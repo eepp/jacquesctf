@@ -399,7 +399,7 @@ private:
 
     int _vPrint(const char *fmt, va_list& args) const
     {
-        return vwprintw(_curWindow, fmt, args);
+        return vw_printw(_curWindow, fmt, args);
     }
 
 private:
