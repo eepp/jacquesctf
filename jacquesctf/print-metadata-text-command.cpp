@@ -8,7 +8,7 @@
 #include <iostream>
 
 #include "config.hpp"
-#include "metadata.hpp"
+#include "data/metadata.hpp"
 #include "print-metadata-text-command.hpp"
 
 namespace jacques {

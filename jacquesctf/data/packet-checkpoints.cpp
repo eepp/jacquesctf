@@ -8,7 +8,7 @@
 #include <cassert>
 #include <algorithm>
 
-#include "packet-checkpoints.hpp"
+#include "data/packet-checkpoints.hpp"
 
 namespace jacques {
 

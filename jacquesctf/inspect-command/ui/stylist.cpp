@@ -9,7 +9,7 @@
 #include <curses.h>
 
 #include "stylist.hpp"
-#include "view.hpp"
+#include "views/view.hpp"
 #include "utils.hpp"
 
 namespace jacques {

@@ -13,10 +13,10 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "stylist.hpp"
+#include "../stylist.hpp"
 #include "status-view.hpp"
 #include "utils.hpp"
-#include "message.hpp"
+#include "../../state/message.hpp"
 
 namespace jacques {
 

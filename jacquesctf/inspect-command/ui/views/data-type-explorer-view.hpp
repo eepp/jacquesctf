@@ -12,7 +12,7 @@
 #include <boost/variant.hpp>
 
 #include "scroll-view.hpp"
-#include "metadata.hpp"
+#include "data/metadata.hpp"
 #include "abstract-data-type-details.hpp"
 
 namespace jacques {

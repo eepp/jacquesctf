@@ -15,9 +15,8 @@
 #include <algorithm>
 
 #include "utils.hpp"
-#include "metadata.hpp"
+#include "data/metadata.hpp"
 #include "config.hpp"
-#include "inspect-command.hpp"
 #include "io-error.hpp"
 #include "command-error.hpp"
 

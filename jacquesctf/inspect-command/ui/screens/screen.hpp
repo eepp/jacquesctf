@@ -10,11 +10,11 @@
 
 #include <memory>
 
-#include "inspect-command.hpp"
-#include "rectangle.hpp"
+#include "../inspect-command.hpp"
+#include "../rectangle.hpp"
 #include "config.hpp"
-#include "stylist.hpp"
-#include "state.hpp"
+#include "../stylist.hpp"
+#include "../../state/state.hpp"
 
 namespace jacques {
 

@@ -12,7 +12,7 @@
 #include <yactfr/metadata/fwd.hpp>
 #include <boost/core/noncopyable.hpp>
 
-#include "event-record.hpp"
+#include "data/event-record.hpp"
 #include "packet-segment.hpp"
 
 namespace jacques {

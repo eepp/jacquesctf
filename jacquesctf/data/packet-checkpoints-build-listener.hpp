@@ -11,8 +11,8 @@
 #include <memory>
 #include <yactfr/metadata/fwd.hpp>
 
-#include "event-record.hpp"
-#include "packet-index-entry.hpp"
+#include "data/event-record.hpp"
+#include "data/packet-index-entry.hpp"
 
 namespace jacques {
 

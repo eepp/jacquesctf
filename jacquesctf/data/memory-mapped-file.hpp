@@ -16,7 +16,7 @@
 #include <sys/mman.h>
 
 #include "aliases.hpp"
-#include "data-size.hpp"
+#include "data/data-size.hpp"
 
 namespace jacques {
 

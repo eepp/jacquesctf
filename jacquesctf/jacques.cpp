@@ -23,7 +23,7 @@
 #include "list-packets-command.hpp"
 #include "copy-packets-command.hpp"
 #include "create-lttng-index-command.hpp"
-#include "inspect-command.hpp"
+#include "inspect-command/ui/inspect-command.hpp"
 
 namespace bfs = boost::filesystem;
 

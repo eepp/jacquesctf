@@ -8,7 +8,7 @@
 #include <yactfr/metadata/event-record-type.hpp>
 #include <yactfr/decoding-errors.hpp>
 
-#include "event-record.hpp"
+#include "data/event-record.hpp"
 
 namespace jacques {
 

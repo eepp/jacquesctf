@@ -13,8 +13,8 @@
 #include <yactfr/metadata/fwd.hpp>
 
 #include "aliases.hpp"
-#include "timestamp.hpp"
-#include "data-size.hpp"
+#include "data/timestamp.hpp"
+#include "data/data-size.hpp"
 
 namespace jacques {
 

@@ -11,7 +11,7 @@
 #include <curses.h>
 
 #include "search-controller.hpp"
-#include "search-parser.hpp"
+#include "../state/search-parser.hpp"
 
 namespace jacques {
 

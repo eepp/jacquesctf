@@ -12,13 +12,13 @@
 #include <tuple>
 
 #include "aliases.hpp"
-#include "stylist.hpp"
-#include "state.hpp"
-#include "event-record-type-table-view.hpp"
-#include "data-stream-type-table-view.hpp"
-#include "data-type-explorer-view.hpp"
+#include "../stylist.hpp"
+#include "../../state/state.hpp"
+#include "../views/event-record-type-table-view.hpp"
+#include "../views/data-stream-type-table-view.hpp"
+#include "../views/data-type-explorer-view.hpp"
 #include "screen.hpp"
-#include "search-controller.hpp"
+#include "../search-controller.hpp"
 
 namespace jacques {
 

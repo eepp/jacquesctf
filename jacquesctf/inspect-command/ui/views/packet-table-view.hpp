@@ -9,8 +9,8 @@
 #define _JACQUES_INSPECT_COMMAND_UI_VIEWS_PACKET_TABLE_VIEW_HPP
 
 #include "table-view.hpp"
-#include "state.hpp"
-#include "data-size.hpp"
+#include "../../state/state.hpp"
+#include "data/data-size.hpp"
 
 namespace jacques {
 

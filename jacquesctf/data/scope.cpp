@@ -5,7 +5,7 @@
  * prohibited. Proprietary and confidential.
  */
 
-#include "scope.hpp"
+#include "data/scope.hpp"
 
 namespace jacques {
 

@@ -18,9 +18,9 @@
 #include "copy-packets-command.hpp"
 #include "command-error.hpp"
 #include "io-error.hpp"
-#include "metadata.hpp"
-#include "data-stream-file.hpp"
-#include "time-ops.hpp"
+#include "data/metadata.hpp"
+#include "data/data-stream-file.hpp"
+#include "data/time-ops.hpp"
 
 namespace jacques {
 

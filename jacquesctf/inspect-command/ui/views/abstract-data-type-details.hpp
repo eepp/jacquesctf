@@ -16,7 +16,7 @@
 #include <yactfr/metadata/fwd.hpp>
 
 #include "aliases.hpp"
-#include "stylist.hpp"
+#include "../stylist.hpp"
 
 namespace jacques {
 

@@ -9,12 +9,12 @@
 #define _JACQUES_INSPECT_COMMAND_UI_SCREENS_DATA_STREAM_FILES_SCREEN_HPP
 
 #include "aliases.hpp"
-#include "stylist.hpp"
-#include "state.hpp"
-#include "data-stream-file-table-view.hpp"
+#include "../stylist.hpp"
+#include "../../state/state.hpp"
+#include "../views/data-stream-file-table-view.hpp"
 #include "screen.hpp"
-#include "cycle-wheel.hpp"
-#include "data-size.hpp"
+#include "../cycle-wheel.hpp"
+#include "data/data-size.hpp"
 
 namespace jacques {
 

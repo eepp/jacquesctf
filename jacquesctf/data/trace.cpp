@@ -7,7 +7,7 @@
 
 #include <cassert>
 
-#include "trace.hpp"
+#include "data/trace.hpp"
 
 namespace jacques {
 

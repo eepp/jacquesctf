@@ -18,15 +18,15 @@
 #include <yactfr/metadata/int-type.hpp>
 #include <boost/core/noncopyable.hpp>
 
-#include "packet-index-entry.hpp"
-#include "packet-checkpoints.hpp"
-#include "event-record.hpp"
-#include "packet-region.hpp"
+#include "data/packet-index-entry.hpp"
+#include "data/packet-checkpoints.hpp"
+#include "data/event-record.hpp"
+#include "data/packet-region.hpp"
 #include "packet-segment.hpp"
 #include "bit-array.hpp"
-#include "content-packet-region.hpp"
-#include "packet-checkpoints-build-listener.hpp"
-#include "metadata.hpp"
+#include "data/content-packet-region.hpp"
+#include "data/packet-checkpoints-build-listener.hpp"
+#include "data/metadata.hpp"
 #include "memory-mapped-file.hpp"
 #include "lru-cache.hpp"
 

@@ -15,7 +15,7 @@
 #include <yactfr/metadata/fwd.hpp>
 
 #include "table-view.hpp"
-#include "state.hpp"
+#include "../../state/state.hpp"
 
 namespace jacques {
 

@@ -11,14 +11,14 @@
 #include <algorithm>
 #include <cstdlib>
 
-#include "stylist.hpp"
+#include "../stylist.hpp"
 #include "packet-data-view.hpp"
 #include "utils.hpp"
-#include "message.hpp"
-#include "content-packet-region.hpp"
-#include "padding-packet-region.hpp"
-#include "error-packet-region.hpp"
-#include "inspect-screen.hpp"
+#include "../../state/message.hpp"
+#include "data/content-packet-region.hpp"
+#include "data/padding-packet-region.hpp"
+#include "data/error-packet-region.hpp"
+#include "../screens/inspect-screen.hpp"
 #include "utils.hpp"
 
 namespace jacques {

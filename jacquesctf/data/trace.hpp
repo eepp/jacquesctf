@@ -15,8 +15,8 @@
 
 #include "aliases.hpp"
 #include "utils.hpp"
-#include "data-stream-file.hpp"
-#include "metadata.hpp"
+#include "data/data-stream-file.hpp"
+#include "data/metadata.hpp"
 
 namespace jacques {
 

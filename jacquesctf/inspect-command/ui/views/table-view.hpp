@@ -17,10 +17,10 @@
 #include <curses.h>
 
 #include "view.hpp"
-#include "rectangle.hpp"
-#include "timestamp.hpp"
-#include "duration.hpp"
-#include "time-ops.hpp"
+#include "../rectangle.hpp"
+#include "data/timestamp.hpp"
+#include "data/duration.hpp"
+#include "data/time-ops.hpp"
 
 namespace jacques {
 

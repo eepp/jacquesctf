@@ -11,7 +11,7 @@
 #include <string>
 
 #include "view.hpp"
-#include "packet-checkpoints.hpp"
+#include "data/packet-checkpoints.hpp"
 
 namespace jacques {
 

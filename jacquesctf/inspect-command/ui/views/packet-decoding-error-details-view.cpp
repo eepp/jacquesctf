@@ -7,9 +7,9 @@
 
 #include "packet-decoding-error-details-view.hpp"
 #include "utils.hpp"
-#include "stylist.hpp"
-#include "state.hpp"
-#include "message.hpp"
+#include "../stylist.hpp"
+#include "../../state/state.hpp"
+#include "../../state/message.hpp"
 
 namespace jacques {
 

@@ -16,7 +16,7 @@
 
 #include "packet-region-visitor.hpp"
 #include "packet-segment.hpp"
-#include "scope.hpp"
+#include "data/scope.hpp"
 
 namespace jacques {
 

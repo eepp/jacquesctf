@@ -11,7 +11,7 @@
 #include <boost/variant/get.hpp>
 
 #include "help-view.hpp"
-#include "stylist.hpp"
+#include "../stylist.hpp"
 
 namespace jacques {
 

@@ -21,7 +21,7 @@
 #include <boost/core/noncopyable.hpp>
 
 #include "aliases.hpp"
-#include "data-size.hpp"
+#include "data/data-size.hpp"
 
 namespace jacques {
 

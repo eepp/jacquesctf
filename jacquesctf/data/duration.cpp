@@ -5,7 +5,7 @@
  * prohibited. Proprietary and confidential.
  */
 
-#include "duration.hpp"
+#include "data/duration.hpp"
 #include "utils.hpp"
 
 namespace jacques {

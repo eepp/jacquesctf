@@ -12,7 +12,7 @@
 #include <boost/variant.hpp>
 
 #include "sub-data-type-explorer-view.hpp"
-#include "content-packet-region.hpp"
+#include "data/content-packet-region.hpp"
 
 namespace jacques {
 

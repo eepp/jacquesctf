@@ -11,7 +11,7 @@
 #include <curses.h>
 #include <boost/core/noncopyable.hpp>
 
-#include "view.hpp"
+#include "views/view.hpp"
 
 namespace jacques {
 

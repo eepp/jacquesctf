@@ -10,7 +10,7 @@
 
 #include <memory>
 
-#include "packet-region.hpp"
+#include "data/packet-region.hpp"
 
 namespace jacques {
 

@@ -10,7 +10,7 @@
 #include <cstring>
 
 #include "input-view.hpp"
-#include "stylist.hpp"
+#include "../stylist.hpp"
 #include "utils.hpp"
 
 namespace jacques {

@@ -9,13 +9,13 @@
 #define _JACQUES_INSPECT_COMMAND_UI_SCREENS_PACKETS_SCREEN_HPP
 
 #include "aliases.hpp"
-#include "stylist.hpp"
-#include "state.hpp"
-#include "packet-table-view.hpp"
-#include "search-controller.hpp"
+#include "../stylist.hpp"
+#include "../../state/state.hpp"
+#include "../views/packet-table-view.hpp"
+#include "../search-controller.hpp"
 #include "screen.hpp"
-#include "cycle-wheel.hpp"
-#include "data-size.hpp"
+#include "../cycle-wheel.hpp"
+#include "data/data-size.hpp"
 
 namespace jacques {
 

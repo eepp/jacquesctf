@@ -12,16 +12,16 @@
 #include <list>
 
 #include "aliases.hpp"
-#include "stylist.hpp"
-#include "state.hpp"
-#include "packet-region-info-view.hpp"
-#include "event-record-table-view.hpp"
-#include "sub-data-type-explorer-view.hpp"
-#include "packet-decoding-error-details-view.hpp"
+#include "../stylist.hpp"
+#include "../../state/state.hpp"
+#include "../views/packet-region-info-view.hpp"
+#include "../views/event-record-table-view.hpp"
+#include "../views/sub-data-type-explorer-view.hpp"
+#include "../views/packet-decoding-error-details-view.hpp"
 #include "inspect-screen.hpp"
 #include "screen.hpp"
-#include "cycle-wheel.hpp"
-#include "search-controller.hpp"
+#include "../cycle-wheel.hpp"
+#include "../search-controller.hpp"
 
 namespace jacques {
 

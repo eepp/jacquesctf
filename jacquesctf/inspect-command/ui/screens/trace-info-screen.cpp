@@ -12,9 +12,9 @@
 
 #include "config.hpp"
 #include "trace-info-screen.hpp"
-#include "trace-info-view.hpp"
-#include "stylist.hpp"
-#include "state.hpp"
+#include "../views/trace-info-view.hpp"
+#include "../stylist.hpp"
+#include "../../state/state.hpp"
 
 namespace jacques {
 

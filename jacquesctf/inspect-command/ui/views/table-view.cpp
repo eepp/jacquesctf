@@ -14,7 +14,7 @@
 
 #include "table-view.hpp"
 #include "utils.hpp"
-#include "stylist.hpp"
+#include "../stylist.hpp"
 
 namespace jacques {
 

@@ -9,7 +9,7 @@
 #include <numeric>
 
 #include "data-stream-file-table-view.hpp"
-#include "message.hpp"
+#include "../../state/message.hpp"
 #include "utils.hpp"
 
 namespace jacques {

@@ -5,7 +5,7 @@
  * prohibited. Proprietary and confidential.
  */
 
-#include "error-packet-region.hpp"
+#include "data/error-packet-region.hpp"
 
 namespace jacques {
 

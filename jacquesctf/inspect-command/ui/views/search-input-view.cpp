@@ -11,7 +11,7 @@
 #include <cctype>
 
 #include "search-input-view.hpp"
-#include "stylist.hpp"
+#include "../stylist.hpp"
 
 namespace jacques {
 

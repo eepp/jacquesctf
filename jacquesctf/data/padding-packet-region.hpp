@@ -8,7 +8,7 @@
 #ifndef _JACQUES_DATA_PADDING_PACKET_REGION_HPP
 #define _JACQUES_DATA_PADDING_PACKET_REGION_HPP
 
-#include "packet-region.hpp"
+#include "data/packet-region.hpp"
 
 namespace jacques {
 

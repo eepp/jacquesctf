@@ -12,9 +12,9 @@
 
 #include "config.hpp"
 #include "help-screen.hpp"
-#include "help-view.hpp"
-#include "stylist.hpp"
-#include "state.hpp"
+#include "../views/help-view.hpp"
+#include "../stylist.hpp"
+#include "../../state/state.hpp"
 
 namespace jacques {
 

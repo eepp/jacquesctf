@@ -6,8 +6,8 @@
  */
 
 #include "data-types-screen.hpp"
-#include "search-parser.hpp"
-#include "content-packet-region.hpp"
+#include "../../state/search-parser.hpp"
+#include "data/content-packet-region.hpp"
 
 namespace jacques {
 

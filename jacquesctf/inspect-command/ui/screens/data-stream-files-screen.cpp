@@ -11,10 +11,10 @@
 #include <unistd.h>
 
 #include "config.hpp"
-#include "data-stream-file-table-view.hpp"
+#include "../views/data-stream-file-table-view.hpp"
 #include "data-stream-files-screen.hpp"
-#include "state.hpp"
-#include "stylist.hpp"
+#include "../../state/state.hpp"
+#include "../stylist.hpp"
 
 namespace jacques {
 

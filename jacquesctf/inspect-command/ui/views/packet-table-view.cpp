@@ -9,7 +9,7 @@
 #include <numeric>
 
 #include "packet-table-view.hpp"
-#include "message.hpp"
+#include "../../state/message.hpp"
 
 namespace jacques {
 

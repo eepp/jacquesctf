@@ -18,10 +18,10 @@
 #include <yactfr/metadata/clock-type.hpp>
 
 #include "trace-info-view.hpp"
-#include "timestamp.hpp"
-#include "time-ops.hpp"
-#include "stylist.hpp"
-#include "message.hpp"
+#include "data/timestamp.hpp"
+#include "data/time-ops.hpp"
+#include "../stylist.hpp"
+#include "../../state/message.hpp"
 
 namespace jacques {
 

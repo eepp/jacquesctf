@@ -11,8 +11,8 @@
 #include <memory>
 #include <atomic>
 
-#include "search-input-view.hpp"
-#include "screen.hpp"
+#include "views/search-input-view.hpp"
+#include "screens/screen.hpp"
 #include "stylist.hpp"
 
 namespace jacques {

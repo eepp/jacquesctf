@@ -16,7 +16,7 @@
 #include <yactfr/metadata/clock-type.hpp>
 
 #include "aliases.hpp"
-#include "duration.hpp"
+#include "data/duration.hpp"
 
 namespace jacques {
 

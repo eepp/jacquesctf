@@ -10,9 +10,9 @@
 
 #include "config.hpp"
 #include "list-packets-command.hpp"
-#include "metadata.hpp"
-#include "data-stream-file.hpp"
-#include "time-ops.hpp"
+#include "data/metadata.hpp"
+#include "data/data-stream-file.hpp"
+#include "data/time-ops.hpp"
 
 namespace jacques {
 

@@ -16,8 +16,8 @@
 #include "message.hpp"
 #include "data-stream-file-state.hpp"
 #include "search-parser.hpp"
-#include "packet-checkpoints-build-listener.hpp"
-#include "trace.hpp"
+#include "data/packet-checkpoints-build-listener.hpp"
+#include "data/trace.hpp"
 
 namespace jacques {
 

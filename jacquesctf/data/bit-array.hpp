@@ -12,7 +12,7 @@
 #include <boost/optional.hpp>
 
 #include "aliases.hpp"
-#include "data-size.hpp"
+#include "data/data-size.hpp"
 #include "bit-location.hpp"
 #include "byte-order.hpp"
 

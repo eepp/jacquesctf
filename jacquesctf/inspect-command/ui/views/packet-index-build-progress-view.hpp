@@ -11,7 +11,7 @@
 #include <boost/optional.hpp>
 
 #include "view.hpp"
-#include "data-stream-file.hpp"
+#include "data/data-stream-file.hpp"
 
 namespace jacques {
 

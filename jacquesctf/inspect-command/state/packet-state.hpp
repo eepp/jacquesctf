@@ -12,7 +12,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 
-#include "packet.hpp"
+#include "data/packet.hpp"
 #include "aliases.hpp"
 
 namespace jacques {

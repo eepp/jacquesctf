@@ -5,7 +5,7 @@
  * prohibited. Proprietary and confidential.
  */
 
-#include "content-packet-region.hpp"
+#include "data/content-packet-region.hpp"
 
 namespace jacques {
 

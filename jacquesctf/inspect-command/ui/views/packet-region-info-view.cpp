@@ -12,13 +12,13 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "stylist.hpp"
+#include "../stylist.hpp"
 #include "packet-region-info-view.hpp"
 #include "utils.hpp"
-#include "message.hpp"
-#include "content-packet-region.hpp"
-#include "padding-packet-region.hpp"
-#include "error-packet-region.hpp"
+#include "../../state/message.hpp"
+#include "data/content-packet-region.hpp"
+#include "data/padding-packet-region.hpp"
+#include "data/error-packet-region.hpp"
 
 namespace jacques {
 

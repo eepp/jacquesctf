@@ -15,12 +15,12 @@
 #include <boost/core/noncopyable.hpp>
 
 #include "aliases.hpp"
-#include "timestamp.hpp"
-#include "data-stream-file.hpp"
+#include "data/timestamp.hpp"
+#include "data/data-stream-file.hpp"
 #include "search-parser.hpp"
-#include "packet.hpp"
-#include "event-record.hpp"
-#include "metadata.hpp"
+#include "data/packet.hpp"
+#include "data/event-record.hpp"
+#include "data/metadata.hpp"
 #include "packet-state.hpp"
 
 namespace jacques {

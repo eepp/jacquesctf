@@ -18,11 +18,11 @@
 #include <yactfr/memory-mapped-file-view-factory.hpp>
 
 #include "aliases.hpp"
-#include "packet.hpp"
-#include "packet-index-entry.hpp"
-#include "metadata.hpp"
-#include "data-size.hpp"
-#include "packet-checkpoints-build-listener.hpp"
+#include "data/packet.hpp"
+#include "data/packet-index-entry.hpp"
+#include "data/metadata.hpp"
+#include "data/data-size.hpp"
+#include "data/packet-checkpoints-build-listener.hpp"
 
 namespace jacques {
 

@@ -9,7 +9,7 @@
 #define _JACQUES_INSPECT_COMMAND_UI_VIEWS_EVENT_RECORD_TABLE_VIEW_HPP
 
 #include "table-view.hpp"
-#include "state.hpp"
+#include "../../state/state.hpp"
 
 namespace jacques {
 

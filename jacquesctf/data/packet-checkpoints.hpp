@@ -20,11 +20,11 @@
 #include <yactfr/decoding-errors.hpp>
 
 #include "aliases.hpp"
-#include "data-size.hpp"
-#include "event-record.hpp"
-#include "timestamp.hpp"
-#include "packet-checkpoints-build-listener.hpp"
-#include "metadata.hpp"
+#include "data/data-size.hpp"
+#include "data/event-record.hpp"
+#include "data/timestamp.hpp"
+#include "data/packet-checkpoints-build-listener.hpp"
+#include "data/metadata.hpp"
 
 namespace jacques {
 

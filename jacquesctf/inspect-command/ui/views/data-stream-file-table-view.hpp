@@ -8,9 +8,9 @@
 #ifndef _JACQUES_INSPECT_COMMAND_UI_VIEWS_DATA_STREAM_FILE_TABLE_VIEW_HPP
 #define _JACQUES_INSPECT_COMMAND_UI_VIEWS_DATA_STREAM_FILE_TABLE_VIEW_HPP
 
-#include "state.hpp"
-#include "data-size.hpp"
-#include "timestamp.hpp"
+#include "../../state/state.hpp"
+#include "data/data-size.hpp"
+#include "data/timestamp.hpp"
 #include "table-view.hpp"
 
 namespace jacques {

@@ -11,13 +11,13 @@
 #include <unistd.h>
 
 #include "config.hpp"
-#include "packet-table-view.hpp"
-#include "search-input-view.hpp"
+#include "../views/packet-table-view.hpp"
+#include "../views/search-input-view.hpp"
 #include "packets-screen.hpp"
-#include "stylist.hpp"
-#include "state.hpp"
-#include "packet-checkpoints-build-listener.hpp"
-#include "packet-checkpoints-build-progress-view.hpp"
+#include "../stylist.hpp"
+#include "../../state/state.hpp"
+#include "data/packet-checkpoints-build-listener.hpp"
+#include "../views/packet-checkpoints-build-progress-view.hpp"
 
 namespace jacques {
 

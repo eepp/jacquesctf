@@ -13,7 +13,7 @@
 #include <boost/optional.hpp>
 
 #include "aliases.hpp"
-#include "data-size.hpp"
+#include "data/data-size.hpp"
 #include "byte-order.hpp"
 #include "bit-location.hpp"
 

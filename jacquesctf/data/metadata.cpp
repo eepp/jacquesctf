@@ -20,7 +20,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 
-#include "metadata.hpp"
+#include "data/metadata.hpp"
 
 namespace jacques {
 

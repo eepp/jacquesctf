@@ -14,9 +14,9 @@
 #include <yactfr/metadata/fwd.hpp>
 
 #include "scroll-view.hpp"
-#include "state.hpp"
-#include "timestamp.hpp"
-#include "duration.hpp"
+#include "../../state/state.hpp"
+#include "data/timestamp.hpp"
+#include "data/duration.hpp"
 
 namespace jacques {
 

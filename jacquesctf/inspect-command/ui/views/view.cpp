@@ -11,7 +11,7 @@
 #include <curses.h>
 
 #include "view.hpp"
-#include "stylist.hpp"
+#include "../stylist.hpp"
 #include "utils.hpp"
 
 namespace jacques {

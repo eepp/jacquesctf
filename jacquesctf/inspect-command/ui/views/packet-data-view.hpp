@@ -14,8 +14,8 @@
 #include <unordered_set>
 
 #include "view.hpp"
-#include "packet-region.hpp"
-#include "inspect-screen.hpp"
+#include "data/packet-region.hpp"
+#include "../screens/inspect-screen.hpp"
 
 namespace jacques {
 

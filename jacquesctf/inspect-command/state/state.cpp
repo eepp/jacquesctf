@@ -10,7 +10,7 @@
 #include <map>
 
 #include "state.hpp"
-#include "trace.hpp"
+#include "data/trace.hpp"
 #include "search-parser.hpp"
 #include "message.hpp"
 

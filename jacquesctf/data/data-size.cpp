@@ -5,7 +5,7 @@
  * prohibited. Proprietary and confidential.
  */
 
-#include "data-size.hpp"
+#include "data/data-size.hpp"
 #include "utils.hpp"
 
 namespace jacques {

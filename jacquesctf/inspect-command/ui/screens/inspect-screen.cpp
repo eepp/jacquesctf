@@ -14,11 +14,11 @@
 #include <unistd.h>
 
 #include "config.hpp"
-#include "event-record-table-view.hpp"
+#include "../views/event-record-table-view.hpp"
 #include "inspect-screen.hpp"
-#include "stylist.hpp"
-#include "state.hpp"
-#include "packet-data-view.hpp"
+#include "../stylist.hpp"
+#include "../../state/state.hpp"
+#include "../views/packet-data-view.hpp"
 
 namespace jacques {
 

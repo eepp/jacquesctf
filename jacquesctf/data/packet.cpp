@@ -9,10 +9,10 @@
 #include <yactfr/metadata/string-type.hpp>
 #include <yactfr/metadata/struct-type.hpp>
 
-#include "packet.hpp"
-#include "content-packet-region.hpp"
-#include "padding-packet-region.hpp"
-#include "error-packet-region.hpp"
+#include "data/packet.hpp"
+#include "data/content-packet-region.hpp"
+#include "data/padding-packet-region.hpp"
+#include "data/error-packet-region.hpp"
 
 namespace jacques {
 

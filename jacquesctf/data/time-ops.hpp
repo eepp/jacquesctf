@@ -15,8 +15,8 @@
 #include <yactfr/element.hpp>
 #include <yactfr/metadata/clock-type.hpp>
 
-#include "timestamp.hpp"
-#include "duration.hpp"
+#include "data/timestamp.hpp"
+#include "data/duration.hpp"
 
 namespace jacques {
 

@@ -13,7 +13,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "data-stream-file.hpp"
+#include "data/data-stream-file.hpp"
 #include "io-error.hpp"
 
 namespace jacques {

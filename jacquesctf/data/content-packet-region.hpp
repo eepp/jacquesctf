@@ -14,8 +14,8 @@
 #include <boost/optional.hpp>
 #include <yactfr/metadata/fwd.hpp>
 
-#include "packet-region.hpp"
-#include "scope.hpp"
+#include "data/packet-region.hpp"
+#include "data/scope.hpp"
 
 namespace jacques {
 

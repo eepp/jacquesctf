@@ -5,7 +5,7 @@
  * prohibited. Proprietary and confidential.
  */
 
-#include "packet-index-entry.hpp"
+#include "data/packet-index-entry.hpp"
 
 namespace jacques {
 

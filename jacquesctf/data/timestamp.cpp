@@ -14,7 +14,7 @@
 #include <curses.h>
 #include <time.h>
 
-#include "timestamp.hpp"
+#include "data/timestamp.hpp"
 
 namespace jacques {
 

@@ -9,8 +9,8 @@
 #define _JACQUES_INSPECT_COMMAND_UI_VIEWS_PACKET_CHECKPOINTS_BUILD_PROGRESS_VIEW_HPP
 
 #include "view.hpp"
-#include "packet-index-entry.hpp"
-#include "event-record.hpp"
+#include "data/packet-index-entry.hpp"
+#include "data/event-record.hpp"
 
 namespace jacques {
 

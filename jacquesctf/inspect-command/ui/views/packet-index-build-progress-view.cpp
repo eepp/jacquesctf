@@ -7,10 +7,10 @@
 
 #include "view.hpp"
 #include "utils.hpp"
-#include "data-stream-file.hpp"
-#include "packet-index-entry.hpp"
+#include "data/data-stream-file.hpp"
+#include "data/packet-index-entry.hpp"
 #include "packet-index-build-progress-view.hpp"
-#include "stylist.hpp"
+#include "../stylist.hpp"
 
 namespace jacques {
 

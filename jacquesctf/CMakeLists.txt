@@ -108,11 +108,6 @@ add_executable (
 target_include_directories (
     jacquesctf PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/inspect-command/ui
-    ${CMAKE_CURRENT_SOURCE_DIR}/inspect-command/ui/views
-    ${CMAKE_CURRENT_SOURCE_DIR}/inspect-command/ui/screens
-    ${CMAKE_CURRENT_SOURCE_DIR}/inspect-command/state
-    ${CMAKE_CURRENT_SOURCE_DIR}/data
     ${CMAKE_SOURCE_DIR}/logging
     ${CURSES_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}

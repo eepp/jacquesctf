@@ -14,9 +14,9 @@
 #include <cstdarg>
 #include <curses.h>
 
-#include "rectangle.hpp"
-#include "message.hpp"
-#include "state.hpp"
+#include "../rectangle.hpp"
+#include "../../state/message.hpp"
+#include "../../state/state.hpp"
 
 namespace jacques {
 

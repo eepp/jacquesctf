@@ -8,7 +8,7 @@
 #include <cassert>
 
 #include "packet-state.hpp"
-#include "packet-region.hpp"
+#include "data/packet-region.hpp"
 #include "state.hpp"
 #include "message.hpp"
 

@@ -9,10 +9,10 @@
 #define _JACQUES_INSPECT_COMMAND_UI_SCREENS_HELP_SCREEN_HPP
 
 #include "aliases.hpp"
-#include "stylist.hpp"
-#include "state.hpp"
+#include "../stylist.hpp"
+#include "../../state/state.hpp"
 #include "screen.hpp"
-#include "help-view.hpp"
+#include "../views/help-view.hpp"
 
 namespace jacques {
 

@@ -8,7 +8,7 @@
 #include <yactfr/metadata/event-record-type.hpp>
 
 #include "packet-checkpoints-build-progress-view.hpp"
-#include "stylist.hpp"
+#include "../stylist.hpp"
 #include "utils.hpp"
 
 namespace jacques {

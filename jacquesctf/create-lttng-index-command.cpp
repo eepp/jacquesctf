@@ -14,8 +14,8 @@
 #include "config.hpp"
 #include "create-lttng-index-command.hpp"
 #include "command-error.hpp"
-#include "metadata.hpp"
-#include "data-stream-file.hpp"
+#include "data/metadata.hpp"
+#include "data/data-stream-file.hpp"
 
 namespace bfs = boost::filesystem;
 namespace bendian = boost::endian;

@@ -17,8 +17,8 @@
 
 #include "aliases.hpp"
 #include "packet-segment.hpp"
-#include "timestamp.hpp"
-#include "metadata.hpp"
+#include "data/timestamp.hpp"
+#include "data/metadata.hpp"
 
 namespace jacques {
 
