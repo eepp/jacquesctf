@@ -19,24 +19,24 @@
 
 namespace jacques {
 
-class Duration :
+class Duration final :
     public boost::totally_ordered<Duration>
 {
 public:
     struct Parts
     {
         unsigned long long hours;
-        unsigned long long minutes;
-        unsigned long long seconds;
+        unsigned long long mins;
+        unsigned long long secs;
         unsigned long long ns;
     };
 
 public:
-    Duration() = default;
-    explicit Duration(unsigned long long ns);
-    Duration(const Duration&) = default;
-    Duration& operator=(const Duration&) = default;
-    Parts parts() const;
+    explicit Duration() noexcept = default;
+    explicit Duration(unsigned long long ns) noexcept;
+    Duration(const Duration&) noexcept = default;
+    Duration& operator=(const Duration&) noexcept = default;
+    Parts parts() const noexcept;
     void format(char *buf, Size bufSize) const;
     std::string format() const;
 
@@ -59,8 +59,7 @@ private:
     unsigned long long _ns = 0;
 };
 
-static inline
-std::ostream& operator<<(std::ostream& stream, const Duration& duration)
+static inline std::ostream& operator<<(std::ostream& stream, const Duration& duration)
 {
     std::array<char, 64> buf;
 

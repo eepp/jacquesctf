@@ -5,25 +5,19 @@
  * prohibited. Proprietary and confidential.
  */
 
-#include "data/scope.hpp"
+#include "scope.hpp"
 
 namespace jacques {
 
-Scope::Scope(EventRecord::SP eventRecord, const yactfr::Scope scope,
-             const PacketSegment& segment) :
-    _eventRecord {std::move(eventRecord)},
+Scope::Scope(Er::SP er, const yactfr::Scope scope, const PktSegment& segment) noexcept :
+    _er {std::move(er)},
     _scope {scope},
     _segment {segment}
 {
 }
 
-Scope::Scope(EventRecord::SP eventRecord, const yactfr::Scope scope) :
-    Scope {std::move(eventRecord), scope, {}}
-{
-}
-
-Scope::Scope(const yactfr::Scope scope) :
-    Scope {nullptr, scope, {}}
+Scope::Scope(const yactfr::Scope scope) noexcept :
+    Scope {nullptr, scope, PktSegment {}}
 {
 }
 

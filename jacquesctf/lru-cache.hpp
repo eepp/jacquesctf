@@ -12,23 +12,25 @@
 #include <unordered_map>
 #include <utility>
 #include <list>
+#include <boost/core/noncopyable.hpp>
 
 #include "aliases.hpp"
 
 namespace jacques {
 
 /*
- * A simple, generic LRU cache, where values of type `ValueT` as
+ * A simple, generic LRU cache, where values of type `ValT` as
  * associated to keys of type `KeyT`.
  */
-template <typename KeyT, typename ValueT>
-class LruCache
+template <typename KeyT, typename ValT>
+class LruCache final :
+    boost::noncopyable
 {
 public:
     /*
      * Builds an LRU cache which can contain at most `maxSize` elements.
      */
-    LruCache(const Size maxSize) :
+    explicit LruCache(const Size maxSize) :
         _maxSize {maxSize}
     {
         assert(maxSize > 0);
@@ -37,7 +39,7 @@ public:
     // size of the cache (not its capacity)
     Size size() const noexcept
     {
-        return _keyToEntryIter.size();
+        return _keyToEntryIt.size();
     }
 
 
@@ -46,37 +48,38 @@ public:
      * recently used, and possibly evicting the least recently used
      * element.
      */
-    void insert(const KeyT& key, const ValueT& value)
+    void insert(KeyT key, ValT val)
     {
         if (this->size() == _maxSize) {
             // remove least recently used
-            _keyToEntryIter.erase(_entries.back().first);
+            _keyToEntryIt.erase(_entries.back().first);
             _entries.pop_back();
         }
 
         assert(!this->contains(key));
-        _entries.push_front({key, value});
-        _keyToEntryIter.insert({key, std::begin(_entries)});
+        _entries.push_front(std::make_pair(key, std::move(val)));
+        _keyToEntryIt.insert(std::make_pair(std::move(key), _entries.begin()));
     }
 
     /*
      * Returns the cached value associated to the key `key`, returning
-     * `nullptr` if this cache does not contain such a value. When a
-     * value is returned, it is marked as the most recently used in this
-     * cache.
+     * `nullptr` if this cache doesn't contain such a value.
+     *
+     * When this method returns a value, it's marked as the most
+     * recently used in this cache.
      */
-    const ValueT *get(const KeyT& key)
+    const ValT *get(const KeyT& key)
     {
-        const auto mapIt = _keyToEntryIter.find(key);
+        const auto mapIt = _keyToEntryIt.find(key);
 
-        if (mapIt == std::end(_keyToEntryIter)) {
+        if (mapIt == _keyToEntryIt.end()) {
             return nullptr;
         }
 
         const auto& entryIter = mapIt->second;
 
         // put it back to the front (MRU)
-        _entries.splice(std::begin(_entries), _entries, entryIter);
+        _entries.splice(_entries.begin(), _entries, entryIter);
         return &entryIter->second;
     }
 
@@ -86,14 +89,14 @@ public:
      */
     bool contains(const KeyT& key) const
     {
-        return _keyToEntryIter.find(key) != std::end(_keyToEntryIter);
+        return _keyToEntryIt.find(key) != _keyToEntryIt.end();
     }
 
     // invalidates the cache: removes everything
     void invalidate()
     {
         _entries.clear();
-        _keyToEntryIter.clear();
+        _keyToEntryIt.clear();
     }
 
     /*
@@ -102,18 +105,18 @@ public:
      */
     void invalidate(const KeyT& key)
     {
-        const auto mapIt = _keyToEntryIter.find(key);
+        const auto mapIt = _keyToEntryIt.find(key);
 
-        if (mapIt == std::end(_keyToEntryIter)) {
+        if (mapIt == _keyToEntryIt.end()) {
             return;
         }
 
         _entries.erase(mapIt->second);
-        _keyToEntryIter.erase(mapIt);
+        _keyToEntryIt.erase(mapIt);
     }
 
 private:
-    using Entry = std::pair<KeyT, ValueT>;
+    using Entry = std::pair<KeyT, ValT>;
     using EntryList = std::list<Entry>;
 
 private:
@@ -123,7 +126,7 @@ private:
     EntryList _entries;
 
     // link from key to entry in the list above
-    std::unordered_map<KeyT, typename EntryList::iterator> _keyToEntryIter;
+    std::unordered_map<KeyT, typename EntryList::iterator> _keyToEntryIt;
 };
 
 } // namespace jacques

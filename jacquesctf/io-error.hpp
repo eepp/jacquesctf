@@ -17,10 +17,9 @@ class IOError final :
     public std::runtime_error
 {
 public:
-    explicit IOError(const boost::filesystem::path& path,
-                     const std::string& msg) :
+    explicit IOError(boost::filesystem::path path, const std::string& msg) :
         std::runtime_error {msg},
-        _path {path}
+        _path {std::move(path)}
     {
     }
 

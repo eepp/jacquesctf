@@ -15,23 +15,18 @@
 #include <algorithm>
 
 #include "utils.hpp"
-#include "data/metadata.hpp"
-#include "config.hpp"
-#include "io-error.hpp"
-#include "command-error.hpp"
+#include "cfg.hpp"
 
 namespace bfs = boost::filesystem;
 
 namespace jacques {
 namespace utils {
 
-std::pair<std::string, std::string> formatPath(const bfs::path& path,
-                                               const Size maxLen)
+std::pair<std::string, std::string> formatPath(const bfs::path& path, const Size maxLen)
 {
     const auto filename = path.filename().string();
     const auto dirName = path.parent_path().string();
     std::string filenameStr;
-    std::string dirNameStr;
 
     if (filename.size() > maxLen) {
         filenameStr = "...";
@@ -41,6 +36,7 @@ std::pair<std::string, std::string> formatPath(const bfs::path& path,
     }
 
     auto leftLen = maxLen - filenameStr.size();
+    std::string dirNameStr;
 
     if (leftLen >= 4) {
         // enough space for `...` and implicit `/`
@@ -53,24 +49,36 @@ std::pair<std::string, std::string> formatPath(const bfs::path& path,
         }
     }
 
-    return std::make_pair(dirNameStr, filenameStr);
+    return std::make_pair(std::move(dirNameStr), std::move(filenameStr));
 }
 
-template <typename T>
-static std::string sepNumber(const T value, const char sep, const char *fmt)
+static inline long long abs(const long long val) noexcept
+{
+    return std::abs(val);
+}
+
+static inline unsigned long long abs(const unsigned long long val) noexcept
+{
+    return val;
+}
+
+template <typename ValT>
+static std::string sepNumber(const ValT val, const char sep, const char * const fmt)
 {
     /*
      * 1. Convert absolute value to string.
+     *
      * 2. Create return string, iterate first string in reverse order,
      *    and append separator every three characters.
+     *
      * 3. Remove trailing separator if any.
+     *
      * 4. Append `-` if the value is negative.
+     *
      * 5. Reverse the whole string.
      */
     std::array<char, 64> buf;
-    const auto absValue = std::is_signed<T>::value ?
-                          std::abs(static_cast<long long>(value)) : value;
-    const auto count = std::sprintf(buf.data(), fmt, absValue);
+    const auto count = std::sprintf(buf.data(), fmt, abs(val));
     Index i = 0;
     std::string ret;
 
@@ -88,25 +96,25 @@ static std::string sepNumber(const T value, const char sep, const char *fmt)
         ret.pop_back();
     }
 
-    if (value < 0) {
+    if (val < 0) {
         ret += '-';
     }
 
-    std::reverse(std::begin(ret), std::end(ret));
+    std::reverse(ret.begin(), ret.end());
     return ret;
 }
 
-std::string sepNumber(const long long value, const char sep)
+std::string sepNumber(const long long val, const char sep)
 {
-    return sepNumber(value, sep, "%lld");
+    return sepNumber(val, sep, "%lld");
 }
 
-std::string sepNumber(const unsigned long long value, const char sep)
+std::string sepNumber(const unsigned long long val, const char sep)
 {
-    return sepNumber(value, sep, "%llu");
+    return sepNumber(val, sep, "%llu");
 }
 
-std::string wrapText(const std::string& text, const Size lineLength)
+std::string wrapText(const std::string& text, const Size lineLen)
 {
     std::istringstream words {text};
     std::ostringstream wrapped;
@@ -115,12 +123,12 @@ std::string wrapText(const std::string& text, const Size lineLength)
     if (words >> word) {
         wrapped << word;
 
-        auto spaceLeft = lineLength - word.size();
+        auto spaceLeft = lineLen - word.size();
 
         while (words >> word) {
             if (spaceLeft < word.size() + 1) {
                 wrapped << '\n' << word;
-                spaceLeft = lineLength - word.size();
+                spaceLeft = lineLen - word.size();
             } else {
                 wrapped << ' ' << word;
                 spaceLeft -= word.size() + 1;
@@ -134,7 +142,7 @@ std::string wrapText(const std::string& text, const Size lineLength)
 std::string normalizeGlobPattern(const std::string& pattern)
 {
     std::string normPat;
-    bool gotStar = false;
+    auto gotStar = false;
 
     normPat.reserve(pattern.size());
 
@@ -161,18 +169,17 @@ std::string normalizeGlobPattern(const std::string& pattern)
     return normPat;
 }
 
-static inline bool atEndOfPattern(const char * const p,
-                                  const std::string& pattern)
+static inline bool atEndOfPattern(const char * const p, const std::string& pattern) noexcept
 {
     return static_cast<Size>(p - pattern.c_str()) == pattern.size() || *p == '\0';
 }
 
 bool globMatch(const std::string& pattern, const std::string& candidate)
 {
-    const char *retryC = candidate.c_str();
-    const char *retryP = pattern.c_str();
+    auto retryC = candidate.c_str();
+    auto retryP = pattern.c_str();
     const char *c, *p;
-    bool gotAStar = false;
+    auto gotAStar = false;
     const auto candidateLen = candidate.size();
 
 retry:
@@ -199,8 +206,8 @@ retry:
 
             if (atEndOfPattern(retryP, pattern)) {
                 /*
-                 * Star at the end of the pattern at
-                 * this point: automatic match.
+                 * Star at the end of the pattern at this point:
+                 * automatic match.
                  */
                 return true;
             }
@@ -209,7 +216,7 @@ retry:
 
         case '\\':
             /* Go to escaped character. */
-            p++;
+            ++p;
 
             /*
              * Fall through the default case which will
@@ -219,61 +226,55 @@ retry:
             // fall through!
 
         default:
-            if (atEndOfPattern(p, pattern) ||
-                    *c != *p) {
+            if (atEndOfPattern(p, pattern) || *c != *p) {
 endOfPattern:
                 /* Character mismatch OR end of pattern. */
                 if (!gotAStar) {
                     /*
-                     * We didn't get any star yet,
-                     * so this first mismatch
-                     * automatically makes the whole
-                     * test fail.
+                     * We didn't get any star yet, so this first
+                     * mismatch automatically makes the whole test fail.
                      */
                     return false;
                 }
 
                 /*
-                 * Next try: next candidate character,
-                 * original pattern character (following
-                 * the most recent star).
+                 * Next try: next candidate character, original pattern
+                 * character (following the most recent star).
                  */
-                retryC++;
+                ++retryC;
                 goto retry;
             }
             break;
         }
 
         /* Next pattern and candidate characters. */
-        c++;
-        p++;
+        ++c;
+        ++p;
     }
 
     /*
-     * We checked every candidate character and we're still in a
-     * success state: the only pattern character allowed to remain
-     * is a star.
+     * We checked every candidate character and we're still in a success
+     * state: the only pattern character allowed to remain is a star.
      */
     if (atEndOfPattern(p, pattern)) {
         return true;
     }
 
-    p++;
+    ++p;
     return p[-1] == '*' && atEndOfPattern(p, pattern);
 }
 
-std::pair<std::string, std::string> formatSize(const Size sizeBits,
-                                               const SizeFormatMode formatMode,
-                                               const boost::optional<char>& sep)
+std::pair<std::string, std::string> formatLen(const Size lenBits, const LenFmtMode fmtMode,
+                                              const boost::optional<char>& sep)
 {
     std::array<char, 64> buf;
     const char *unit;
-    const auto sizeBytes = sizeBits / 8;
-    const auto extraBits = sizeBits & 7;
+    const auto sizeBytes = lenBits / 8;
+    const auto extraBits = lenBits & 7;
 
-    switch (formatMode) {
-    case SizeFormatMode::FULL_FLOOR:
-    case SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS:
+    switch (fmtMode) {
+    case LenFmtMode::FULL_FLOOR:
+    case LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS:
     {
         unit = "B";
         double val = static_cast<double>(sizeBytes);
@@ -289,8 +290,7 @@ std::pair<std::string, std::string> formatSize(const Size sizeBits,
             unit = "KiB";
         }
 
-        if (formatMode == SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS &&
-                extraBits > 0) {
+        if (fmtMode == LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS && extraBits > 0) {
             std::sprintf(buf.data(), "%.3f+%llu", val, extraBits);
         } else {
             std::sprintf(buf.data(), "%.3f", val);
@@ -299,23 +299,23 @@ std::pair<std::string, std::string> formatSize(const Size sizeBits,
         break;
     }
 
-    case SizeFormatMode::BYTES_FLOOR:
-    case SizeFormatMode::BYTES_FLOOR_WITH_EXTRA_BITS:
+    case LenFmtMode::BYTES_FLOOR:
+    case LenFmtMode::BYTES_FLOOR_WITH_EXTRA_BITS:
         unit = "B";
 
-        if (formatMode == SizeFormatMode::BYTES_FLOOR_WITH_EXTRA_BITS &&
+        if (fmtMode == LenFmtMode::BYTES_FLOOR_WITH_EXTRA_BITS &&
                 extraBits > 0) {
             if (sep) {
                 std::sprintf(buf.data(), "%s+%llu",
-                             sepNumber(static_cast<long long>(sizeBytes), *sep).c_str(),
-                             extraBits);
+                             sepNumber(static_cast<long long>(sizeBytes), *sep).c_str(), extraBits);
             } else {
                 std::sprintf(buf.data(), "%llu+%llu", sizeBytes, extraBits);
             }
         } else {
             if (sep) {
-                std::sprintf(buf.data(), "%s",
-                             sepNumber(static_cast<long long>(sizeBytes), *sep).c_str());
+                const auto sepNum = sepNumber(static_cast<long long>(sizeBytes), *sep);
+
+                std::copy(sepNum.begin(), sepNum.end(), buf.begin());
             } else {
                 std::sprintf(buf.data(), "%llu", sizeBytes);
             }
@@ -323,14 +323,15 @@ std::pair<std::string, std::string> formatSize(const Size sizeBits,
 
         break;
 
-    case SizeFormatMode::BITS:
+    case LenFmtMode::BITS:
         unit = "b";
 
         if (sep) {
-            std::sprintf(buf.data(), "%s",
-                         sepNumber(static_cast<long long>(sizeBits), *sep).c_str());
+            const auto sepNum = sepNumber(static_cast<long long>(lenBits), *sep);
+
+            std::copy(sepNum.begin(), sepNum.end(), buf.begin());
         } else {
-            std::sprintf(buf.data(), "%llu", sizeBits);
+            std::sprintf(buf.data(), "%llu", lenBits);
         }
 
         break;
@@ -339,8 +340,7 @@ std::pair<std::string, std::string> formatSize(const Size sizeBits,
     return {buf.data(), unit};
 }
 
-std::pair<std::string, std::string> formatNs(long long ns,
-                                             const boost::optional<char>& sep)
+std::pair<std::string, std::string> formatNs(long long ns, const boost::optional<char>& sep)
 {
     constexpr auto nsInS = 1'000'000'000LL;
     const auto absNs = std::abs(ns);
@@ -360,34 +360,13 @@ std::pair<std::string, std::string> formatNs(long long ns,
     return {sStr, nsStr};
 }
 
-static std::string formatMetadataParseError(const std::string& path,
-                                            const yactfr::MetadataParseError& error)
-{
-    std::ostringstream ss;
-
-    for (auto it = std::rbegin(error.errorMessages());
-            it != std::rend(error.errorMessages()); ++it) {
-        const auto& msg = *it;
-
-        ss << path << ":" << msg.location().natLineNumber() <<
-              ":" << msg.location().natColNumber() <<
-              ": " << msg.message();
-
-        if (it < std::rend(error.errorMessages()) - 1) {
-            ss << std::endl;
-        }
-    }
-
-    return ss.str();
-}
-
 void printMetadataParseError(std::ostream& os, const std::string& path,
                              const yactfr::MetadataParseError& error)
 {
-    os << formatMetadataParseError(path, error);
+    os << internal::formatMetadataParseError(path, error);
 }
 
-std::string escapeString(const std::string& str)
+std::string escapeStr(const std::string& str)
 {
     std::string outStr;
 
@@ -447,55 +426,6 @@ std::string escapeString(const std::string& str)
     }
 
     return outStr;
-}
-
-static void maybeAppendPeriod(std::string& str)
-{
-    if (str.empty()) {
-        return;
-    }
-
-    if (str.back() != '.') {
-        str += '.';
-    }
-}
-
-boost::optional<std::string> tryFunc(const std::function<void ()>& func)
-{
-    std::ostringstream ss;
-
-    try {
-        func();
-    } catch (const MetadataError<yactfr::InvalidMetadataStream>& ex) {
-        ss << "Metadata error: `" << ex.path().string() <<
-              "`: invalid metadata stream: " << ex.what();
-    } catch (const MetadataError<yactfr::InvalidMetadata>& ex) {
-        ss << "Metadata error: `" << ex.path().string() <<
-              "`: invalid metadata: " << ex.what();
-    } catch (const MetadataError<yactfr::MetadataParseError>& ex) {
-        ss << formatMetadataParseError(ex.path().string(), ex.subError());
-    } catch (const CliError& ex) {
-        ss << "Command-line error: " << ex.what();
-    } catch (const bfs::filesystem_error& ex) {
-        ss << "File system error: " << ex.what();
-    } catch (const IOError& ex) {
-        ss << "I/O error: " << ex.what();
-    } catch (const CommandError& ex) {
-        ss << "Command error: " << ex.what();
-    } catch (const std::exception& ex) {
-        ss << ex.what();
-    } catch (...) {
-        ss << "Unknown exception";
-    }
-
-    auto str = ss.str();
-
-    if (str.empty()) {
-        return boost::none;
-    }
-
-    maybeAppendPeriod(str);
-    return str;
 }
 
 } // namespace utils

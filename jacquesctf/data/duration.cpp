@@ -5,17 +5,17 @@
  * prohibited. Proprietary and confidential.
  */
 
-#include "data/duration.hpp"
+#include "duration.hpp"
 #include "utils.hpp"
 
 namespace jacques {
 
-Duration::Duration(const unsigned long long ns) :
+Duration::Duration(const unsigned long long ns) noexcept :
     _ns {ns}
 {
 }
 
-Duration::Parts Duration::parts() const
+Duration::Parts Duration::parts() const noexcept
 {
     const auto nsPart = _ns % 1'000'000'000;
     const auto sDiff = (_ns - nsPart) / 1'000'000'000;
@@ -27,11 +27,9 @@ Duration::Parts Duration::parts() const
     return {hPart, mPart, sPart, nsPart};
 }
 
-void Duration::format(char * const buf, const Size bufSize) const
+// TODO: use `bufSize`
+void Duration::format(char * const buf, const Size) const
 {
-    // TODO: use bufSize
-    JACQUES_UNUSED(bufSize);
-
     auto bufAt = buf;
     const auto parts = this->parts();
 
@@ -39,28 +37,13 @@ void Duration::format(char * const buf, const Size bufSize) const
         bufAt += std::sprintf(bufAt, "%llu:", parts.hours);
     }
 
-    if (parts.minutes > 0 || parts.hours > 0) {
-        const char *fmt;
-
-        if (parts.hours > 0) {
-            fmt = "%02llu:";
-        } else {
-            fmt = "%llu:";
-        }
-
-        bufAt += std::sprintf(bufAt, fmt, parts.minutes);
+    if (parts.mins > 0 || parts.hours > 0) {
+        bufAt += std::sprintf(bufAt, (parts.hours > 0) ? "%02llu:" : "%llu:", parts.mins);
     }
 
-    if (parts.seconds > 0 || parts.minutes > 0 || parts.hours > 0) {
-        const char *fmt;
-
-        if (parts.minutes > 0 || parts.hours > 0) {
-            fmt = "%02llu";
-        } else {
-            fmt = "%llu";
-        }
-
-        bufAt += std::sprintf(bufAt, fmt, parts.seconds);
+    if (parts.secs > 0 || parts.mins > 0 || parts.hours > 0) {
+        bufAt += std::sprintf(bufAt, (parts.mins > 0 || parts.hours > 0) ? "%02llu" : "%llu",
+                              parts.secs);
     }
 
     std::sprintf(bufAt, ".%09llu", parts.ns);

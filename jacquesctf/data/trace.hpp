@@ -15,19 +15,19 @@
 
 #include "aliases.hpp"
 #include "utils.hpp"
-#include "data/data-stream-file.hpp"
-#include "data/metadata.hpp"
+#include "ds-file.hpp"
+#include "metadata.hpp"
 
 namespace jacques {
 
-class Trace :
+class Trace final :
     boost::noncopyable
 {
 public:
-    using DataStreamFiles = std::vector<std::unique_ptr<DataStreamFile>>;
+    using DsFiles = std::vector<std::unique_ptr<DsFile>>;
 
 public:
-    explicit Trace(const std::vector<boost::filesystem::path>& dataStreamFilePaths);
+    explicit Trace(const std::vector<boost::filesystem::path>& dsFilePaths);
 
 public:
     const Metadata& metadata() const noexcept
@@ -35,16 +35,16 @@ public:
         return *_metadata;
     }
 
-    const DataStreamFiles& dataStreamFiles() const noexcept
+    const DsFiles& dsFiles() const noexcept
     {
-        return _dataStreamFiles;
+        return _dsFiles;
     }
 
 private:
     void _createMetadata(const boost::filesystem::path& path);
 
 private:
-    DataStreamFiles _dataStreamFiles;
+    DsFiles _dsFiles;
     std::unique_ptr<Metadata> _metadata;
 };
 

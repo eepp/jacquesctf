@@ -21,68 +21,39 @@
 #include <boost/core/noncopyable.hpp>
 
 #include "aliases.hpp"
-#include "data/data-size.hpp"
+#include "data-len.hpp"
+#include "metadata-error.hpp"
 
 namespace jacques {
 
-template <typename SubErrorT>
-class MetadataError final :
-    public std::runtime_error
-{
-public:
-    explicit MetadataError(const boost::filesystem::path& path,
-                           const SubErrorT& subError) :
-        std::runtime_error {subError.what()},
-        _path {path},
-        _subError {subError}
-    {
-    }
-
-    const boost::filesystem::path& path() const noexcept
-    {
-        return _path;
-    }
-
-    const SubErrorT& subError() const noexcept
-    {
-        return _subError;
-    }
-
-private:
-    const boost::filesystem::path _path;
-    const SubErrorT _subError;
-};
-
-class Metadata :
+class Metadata final :
     boost::noncopyable
 {
 public:
-    struct DataTypePath
+    struct DtPath
     {
         yactfr::Scope scope;
         std::vector<std::string> path;
     };
 
-    using DataTypeParentMap = std::unordered_map<const yactfr::DataType *,
-                                                 const yactfr::DataType *>;
-    using DataTypeScopeMap = std::unordered_map<const yactfr::DataType *,
-                                                yactfr::Scope>;
-    using DataTypePathMap = std::unordered_map<const yactfr::DataType *,
-                                               DataTypePath>;
+    using DtParentMap = std::unordered_map<const yactfr::DataType *, const yactfr::DataType *>;
+
+    using DtScopeMap = std::unordered_map<const yactfr::DataType *, yactfr::Scope>;
+    using DtPathMap = std::unordered_map<const yactfr::DataType *, DtPath>;
 
 public:
-    explicit Metadata(const boost::filesystem::path& path);
-    const yactfr::DataType *dataTypeParent(const yactfr::DataType& dataType) const;
-    yactfr::Scope dataTypeScope(const yactfr::DataType& dataType) const;
-    const DataTypePath& dataTypePath(const yactfr::DataType& dataType) const;
+    explicit Metadata(boost::filesystem::path path);
+    const yactfr::DataType *dtParent(const yactfr::DataType& dt) const noexcept;
+    yactfr::Scope dtScope(const yactfr::DataType& dt) const noexcept;
+    const DtPath& dtPath(const yactfr::DataType& dt) const noexcept;
 
-    Size maxDataTypePathSize() const noexcept
+    Size maxDtPathSize() const noexcept
     {
-        return _maxDataTypePathSize;
+        return _maxDtPathSize;
     }
 
-    bool dataTypeIsScopeRoot(const yactfr::DataType& dataType) const;
-    DataSize fileSize() const noexcept;
+    bool dtIsScopeRoot(const yactfr::DataType& dt) const noexcept;
+    DataLen fileLen() const noexcept;
 
     const std::string& text() const noexcept
     {
@@ -94,9 +65,9 @@ public:
         return _path;
     }
 
-    const boost::optional<Size>& streamPacketCount() const noexcept
+    const boost::optional<Size>& streamPktCount() const noexcept
     {
-        return _stream.packetCount;
+        return _stream.pktCount;
     }
 
     const boost::optional<unsigned int>& streamMajorVersion() const noexcept
@@ -109,9 +80,9 @@ public:
         return _stream.minorVersion;
     }
 
-    const boost::optional<yactfr::ByteOrder>& streamByteOrder() const noexcept
+    const boost::optional<yactfr::ByteOrder>& streamBo() const noexcept
     {
-        return _stream.byteOrder;
+        return _stream.bo;
     }
 
     const boost::optional<boost::uuids::uuid>& streamUuid() const noexcept
@@ -131,7 +102,7 @@ public:
     }
 
 private:
-    void _setDataTypeParents();
+    void _setDtParents();
     void _setIsCorrelatable();
 
 private:
@@ -139,18 +110,18 @@ private:
     std::string _text;
 
     struct {
-        boost::optional<Size> packetCount;
+        boost::optional<Size> pktCount;
         boost::optional<unsigned int> majorVersion;
         boost::optional<unsigned int> minorVersion;
-        boost::optional<yactfr::ByteOrder> byteOrder;
+        boost::optional<yactfr::ByteOrder> bo;
         boost::optional<boost::uuids::uuid> uuid;
     } _stream;
 
     yactfr::TraceType::SP _traceType;
-    DataTypeParentMap _dataTypeParents;
-    DataTypeScopeMap _dataTypeScopes;
-    DataTypePathMap _dataTypePaths;
-    Size _maxDataTypePathSize = 0;
+    DtParentMap _dtParents;
+    DtScopeMap _dtScopes;
+    DtPathMap _dtPaths;
+    Size _maxDtPathSize = 0;
     bool _isCorrelatable = false;
 };
 

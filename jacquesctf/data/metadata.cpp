@@ -20,39 +20,37 @@
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 
-#include "data/metadata.hpp"
+#include "metadata.hpp"
 
 namespace jacques {
 
 namespace bfs = boost::filesystem;
 
-Metadata::Metadata(const bfs::path& path) :
-    _path {path}
+Metadata::Metadata(bfs::path path) :
+    _path {std::move(path)}
 {
     try {
-        std::ifstream fileStream {path.string().c_str(),
-                                  std::ios::in | std::ios::binary};
+        std::ifstream fileStream {path.string().c_str(), std::ios::in | std::ios::binary};
         auto stream = yactfr::createMetadataStream(fileStream);
 
         if (auto pStream = dynamic_cast<const yactfr::PacketizedMetadataStream *>(stream.get())) {
-            _stream.packetCount = pStream->packetCount();
+            _stream.pktCount = pStream->packetCount();
             _stream.majorVersion = pStream->majorVersion();
             _stream.minorVersion = pStream->minorVersion();
-            _stream.byteOrder = pStream->byteOrder();
+            _stream.bo = pStream->byteOrder();
             _stream.uuid = pStream->uuid();
         }
 
         _text = stream->text();
-        _traceType = yactfr::traceTypeFromMetadataText(std::begin(_text),
-                                                       std::end(_text));
-        this->_setDataTypeParents();
+        _traceType = yactfr::traceTypeFromMetadataText(_text.begin(), _text.end());
+        this->_setDtParents();
         this->_setIsCorrelatable();
-    } catch (const yactfr::InvalidMetadataStream& ex) {
-        throw MetadataError<yactfr::InvalidMetadataStream> {path, ex};
-    } catch (const yactfr::InvalidMetadata& ex) {
-        throw MetadataError<yactfr::InvalidMetadata> {path, ex};
-    } catch (const yactfr::MetadataParseError& ex) {
-        throw MetadataError<yactfr::MetadataParseError> {path, ex};
+    } catch (const yactfr::InvalidMetadataStream& exc) {
+        throw MetadataError<yactfr::InvalidMetadataStream> {path, exc};
+    } catch (const yactfr::InvalidMetadata& exc) {
+        throw MetadataError<yactfr::InvalidMetadata> {path, exc};
+    } catch (const yactfr::MetadataParseError& exc) {
+        throw MetadataError<yactfr::MetadataParseError> {path, exc};
     }
 }
 
@@ -62,8 +60,8 @@ void Metadata::_setIsCorrelatable()
         return;
     }
 
-    bool hasAbsolute = false;
-    bool hasNonAbsolute = false;
+    auto hasAbsolute = false;
+    auto hasNonAbsolute = false;
     const boost::uuids::uuid *uuid = nullptr;
 
     for (auto& clockType : _traceType->clockTypes()) {
@@ -95,12 +93,12 @@ void Metadata::_setIsCorrelatable()
     _isCorrelatable = true;
 }
 
-class SetDataTypeParentsPathsVisitor :
+class SetDtParentsPathsVisitor final :
     public yactfr::DataTypeVisitor
 {
 public:
-    explicit SetDataTypeParentsPathsVisitor(Metadata::DataTypeParentMap& dtParentMap,
-                                            Metadata::DataTypePathMap& dtPathMap) :
+    explicit SetDtParentsPathsVisitor(Metadata::DtParentMap& dtParentMap,
+                                      Metadata::DtPathMap& dtPathMap) noexcept :
         _dtParentMap {&dtParentMap},
         _dtPathMap {&dtPathMap}
     {
@@ -116,42 +114,42 @@ public:
         return _scope;
     }
 
-    void visit(const yactfr::SignedIntType& type) override
+    void visit(const yactfr::SignedIntType& dt) override
     {
-        this->_setParentAndPath(type);
+        this->_setParentAndPath(dt);
     }
 
-    void visit(const yactfr::UnsignedIntType& type) override
+    void visit(const yactfr::UnsignedIntType& dt) override
     {
-        this->_setParentAndPath(type);
+        this->_setParentAndPath(dt);
     }
 
-    void visit(const yactfr::FloatType& type) override
+    void visit(const yactfr::FloatType& dt) override
     {
-        this->_setParentAndPath(type);
+        this->_setParentAndPath(dt);
     }
 
-    void visit(const yactfr::SignedEnumType& type) override
+    void visit(const yactfr::SignedEnumType& dt) override
     {
-        this->_setParentAndPath(type);
+        this->_setParentAndPath(dt);
     }
 
-    void visit(const yactfr::UnsignedEnumType& type) override
+    void visit(const yactfr::UnsignedEnumType& dt) override
     {
-        this->_setParentAndPath(type);
+        this->_setParentAndPath(dt);
     }
 
-    void visit(const yactfr::StringType& type) override
+    void visit(const yactfr::StringType& dt) override
     {
-        this->_setParentAndPath(type);
+        this->_setParentAndPath(dt);
     }
 
-    void visit(const yactfr::StructType& type) override
+    void visit(const yactfr::StructType& dt) override
     {
-        this->_setParentAndPath(type);
-        _stack.push_back({&type, _curDtName});
+        this->_setParentAndPath(dt);
+        _stack.push_back({&dt, _curDtName});
 
-        for (auto& field : type) {
+        for (auto& field : dt) {
             _curDtName = &field->displayName();
             field->type().accept(*this);
             _curDtName = nullptr;
@@ -160,42 +158,42 @@ public:
         _stack.pop_back();
     }
 
-    void visit(const yactfr::StaticArrayType& type) override
+    void visit(const yactfr::StaticArrayType& dt) override
     {
-        this->_setParentAndPath(type);
-        _stack.push_back({&type, _curDtName});
+        this->_setParentAndPath(dt);
+        _stack.push_back({&dt, _curDtName});
         _curDtName = &_arrayElemStr;
-        type.elemType().accept(*this);
+        dt.elemType().accept(*this);
         _stack.pop_back();
         _curDtName = nullptr;
     }
 
-    void visit(const yactfr::StaticTextArrayType& type) override
+    void visit(const yactfr::StaticTextArrayType& dt) override
     {
-        this->visit(static_cast<const yactfr::StaticArrayType&>(type));
+        this->visit(static_cast<const yactfr::StaticArrayType&>(dt));
     }
 
-    void visit(const yactfr::DynamicArrayType& type) override
+    void visit(const yactfr::DynamicArrayType& dt) override
     {
-        this->_setParentAndPath(type);
-        _stack.push_back({&type, _curDtName});
+        this->_setParentAndPath(dt);
+        _stack.push_back({&dt, _curDtName});
         _curDtName = &_arrayElemStr;
-        type.elemType().accept(*this);
+        dt.elemType().accept(*this);
         _stack.pop_back();
         _curDtName = nullptr;
     }
 
-    void visit(const yactfr::DynamicTextArrayType& type) override
+    void visit(const yactfr::DynamicTextArrayType& dt) override
     {
-        this->visit(static_cast<const yactfr::DynamicArrayType&>(type));
+        this->visit(static_cast<const yactfr::DynamicArrayType&>(dt));
     }
 
-    void visit(const yactfr::VariantType& type) override
+    void visit(const yactfr::VariantType& dt) override
     {
-        this->_setParentAndPath(type);
-        _stack.push_back({&type, _curDtName});
+        this->_setParentAndPath(dt);
+        _stack.push_back({&dt, _curDtName});
 
-        for (auto& opt : type) {
+        for (auto& opt : dt) {
             _curDtName = &opt->displayName();
             opt->type().accept(*this);
             _curDtName = nullptr;
@@ -208,28 +206,28 @@ private:
     static const std::string _arrayElemStr;
 
 private:
-    void _setParentAndPath(const yactfr::DataType& dataType)
+    void _setParentAndPath(const yactfr::DataType& dt)
     {
-        this->_setParent(dataType);
-        this->_setPath(dataType);
+        this->_setParent(dt);
+        this->_setPath(dt);
     }
 
-    void _setParent(const yactfr::DataType& dataType)
+    void _setParent(const yactfr::DataType& dt)
     {
         if (_stack.empty()) {
             return;
         }
 
-        (*_dtParentMap)[&dataType] = _stack.back().parent;
+        (*_dtParentMap)[&dt] = _stack.back().parent;
     }
 
-    void _setPath(const yactfr::DataType& dataType)
+    void _setPath(const yactfr::DataType& dt)
     {
         if (_stack.empty()) {
             return;
         }
 
-        auto& mapEntry = (*_dtPathMap)[&dataType];
+        auto& mapEntry = (*_dtPathMap)[&dt];
 
         mapEntry.scope = _scope;
 
@@ -253,118 +251,102 @@ private:
 
 private:
     yactfr::Scope _scope;
-    Metadata::DataTypeParentMap * const _dtParentMap;
-    Metadata::DataTypePathMap * const _dtPathMap;
+    Metadata::DtParentMap * const _dtParentMap;
+    Metadata::DtPathMap * const _dtPathMap;
     std::vector<_StackEntry> _stack;
     const std::string *_curDtName = nullptr;
 };
 
-const std::string SetDataTypeParentsPathsVisitor::_arrayElemStr = "%";
+const std::string SetDtParentsPathsVisitor::_arrayElemStr = "%";
 
-static void setScopeDataTypeParents(SetDataTypeParentsPathsVisitor& visitor,
-                                    Metadata::DataTypeScopeMap& dataTypeScopes,
-                                    const yactfr::DataType *dataType)
+static void setScopeDtParents(SetDtParentsPathsVisitor& visitor, Metadata::DtScopeMap& dtScopes,
+                              const yactfr::DataType *dt)
 {
-    if (!dataType) {
+    if (!dt) {
         return;
     }
 
-    dataTypeScopes[dataType] = visitor.scope();
-    dataType->accept(visitor);
+    dtScopes[dt] = visitor.scope();
+    dt->accept(visitor);
 }
 
-void Metadata::_setDataTypeParents()
+void Metadata::_setDtParents()
 {
-    SetDataTypeParentsPathsVisitor visitor {_dataTypeParents,
-                                            _dataTypePaths};
+    SetDtParentsPathsVisitor visitor {_dtParents, _dtPaths};
 
     visitor.scope(yactfr::Scope::PACKET_HEADER);
-    setScopeDataTypeParents(visitor, _dataTypeScopes,
-                            _traceType->packetHeaderType());
+    setScopeDtParents(visitor, _dtScopes, _traceType->packetHeaderType());
 
     for (auto& dst : _traceType->dataStreamTypes()) {
         visitor.scope(yactfr::Scope::PACKET_CONTEXT);
-        setScopeDataTypeParents(visitor, _dataTypeScopes,
-                                dst->packetContextType());
+        setScopeDtParents(visitor, _dtScopes, dst->packetContextType());
         visitor.scope(yactfr::Scope::EVENT_RECORD_HEADER);
-        setScopeDataTypeParents(visitor, _dataTypeScopes,
-                                dst->eventRecordHeaderType());
+        setScopeDtParents(visitor, _dtScopes, dst->eventRecordHeaderType());
         visitor.scope(yactfr::Scope::EVENT_RECORD_FIRST_CONTEXT);
-        setScopeDataTypeParents(visitor, _dataTypeScopes,
-                                dst->eventRecordFirstContextType());
+        setScopeDtParents(visitor, _dtScopes, dst->eventRecordFirstContextType());
 
         for (auto& ert : dst->eventRecordTypes()) {
             visitor.scope(yactfr::Scope::EVENT_RECORD_SECOND_CONTEXT);
-            setScopeDataTypeParents(visitor, _dataTypeScopes,
-                                    ert->secondContextType());
+            setScopeDtParents(visitor, _dtScopes, ert->secondContextType());
             visitor.scope(yactfr::Scope::EVENT_RECORD_PAYLOAD);
-            setScopeDataTypeParents(visitor, _dataTypeScopes,
-                                    ert->payloadType());
+            setScopeDtParents(visitor, _dtScopes, ert->payloadType());
         }
     }
 
     const auto accFunc = [](const auto total, const auto& str) {
         return total + str.size();
     };
+
     const auto totalSizeFunc = [accFunc](const auto& dtPathMapPair) {
-        return std::accumulate(std::begin(dtPathMapPair.second.path),
-                               std::end(dtPathMapPair.second.path),
-                               0ULL, accFunc) +
-               dtPathMapPair.second.path.size() + 4;
+        return std::accumulate(dtPathMapPair.second.path.begin(), dtPathMapPair.second.path.end(),
+                               0ULL, accFunc) + dtPathMapPair.second.path.size() + 4;
     };
-    const auto maxDtPathIt = std::max_element(std::begin(_dataTypePaths),
-                                              std::end(_dataTypePaths),
+
+    const auto maxDtPathIt = std::max_element(_dtPaths.begin(), _dtPaths.end(),
                                               [totalSizeFunc](const auto& pairA,
                                                               const auto& pairB) {
         return totalSizeFunc(pairA) < totalSizeFunc(pairB);
     });
 
-    _maxDataTypePathSize = maxDtPathIt == std::end(_dataTypePaths) ?
-                                          0 : totalSizeFunc(*maxDtPathIt);
+    _maxDtPathSize = maxDtPathIt == _dtPaths.end() ? 0 : totalSizeFunc(*maxDtPathIt);
 }
 
-const Metadata::DataTypePath& Metadata::dataTypePath(const yactfr::DataType& dataType) const
+const Metadata::DtPath& Metadata::dtPath(const yactfr::DataType& dt) const noexcept
 {
-    return _dataTypePaths.find(&dataType)->second;
+    return _dtPaths.find(&dt)->second;
 }
 
-const yactfr::DataType *Metadata::dataTypeParent(const yactfr::DataType& dataType) const
+const yactfr::DataType *Metadata::dtParent(const yactfr::DataType& dt) const noexcept
 {
-    auto it = _dataTypeParents.find(&dataType);
+    const auto it = _dtParents.find(&dt);
 
-    if (it == std::end(_dataTypeParents)) {
+    if (it == _dtParents.end()) {
         return nullptr;
     }
 
     return it->second;
 }
 
-yactfr::Scope Metadata::dataTypeScope(const yactfr::DataType& dataType) const
+yactfr::Scope Metadata::dtScope(const yactfr::DataType& dt) const noexcept
 {
-    const yactfr::DataType *curDataType = &dataType;
+    auto curDt = &dt;
 
-    while (!this->dataTypeIsScopeRoot(*curDataType)) {
-        curDataType = this->dataTypeParent(*curDataType);
-        assert(curDataType);
+    while (!this->dtIsScopeRoot(*curDt)) {
+        curDt = this->dtParent(*curDt);
+        assert(curDt);
     }
 
-    return _dataTypeScopes.find(curDataType)->second;
+    return _dtScopes.find(curDt)->second;
 }
 
-bool Metadata::dataTypeIsScopeRoot(const yactfr::DataType& dataType) const
+bool Metadata::dtIsScopeRoot(const yactfr::DataType& dt) const noexcept
 {
-    auto it = _dataTypeScopes.find(&dataType);
-
-    if (it == std::end(_dataTypeScopes)) {
-        return false;
-    }
-
-    return true;
+    return _dtScopes.find(&dt) != _dtScopes.end();
 }
 
-DataSize Metadata::fileSize() const noexcept
+DataLen Metadata::fileLen() const noexcept
 {
-    return DataSize::fromBytes(bfs::file_size(_path));
+    return DataLen::fromBytes(bfs::file_size(_path));
 }
 
 } // namespace jacques

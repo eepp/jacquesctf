@@ -12,90 +12,92 @@
 #include <boost/optional.hpp>
 
 #include "aliases.hpp"
-#include "data/data-size.hpp"
-#include "bit-location.hpp"
-#include "byte-order.hpp"
+#include "data-len.hpp"
+#include "bit-loc.hpp"
+#include "bo.hpp"
 
 namespace jacques {
 
 /*
  * A bit array contains actual data from the packet. Its lifetime
  * depends on the lifetime of the packet which created it
- * (see Packet::bitArray()).
+ * (see Pkt::bitArray()).
  *
- * You can use bitLocation() to get the bit location of a bit at a given
+ * You can use bitLoc() to get the bit location of a bit at a given
  * index within the bit array. You can use operator[]() to get the value
  * of a specific bit from its location or index.
  */
-class BitArray
+class BitArray final
 {
 public:
-    explicit BitArray(const std::uint8_t *buf,
-                      const Index offsetInFirstByteBits, const DataSize& size,
-                      const OptByteOrder& byteOrder = boost::none) :
+    explicit BitArray(const std::uint8_t * const buf, const Index offsetInFirstByteBits,
+                      const DataLen& len, const OptBo& bo = boost::none) noexcept :
         _buf {buf},
         _offsetInFirstByteBits {offsetInFirstByteBits},
-        _size {size},
-        _byteOrder {byteOrder}
+        _len {len},
+        _bo {bo}
     {
     }
 
-    BitArray(const BitArray&) = default;
-    BitArray& operator=(const BitArray&) = default;
+    BitArray(const BitArray&) noexcept = default;
+    BitArray& operator=(const BitArray&) noexcept = default;
 
-    // the offset, within the first byte, of this bit array's beginning
+    /*
+     * The offset, within the first byte, of the beginning of this bit
+     * array.
+     */
     Index offsetInFirstByteBits() const noexcept
     {
         return _offsetInFirstByteBits;
     }
 
-    const DataSize& size() const noexcept
+    const DataLen& len() const noexcept
     {
-        return _size;
+        return _len;
     }
 
-    // this bit array's byte buffer
+    // byte buffer of this bit array
     const std::uint8_t *buf() const noexcept
     {
         return _buf;
     }
 
-    const OptByteOrder& byteOrder() const noexcept
+    const OptBo& bo() const noexcept
     {
-        return _byteOrder;
+        return _bo;
     }
 
-    BitLocation bitLocation(Index index) const noexcept
+    BitLoc bitLoc(Index index) const noexcept
     {
         index += this->offsetInFirstByteBits();
 
         const auto byteIndex = index / 8;
         Index bitIndexInByte;
 
-        if (!_byteOrder || _byteOrder == ByteOrder::BIG) {
+        if (!_bo || _bo == Bo::BIG) {
             bitIndexInByte = 7 - (index - byteIndex * 8);
         } else {
             bitIndexInByte = index - byteIndex * 8;
         }
 
-        return BitLocation {byteIndex, bitIndexInByte};
+        return BitLoc {byteIndex, bitIndexInByte};
     }
 
-    std::uint8_t operator[](const BitLocation& bitLoc) const noexcept
+    std::uint8_t operator[](const BitLoc& bitLoc) const noexcept
     {
         return (_buf[bitLoc.byteIndex()] >> bitLoc.bitIndexInByte()) & 1;
     }
 
     std::uint8_t operator[](const Index index) const noexcept
     {
-        return (*this)[this->bitLocation(index)];
+        return (*this)[this->bitLoc(index)];
     }
 
 private:
     const std::uint8_t *_buf = nullptr;
     Index _offsetInFirstByteBits = 0;
-    DataSize _size = 0;
-    OptByteOrder _byteOrder;
+    DataLen _len = 0;
+    OptBo _bo;
 };
 
 } // namespace jacques

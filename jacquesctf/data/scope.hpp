@@ -12,12 +12,12 @@
 #include <yactfr/metadata/fwd.hpp>
 #include <boost/core/noncopyable.hpp>
 
-#include "data/event-record.hpp"
-#include "packet-segment.hpp"
+#include "er.hpp"
+#include "pkt-segment.hpp"
 
 namespace jacques {
 
-class Scope :
+class Scope final :
     boost::noncopyable
 {
 public:
@@ -25,24 +25,23 @@ public:
     using SPC = std::shared_ptr<const Scope>;
 
 public:
-    explicit Scope(yactfr::Scope scope);
-    explicit Scope(EventRecord::SP eventRecord, yactfr::Scope scope);
-    explicit Scope(EventRecord::SP eventRecord, yactfr::Scope scope,
-                   const PacketSegment& segment);
+    explicit Scope(yactfr::Scope scope) noexcept;
 
-    const EventRecord *eventRecord() const noexcept
+    explicit Scope(Er::SP er, yactfr::Scope scope, const PktSegment& segment = PktSegment {}) noexcept;
+
+    const Er *er() const noexcept
     {
-        return _eventRecord.get();
+        return _er.get();
     }
 
-    EventRecord::SP eventRecordPtr()
+    Er::SP erPtr()
     {
-        return _eventRecord;
+        return _er;
     }
 
-    EventRecord::SPC eventRecordPtr() const
+    Er::SPC erPtr() const
     {
-        return _eventRecord;
+        return _er;
     }
 
     yactfr::Scope scope() const noexcept
@@ -50,36 +49,36 @@ public:
         return _scope;
     }
 
-    const yactfr::DataType *dataType() const noexcept
+    const yactfr::DataType *dt() const noexcept
     {
-        return _dataType;
+        return _dt;
     }
 
-    void dataType(const yactfr::DataType& dataType) noexcept
+    void dt(const yactfr::DataType& dt) noexcept
     {
-        _dataType = &dataType;
+        _dt = &dt;
     }
 
-    const PacketSegment& segment() const noexcept
-    {
-        return _segment;
-    }
-
-    PacketSegment& segment() noexcept
+    const PktSegment& segment() const noexcept
     {
         return _segment;
     }
 
-    void segment(const PacketSegment& segment) noexcept
+    PktSegment& segment() noexcept
+    {
+        return _segment;
+    }
+
+    void segment(const PktSegment& segment) noexcept
     {
         _segment = segment;
     }
 
 private:
-    EventRecord::SP _eventRecord;
+    Er::SP _er;
     const yactfr::Scope _scope;
-    const yactfr::DataType *_dataType = nullptr;
-    PacketSegment _segment;
+    const yactfr::DataType *_dt = nullptr;
+    PktSegment _segment;
 };
 
 } // namespace jacques

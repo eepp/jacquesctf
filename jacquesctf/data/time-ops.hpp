@@ -15,27 +15,31 @@
 #include <yactfr/element.hpp>
 #include <yactfr/metadata/clock-type.hpp>
 
-#include "data/timestamp.hpp"
-#include "data/duration.hpp"
+#include "ts.hpp"
+#include "duration.hpp"
 
 namespace jacques {
+namespace internal {
 
-static inline
-Duration operator-(const Timestamp& left, const Timestamp& right)
+static inline unsigned long long diff(const Ts& left, const Ts& right) noexcept
 {
     assert(left >= right);
 
-    unsigned long long diff;
-
     if (left.nsFromOrigin() >= 0 && right.nsFromOrigin() < 0) {
-        diff = static_cast<unsigned long long>(left.nsFromOrigin()) +
+        return static_cast<unsigned long long>(left.nsFromOrigin()) +
                static_cast<unsigned long long>(-right.nsFromOrigin());
     } else {
-        diff = static_cast<unsigned long long>(left.nsFromOrigin() -
-                                               right.nsFromOrigin());
+        return static_cast<unsigned long long>(left.nsFromOrigin() - right.nsFromOrigin());
     }
+}
 
-    return Duration {diff};
+} // namespace internal
+
+static inline Duration operator-(const Ts& left, const Ts& right)
+{
+    assert(left >= right);
+
+    return Duration {internal::diff(left, right)};
 }
 
 } // namespace jacques
