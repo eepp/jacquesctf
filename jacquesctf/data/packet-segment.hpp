@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_PACKET_SEGMENT_HPP
-#define _JACQUES_PACKET_SEGMENT_HPP
+#ifndef _JACQUES_DATA_PACKET_SEGMENT_HPP
+#define _JACQUES_DATA_PACKET_SEGMENT_HPP
 
 #include <cstdint>
 #include <boost/operators.hpp>
@@ -104,4 +104,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_PACKET_SEGMENT_HPP
+#endif // _JACQUES_DATA_PACKET_SEGMENT_HPP

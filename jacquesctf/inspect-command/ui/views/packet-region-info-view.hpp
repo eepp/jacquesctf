@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_PACKET_REGION_INFO_VIEW_HPP
-#define _JACQUES_PACKET_REGION_INFO_VIEW_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_VIEWS_PACKET_REGION_INFO_VIEW_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_VIEWS_PACKET_REGION_INFO_VIEW_HPP
 
 #include <unordered_map>
 
@@ -35,4 +35,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_PACKET_REGION_INFO_VIEW_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_VIEWS_PACKET_REGION_INFO_VIEW_HPP

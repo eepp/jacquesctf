@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_PACKET_HPP
-#define _JACQUES_PACKET_HPP
+#ifndef _JACQUES_DATA_PACKET_HPP
+#define _JACQUES_DATA_PACKET_HPP
 
 #include <algorithm>
 #include <memory>
@@ -647,4 +647,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_PACKET_HPP
+#endif // _JACQUES_DATA_PACKET_HPP

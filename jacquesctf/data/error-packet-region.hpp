@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_ERROR_PACKET_REGION_HPP
-#define _JACQUES_ERROR_PACKET_REGION_HPP
+#ifndef _JACQUES_DATA_ERROR_PACKET_REGION_HPP
+#define _JACQUES_DATA_ERROR_PACKET_REGION_HPP
 
 #include <memory>
 
@@ -26,4 +26,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_ERROR_PACKET_REGION_HPP
+#endif // _JACQUES_DATA_ERROR_PACKET_REGION_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_INSPECT_SCREEN_HPP
-#define _JACQUES_INSPECT_SCREEN_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_SCREENS_INSPECT_SCREEN_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_SCREENS_INSPECT_SCREEN_HPP
 
 #include <tuple>
 #include <list>
@@ -110,4 +110,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_INSPECT_SCREEN_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_SCREENS_INSPECT_SCREEN_HPP

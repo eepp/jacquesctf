@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_DATA_STREAM_FILE_TABLE_VIEW_HPP
-#define _JACQUES_DATA_STREAM_FILE_TABLE_VIEW_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_VIEWS_DATA_STREAM_FILE_TABLE_VIEW_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_VIEWS_DATA_STREAM_FILE_TABLE_VIEW_HPP
 
 #include "state.hpp"
 #include "data-size.hpp"
@@ -46,4 +46,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_DATA_STREAM_FILE_TABLE_VIEW_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_VIEWS_DATA_STREAM_FILE_TABLE_VIEW_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_INSPECT_COMMAND_HPP
-#define _JACQUES_INSPECT_COMMAND_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_INSPECT_COMMAND_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_INSPECT_COMMAND_HPP
 
 #include <stdexcept>
 
@@ -32,4 +32,4 @@ void inspectCommand(const InspectConfig& cfg);
 
 } // namespace jacques
 
-#endif // _JACQUES_INSPECT_COMMAND_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_INSPECT_COMMAND_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_TIME_OPS_HPP
-#define _JACQUES_TIME_OPS_HPP
+#ifndef _JACQUES_DATA_TIME_OPS_HPP
+#define _JACQUES_DATA_TIME_OPS_HPP
 
 #include <cassert>
 #include <cstdint>
@@ -40,4 +40,4 @@ Duration operator-(const Timestamp& left, const Timestamp& right)
 
 } // namespace jacques
 
-#endif // _JACQUES_TIME_OPS_HPP
+#endif // _JACQUES_DATA_TIME_OPS_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_METADATA_HPP
-#define _JACQUES_METADATA_HPP
+#ifndef _JACQUES_DATA_METADATA_HPP
+#define _JACQUES_DATA_METADATA_HPP
 
 #include <memory>
 #include <unordered_map>
@@ -156,4 +156,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_METADATA_HPP
+#endif // _JACQUES_DATA_METADATA_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_MEMORY_MAPPED_FILE_HPP
-#define _JACQUES_MEMORY_MAPPED_FILE_HPP
+#ifndef _JACQUES_DATA_MEMORY_MAPPED_FILE_HPP
+#define _JACQUES_DATA_MEMORY_MAPPED_FILE_HPP
 
 #include <string>
 #include <cstdlib>
@@ -83,4 +83,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_MEMORY_MAPPED_FILE_HPP
+#endif // _JACQUES_DATA_MEMORY_MAPPED_FILE_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_SCREEN_HPP
-#define _JACQUES_SCREEN_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_SCREENS_SCREEN_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_SCREENS_SCREEN_HPP
 
 #include <memory>
 
@@ -170,4 +170,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_SCREEN_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_SCREENS_SCREEN_HPP

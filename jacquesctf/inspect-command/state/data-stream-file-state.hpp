@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_DATA_STREAM_FILE_STATE_HPP
-#define _JACQUES_DATA_STREAM_FILE_STATE_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_DATA_STREAM_FILE_STATE_HPP
+#define _JACQUES_INSPECT_COMMAND_DATA_STREAM_FILE_STATE_HPP
 
 #include <vector>
 #include <boost/filesystem.hpp>
@@ -160,4 +160,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_DATA_STREAM_FILE_STATE_HPP
+#endif // _JACQUES_INSPECT_COMMAND_DATA_STREAM_FILE_STATE_HPP

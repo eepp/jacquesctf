@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_STATUS_VIEW_HPP
-#define _JACQUES_STATUS_VIEW_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_VIEWS_STATUS_VIEW_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_VIEWS_STATUS_VIEW_HPP
 
 #include <unordered_map>
 
@@ -50,4 +50,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_STATUS_VIEW_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_VIEWS_STATUS_VIEW_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_PADDING_PACKET_REGION_HPP
-#define _JACQUES_PADDING_PACKET_REGION_HPP
+#ifndef _JACQUES_DATA_PADDING_PACKET_REGION_HPP
+#define _JACQUES_DATA_PADDING_PACKET_REGION_HPP
 
 #include "packet-region.hpp"
 
@@ -24,4 +24,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_PADDING_PACKET_REGION_HPP
+#endif // _JACQUES_DATA_PADDING_PACKET_REGION_HPP

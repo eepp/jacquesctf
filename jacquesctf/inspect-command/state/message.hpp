@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_MESSAGE_HPP
-#define _JACQUES_MESSAGE_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_MESSAGE_HPP
+#define _JACQUES_INSPECT_COMMAND_MESSAGE_HPP
 
 namespace jacques {
 
@@ -18,4 +18,4 @@ enum class Message {
 
 } // namespace jacques
 
-#endif // _JACQUES_MESSAGE_HPP
+#endif // _JACQUES_INSPECT_COMMAND_MESSAGE_HPP

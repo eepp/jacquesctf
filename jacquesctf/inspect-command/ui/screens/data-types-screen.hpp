@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_DATA_TYPES_SCREEN_HPP
-#define _JACQUES_DATA_TYPES_SCREEN_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_SCREENS_DATA_TYPES_SCREEN_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_SCREENS_DATA_TYPES_SCREEN_HPP
 
 #include <functional>
 #include <tuple>
@@ -51,4 +51,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_DATA_TYPES_SCREEN_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_SCREENS_DATA_TYPES_SCREEN_HPP

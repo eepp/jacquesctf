@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_SIMPLE_MESSAGE_VIEW_HPP
-#define _JACQUES_SIMPLE_MESSAGE_VIEW_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_VIEWS_SIMPLE_MESSAGE_VIEW_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_VIEWS_SIMPLE_MESSAGE_VIEW_HPP
 
 #include "view.hpp"
 
@@ -29,4 +29,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_SIMPLE_MESSAGE_VIEW_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_VIEWS_SIMPLE_MESSAGE_VIEW_HPP

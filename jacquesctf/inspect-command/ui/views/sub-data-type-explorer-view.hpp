@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_SUB_DATA_TYPE_EXPLORER_VIEW_HPP
-#define _JACQUES_SUB_DATA_TYPE_EXPLORER_VIEW_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_VIEWS_SUB_DATA_TYPE_EXPLORER_VIEW_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_VIEWS_SUB_DATA_TYPE_EXPLORER_VIEW_HPP
 
 #include "data-type-explorer-view.hpp"
 
@@ -29,4 +29,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_SUB_DATA_TYPE_EXPLORER_VIEW_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_VIEWS_SUB_DATA_TYPE_EXPLORER_VIEW_HPP

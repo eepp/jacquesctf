@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_BIT_ARRAY_HPP
-#define _JACQUES_BIT_ARRAY_HPP
+#ifndef _JACQUES_DATA_BIT_ARRAY_HPP
+#define _JACQUES_DATA_BIT_ARRAY_HPP
 
 #include <cstdint>
 #include <boost/optional.hpp>
@@ -100,4 +100,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_BIT_ARRAY_HPP
+#endif // _JACQUES_DATA_BIT_ARRAY_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_TABLE_VIEW_HPP
-#define _JACQUES_TABLE_VIEW_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_VIEWS_TABLE_VIEW_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_VIEWS_TABLE_VIEW_HPP
 
 #include <string>
 #include <vector>
@@ -496,4 +496,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_TABLE_VIEW_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_VIEWS_TABLE_VIEW_HPP

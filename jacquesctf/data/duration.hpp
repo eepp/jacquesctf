@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_DURATION_HPP
-#define _JACQUES_DURATION_HPP
+#ifndef _JACQUES_DATA_DURATION_HPP
+#define _JACQUES_DATA_DURATION_HPP
 
 #include <cstdint>
 #include <ostream>
@@ -71,4 +71,4 @@ std::ostream& operator<<(std::ostream& stream, const Duration& duration)
 
 } // namespace jacques
 
-#endif // _JACQUES_DURATION_HPP
+#endif // _JACQUES_DATA_DURATION_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_CONTENT_PACKET_REGION_HPP
-#define _JACQUES_CONTENT_PACKET_REGION_HPP
+#ifndef _JACQUES_DATA_CONTENT_PACKET_REGION_HPP
+#define _JACQUES_DATA_CONTENT_PACKET_REGION_HPP
 
 #include <memory>
 #include <cstdint>
@@ -53,4 +53,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_CONTENT_PACKET_REGION_HPP
+#endif // _JACQUES_DATA_CONTENT_PACKET_REGION_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_DATA_SIZE_HPP
-#define _JACQUES_DATA_SIZE_HPP
+#ifndef _JACQUES_DATA_DATA_SIZE_HPP
+#define _JACQUES_DATA_DATA_SIZE_HPP
 
 #include <utility>
 #include <tuple>
@@ -190,4 +190,4 @@ DataSize operator""_GiB(const Size gib) noexcept
 
 } // namespace jacques
 
-#endif // _JACQUES_DATA_SIZE_HPP
+#endif // _JACQUES_DATA_DATA_SIZE_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_POINT_HPP
-#define _JACQUES_POINT_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_POINT_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_POINT_HPP
 
 #include "aliases.hpp"
 
@@ -19,4 +19,4 @@ struct Point
 
 } // namespace jacques
 
-#endif // _JACQUES_POINT_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_POINT_HPP

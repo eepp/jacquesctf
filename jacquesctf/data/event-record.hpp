@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_EVENT_RECORD_HPP
-#define _JACQUES_EVENT_RECORD_HPP
+#ifndef _JACQUES_DATA_EVENT_RECORD_HPP
+#define _JACQUES_DATA_EVENT_RECORD_HPP
 
 #include <memory>
 #include <boost/optional.hpp>
@@ -107,4 +107,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_EVENT_RECORD_HPP
+#endif // _JACQUES_DATA_EVENT_RECORD_HPP

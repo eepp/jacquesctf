@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_SCOPE_HPP
-#define _JACQUES_SCOPE_HPP
+#ifndef _JACQUES_DATA_SCOPE_HPP
+#define _JACQUES_DATA_SCOPE_HPP
 
 #include <memory>
 #include <yactfr/metadata/fwd.hpp>
@@ -84,4 +84,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_SCOPE_HPP
+#endif // _JACQUES_DATA_SCOPE_HPP

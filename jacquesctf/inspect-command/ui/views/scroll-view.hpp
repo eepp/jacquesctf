@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_SCROLL_VIEW_HPP
-#define _JACQUES_SCROLL_VIEW_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_VIEWS_SCROLL_VIEW_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_VIEWS_SCROLL_VIEW_HPP
 
 #include <boost/variant.hpp>
 
@@ -67,4 +67,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_SCROLL_VIEW_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_VIEWS_SCROLL_VIEW_HPP

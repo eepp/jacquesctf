@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_DATA_TYPE_DETAILS_HPP
-#define _JACQUES_DATA_TYPE_DETAILS_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_VIEWS_DATA_TYPE_DETAILS_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_VIEWS_DATA_TYPE_DETAILS_HPP
 
 #include <string>
 #include <yactfr/metadata/fwd.hpp>
@@ -69,4 +69,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_DATA_TYPE_DETAILS_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_VIEWS_DATA_TYPE_DETAILS_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_PACKET_REGION_VISITOR_HPP
-#define _JACQUES_PACKET_REGION_VISITOR_HPP
+#ifndef _JACQUES_DATA_PACKET_REGION_VISITOR_HPP
+#define _JACQUES_DATA_PACKET_REGION_VISITOR_HPP
 
 namespace jacques {
 
@@ -25,4 +25,4 @@ public:
 
 } // namespace jacques
 
-#endif // _JACQUES_PACKET_REGION_VISITOR_HPP
+#endif // _JACQUES_DATA_PACKET_REGION_VISITOR_HPP

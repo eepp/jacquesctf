@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_RECTANGLE_HPP
-#define _JACQUES_RECTANGLE_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_RECTANGLE_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_RECTANGLE_HPP
 
 #include "aliases.hpp"
 #include "point.hpp"
@@ -21,4 +21,4 @@ struct Rectangle
 
 } // namespace jacques
 
-#endif // _JACQUES_RECTANGLE_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_RECTANGLE_HPP

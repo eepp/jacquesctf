@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_EVENT_RECORD_TABLE_VIEW_HPP
-#define _JACQUES_EVENT_RECORD_TABLE_VIEW_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_VIEWS_EVENT_RECORD_TABLE_VIEW_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_VIEWS_EVENT_RECORD_TABLE_VIEW_HPP
 
 #include "table-view.hpp"
 #include "state.hpp"
@@ -43,4 +43,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_EVENT_RECORD_TABLE_VIEW_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_VIEWS_EVENT_RECORD_TABLE_VIEW_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_BIT_LOCATION_HPP
-#define _JACQUES_BIT_LOCATION_HPP
+#ifndef _JACQUES_DATA_BIT_LOCATION_HPP
+#define _JACQUES_DATA_BIT_LOCATION_HPP
 
 #include <cstdint>
 
@@ -67,4 +67,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_BIT_LOCATION_HPP
+#endif // _JACQUES_DATA_BIT_LOCATION_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_STYLIST_HPP
-#define _JACQUES_STYLIST_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_STYLIST_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_STYLIST_HPP
 
 #include <curses.h>
 #include <boost/core/noncopyable.hpp>
@@ -203,4 +203,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_STYLIST_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_STYLIST_HPP

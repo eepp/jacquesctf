@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_TRACE_HPP
-#define _JACQUES_TRACE_HPP
+#ifndef _JACQUES_DATA_TRACE_HPP
+#define _JACQUES_DATA_TRACE_HPP
 
 #include <memory>
 #include <vector>
@@ -50,4 +50,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_TRACE_HPP
+#endif // _JACQUES_DATA_TRACE_HPP

@@ -12,6 +12,7 @@
 #include <sstream>
 #include <boost/filesystem.hpp>
 #include <boost/utility.hpp>
+#include <algorithm>
 
 #include "utils.hpp"
 #include "metadata.hpp"

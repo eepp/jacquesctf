@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_ABSTRACT_DATA_TYPE_DETAILS_HPP
-#define _JACQUES_ABSTRACT_DATA_TYPE_DETAILS_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_VIEWS_ABSTRACT_DATA_TYPE_DETAILS_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_VIEWS_ABSTRACT_DATA_TYPE_DETAILS_HPP
 
 #include <memory>
 #include <cstring>
@@ -65,4 +65,4 @@ void dataTypeDetailsFromDataType(const yactfr::DataType& dataType,
 
 } // namespace jacques
 
-#endif // _JACQUES_ABSTRACT_DATA_TYPE_DETAILS_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_VIEWS_ABSTRACT_DATA_TYPE_DETAILS_HPP

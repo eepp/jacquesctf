@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_SEARCH_CONTROLLER_HPP
-#define _JACQUES_SEARCH_CONTROLLER_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_SEARCH_CONTROLLER_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_SEARCH_CONTROLLER_HPP
 
 #include <memory>
 #include <atomic>
@@ -72,4 +72,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_SEARCH_CONTROLLER_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_SEARCH_CONTROLLER_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_CYCLE_WHEEL_HPP
-#define _JACQUES_CYCLE_WHEEL_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_CYCLE_WHEEL_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_CYCLE_WHEEL_HPP
 
 #include <vector>
 #include <initializer_list>
@@ -61,4 +61,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_CYCLE_WHEEL_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_CYCLE_WHEEL_HPP

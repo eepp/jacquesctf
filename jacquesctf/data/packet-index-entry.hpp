@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_PACKET_INDEX_ENTRY_HPP
-#define _JACQUES_PACKET_INDEX_ENTRY_HPP
+#ifndef _JACQUES_DATA_PACKET_INDEX_ENTRY_HPP
+#define _JACQUES_DATA_PACKET_INDEX_ENTRY_HPP
 
 #include <boost/optional.hpp>
 #include <boost/operators.hpp>
@@ -181,4 +181,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_PACKET_INDEX_ENTRY_HPP
+#endif // _JACQUES_DATA_PACKET_INDEX_ENTRY_HPP

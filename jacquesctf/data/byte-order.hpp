@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_BYTE_ORDER_HPP
-#define _JACQUES_BYTE_ORDER_HPP
+#ifndef _JACQUES_DATA_BYTE_ORDER_HPP
+#define _JACQUES_DATA_BYTE_ORDER_HPP
 
 #include <boost/optional.hpp>
 
@@ -22,4 +22,4 @@ using OptByteOrder = boost::optional<ByteOrder>;
 
 } // namespace jacques
 
-#endif // _JACQUES_BYTE_ORDER_HPP
+#endif // _JACQUES_DATA_BYTE_ORDER_HPP

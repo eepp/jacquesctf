@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_PACKET_CHECKPOINTS_HPP
-#define _JACQUES_PACKET_CHECKPOINTS_HPP
+#ifndef _JACQUES_DATA_PACKET_CHECKPOINTS_HPP
+#define _JACQUES_DATA_PACKET_CHECKPOINTS_HPP
 
 #include <cassert>
 #include <algorithm>
@@ -385,4 +385,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_PACKET_CHECKPOINTS_HPP
+#endif // _JACQUES_DATA_PACKET_CHECKPOINTS_HPP

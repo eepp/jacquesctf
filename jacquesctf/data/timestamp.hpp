@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_TIMESTAMP_HPP
-#define _JACQUES_TIMESTAMP_HPP
+#ifndef _JACQUES_DATA_TIMESTAMP_HPP
+#define _JACQUES_DATA_TIMESTAMP_HPP
 
 #include <cstdint>
 #include <ostream>
@@ -149,4 +149,4 @@ std::ostream& operator<<(std::ostream& stream, const Timestamp& ts)
 
 } // namespace jacques
 
-#endif // _JACQUES_TIMESTAMP_HPP
+#endif // _JACQUES_DATA_TIMESTAMP_HPP

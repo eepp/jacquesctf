@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_DATA_STREAM_FILE_HPP
-#define _JACQUES_DATA_STREAM_FILE_HPP
+#ifndef _JACQUES_DATA_DATA_STREAM_FILE_HPP
+#define _JACQUES_DATA_DATA_STREAM_FILE_HPP
 
 #include <cassert>
 #include <vector>
@@ -190,4 +190,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_DATA_STREAM_FILE_HPP
+#endif // _JACQUES_DATA_DATA_STREAM_FILE_HPP

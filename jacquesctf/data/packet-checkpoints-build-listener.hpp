@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_PACKET_CHECKPOINTS_BUILD_LISTENER_HPP
-#define _JACQUES_PACKET_CHECKPOINTS_BUILD_LISTENER_HPP
+#ifndef _JACQUES_DATA_PACKET_CHECKPOINTS_BUILD_LISTENER_HPP
+#define _JACQUES_DATA_PACKET_CHECKPOINTS_BUILD_LISTENER_HPP
 
 #include <memory>
 #include <yactfr/metadata/fwd.hpp>
@@ -47,4 +47,4 @@ protected:
 
 } // namespace jacques
 
-#endif // _JACQUES_PACKET_CHECKPOINTS_BUILD_LISTENER_HPP
+#endif // _JACQUES_DATA_PACKET_CHECKPOINTS_BUILD_LISTENER_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_DATA_STREAM_FILES_SCREEN_HPP
-#define _JACQUES_DATA_STREAM_FILES_SCREEN_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_UI_SCREENS_DATA_STREAM_FILES_SCREEN_HPP
+#define _JACQUES_INSPECT_COMMAND_UI_SCREENS_DATA_STREAM_FILES_SCREEN_HPP
 
 #include "aliases.hpp"
 #include "stylist.hpp"
@@ -40,4 +40,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_DATA_STREAM_FILES_SCREEN_HPP
+#endif // _JACQUES_INSPECT_COMMAND_UI_SCREENS_DATA_STREAM_FILES_SCREEN_HPP

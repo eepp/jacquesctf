@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_PACKET_STATE_HPP
-#define _JACQUES_PACKET_STATE_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_PACKET_STATE_HPP
+#define _JACQUES_INSPECT_COMMAND_PACKET_STATE_HPP
 
 #include <vector>
 #include <boost/filesystem.hpp>
@@ -90,4 +90,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_PACKET_STATE_HPP
+#endif // _JACQUES_INSPECT_COMMAND_PACKET_STATE_HPP

@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_SEARCH_PARSER_HPP
-#define _JACQUES_SEARCH_PARSER_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_SEARCH_PARSER_HPP
+#define _JACQUES_INSPECT_COMMAND_SEARCH_PARSER_HPP
 
 #include <memory>
 #include <string>
@@ -171,4 +171,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_SEARCH_PARSER_HPP
+#endif // _JACQUES_INSPECT_COMMAND_SEARCH_PARSER_HPP
