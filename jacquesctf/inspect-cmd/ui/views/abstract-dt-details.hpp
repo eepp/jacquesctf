@@ -16,6 +16,7 @@
 #include <yactfr/metadata/fwd.hpp>
 
 #include "aliases.hpp"
+#include "utils.hpp"
 #include "../stylist.hpp"
 
 namespace jacques {
@@ -56,6 +57,30 @@ private:
     const Size _indentWidth;
     const Stylist * const _theStylist;
 };
+
+template <typename IntRangeSetT>
+std::string intRangeSetStr(const IntRangeSetT& ranges)
+{
+    std::vector<std::string> rangeStrs;
+
+    std::transform(ranges.begin(), ranges.end(), std::back_inserter(rangeStrs),
+                   [](auto& range) {
+        std::ostringstream ss;
+
+        ss << '[';
+
+        if (range.lower() == range.upper()) {
+            ss << range.lower();
+        } else {
+            ss << range.lower() << ", " << range.upper();
+        }
+
+        ss << ']';
+        return ss.str();
+    });
+
+    return utils::csvListStr(rangeStrs, false, nullptr);
+}
 
 void dtDetailsFromDt(const yactfr::DataType& dt, const Stylist& stylist,
                      std::vector<AbstractDtDetails::UP>& vec);

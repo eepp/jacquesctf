@@ -18,7 +18,7 @@ PktIndexEntry::PktIndexEntry(const Index indexInDsFile, const Index offsetInDsFi
                              const yactfr::DataStreamType *dst, boost::optional<Index> dsId,
                              boost::optional<Ts> beginTs, boost::optional<Ts> endTs,
                              boost::optional<Index> seqNum,
-                             boost::optional<Size> discardedErCounter, const bool isInvalid) noexcept :
+                             boost::optional<Size> discErCounterSnap, const bool isInvalid) noexcept :
     _indexInDsFile {indexInDsFile},
     _offsetInDsFileBytes {offsetInDsFileBytes},
     _pktCtxOffsetInPktBits {std::move(pktCtxOffsetInPktBits)},
@@ -32,7 +32,7 @@ PktIndexEntry::PktIndexEntry(const Index indexInDsFile, const Index offsetInDsFi
     _beginTs {std::move(beginTs)},
     _endTs {std::move(endTs)},
     _seqNum {std::move(seqNum)},
-    _discardedErCounter {std::move(discardedErCounter)},
+    _discErCounterSnap {std::move(discErCounterSnap)},
     _isInvalid {isInvalid}
 {
 }

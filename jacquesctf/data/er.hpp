@@ -12,13 +12,13 @@
 #include <boost/optional.hpp>
 #include <boost/operators.hpp>
 #include <boost/core/noncopyable.hpp>
-#include <yactfr/metadata/fwd.hpp>
-#include <yactfr/element-sequence-iterator.hpp>
+#include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
 #include "pkt-segment.hpp"
 #include "ts.hpp"
 #include "metadata.hpp"
+#include "pkt-index-entry.hpp"
 
 namespace jacques {
 
@@ -32,13 +32,13 @@ public:
 
 public:
     static SP createFromElemSeqIt(yactfr::ElementSequenceIterator& it, const Metadata& metadata,
-                                  Index pktOffsetInDsFileBytes, Index indexInPkt);
+                                  const PktIndexEntry& pktIndexEntry, Index indexInPkt);
 
 public:
     explicit Er(Index indexInPkt) noexcept;
 
     explicit Er(const yactfr::EventRecordType& type, const Index indexInPkt,
-                boost::optional<Ts> firstTs, const PktSegment& segment) noexcept;
+                boost::optional<Ts> ts, const PktSegment& segment) noexcept;
 
     const yactfr::EventRecordType *type() const noexcept
     {
@@ -75,14 +75,14 @@ public:
         _segment = segment;
     }
 
-    const boost::optional<Ts>& firstTs() const noexcept
+    const boost::optional<Ts>& ts() const noexcept
     {
-        return _firstTs;
+        return _ts;
     }
 
-    void firstTs(const Ts& firstTs) noexcept
+    void ts(const Ts& ts) noexcept
     {
-        _firstTs = firstTs;
+        _ts = ts;
     }
 
     bool operator<(const Er& other) const noexcept
@@ -98,7 +98,7 @@ public:
 private:
     const yactfr::EventRecordType *_type = nullptr;
     Index _indexInPkt;
-    boost::optional<Ts> _firstTs;
+    boost::optional<Ts> _ts;
     PktSegment _segment;
 };
 

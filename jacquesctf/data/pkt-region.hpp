@@ -39,7 +39,7 @@ namespace jacques {
  * bit array (of which the lifetime depends on the packet object which
  * created it).
  *
- * Packet regions are comparable as long as they are known to be part of
+ * Packet regions are comparable as long as they're known to be part of
  * the same packet: only their segments are compared.
  */
 class PktRegion :
@@ -81,12 +81,12 @@ public:
         return _seg;
     }
 
-    const boost::optional<Index>& previousRegionOffsetInPktBits() const noexcept
+    const boost::optional<Index>& prevRegionOffsetInPktBits() const noexcept
     {
         return _prevRegionOffsetInPktBits;
     }
 
-    void previousRegionOffsetInPktBits(const Index offsetInPktBits) noexcept
+    void prevRegionOffsetInPktBits(const Index offsetInPktBits) noexcept
     {
         _prevRegionOffsetInPktBits = offsetInPktBits;
     }

@@ -26,7 +26,7 @@ public:
     {
     }
 
-    boost::filesystem::path path() const noexcept
+    const boost::filesystem::path& path() const noexcept
     {
         return _path;
     }

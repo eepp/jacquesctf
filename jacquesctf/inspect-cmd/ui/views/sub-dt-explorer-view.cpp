@@ -7,8 +7,7 @@
 
 #include <cassert>
 #include <sstream>
-#include <yactfr/metadata/event-record-type.hpp>
-#include <yactfr/metadata/data-stream-type.hpp>
+#include <yactfr/yactfr.hpp>
 #include <boost/variant.hpp>
 
 #include "sub-dt-explorer-view.hpp"

@@ -10,7 +10,7 @@
 
 #include <boost/optional.hpp>
 #include <boost/operators.hpp>
-#include <yactfr/metadata/fwd.hpp>
+#include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
 #include "ts.hpp"
@@ -30,7 +30,7 @@ public:
                            const DataLen& effectiveTotalLen, const DataLen& effectiveContentLen,
                            const yactfr::DataStreamType *dst, boost::optional<Index> dsId,
                            boost::optional<Ts> beginTs, boost::optional<Ts> endTs,
-                           boost::optional<Index> seqNum, boost::optional<Size> discardedErCounter,
+                           boost::optional<Index> seqNum, boost::optional<Size> discErCounterSnap,
                            bool isInvalid) noexcept;
 
     PktIndexEntry(const PktIndexEntry&) = default;
@@ -105,9 +105,9 @@ public:
         return _dsId;
     }
 
-    const boost::optional<Size>& discardedErCounter() const noexcept
+    const boost::optional<Size>& discErCounterSnap() const noexcept
     {
-        return _discardedErCounter;
+        return _discErCounterSnap;
     }
 
     Index indexInDsFile() const noexcept
@@ -170,7 +170,7 @@ private:
     const boost::optional<Ts> _beginTs;
     const boost::optional<Ts> _endTs;
     const boost::optional<Index> _seqNum;
-    const boost::optional<Size> _discardedErCounter;
+    const boost::optional<Size> _discErCounterSnap;
     bool _isInvalid;
     boost::optional<Size> _erCount;
 };

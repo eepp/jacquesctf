@@ -11,7 +11,7 @@
 #include <vector>
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
-#include <yactfr/memory-mapped-file-view-factory.hpp>
+#include <yactfr/yactfr.hpp>
 #include <boost/core/noncopyable.hpp>
 
 #include "aliases.hpp"
@@ -130,6 +130,11 @@ public:
     const Metadata& metadata() const noexcept
     {
         return _dsFile->metadata();
+    }
+
+    const Trace& trace() const noexcept
+    {
+        return _dsFile->trace();
     }
 
     State& state() noexcept

@@ -10,18 +10,15 @@
 
 #include <memory>
 #include <unordered_map>
-#include <yactfr/metadata/metadata-stream.hpp>
-#include <yactfr/metadata/fwd.hpp>
-#include <yactfr/metadata/trace-type.hpp>
-#include <yactfr/metadata/invalid-metadata.hpp>
-#include <yactfr/metadata/invalid-metadata-stream.hpp>
-#include <yactfr/metadata/metadata-parse-error.hpp>
+#include <yactfr/yactfr.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 #include <boost/core/noncopyable.hpp>
 
 #include "aliases.hpp"
+#include "bo.hpp"
 #include "data-len.hpp"
+#include "dt-path.hpp"
 #include "metadata-error.hpp"
 
 namespace jacques {
@@ -30,26 +27,20 @@ class Metadata final :
     boost::noncopyable
 {
 public:
-    struct DtPath
-    {
-        yactfr::Scope scope;
-        std::vector<std::string> path;
-    };
-
     using DtParentMap = std::unordered_map<const yactfr::DataType *, const yactfr::DataType *>;
-
     using DtScopeMap = std::unordered_map<const yactfr::DataType *, yactfr::Scope>;
     using DtPathMap = std::unordered_map<const yactfr::DataType *, DtPath>;
 
 public:
-    explicit Metadata(boost::filesystem::path path);
+    explicit Metadata(boost::filesystem::path path, yactfr::TraceType::UP traceType,
+                      std::unique_ptr<const yactfr::MetadataStream> stream);
     const yactfr::DataType *dtParent(const yactfr::DataType& dt) const noexcept;
     yactfr::Scope dtScope(const yactfr::DataType& dt) const noexcept;
     const DtPath& dtPath(const yactfr::DataType& dt) const noexcept;
 
-    Size maxDtPathSize() const noexcept
+    const DtPathMap& dtPaths() const noexcept
     {
-        return _maxDtPathSize;
+        return _dtPaths;
     }
 
     bool dtIsScopeRoot(const yactfr::DataType& dt) const noexcept;
@@ -57,7 +48,7 @@ public:
 
     const std::string& text() const noexcept
     {
-        return _text;
+        return _stream->text();
     }
 
     const boost::filesystem::path& path() const noexcept
@@ -65,34 +56,14 @@ public:
         return _path;
     }
 
-    const boost::optional<Size>& streamPktCount() const noexcept
+    const yactfr::TraceType& traceType() const noexcept
     {
-        return _stream.pktCount;
+        return *_traceType;
     }
 
-    const boost::optional<unsigned int>& streamMajorVersion() const noexcept
+    const yactfr::MetadataStream& stream() const noexcept
     {
-        return _stream.majorVersion;
-    }
-
-    const boost::optional<unsigned int>& streamMinorVersion() const noexcept
-    {
-        return _stream.minorVersion;
-    }
-
-    const boost::optional<yactfr::ByteOrder>& streamBo() const noexcept
-    {
-        return _stream.bo;
-    }
-
-    const boost::optional<boost::uuids::uuid>& streamUuid() const noexcept
-    {
-        return _stream.uuid;
-    }
-
-    yactfr::TraceType::SP traceType() const noexcept
-    {
-        return _traceType;
+        return *_stream;
     }
 
     // true if all clock types are absolute or have the same UUID
@@ -107,23 +78,15 @@ private:
 
 private:
     const boost::filesystem::path _path;
-    std::string _text;
-
-    struct {
-        boost::optional<Size> pktCount;
-        boost::optional<unsigned int> majorVersion;
-        boost::optional<unsigned int> minorVersion;
-        boost::optional<yactfr::ByteOrder> bo;
-        boost::optional<boost::uuids::uuid> uuid;
-    } _stream;
-
-    yactfr::TraceType::SP _traceType;
+    yactfr::TraceType::UP _traceType;
+    std::unique_ptr<const yactfr::MetadataStream> _stream;
     DtParentMap _dtParents;
     DtScopeMap _dtScopes;
     DtPathMap _dtPaths;
-    Size _maxDtPathSize = 0;
     bool _isCorrelatable = false;
 };
+
+const yactfr::DataLocation *dtDataLoc(const yactfr::DataType& dt) noexcept;
 
 } // namespace jacques
 

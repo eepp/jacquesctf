@@ -5,18 +5,17 @@
  * prohibited. Proprietary and confidential.
  */
 
-#include <yactfr/metadata/event-record-type.hpp>
-#include <yactfr/decoding-errors.hpp>
+#include <yactfr/yactfr.hpp>
 
 #include "er.hpp"
 
 namespace jacques {
 
 Er::Er(const yactfr::EventRecordType& type, const Index indexInPkt,
-       boost::optional<Ts> firstTs, const PktSegment& segment) noexcept :
+       boost::optional<Ts> ts, const PktSegment& segment) noexcept :
     _type {&type},
     _indexInPkt {indexInPkt},
-    _firstTs {std::move(firstTs)},
+    _ts {std::move(ts)},
     _segment {segment}
 {
 }
@@ -27,10 +26,11 @@ Er::Er(Index indexInPkt) noexcept :
 }
 
 Er::SP Er::createFromElemSeqIt(yactfr::ElementSequenceIterator& it, const Metadata& metadata,
-                               const Index pktOffsetInDsFileBytes, const Index indexInPkt)
+                               const PktIndexEntry& pktIndexEntry, const Index indexInPkt)
 {
-    const auto pktOffsetInDsFileBits = pktOffsetInDsFileBytes * 8;
+    const auto pktOffsetInDsFileBits = pktIndexEntry.offsetInDsFileBytes() * 8;
     Er::SP er;
+    boost::optional<Ts> curTs;
 
     try {
         while (true) {
@@ -41,23 +41,31 @@ Er::SP Er::createFromElemSeqIt(yactfr::ElementSequenceIterator& it, const Metada
                 er->segment().offsetInPktBits(it.offset() - pktOffsetInDsFileBits);
                 break;
 
-            case yactfr::Element::Kind::EVENT_RECORD_TYPE:
+            case yactfr::Element::Kind::EVENT_RECORD_INFO:
             {
-                auto& elem = static_cast<const yactfr::EventRecordTypeElement&>(*it);
+                auto& elem = it->asEventRecordInfoElement();
 
-                er->type(elem.eventRecordType());
+                if (elem.type()) {
+                    er->type(*elem.type());
+                }
+
+                if (curTs && metadata.isCorrelatable()) {
+                    er->ts(*curTs);
+                }
+
                 break;
             }
 
-            case yactfr::Element::Kind::CLOCK_VALUE:
+            case yactfr::Element::Kind::DEFAULT_CLOCK_VALUE:
             {
-                if (er->firstTs() || !metadata.isCorrelatable()) {
-                    break;
+                if (metadata.isCorrelatable()) {
+                    auto& elem = it->asDefaultClockValueElement();
+
+                    assert(pktIndexEntry.dst());
+                    assert(pktIndexEntry.dst()->defaultClockType());
+                    curTs = Ts {elem.cycles(), *pktIndexEntry.dst()->defaultClockType()};
                 }
 
-                auto& elem = static_cast<const yactfr::ClockValueElement&>(*it);
-
-                er->firstTs(Ts {elem});
                 break;
             }
 

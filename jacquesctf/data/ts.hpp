@@ -12,8 +12,7 @@
 #include <ostream>
 #include <string>
 #include <boost/operators.hpp>
-#include <yactfr/element.hpp>
-#include <yactfr/metadata/clock-type.hpp>
+#include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
 #include "duration.hpp"
@@ -45,8 +44,6 @@ class Ts final :
 public:
     explicit Ts() noexcept = default;
     explicit Ts(unsigned long long cycles, const yactfr::ClockType& clkType) noexcept;
-    explicit Ts(const yactfr::ClockValueElement& elem) noexcept;
-    explicit Ts(const yactfr::PacketEndClockValueElement& elem) noexcept;
 
     explicit Ts(unsigned long long cycles, unsigned long long freq, long long offsetSecs,
                 unsigned long long offsetCycles) noexcept;

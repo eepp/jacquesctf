@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <cinttypes>
 #include <limits>
+#include <array>
 #include <time.h>
 
 #include "ts.hpp"
@@ -78,17 +79,7 @@ Ts::Ts(const unsigned long long cycles, const unsigned long long freq, long long
 }
 
 Ts::Ts(const unsigned long long cycles, const yactfr::ClockType& clkType) noexcept :
-    Ts {cycles, clkType.freq(), clkType.offset().seconds(), clkType.offset().cycles()}
-{
-}
-
-Ts::Ts(const yactfr::ClockValueElement& elem) noexcept :
-    Ts {elem.cycles(), elem.clockType()}
-{
-}
-
-Ts::Ts(const yactfr::PacketEndClockValueElement& elem) noexcept :
-    Ts {elem.cycles(), elem.clockType()}
+    Ts {cycles, clkType.frequency(), clkType.offset().seconds(), clkType.offset().cycles()}
 {
 }
 

@@ -62,7 +62,7 @@ void ErTableView::_setColumnDescrs()
         TableViewColumnDescr {"Size", 14},
         TableViewColumnDescr {"ERT name", 8},
         TableViewColumnDescr {"ERT ID", 8},
-        TableViewColumnDescr {"Timestamp: first", 29},
+        TableViewColumnDescr {"Timestamp", 29},
         TableViewColumnDescr {"Duration since last ER", 23},
     };
 
@@ -136,9 +136,9 @@ void ErTableView::_drawRow(const Index index)
     }
 
     if (_row.size() >= 6) {
-        if (er.firstTs()) {
+        if (er.ts()) {
             _row[5]->na(false);
-            static_cast<TsTableViewCell&>(*_row[5]).ts(*er.firstTs());
+            static_cast<TsTableViewCell&>(*_row[5]).ts(*er.ts());
         } else {
             _row[5]->na(true);
         }
@@ -147,17 +147,17 @@ void ErTableView::_drawRow(const Index index)
     if (_row.size() >= 7) {
         auto& cell = static_cast<DurationTableViewCell&>(*_row[6]);
 
-        if (index == 0 || !er.firstTs()) {
+        if (index == 0 || !er.ts()) {
             cell.na(true);
         } else {
-            const auto curTs = *er.firstTs();
+            const auto curTs = *er.ts();
             auto& prevEventRecord = _state->activePktState().pkt().erAtIndexInPkt(index - 1);
 
-            if (!prevEventRecord.firstTs()) {
+            if (!prevEventRecord.ts()) {
                 cell.na(true);
             } else {
                 cell.na(false);
-                cell.beginTs(*prevEventRecord.firstTs());
+                cell.beginTs(*prevEventRecord.ts());
                 cell.endTs(curTs);
             }
         }

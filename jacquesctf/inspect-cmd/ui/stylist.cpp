@@ -48,6 +48,7 @@ Stylist::Stylist()
     this->_registerStyle(_StyleId::PKT_INDEX_BUILD_PROGRESS_VIEW_PATH, COLOR_BLUE, false, -1);
     this->_registerStyle(_StyleId::DETAILS_VIEW_TYPE_INFO, COLOR_MAGENTA, true, -1);
     this->_registerStyle(_StyleId::DETAILS_VIEW_DT_NAME, COLOR_WHITE, false, COLOR_BLUE);
+    this->_registerStyle(_StyleId::DETAILS_VIEW_DT_EXTRA, COLOR_WHITE, false, COLOR_GREEN);
     this->_registerStyle(_StyleId::DETAILS_VIEW_ENUM_TYPE_MEMBER_NAME, COLOR_YELLOW, false, -1);
     this->_registerStyle(_StyleId::DETAILS_VIEW_ENUM_TYPE_MEMBER_RANGE, COLOR_CYAN, false, -1);
     this->_registerStyle(_StyleId::DETAILS_VIEW_PROP_KEY, COLOR_GREEN, false, -1);
@@ -331,13 +332,18 @@ void Stylist::detailsViewDtName(WINDOW * const window) const
     this->_applyStyle(window, _StyleId::DETAILS_VIEW_DT_NAME, A_BOLD);
 }
 
-void Stylist::detailsViewEnumTypeMemberName(WINDOW * const window) const
+void Stylist::detailsViewDtExtra(WINDOW * const window) const
+{
+    this->_applyStyle(window, _StyleId::DETAILS_VIEW_DT_EXTRA, A_BOLD);
+}
+
+void Stylist::detailsViewEnumTypeMappingName(WINDOW * const window) const
 {
     this->_applyStyle(window,
                       _StyleId::DETAILS_VIEW_ENUM_TYPE_MEMBER_NAME);
 }
 
-void Stylist::detailsViewEnumTypeMemberRange(WINDOW * const window) const
+void Stylist::detailsViewIntRanges(WINDOW * const window) const
 {
     this->_applyStyle(window, _StyleId::DETAILS_VIEW_ENUM_TYPE_MEMBER_RANGE);
 }

@@ -34,14 +34,14 @@ void PktTableView::_setColumnDescrs()
         TableViewColumnDescr {"Offset", 16},
         TableViewColumnDescr {"Total length", 16},
         TableViewColumnDescr {"Content length", 16},
-        TableViewColumnDescr {"Ts: beginning", 29},
-        TableViewColumnDescr {"Ts: end", 29},
+        TableViewColumnDescr {"Timestamp: beginning", 29},
+        TableViewColumnDescr {"Timestamp: end", 29},
         TableViewColumnDescr {"Duration", 23},
         TableViewColumnDescr {"Event records", 13},
         TableViewColumnDescr {"DST ID", 6},
         TableViewColumnDescr {"DS ID", 5},
         TableViewColumnDescr {"Seq num", 8},
-        TableViewColumnDescr {"Discard ER", 10},
+        TableViewColumnDescr {"Disc ER", 10},
     };
 
     const auto accOp = [](const auto sz, const auto& descr) {
@@ -248,13 +248,13 @@ void PktTableView::_drawRow(const Index index)
     if (_row.size() >= at + 1) {
         _row[at]->style(TableViewCell::Style::NORMAL);
 
-        if (entry.discardedErCounter()) {
+        if (entry.discErCounterSnap()) {
             _row[at]->na(false);
-            static_cast<UIntTableViewCell&>(*_row[at]).val(*entry.discardedErCounter());
+            static_cast<UIntTableViewCell&>(*_row[at]).val(*entry.discErCounterSnap());
 
-            if (prevEntry && prevEntry->discardedErCounter()) {
-                const auto diff = *entry.discardedErCounter() -
-                                  *prevEntry->discardedErCounter();
+            if (prevEntry && prevEntry->discErCounterSnap()) {
+                const auto diff = *entry.discErCounterSnap() -
+                                  *prevEntry->discErCounterSnap();
 
                 if (diff != 0) {
                     _row[at]->style(TableViewCell::Style::WARNING);

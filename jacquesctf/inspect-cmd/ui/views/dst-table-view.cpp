@@ -1,4 +1,4 @@
-#/*
+/*
  * Copyright (C) 2018 Philippe Proulx <eepp.ca> - All Rights Reserved
  *
  * Unauthorized copying of this file, via any medium, is strictly
@@ -49,15 +49,15 @@ void DstTableView::_buildRows(const State& state)
 {
     for (auto& dsFileState : state.dsFileStates()) {
         auto& metadata = dsFileState->metadata();
-        auto traceType = metadata.traceType();
+        auto& traceType = metadata.traceType();
 
-        if (_rows.find(traceType.get()) != _rows.end()) {
+        if (_rows.find(&traceType) != _rows.end()) {
             continue;
         }
 
-        auto& dstVec = _rows[traceType.get()];
+        auto& dstVec = _rows[&traceType];
 
-        for (auto& dst : *traceType) {
+        for (auto& dst : traceType) {
             dstVec.push_back(dst.get());
         }
     }

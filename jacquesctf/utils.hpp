@@ -12,12 +12,11 @@
 #include <iostream>
 #include <utility>
 #include <sstream>
+#include <iterator>
 #include <boost/filesystem.hpp>
 #include <boost/utility.hpp>
 #include <boost/optional.hpp>
-#include <yactfr/metadata/metadata-parse-error.hpp>
-#include <yactfr/metadata/invalid-metadata.hpp>
-#include <yactfr/metadata/invalid-metadata-stream.hpp>
+#include <yactfr/yactfr.hpp>
 
 #include "data/metadata-error.hpp"
 #include "io-error.hpp"
@@ -59,6 +58,11 @@ bool globMatch(const std::string& pattern, const std::string& candidate);
 std::string wrapText(const std::string& text, Size lineLen);
 
 /*
+ * Does pretty much what the fold(1) command does.
+ */
+std::vector<std::string> wrapTextLines(const std::string& text, Size lineLen);
+
+/*
  * Escapes a string, replacing special characters with typical escape
  * sequences.
  */
@@ -73,6 +77,18 @@ std::string escapeStr(const std::string& str);
  */
 std::string sepNumber(long long val, char sep = ' ');
 std::string sepNumber(unsigned long long val, char sep = ' ');
+
+/*
+ * Returns whether or not the path `path` identifies a hidden
+ * file/directory.
+ */
+bool isHiddenFile(const boost::filesystem::path& path);
+
+/*
+ * Returns whether or not the path `path` looks like a CTF data stream
+ * file path, only considering the path itself.
+ */
+bool looksLikeDsFilePath(const boost::filesystem::path& path);
 
 /*
  * Used as such:
@@ -103,8 +119,8 @@ std::pair<std::string, std::string> formatLen(Size lenBits,
 std::pair<std::string, std::string> formatNs(long long ns,
                                              const boost::optional<char>& sep = boost::none);
 
-void printMetadataParseError(std::ostream& os, const std::string& path,
-                             const yactfr::MetadataParseError& error);
+void printTextParseError(std::ostream& os, const std::string& path,
+                         const yactfr::TextParseError& error);
 
 namespace internal {
 
@@ -119,19 +135,19 @@ static inline void maybeAppendPeriod(std::string& str)
     }
 }
 
-static inline std::string formatMetadataParseError(const std::string& path,
-                                                   const yactfr::MetadataParseError& error)
+static inline std::string formatTextParseError(const std::string& path,
+                                               const yactfr::TextParseError& error)
 {
     std::ostringstream ss;
 
-    for (auto it = error.errorMessages().rbegin(); it != error.errorMessages().rend(); ++it) {
+    for (auto it = error.messages().rbegin(); it != error.messages().rend(); ++it) {
         auto& msg = *it;
 
-        ss << path << ":" << msg.location().natLineNumber() <<
-              ":" << msg.location().natColNumber() <<
-              ": " << msg.message();
+        ss << path << ":" << msg.location().naturalLineNumber() <<
+              ":" << msg.location().naturalColumnNumber() << " [" <<
+              msg.location().offset() << "]: " << msg.message();
 
-        if (it < error.errorMessages().rend() - 1) {
+        if (it < error.messages().rend() - 1) {
             ss << std::endl;
         }
     }
@@ -151,11 +167,8 @@ boost::optional<std::string> tryFunc(FuncT&& func)
     } catch (const MetadataError<yactfr::InvalidMetadataStream>& exc) {
         ss << "Metadata error: `" << exc.path().string() <<
               "`: invalid metadata stream: " << exc.what();
-    } catch (const MetadataError<yactfr::InvalidMetadata>& exc) {
-        ss << "Metadata error: `" << exc.path().string() <<
-              "`: invalid metadata: " << exc.what();
-    } catch (const MetadataError<yactfr::MetadataParseError>& exc) {
-        ss << internal::formatMetadataParseError(exc.path().string(), exc.subError());
+    } catch (const MetadataError<yactfr::TextParseError>& exc) {
+        ss << internal::formatTextParseError(exc.path().string(), exc.subError());
     } catch (const CliError& exc) {
         ss << "Command-line error: " << exc.what();
     } catch (const boost::filesystem::filesystem_error& exc) {
@@ -178,6 +191,53 @@ boost::optional<std::string> tryFunc(FuncT&& func)
 
     internal::maybeAppendPeriod(str);
     return str;
+}
+
+template <typename ContainerT>
+std::string csvListStr(const ContainerT& container, const bool withBackticks = true,
+                       const char * const lastWord = "and")
+{
+    if (container.empty()) {
+        return "";
+    }
+
+    const auto fmtStr = [withBackticks](const auto& str) {
+        if (withBackticks) {
+            return std::string {'`'} + str + '`';
+        }
+
+        return str;
+    };
+
+    if (container.size() == 1) {
+        return fmtStr(*container.begin());
+    }
+
+    if (container.size() == 2 && lastWord) {
+        std::ostringstream ss;
+
+        ss << fmtStr(*container.begin());
+        ss << ' ' << lastWord << ' ';
+        ss << fmtStr(*std::next(container.begin()));
+        return ss.str();
+    }
+
+    std::ostringstream ss;
+    const auto penultimateIt = std::prev(container.end());
+
+    for (auto it = container.begin(); it < container.end(); ++it) {
+        if (it == penultimateIt && lastWord) {
+            ss << lastWord << ' ';
+        }
+
+        ss << fmtStr(*it);
+
+        if (it != penultimateIt) {
+            ss << ", ";
+        }
+    }
+
+    return ss.str();
 }
 
 } // namespace utils

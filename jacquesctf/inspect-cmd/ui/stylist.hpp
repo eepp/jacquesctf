@@ -76,8 +76,9 @@ public:
     void pktIndexBuildProgressViewBar(const View& view, bool on) const;
     void detailsViewTypeInfo(WINDOW *window) const;
     void detailsViewDtName(WINDOW *window) const;
-    void detailsViewEnumTypeMemberName(WINDOW *window) const;
-    void detailsViewEnumTypeMemberRange(WINDOW *window) const;
+    void detailsViewDtExtra(WINDOW *window) const;
+    void detailsViewEnumTypeMappingName(WINDOW *window) const;
+    void detailsViewIntRanges(WINDOW *window) const;
     void detailsViewPropKey(WINDOW *window) const;
     void detailsViewPropVal(WINDOW *window) const;
     void traceInfoViewPropKey(const View& view) const;
@@ -144,6 +145,7 @@ private:
         PKT_INDEX_BUILD_PROGRESS_VIEW_PATH,
         DETAILS_VIEW_TYPE_INFO,
         DETAILS_VIEW_DT_NAME,
+        DETAILS_VIEW_DT_EXTRA,
         DETAILS_VIEW_ENUM_TYPE_MEMBER_NAME,
         DETAILS_VIEW_ENUM_TYPE_MEMBER_RANGE,
         DETAILS_VIEW_PROP_KEY,

@@ -7,8 +7,7 @@
 
 #include <cassert>
 #include <sstream>
-#include <yactfr/metadata/event-record-type.hpp>
-#include <yactfr/metadata/data-stream-type.hpp>
+#include <yactfr/yactfr.hpp>
 #include <boost/variant.hpp>
 
 #include "abstract-dt-details.hpp"
@@ -53,9 +52,9 @@ void DtExplorerView::dst(const yactfr::DataStreamType& dst, const bool showErts)
             _rows.push_back(_EmptyRow {});
         }
 
-        if (dst.eventRecordFirstContextType()) {
-            _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EVENT_RECORD_FIRST_CONTEXT});
-            this->_appendDetailsRow(*dst.eventRecordFirstContextType(), _details.ertFirstCtx);
+        if (dst.eventRecordCommonContextType()) {
+            _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EVENT_RECORD_COMMON_CONTEXT});
+            this->_appendDetailsRow(*dst.eventRecordCommonContextType(), _details.ertFirstCtx);
             _rows.push_back(_EmptyRow {});
         }
     }
@@ -99,15 +98,15 @@ void DtExplorerView::ert(const yactfr::EventRecordType& ert)
         _rows.push_back(_EmptyRow {});
     }
 
-    if (dst.eventRecordFirstContextType()) {
-        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EVENT_RECORD_FIRST_CONTEXT});
-        this->_appendDetailsRow(*dst.eventRecordFirstContextType(), _details.ertFirstCtx);
+    if (dst.eventRecordCommonContextType()) {
+        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EVENT_RECORD_COMMON_CONTEXT});
+        this->_appendDetailsRow(*dst.eventRecordCommonContextType(), _details.ertFirstCtx);
         _rows.push_back(_EmptyRow {});
     }
 
-    if (ert.secondContextType()) {
-        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EVENT_RECORD_SECOND_CONTEXT});
-        this->_appendDetailsRow(*ert.secondContextType(), _details.ertSecondCtx);
+    if (ert.specificContextType()) {
+        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EVENT_RECORD_SPECIFIC_CONTEXT});
+        this->_appendDetailsRow(*ert.specificContextType(), _details.ertSecondCtx);
         _rows.push_back(_EmptyRow {});
     }
 
@@ -170,12 +169,12 @@ void DtExplorerView::singleDt(const yactfr::DataType& dt, const yactfr::Scope sc
         title += "event record header";
         break;
 
-    case yactfr::Scope::EVENT_RECORD_FIRST_CONTEXT:
-        title += "event record first context";
+    case yactfr::Scope::EVENT_RECORD_COMMON_CONTEXT:
+        title += "event record common context";
         break;
 
-    case yactfr::Scope::EVENT_RECORD_SECOND_CONTEXT:
-        title += "event record second context";
+    case yactfr::Scope::EVENT_RECORD_SPECIFIC_CONTEXT:
+        title += "event record specific context";
         break;
 
     case yactfr::Scope::EVENT_RECORD_PAYLOAD:
@@ -309,12 +308,12 @@ void DtExplorerView::_drawRows()
                 this->_print("Event record header");
                 break;
 
-            case yactfr::Scope::EVENT_RECORD_FIRST_CONTEXT:
-                this->_print("Event record first context");
+            case yactfr::Scope::EVENT_RECORD_COMMON_CONTEXT:
+                this->_print("Event record common context");
                 break;
 
-            case yactfr::Scope::EVENT_RECORD_SECOND_CONTEXT:
-                this->_print("Event record second context");
+            case yactfr::Scope::EVENT_RECORD_SPECIFIC_CONTEXT:
+                this->_print("Event record specific context");
                 break;
 
             case yactfr::Scope::EVENT_RECORD_PAYLOAD:

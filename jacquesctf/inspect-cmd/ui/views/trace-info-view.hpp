@@ -29,7 +29,7 @@ public:
 private:
     void _drawRows() override;
     void _stateChanged(Message msg) override;
-    void _buildTraceInfoRows(const Metadata& metadata);
+    void _buildTraceInfoRows(const Trace& metadata);
     void _buildRows();
 
 private:
@@ -120,7 +120,7 @@ private:
         Duration duration;
     };
 
-    struct _StrPropRow final :
+    struct _StrPropRow :
         public _PropRow
     {
         _StrPropRow(std::string key, const std::string& val) :
@@ -130,6 +130,12 @@ private:
         }
 
         std::string val;
+    };
+
+    struct _ErrorPropRow final :
+        public _StrPropRow
+    {
+        using _StrPropRow::_StrPropRow;
     };
 
     struct _NonePropRow final :
@@ -147,7 +153,7 @@ private:
 private:
     State * const _state;
     const ViewStateObserverGuard _stateObserverGuard;
-    std::unordered_map<const yactfr::TraceType *, _Rows> _traceInfo;
+    std::unordered_map<const Trace *, _Rows> _traceInfo;
     const _Rows *_rows = nullptr;
 };
 

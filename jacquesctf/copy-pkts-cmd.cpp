@@ -18,7 +18,7 @@
 #include "copy-pkts-cmd.hpp"
 #include "cmd-error.hpp"
 #include "io-error.hpp"
-#include "data/metadata.hpp"
+#include "data/trace.hpp"
 #include "data/ds-file.hpp"
 #include "data/time-ops.hpp"
 
@@ -142,8 +142,8 @@ static std::vector<Index> tryParsePktIndexSpecList(const std::string& pktIndexSp
 
 void copyPktsCmd(const CopyPktsCfg& cfg)
 {
-    const Metadata metadata {cfg.srcPath().parent_path() / "metadata"};
-    DsFile dsf {cfg.srcPath(), metadata};
+    Trace trace {{cfg.srcPath()}, false};
+    auto& dsf = *trace.dsFiles().front();
 
     dsf.buildIndex();
 

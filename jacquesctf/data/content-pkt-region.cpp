@@ -11,14 +11,8 @@ namespace jacques {
 
 static OptBo boFromDt(const yactfr::DataType& dt)
 {
-    if (dt.isBitArrayType()) {
-        switch (dt.asBitArrayType()->byteOrder()) {
-        case yactfr::ByteOrder::BIG:
-            return Bo::BIG;
-
-        case yactfr::ByteOrder::LITTLE:
-            return Bo::LITTLE;
-        }
+    if (dt.isFixedLengthBitArrayType()) {
+        return dt.asFixedLengthBitArrayType().byteOrder();
     }
 
     return boost::none;

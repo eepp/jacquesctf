@@ -17,9 +17,8 @@ namespace jacques {
 /*
  * Simple wheel which cycles through a fixed list of values.
  *
- * Use CycleWheel::next() to go to the next value (possibly wrapping to
- * the first value), and CycleWheel::curVal() to get the current
- * selected value.
+ * Use next() to go to the next value (possibly wrapping to the first
+ * value), and curVal() to get the current selected value.
  */
 template <typename ValT>
 class CycleWheel final

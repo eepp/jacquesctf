@@ -9,7 +9,7 @@
 #define _JACQUES_DATA_SCOPE_HPP
 
 #include <memory>
-#include <yactfr/metadata/fwd.hpp>
+#include <yactfr/yactfr.hpp>
 #include <boost/core/noncopyable.hpp>
 
 #include "er.hpp"
@@ -26,7 +26,6 @@ public:
 
 public:
     explicit Scope(yactfr::Scope scope) noexcept;
-
     explicit Scope(Er::SP er, yactfr::Scope scope, const PktSegment& segment = PktSegment {}) noexcept;
 
     const Er *er() const noexcept

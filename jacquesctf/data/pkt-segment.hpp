@@ -37,9 +37,7 @@ class PktSegment final :
 {
 public:
     explicit PktSegment() noexcept = default;
-
     explicit PktSegment(Index offsetInPktBits, const DataLen& len, OptBo bo = boost::none) noexcept;
-
     PktSegment(const PktSegment&) noexcept = default;
     PktSegment& operator=(const PktSegment&) noexcept = default;
 

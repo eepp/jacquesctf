@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
-#include <yactfr/metadata/fwd.hpp>
+#include <yactfr/yactfr.hpp>
 
 #include "pkt-region.hpp"
 #include "scope.hpp"
@@ -23,7 +23,7 @@ class ContentPktRegion final :
     public PktRegion
 {
 public:
-    using Val = boost::variant<std::int64_t, std::uint64_t, double, std::string>;
+    using Val = boost::variant<nullptr_t, bool, unsigned long long, long long, double, std::string>;
 
 public:
     explicit ContentPktRegion(const PktSegment& segment, Scope::SP scope,

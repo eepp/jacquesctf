@@ -5,16 +5,16 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_DATA_BO_HPP
-#define _JACQUES_DATA_BO_HPP
+#include <utility>
 
-#include <boost/optional.hpp>
-#include <yactfr/yactfr.hpp>
+#include "dt-path.hpp"
 
 namespace jacques {
 
-using OptBo = boost::optional<yactfr::ByteOrder>;
+DtPath::DtPath(const yactfr::Scope scope, Items items) :
+    _scope {scope},
+    _items {std::move(items)}
+{
+}
 
 } // namespace jacques
-
-#endif // _JACQUES_DATA_BO_HPP

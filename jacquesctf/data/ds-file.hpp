@@ -13,9 +13,7 @@
 #include <functional>
 #include <boost/filesystem.hpp>
 #include <boost/core/noncopyable.hpp>
-#include <yactfr/element-sequence.hpp>
-#include <yactfr/metadata/fwd.hpp>
-#include <yactfr/memory-mapped-file-view-factory.hpp>
+#include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
 #include "pkt.hpp"
@@ -23,17 +21,24 @@
 #include "metadata.hpp"
 #include "data-len.hpp"
 #include "pkt-checkpoints-build-listener.hpp"
+#include "trace.hpp"
 
 namespace jacques {
+
+class Trace;
 
 class DsFile final :
     boost::noncopyable
 {
+    friend class Trace;
+
 public:
     using BuildIndexProgressFunc = std::function<void (const PktIndexEntry&)>;
 
+private:
+    explicit DsFile(Trace& trace, boost::filesystem::path path);
+
 public:
-    explicit DsFile(boost::filesystem::path path, const Metadata& metadata);
     ~DsFile();
     void buildIndex();
     void buildIndex(const BuildIndexProgressFunc& progressFunc, Size step = 1);
@@ -93,7 +98,17 @@ public:
 
     const Metadata& metadata() const noexcept
     {
-        return *_metadata;
+        return _trace->metadata();
+    }
+
+    const Trace& trace() const noexcept
+    {
+        return *_trace;
+    }
+
+    Trace& trace() noexcept
+    {
+        return *_trace;
     }
 
 private:
@@ -109,7 +124,7 @@ private:
         boost::optional<Ts> endTs;
         boost::optional<Index> dsId;
         boost::optional<Index> seqNum;
-        boost::optional<Size> discardedErCounter;
+        boost::optional<Size> discErCounterSnap;
         const yactfr::DataStreamType *dst = nullptr;
         bool inPktCtxScope = false;
     };
@@ -125,7 +140,7 @@ private:
                                                      ValInTsFuncT&& valInTsFunc,
                                                      const ValT val) const noexcept
     {
-        if (!_metadata->isCorrelatable()) {
+        if (!_trace->metadata().isCorrelatable()) {
             return nullptr;
         }
 
@@ -170,9 +185,9 @@ private:
     }
 
 private:
+    Trace * const _trace;
     const boost::filesystem::path _path;
-    const Metadata * const _metadata;
-    std::shared_ptr<yactfr::MemoryMappedFileViewFactory> _factory;
+    std::unique_ptr<yactfr::MemoryMappedFileViewFactory> _factory;
     yactfr::ElementSequence _seq;
     DataLen _fileLen;
     std::vector<PktIndexEntry> _index;

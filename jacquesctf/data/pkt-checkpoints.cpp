@@ -153,8 +153,7 @@ void PktCheckpoints::_createCheckpoint(yactfr::ElementSequenceIterator& it,
     assert(it->kind() == yactfr::Element::Kind::EVENT_RECORD_BEGINNING);
     it.savePosition(pos);
 
-    const auto er = Er::createFromElemSeqIt(it, metadata, pktIndexEntry.offsetInDsFileBytes(),
-                                            indexInPkt);
+    const auto er = Er::createFromElemSeqIt(it, metadata, pktIndexEntry, indexInPkt);
     _checkpoints.push_back({er, std::move(pos)});
     pktCheckpointsBuildListener.update(*er);
 }
@@ -223,20 +222,20 @@ static bool nsFromOriginLessThan(const PktCheckpoints::Checkpoint& checkpoint,
 {
     const auto& er = *checkpoint.first;
 
-    if (!er.firstTs()) {
+    if (!er.ts()) {
         return false;
     }
 
-    return er.firstTs()->nsFromOrigin() < nsFromOrigin;
+    return er.ts()->nsFromOrigin() < nsFromOrigin;
 }
 
 static bool nsFromOriginEqual(const Er& er, const long long nsFromOrigin)
 {
-    if (!er.firstTs()) {
+    if (!er.ts()) {
         return false;
     }
 
-    return er.firstTs()->nsFromOrigin() == nsFromOrigin;
+    return er.ts()->nsFromOrigin() == nsFromOrigin;
 }
 
 const PktCheckpoints::Checkpoint *PktCheckpoints::nearestCheckpointBeforeOrAtNsFromOrigin(const long long nsFromOrigin) const noexcept
@@ -248,7 +247,7 @@ const PktCheckpoints::Checkpoint *PktCheckpoints::nearestCheckpointBeforeOrAtNsF
         return nullptr;
     }
 
-    if (!checkpoint->first->firstTs()) {
+    if (!checkpoint->first->ts()) {
         // event record of checkpoint doesn't even have a timestamp
         return nullptr;
     }
@@ -264,7 +263,7 @@ const PktCheckpoints::Checkpoint *PktCheckpoints::nearestCheckpointBeforeNsFromO
         return nullptr;
     }
 
-    if (!checkpoint->first->firstTs()) {
+    if (!checkpoint->first->ts()) {
         // event record of checkpoint doesn't even have a timestamp
         return nullptr;
     }
@@ -279,18 +278,18 @@ const PktCheckpoints::Checkpoint *PktCheckpoints::nearestCheckpointAfterNsFromOr
                                                              const auto& checkpoint) {
         const auto& er = *checkpoint.first;
 
-        if (!er.firstTs()) {
+        if (!er.ts()) {
             return false;
         }
 
-        return nsFromOrigin < er.firstTs()->nsFromOrigin();
+        return nsFromOrigin < er.ts()->nsFromOrigin();
     });
 
     if (!checkpoint) {
         return nullptr;
     }
 
-    if (!checkpoint->first->firstTs()) {
+    if (!checkpoint->first->ts()) {
         // event record of checkpoint doesn't even have a timestamp
         return nullptr;
     }
@@ -303,20 +302,20 @@ static bool cyclesLessThan(const PktCheckpoints::Checkpoint& checkpoint,
 {
     const auto& er = *checkpoint.first;
 
-    if (!er.firstTs()) {
+    if (!er.ts()) {
         return false;
     }
 
-    return er.firstTs()->cycles() < cycles;
+    return er.ts()->cycles() < cycles;
 }
 
 static bool cyclesEqual(const Er& er, const unsigned long long cycles)
 {
-    if (!er.firstTs()) {
+    if (!er.ts()) {
         return false;
     }
 
-    return er.firstTs()->cycles() == cycles;
+    return er.ts()->cycles() == cycles;
 }
 
 const PktCheckpoints::Checkpoint *PktCheckpoints::nearestCheckpointBeforeOrAtCycles(const unsigned long long cycles) const noexcept
@@ -327,7 +326,7 @@ const PktCheckpoints::Checkpoint *PktCheckpoints::nearestCheckpointBeforeOrAtCyc
         return nullptr;
     }
 
-    if (!checkpoint->first->firstTs()) {
+    if (!checkpoint->first->ts()) {
         // event record of checkpoint doesn't even have a timestamp
         return nullptr;
     }
@@ -343,7 +342,7 @@ const PktCheckpoints::Checkpoint *PktCheckpoints::nearestCheckpointBeforeCycles(
         return nullptr;
     }
 
-    if (!checkpoint->first->firstTs()) {
+    if (!checkpoint->first->ts()) {
         // event record of checkpoint doesn't even have a timestamp
         return nullptr;
     }
@@ -358,18 +357,18 @@ const PktCheckpoints::Checkpoint *PktCheckpoints::nearestCheckpointAfterCycles(c
                                                              const auto& checkpoint) {
         const auto& er = *checkpoint.first;
 
-        if (!er.firstTs()) {
+        if (!er.ts()) {
             return false;
         }
 
-        return cycles < er.firstTs()->cycles();
+        return cycles < er.ts()->cycles();
     });
 
     if (!checkpoint) {
         return nullptr;
     }
 
-    if (!checkpoint->first->firstTs()) {
+    if (!checkpoint->first->ts()) {
         // event record of checkpoint doesn't even have a timestamp
         return nullptr;
     }

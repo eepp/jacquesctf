@@ -14,10 +14,7 @@
 #include <vector>
 #include <utility>
 #include <boost/optional.hpp>
-#include <yactfr/element-sequence.hpp>
-#include <yactfr/element-sequence-iterator.hpp>
-#include <yactfr/element-sequence-iterator-position.hpp>
-#include <yactfr/decoding-errors.hpp>
+#include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
 #include "data-len.hpp"

@@ -25,11 +25,14 @@ private:
     void _redrawContent() override;
     void _safePrintScope(yactfr::Scope scope);
     Size _curMaxOffsetSize();
+    void _setMaxDtPathSize(const Trace& trace);
+    void _setMaxDtPathSizes();
 
 private:
     State * const _state;
     const ViewStateObserverGuard _stateObserverGuard;
     std::unordered_map<const Pkt *, Size> _maxOffsetSizes;
+    std::unordered_map<const Trace *, Size> _maxDtPathSizes;
 };
 
 } // namespace jacques

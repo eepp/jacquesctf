@@ -6,6 +6,8 @@
  */
 
 #include <iostream>
+#include <algorithm>
+#include <numeric>
 #include <cinttypes>
 #include <cstdio>
 #include <curses.h>
@@ -27,6 +29,7 @@ PktRegionInfoView::PktRegionInfoView(const Rect& rect, const Stylist& stylist, S
     _state {&state},
     _stateObserverGuard {state, *this}
 {
+    this->_setMaxDtPathSizes();
 }
 
 void PktRegionInfoView::_stateChanged(const Message)
@@ -46,11 +49,11 @@ static const char *scopeStr(const yactfr::Scope scope) noexcept
     case yactfr::Scope::EVENT_RECORD_HEADER:
         return "ERH";
 
-    case yactfr::Scope::EVENT_RECORD_FIRST_CONTEXT:
-        return "ER1C";
+    case yactfr::Scope::EVENT_RECORD_COMMON_CONTEXT:
+        return "ERCC";
 
-    case yactfr::Scope::EVENT_RECORD_SECOND_CONTEXT:
-        return "ER2C";
+    case yactfr::Scope::EVENT_RECORD_SPECIFIC_CONTEXT:
+        return "ERSC";
 
     case yactfr::Scope::EVENT_RECORD_PAYLOAD:
         return "ERP";
@@ -58,6 +61,47 @@ static const char *scopeStr(const yactfr::Scope scope) noexcept
     default:
         std::abort();
     }
+}
+
+class DtPathItemStrVisitor final :
+    public boost::static_visitor<std::string>
+{
+public:
+    template <typename ItemT>
+    std::string operator()(const ItemT& item) const
+    {
+        return this->_itemStr(item);
+    }
+
+private:
+    std::string _itemStr(const DtPath::StructMemberItem& item) const
+    {
+        return utils::escapeStr(item.name);
+    }
+
+    std::string _itemStr(const DtPath::VarOptItem& item) const
+    {
+        if (item.name) {
+            return std::string {'<'} + utils::escapeStr(*item.name) + '>';
+        } else {
+            return std::string {'<'} + std::to_string(item.index) + '>';
+        }
+    }
+
+    std::string _itemStr(const DtPath::CurArrayElemItem&) const
+    {
+        return "<%>";
+    }
+
+    std::string _itemStr(const DtPath::CurOptDataItem&) const
+    {
+        return "<%>";
+    }
+};
+
+std::string dtPathItemStr(const DtPath::Item& item)
+{
+    return boost::apply_visitor(DtPathItemStrVisitor {}, item);
 }
 
 void PktRegionInfoView::_safePrintScope(const yactfr::Scope scope)
@@ -86,24 +130,24 @@ void PktRegionInfoView::_redrawContent()
         // path
         const auto& path = _state->metadata().dtPath(cPktRegion->dt());
 
-        if (path.path.empty()) {
+        if (path.items().empty()) {
             this->_stylist().pktRegionInfoViewStd(*this, true);
         }
 
-        this->_safePrintScope(path.scope);
+        this->_safePrintScope(path.scope());
 
-        if (path.path.empty()) {
+        if (path.items().empty()) {
             this->_stylist().pktRegionInfoViewStd(*this);
         }
 
-        for (auto it = path.path.begin(); it != path.path.end(); ++it) {
+        for (auto it = path.items().begin(); it != path.items().end(); ++it) {
             this->_safePrint("/");
 
-            if (it == path.path.end() - 1) {
+            if (it == path.items().end() - 1) {
                 this->_stylist().pktRegionInfoViewStd(*this, true);
             }
 
-            this->_safePrint("%s", utils::escapeStr(*it).c_str());
+            this->_safePrint("%s", dtPathItemStr(*it).c_str());
         }
     } else if (const auto sPktRegion = dynamic_cast<const PaddingPktRegion *>(pktRegion)) {
         if (pktRegion->scope()) {
@@ -123,7 +167,7 @@ void PktRegionInfoView::_redrawContent()
     // size
     this->_stylist().pktRegionInfoViewStd(*this, false);
 
-    const auto pathWidth = _state->activeDsFileState().metadata().maxDtPathSize();
+    const auto pathWidth = _maxDtPathSizes[&_state->trace()];
     const auto str = utils::sepNumber(pktRegion->segment().len()->bits(), ',');
 
     this->_safeMoveAndPrint({
@@ -134,7 +178,7 @@ void PktRegionInfoView::_redrawContent()
     if (pktRegion->segment().bo()) {
         this->_safePrint("    ");
 
-        if (*pktRegion->segment().bo() == Bo::BIG) {
+        if (*pktRegion->segment().bo() == yactfr::ByteOrder::BIG) {
             this->_safePrint("BE");
         } else {
             this->_safePrint("LE");
@@ -150,12 +194,23 @@ void PktRegionInfoView::_redrawContent()
         this->_safePrint("    ");
         this->_stylist().pktRegionInfoViewVal(*this);
 
-        if (const auto val = boost::get<std::int64_t>(&varVal)) {
-            this->_safePrint("%s", utils::sepNumber(static_cast<long long>(*val), ',').c_str());
-        } else if (const auto val = boost::get<std::uint64_t>(&varVal)) {
+        if (const auto val = boost::get<bool>(&varVal)) {
+            this->_safePrint("%s", *val ? "true" : "false");
+        } else if (const auto val = boost::get<long long>(&varVal)) {
+            this->_safePrint("%s", utils::sepNumber(*val, ',').c_str());
+        } else if (const auto val = boost::get<unsigned long long>(&varVal)) {
+            const auto prefDispBase = [cPktRegion] {
+                if (cPktRegion->dt().isFixedLengthIntegerType()) {
+                    return cPktRegion->dt().asFixedLengthIntegerType().preferredDisplayBase();
+                } else {
+                    assert(cPktRegion->dt().isVariableLengthIntegerType());
+                    return cPktRegion->dt().asVariableLengthIntegerType().preferredDisplayBase();
+                }
+            }();
+
             std::string intFmt;
 
-            switch (cPktRegion->dt().asIntType()->displayBase()) {
+            switch (prefDispBase) {
             case yactfr::DisplayBase::OCTAL:
                 intFmt = "0%" PRIo64;
                 break;
@@ -169,7 +224,7 @@ void PktRegionInfoView::_redrawContent()
             }
 
             if (intFmt.empty()) {
-                this->_safePrint("%s", utils::sepNumber(static_cast<unsigned long long>(*val), ',').c_str());
+                this->_safePrint("%s", utils::sepNumber(*val, ',').c_str());
             } else {
                 this->_safePrint(intFmt.c_str(), *val);
             }
@@ -185,6 +240,45 @@ void PktRegionInfoView::_redrawContent()
         this->_safePrint("    ");
         this->_stylist().pktRegionInfoViewError(*this);
         this->_safePrint("%s", utils::escapeStr(error->decodingError().what()).c_str());
+    }
+}
+
+void PktRegionInfoView::_setMaxDtPathSize(const Trace& trace)
+{
+    const auto accFunc = [](const auto total, auto& item) {
+        return total + dtPathItemStr(item).size();
+    };
+
+    const auto totalDtPathItSizeFunc = [&accFunc](auto& dtDtPathPair) {
+        /*
+         * Adding `dtDtPathPair.second.items().size()` for the
+         * separators and 4 for the scope name.
+         */
+        return std::accumulate(dtDtPathPair.second.items().begin(),
+                               dtDtPathPair.second.items().end(), 0ULL, accFunc) +
+               dtDtPathPair.second.items().size() + 4;
+    };
+
+    const auto maxDtPathIt = std::max_element(trace.metadata().dtPaths().begin(),
+                                              trace.metadata().dtPaths().end(),
+                                              [&totalDtPathItSizeFunc](const auto& pairA,
+                                                                       const auto& pairB) {
+        return totalDtPathItSizeFunc(pairA) < totalDtPathItSizeFunc(pairB);
+    });
+
+    _maxDtPathSizes.insert(std::make_pair(&trace,
+                                          maxDtPathIt == trace.metadata().dtPaths().end() ? 0ULL :
+                                          totalDtPathItSizeFunc(*maxDtPathIt)));
+}
+
+void PktRegionInfoView::_setMaxDtPathSizes()
+{
+    for (const auto& dsfState : _state->dsFileStates()) {
+        auto& trace = dsfState->trace();
+
+        if (_maxDtPathSizes.find(&trace) == _maxDtPathSizes.end()) {
+            this->_setMaxDtPathSize(trace);
+        }
     }
 }
 

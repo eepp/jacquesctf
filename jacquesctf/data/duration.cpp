@@ -27,7 +27,7 @@ Duration::Parts Duration::parts() const noexcept
     return {hPart, mPart, sPart, nsPart};
 }
 
-// TODO: use `bufSize`
+// TODO: use the second parameter
 void Duration::format(char * const buf, const Size) const
 {
     auto bufAt = buf;

@@ -86,8 +86,8 @@ void PktState::gotoPrevPktRegion()
 
     const auto& curPktRegion = this->curPktRegion();
 
-    if (curPktRegion.previousRegionOffsetInPktBits()) {
-        this->gotoPktRegionAtOffsetInPktBits(*curPktRegion.previousRegionOffsetInPktBits());
+    if (curPktRegion.prevRegionOffsetInPktBits()) {
+        this->gotoPktRegionAtOffsetInPktBits(*curPktRegion.prevRegionOffsetInPktBits());
         return;
     }
 

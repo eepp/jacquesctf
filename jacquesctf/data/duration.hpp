@@ -11,9 +11,8 @@
 #include <cstdint>
 #include <ostream>
 #include <string>
+#include <array>
 #include <boost/operators.hpp>
-#include <yactfr/element.hpp>
-#include <yactfr/metadata/clock-type.hpp>
 
 #include "aliases.hpp"
 

@@ -18,20 +18,20 @@
 
 namespace jacques {
 
-DsFile::DsFile(boost::filesystem::path path, const Metadata& metadata) :
+DsFile::DsFile(Trace& trace, boost::filesystem::path path) :
+    _trace {&trace},
     _path {std::move(path)},
-    _metadata {&metadata},
     _factory {
-        std::make_shared<yactfr::MemoryMappedFileViewFactory>(path.string(), 8 << 20,
+        std::make_unique<yactfr::MemoryMappedFileViewFactory>(_path.string(), 8 << 20,
                                                               yactfr::MemoryMappedFileViewFactory::AccessPattern::SEQUENTIAL)
     },
-    _seq {_metadata->traceType(), _factory}
+    _seq {trace.metadata().traceType(), *_factory}
 {
-    _fileLen = DataLen::fromBytes(boost::filesystem::file_size(path));
-    _fd = open(path.string().c_str(), O_RDONLY);
+    _fileLen = DataLen::fromBytes(boost::filesystem::file_size(_path));
+    _fd = open(_path.string().c_str(), O_RDONLY);
 
     if (_fd < 0) {
-        throw IOError {path, "Cannot open file."};
+        throw IOError {_path, "Cannot open file."};
     }
 }
 
@@ -123,7 +123,7 @@ void DsFile::_addPktIndexEntry(const Index offsetInDsFileBytes, const Index offs
         expectedTotalLen, expectedContentLen,
         effectiveTotalLen, effectiveContentLen,
         state.dst, state.dsId, state.beginTs, state.endTs, state.seqNum,
-        state.discardedErCounter, isInvalid,
+        state.discErCounterSnap, isInvalid,
     });
 }
 
@@ -138,7 +138,7 @@ void DsFile::_IndexBuildingState::reset()
     endTs = boost::none;
     seqNum = boost::none;
     dsId = boost::none;
-    discardedErCounter = boost::none;
+    discErCounterSnap = boost::none;
     dst = nullptr;
 }
 
@@ -149,6 +149,7 @@ void DsFile::_buildIndex(const BuildIndexProgressFunc& progressFunc, const Size 
     Index offsetBytes = 0;
     _IndexBuildingState state;
     bool pktStarted = false;
+    boost::optional<Ts> curBeginTs;
 
     try {
         while (it != endIt) {
@@ -156,11 +157,12 @@ void DsFile::_buildIndex(const BuildIndexProgressFunc& progressFunc, const Size 
             case yactfr::Element::Kind::PACKET_BEGINNING:
                 offsetBytes = it.offset() / 8;
                 pktStarted = true;
+                curBeginTs = boost::none;
                 break;
 
             case yactfr::Element::Kind::SCOPE_BEGINNING:
             {
-                auto& elem = static_cast<const yactfr::ScopeBeginningElement&>(*it);
+                auto& elem = it->asScopeBeginningElement();
 
                 if (elem.scope() == yactfr::Scope::PACKET_CONTEXT) {
                     state.inPktCtxScope = true;
@@ -201,80 +203,68 @@ void DsFile::_buildIndex(const BuildIndexProgressFunc& progressFunc, const Size 
                 continue;
             }
 
-            case yactfr::Element::Kind::EXPECTED_PACKET_TOTAL_SIZE:
+            case yactfr::Element::Kind::PACKET_INFO:
             {
-                auto& elem = static_cast<const yactfr::ExpectedPacketTotalSizeElement&>(*it);
+                auto& elem = it->asPacketInfoElement();
 
-                state.expectedTotalLen = elem.expectedSize();
-                break;
-            }
-
-            case yactfr::Element::Kind::EXPECTED_PACKET_CONTENT_SIZE:
-            {
-                auto& elem = static_cast<const yactfr::ExpectedPacketContentSizeElement&>(*it);
-
-                state.expectedContentLen = elem.expectedSize();
-                break;
-            }
-
-            case yactfr::Element::Kind::CLOCK_VALUE:
-            {
-                if (!state.inPktCtxScope || state.beginTs || !_metadata->isCorrelatable()) {
-                    break;
+                if (elem.expectedTotalLength()) {
+                    state.expectedTotalLen = *elem.expectedTotalLength();
                 }
 
-                auto& elem = static_cast<const yactfr::ClockValueElement&>(*it);
-
-                state.beginTs = Ts {elem};
-                break;
-            }
-
-            case yactfr::Element::Kind::PACKET_END_CLOCK_VALUE:
-            {
-                if (!state.inPktCtxScope || state.endTs || !_metadata->isCorrelatable()) {
-                    break;
+                if (elem.expectedContentLength()) {
+                    state.expectedContentLen = *elem.expectedContentLength();
                 }
 
-                auto& elem = static_cast<const yactfr::PacketEndClockValueElement&>(*it);
+                if (_trace->metadata().isCorrelatable()) {
+                    assert(!state.beginTs);
+                    state.beginTs = curBeginTs;
+                }
 
-                state.endTs = Ts {elem};
-                break;
-            }
-
-            case yactfr::Element::Kind::DATA_STREAM_ID:
-            {
-                auto& elem = static_cast<const yactfr::DataStreamIdElement&>(*it);
-
-                state.dsId = elem.id();
-                break;
-            }
-
-            case yactfr::Element::Kind::PACKET_ORIGIN_INDEX:
-            {
-                auto& elem = static_cast<const yactfr::PacketOriginIndexElement&>(*it);
-
-                state.seqNum = elem.index();
-                break;
-            }
-
-            case yactfr::Element::Kind::UNSIGNED_INT:
-            {
-                if (state.inPktCtxScope) {
-                    auto& elem = static_cast<const yactfr::UnsignedIntElement&>(*it);
-
-                    if (elem.displayName() && *elem.displayName() == "events_discarded") {
-                        state.discardedErCounter = elem.value();
+                if (elem.endDefaultClockValue()) {
+                    if (_trace->metadata().isCorrelatable()) {
+                        assert(!state.endTs);
+                        assert(state.dst);
+                        assert(state.dst->defaultClockType());
+                        state.endTs = Ts {*elem.endDefaultClockValue(), *state.dst->defaultClockType()};
                     }
                 }
 
+                if (elem.sequenceNumber()) {
+                    state.seqNum = *elem.sequenceNumber();
+                }
+
+                if (elem.discardedEventRecordCounterSnapshot()) {
+                    state.discErCounterSnap = *elem.discardedEventRecordCounterSnapshot();
+                }
+
                 break;
             }
 
-            case yactfr::Element::Kind::DATA_STREAM_TYPE:
+            case yactfr::Element::Kind::DATA_STREAM_INFO:
             {
-                auto& elem = static_cast<const yactfr::DataStreamTypeElement&>(*it);
+                auto& elem = it->asDataStreamInfoElement();
 
-                state.dst = &elem.dataStreamType();
+                if (elem.type()) {
+                    state.dst = elem.type();
+                }
+
+                if (elem.id()) {
+                    state.dsId = elem.id();
+                }
+
+                break;
+            }
+
+            case yactfr::Element::Kind::DEFAULT_CLOCK_VALUE:
+            {
+                if (state.inPktCtxScope && _trace->metadata().isCorrelatable()) {
+                    auto& elem = it->asDefaultClockValueElement();
+
+                    assert(state.dst);
+                    assert(state.dst->defaultClockType());
+                    curBeginTs = Ts {elem.cycles(), *state.dst->defaultClockType()};
+                }
+
                 break;
             }
 
@@ -396,7 +386,7 @@ Pkt& DsFile::pktAtIndex(const Index index, PktCheckpointsBuildListener& buildLis
 
         buildListener.startBuild(pktIndexEntry);
 
-        auto pkt = std::make_unique<Pkt>(pktIndexEntry, _seq, *_metadata,
+        auto pkt = std::make_unique<Pkt>(pktIndexEntry, _seq, _trace->metadata(),
                                          _factory->createDataSource(), std::move(mmapFile),
                                          buildListener);
 

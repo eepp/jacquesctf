@@ -70,40 +70,22 @@ static void expandDir(std::list<bfs::path>& tmpFilePaths, const bfs::path& path)
     assert(bfs::is_directory(path));
 
     const bool hasMetadata = bfs::exists(path / "metadata");
-    std::vector<bfs::path> thisDirStreamFilePaths;
+    std::vector<bfs::path> thisDirDsFilePaths;
 
     for (auto& entry : boost::make_iterator_range(bfs::directory_iterator(path), {})) {
         auto& entryPath = entry.path();
 
-        if (!entryPath.has_filename()) {
-            continue;
-        }
-
-        if (entryPath.filename() == "metadata") {
-            // skip `metadata` file
-            continue;
-        }
-
-        if (bfs::is_directory(entryPath)) {
+        if (utils::looksLikeDsFilePath(entryPath) && hasMetadata) {
+            thisDirDsFilePaths.push_back(entryPath);
+        } else if (bfs::is_directory(entryPath) && !utils::isHiddenFile(entryPath)) {
             // expand subdirectory
             expandDir(tmpFilePaths, entryPath);
-            continue;
-        }
-
-        if (!entryPath.filename().string().empty() && entryPath.filename().string()[0] == '.') {
-            // hidden file
-            continue;
-        }
-
-        if (hasMetadata) {
-            // it's a CTF directory!
-            thisDirStreamFilePaths.push_back(entryPath);
         }
     }
 
-    std::sort(thisDirStreamFilePaths.begin(), thisDirStreamFilePaths.end());
-    tmpFilePaths.insert(tmpFilePaths.end(), thisDirStreamFilePaths.begin(),
-                        thisDirStreamFilePaths.end());
+    std::sort(thisDirDsFilePaths.begin(), thisDirDsFilePaths.end());
+    tmpFilePaths.insert(tmpFilePaths.end(), thisDirDsFilePaths.begin(),
+                        thisDirDsFilePaths.end());
 }
 
 static std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFilePaths,

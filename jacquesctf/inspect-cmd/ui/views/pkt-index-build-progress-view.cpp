@@ -143,7 +143,7 @@ void PktIndexBuildProgressView::_drawProgress()
 
     this->_clearRow(sizeY);
     this->_stylist().std(*this);
-    this->_moveAndPrint({titleX, sizeY}, "Size:");
+    this->_moveAndPrint({titleX, sizeY}, "Length:");
     this->_stylist().std(*this, true);
 
     {

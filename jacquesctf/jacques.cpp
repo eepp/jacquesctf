@@ -11,10 +11,7 @@
 #include <fstream>
 #include <memory>
 #include <stdexcept>
-#include <yactfr/metadata/invalid-metadata.hpp>
-#include <yactfr/metadata/invalid-metadata-stream.hpp>
-#include <yactfr/metadata/metadata-parse-error.hpp>
-#include <yactfr/metadata/metadata-stream.hpp>
+#include <yactfr/yactfr.hpp>
 #include <boost/filesystem.hpp>
 
 #include "cfg.hpp"

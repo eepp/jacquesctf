@@ -52,8 +52,8 @@ void PktDecodingErrorDetailsView::_redrawContent()
     this->_stylist().pktDecodingErrorDetailsView(*this, false);
 
     {
-        auto lenUnit = utils::formatLen(error.decodingError().offset(),
-                                        utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS, ',');
+        const auto lenUnit = utils::formatLen(error.decodingError().offset(),
+                                              utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS, ',');
 
         this->_print("%s %s", lenUnit.first.c_str(), lenUnit.second.c_str());
     }

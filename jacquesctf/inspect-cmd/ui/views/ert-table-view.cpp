@@ -19,7 +19,7 @@ ErtTableView::ErtTableView(const Rect& rect, const Stylist& stylist, const State
     TableView {rect, "Event record types", DecorationStyle::BORDERS, stylist}
 {
     this->_buildRows(state);
-    this->_buildLogLevelNames();
+    //this->_buildLogLevelNames();
     this->_setColumnDescrs();
 }
 
@@ -60,7 +60,7 @@ void ErtTableView::_buildRows(const State& state)
     for (auto& dsFileState : state.dsFileStates()) {
         auto& metadata = dsFileState->metadata();
 
-        for (auto& dst : *metadata.traceType()) {
+        for (auto& dst : metadata.traceType()) {
             const auto it = _rows.find(dst.get());
 
             if (it != _rows.end()) {
@@ -102,31 +102,6 @@ void ErtTableView::_drawRow(const Index index)
     }
 
     this->_drawCells(index, _row);
-}
-
-void ErtTableView::_buildLogLevelNames()
-{
-    _logLevelNames = {
-        "EMERGENCY",
-        "ALERT",
-        "CRITICAL",
-        "ERROR",
-        "WARNING",
-        "NOTICE",
-        "INFO",
-        "DEBUG_SYSTEM",
-        "DEBUG_PROGRAM",
-        "DEBUG_PROCESS",
-        "DEBUG_MODULE",
-        "DEBUG_UNIT",
-        "DEBUG_FUNCTION",
-        "DEBUG_LINE",
-        "DEBUG",
-    };
-
-    for (Index i = 0; i < _logLevelNames.size(); ++i) {
-        _logLevelNames[i] += " (" + std::to_string(i) + ")";
-    }
 }
 
 bool ErtTableView::_hasIndex(const Index index)

@@ -411,17 +411,17 @@ bool DsFileState::search(const SearchQuery& query)
         if (sQuery->isDiff()) {
             const auto curEr = _activePktState->curEr();
 
-            if (!curEr || !curEr->firstTs()) {
+            if (!curEr || !curEr->ts()) {
                 return false;
             }
 
             switch (sQuery->unit()) {
             case TimestampSearchQuery::Unit::NS:
-                reqVal += curEr->firstTs()->nsFromOrigin();
+                reqVal += curEr->ts()->nsFromOrigin();
                 break;
 
             case TimestampSearchQuery::Unit::CYCLE:
-                reqVal += static_cast<long long>(curEr->firstTs()->cycles());
+                reqVal += static_cast<long long>(curEr->ts()->cycles());
                 break;
             }
         }

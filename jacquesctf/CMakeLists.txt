@@ -46,6 +46,7 @@ add_executable (
     data/content-pkt-region.cpp
     data/data-len.cpp
     data/ds-file.cpp
+    data/dt-path.cpp
     data/duration.cpp
     data/er.cpp
     data/error-pkt-region.cpp
@@ -79,8 +80,10 @@ add_executable (
     inspect-cmd/ui/views/abstract-dt-details.cpp
     inspect-cmd/ui/views/ds-file-table-view.cpp
     inspect-cmd/ui/views/dst-table-view.cpp
+    inspect-cmd/ui/views/dt-details-from-dt.cpp
     inspect-cmd/ui/views/dt-details.cpp
     inspect-cmd/ui/views/dt-explorer-view.cpp
+    inspect-cmd/ui/views/enum-type-mapping-details.cpp
     inspect-cmd/ui/views/er-table-view.cpp
     inspect-cmd/ui/views/ert-table-view.cpp
     inspect-cmd/ui/views/help-view.cpp

@@ -16,6 +16,9 @@ class ErrorPktRegion;
 
 class PktRegionVisitor
 {
+protected:
+    explicit PktRegionVisitor() noexcept = default;
+
 public:
     virtual ~PktRegionVisitor() = default;
     virtual void visit(const ContentPktRegion&);

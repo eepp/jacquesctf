@@ -5,8 +5,6 @@
  * prohibited. Proprietary and confidential.
  */
 
-#include <yactfr/metadata/event-record-type.hpp>
-
 #include "pkt-checkpoints-build-progress-view.hpp"
 #include "../stylist.hpp"
 #include "utils.hpp"
@@ -118,7 +116,7 @@ void PktCheckpointsBuildProgressView::_drawProgress()
     // size
     this->_clearRow(sizeY);
     this->_stylist().std(*this);
-    this->_moveAndPrint({titleX, sizeY}, "Size:");
+    this->_moveAndPrint({titleX, sizeY}, "Length:");
     this->_stylist().std(*this, true);
     lenUnit = _pktIndexEntry->effectiveContentLen().format(utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
                                                            ',');

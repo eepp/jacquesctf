@@ -61,7 +61,7 @@ std::tuple<Rect, Rect, Rect> DtsScreen::_viewRects() const
 
 void DtsScreen::_updateViews()
 {
-    _dstTableView->traceType(*this->_state().metadata().traceType());
+    _dstTableView->traceType(this->_state().metadata().traceType());
     _ertTableView->dst(*_dstTableView->dst());
 
     if (_focusedView == _dstTableView.get()) {

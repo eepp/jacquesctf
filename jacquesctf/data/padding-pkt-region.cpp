@@ -9,8 +9,7 @@
 
 namespace jacques {
 
-PaddingPktRegion::PaddingPktRegion(const PktSegment& segment,
-                                         Scope::SP scope) :
+PaddingPktRegion::PaddingPktRegion(const PktSegment& segment, Scope::SP scope) :
     PktRegion {segment, std::move(scope)}
 {
 }

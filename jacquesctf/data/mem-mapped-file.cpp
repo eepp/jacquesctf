@@ -26,16 +26,16 @@ MemMappedFile::MemMappedFile(bfs::path path, const boost::optional<int>& fd) :
     if (fd) {
         _fd = *fd;
     } else {
-        _fd = open(path.string().c_str(), O_RDONLY);
+        _fd = open(_path.string().c_str(), O_RDONLY);
 
         if (_fd < 0) {
-            throw IOError {path, "Cannot open file."};
+            throw IOError {_path, "Cannot open file."};
         }
 
         _closeFd = true;
     }
 
-    _fileLen = DataLen::fromBytes(bfs::file_size(path));
+    _fileLen = DataLen::fromBytes(bfs::file_size(_path));
     _mmapOffsetGranularityBytes = sysconf(_SC_PAGE_SIZE);
     assert(_mmapOffsetGranularityBytes >= 1);
 }

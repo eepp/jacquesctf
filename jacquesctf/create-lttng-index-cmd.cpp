@@ -9,11 +9,13 @@
 #include <fstream>
 #include <cassert>
 #include <map>
+#include <set>
 #include <boost/endian/buffers.hpp>
 
 #include "cfg.hpp"
 #include "create-lttng-index-cmd.hpp"
 #include "cmd-error.hpp"
+#include "data/trace.hpp"
 #include "data/metadata.hpp"
 #include "data/ds-file.hpp"
 
@@ -35,7 +37,7 @@ struct LTTngIndexEntryBase {
     bendian::big_uint64_buf_t contentLenBits;
     bendian::big_uint64_buf_t beginTs;
     bendian::big_uint64_buf_t endTs;
-    bendian::big_uint64_buf_t discardedErCounter;
+    bendian::big_uint64_buf_t discErCounterSnap;
     bendian::big_uint64_buf_t dstId;
 };
 
@@ -100,10 +102,10 @@ static void writeLttngIndexEntry(std::ofstream& idxStream, const DsFile& dsf,
         entryBase.endTs = indexEntry.endTs()->cycles();
     }
 
-    entryBase.discardedErCounter = 0;
+    entryBase.discErCounterSnap = 0;
 
-    if (indexEntry.discardedErCounter()) {
-        entryBase.discardedErCounter = *indexEntry.discardedErCounter();
+    if (indexEntry.discErCounterSnap()) {
+        entryBase.discErCounterSnap = *indexEntry.discErCounterSnap();
     }
 
     entryBase.dstId = 0;
@@ -152,31 +154,22 @@ static void createDsFileLttngIndex(const DsFile& dsf)
 
 void createLttngIndexCmd(const CreateLttngIndexCfg& cfg)
 {
-    // metadata file path to metadata
-    std::map<bfs::path, std::unique_ptr<const Metadata>> metadataStreams;
+    // trace directory to set of data stream file paths
+    std::map<bfs::path, std::vector<bfs::path>> groupedDsFilePaths;
 
-    for (const auto& dsfPath : cfg.paths()) {
-        const auto metadataPath = dsfPath.parent_path() / "metadata";
-        const auto it = metadataStreams.find(metadataPath);
-        const Metadata *metadata = nullptr;
+    for (auto& dsfPath : cfg.paths()) {
+        groupedDsFilePaths[dsfPath.parent_path()].push_back(dsfPath);
+    }
 
-        if (it == metadataStreams.end()) {
-            // create one
-            auto metadataUp = std::make_unique<const Metadata>(metadataPath);
+    // create indexes
+    for (const auto& traceDirDsFilePathsPair : groupedDsFilePaths) {
+        // create trace with specific data stream files
+        Trace trace {traceDirDsFilePathsPair.second, false};
 
-            metadata = metadataUp.get();
-            metadataStreams[metadataPath] = std::move(metadataUp);
-        } else {
-            // already exists
-            metadata = it->second.get();
+        for (auto& dsf : trace.dsFiles()) {
+            dsf->buildIndex();
+            createDsFileLttngIndex(*dsf);
         }
-
-        assert(metadata);
-
-        DsFile dsf {dsfPath, *metadata};
-
-        dsf.buildIndex();
-        createDsFileLttngIndex(dsf);
     }
 }
 

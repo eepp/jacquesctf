@@ -78,6 +78,11 @@ public:
         return _activeDsFileState->metadata();
     }
 
+    const Trace& trace() const noexcept
+    {
+        return _activeDsFileState->trace();
+    }
+
     void gotoPkt(const Index index)
     {
         _activeDsFileState->gotoPkt(index);

@@ -49,7 +49,7 @@ private:
     void _setColumnDescrs();
     void _buildRows(const State& state);
     void _resetRow();
-    void _buildLogLevelNames();
+    //void _buildLogLevelNames();
 
 private:
     using Erts = std::vector<const yactfr::EventRecordType *>;
@@ -58,7 +58,7 @@ private:
     std::vector<std::unique_ptr<TableViewCell>> _row;
     std::unordered_map<const yactfr::DataStreamType *, Erts> _rows;
     const Erts *_erts = nullptr;
-    std::array<std::string, 15> _logLevelNames;
+    //std::array<std::string, 15> _logLevelNames;
 };
 
 } // namespace jacques

@@ -10,7 +10,7 @@
 
 #include "cfg.hpp"
 #include "list-pkts-cmd.hpp"
-#include "data/metadata.hpp"
+#include "data/trace.hpp"
 #include "data/ds-file.hpp"
 #include "data/time-ops.hpp"
 
@@ -81,8 +81,8 @@ static void printRow(const PktIndexEntry& indexEntry, const ListPktsCfg::Fmt fmt
         std::cout << ",";
     }
 
-    if (indexEntry.discardedErCounter()) {
-        std::cout << *indexEntry.discardedErCounter() << ",";
+    if (indexEntry.discErCounterSnap()) {
+        std::cout << *indexEntry.discErCounterSnap() << ",";
     } else {
         std::cout << ",";
     }
@@ -92,8 +92,8 @@ static void printRow(const PktIndexEntry& indexEntry, const ListPktsCfg::Fmt fmt
 
 void listPktsCmd(const ListPktsCfg& cfg)
 {
-    const Metadata metadata {cfg.path().parent_path() / "metadata"};
-    DsFile dsf {cfg.path(), metadata};
+    Trace trace {{cfg.path()}, false};
+    auto& dsf = *trace.dsFiles().front();
 
     dsf.buildIndex();
 

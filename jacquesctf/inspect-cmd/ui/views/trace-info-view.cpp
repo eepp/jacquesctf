@@ -12,10 +12,7 @@
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/variant/get.hpp>
 #include <boost/uuid/uuid_io.hpp>
-#include <yactfr/metadata/trace-type.hpp>
-#include <yactfr/metadata/trace-type-env.hpp>
-#include <yactfr/metadata/data-stream-type.hpp>
-#include <yactfr/metadata/clock-type.hpp>
+#include <yactfr/yactfr.hpp>
 
 #include "trace-info-view.hpp"
 #include "data/ts.hpp"
@@ -31,18 +28,19 @@ TraceInfoView::TraceInfoView(const Rect& rect, const Stylist& stylist, State& st
     _stateObserverGuard {state, *this}
 {
     this->_buildRows();
-    _rows = &_traceInfo[state.metadata().traceType().get()];
+    _rows = &_traceInfo[&state.trace()];
     this->_rowCount(_rows->size());
     this->_drawRows();
 }
 
-void TraceInfoView::_buildTraceInfoRows(const Metadata& metadata)
+void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
 {
-    auto& traceType = *metadata.traceType();
-
-    if (_traceInfo.find(&traceType) != _traceInfo.end()) {
+    if (_traceInfo.find(&trace) != _traceInfo.end()) {
         return;
     }
+
+    auto& metadata = trace.metadata();
+    auto& traceType = metadata.traceType();
 
     _Rows rows;
 
@@ -50,6 +48,12 @@ void TraceInfoView::_buildTraceInfoRows(const Metadata& metadata)
     rows.push_back(std::make_unique<_StrPropRow>("Trace directory",
                                                  metadata.path().parent_path().string()));
     rows.push_back(std::make_unique<_StrPropRow>("Metadata stream", metadata.path().string()));
+
+    if (trace.envStreamPath()) {
+        rows.push_back(std::make_unique<_StrPropRow>("Environment stream",
+                                                     trace.envStreamPath()->string()));
+    }
+
     rows.push_back(std::make_unique<_EmptyRow>());
     rows.push_back(std::make_unique<_SectionRow>("Data stream info"));
 
@@ -66,17 +70,11 @@ void TraceInfoView::_buildTraceInfoRows(const Metadata& metadata)
     Size pktCount = 0;
     std::set<std::pair<Index, Index>> dsIds;
 
-    for (const auto& dsfState : _state->dsFileStates()) {
-        if (dsfState->metadata().traceType().get() != &traceType) {
-            continue;
-        }
-
-        const auto& dsFile = dsfState->dsFile();
-
+    for (auto& dsFile : trace.dsFiles()) {
         ++dsfCount;
-        pktCount += dsFile.pktCount();
+        pktCount += dsFile->pktCount();
 
-        for (const auto& entry : dsFile.pktIndexEntries()) {
+        for (const auto& entry : dsFile->pktIndexEntries()) {
             if (entry.expectedContentLen()) {
                 totalExpectedPktsContentLen += *entry.expectedContentLen();
             }
@@ -89,9 +87,9 @@ void TraceInfoView::_buildTraceInfoRows(const Metadata& metadata)
             totalEffectivePktsTotalLen += entry.effectiveTotalLen();
         }
 
-        if (dsFile.pktCount() > 0) {
-            const auto& dsId = dsFile.pktIndexEntry(0).dsId();
-            const auto dst = dsFile.pktIndexEntry(0).dst();
+        if (dsFile->pktCount() > 0) {
+            const auto& dsId = dsFile->pktIndexEntry(0).dsId();
+            const auto dst = dsFile->pktIndexEntry(0).dst();
 
             if (dsId && dst) {
                 dsIds.insert({dst->id(), *dsId});
@@ -99,8 +97,8 @@ void TraceInfoView::_buildTraceInfoRows(const Metadata& metadata)
                 ++dsfWithoutDsIdCount;
             }
 
-            const auto& firstpktIndexEntry = dsFile.pktIndexEntries().front();
-            const auto& lastpktIndexEntry = dsFile.pktIndexEntries().back();
+            const auto& firstpktIndexEntry = dsFile->pktIndexEntries().front();
+            const auto& lastpktIndexEntry = dsFile->pktIndexEntries().back();
             const auto& dsfFirstTs = firstpktIndexEntry.beginTs();
             const auto& dsfLastTs = lastpktIndexEntry.endTs();
 
@@ -211,25 +209,26 @@ void TraceInfoView::_buildTraceInfoRows(const Metadata& metadata)
     rows.push_back(std::make_unique<_EmptyRow>());
     rows.push_back(std::make_unique<_SectionRow>("Metadata stream info"));
 
-    rows.push_back(std::make_unique<_StrPropRow>("Packetized",
-                                                 metadata.streamPktCount() ? "Yes" : "No"));
+    const auto pMetadataStream = dynamic_cast<const yactfr::PacketizedMetadataStream *>(&metadata.stream());
+
+    rows.push_back(std::make_unique<_StrPropRow>("Packetized", pMetadataStream ? "Yes" : "No"));
     rows.push_back(std::make_unique<_StrPropRow>("Path", metadata.path().string()));
     rows.push_back(std::make_unique<_DataLenPropRow>("Size", metadata.fileLen()));
 
-    if (metadata.streamPktCount()) {
-        const auto version = std::to_string(*metadata.streamMajorVersion()) + "." +
-                             std::to_string(*metadata.streamMinorVersion());
+    if (pMetadataStream) {
+        const auto version = std::to_string(pMetadataStream->majorVersion()) + "." +
+                             std::to_string(pMetadataStream->minorVersion());
 
         rows.push_back(std::make_unique<_StrPropRow>("Version", version));
         rows.push_back(std::make_unique<_SIntPropRow>("Packets",
-                                                      static_cast<long long>(*metadata.streamPktCount())));
+                                                      static_cast<long long>(pMetadataStream->packetCount())));
 
-        const auto bo = (*metadata.streamBo() == yactfr::ByteOrder::BIG) ?
-                        "Big endian" : "Little endian";
+        const auto bo = (pMetadataStream->byteOrder() == yactfr::ByteOrder::BIG) ?
+                        "Big-endian" : "Little-endian";
 
         rows.push_back(std::make_unique<_StrPropRow>("Byte order", bo));
         rows.push_back(std::make_unique<_StrPropRow>("UUID",
-                                                     boost::uuids::to_string(*metadata.streamUuid())));
+                                                     boost::uuids::to_string(pMetadataStream->uuid())));
     }
 
     rows.push_back(std::make_unique<_EmptyRow>());
@@ -264,26 +263,38 @@ void TraceInfoView::_buildTraceInfoRows(const Metadata& metadata)
     rows.push_back(std::make_unique<_SIntPropRow>("Clock types",
                                                   static_cast<long long>(traceType.clockTypes().size())));
 
-    if (!traceType.env().entries().empty()) {
+    if (trace.envStreamError() || trace.env()) {
         rows.push_back(std::make_unique<_EmptyRow>());
-        rows.push_back(std::make_unique<_SectionRow>("Trace type environment"));
+        rows.push_back(std::make_unique<_SectionRow>(std::string {"Trace environment"} +
+                                                     (trace.envStreamError() ? " (error)" : "")));
 
-        std::vector<const yactfr::TraceTypeEnv::Entries::value_type *> entries;
+        if (trace.envStreamError()) {
+            assert(!trace.env());
 
-        for (auto& entryPair : traceType.env().entries()) {
-            entries.push_back(&entryPair);
-        }
+            if (trace.envStreamError()->path()) {
+                rows.push_back(std::make_unique<_ErrorPropRow>("Data stream path",
+                                                               trace.envStreamError()->path()->string()));
+            }
 
-        std::sort(entries.begin(), entries.end(),
-                  [](const auto entryLeft, const auto entryRight) {
-            return entryLeft->first < entryRight->first;
-        });
+            if (trace.envStreamError()->offset()) {
+                const auto offset = DataLen {*trace.envStreamError()->offset()};
+                const auto offsetStr = offset.format(utils::LenFmtMode::BITS, ',');
 
-        for (const auto& entryPair : entries) {
-            if (const auto intEntry = boost::get<long long>(&entryPair->second)) {
-                rows.push_back(std::make_unique<_SIntPropRow>(entryPair->first, *intEntry));
-            } else if (const auto strEntry = boost::get<std::string>(&entryPair->second)) {
-                rows.push_back(std::make_unique<_StrPropRow>(entryPair->first, *strEntry));
+                rows.push_back(std::make_unique<_ErrorPropRow>("Error offset",
+                                                               offsetStr.first + ' ' + offsetStr.second));
+            }
+
+            rows.push_back(std::make_unique<_ErrorPropRow>("Error message",
+                                                           trace.envStreamError()->msg()));
+        } else {
+            assert(!trace.envStreamError());
+
+            for (auto& entryPair : trace.env()->entries()) {
+                if (const auto intEntry = boost::get<long long>(&entryPair.second)) {
+                    rows.push_back(std::make_unique<_SIntPropRow>(entryPair.first, *intEntry));
+                } else if (const auto strEntry = boost::get<std::string>(&entryPair.second)) {
+                    rows.push_back(std::make_unique<_StrPropRow>(entryPair.first, *strEntry));
+                }
             }
         }
     }
@@ -300,8 +311,9 @@ void TraceInfoView::_buildTraceInfoRows(const Metadata& metadata)
 
     for (auto& clkType : traceType.clockTypes()) {
         rows.push_back(std::make_unique<_EmptyRow>());
+        assert(clkType->name());
 
-        const auto title = std::string {"Clock type `"} + clkType->name() + "`";
+        const auto title = std::string {"Clock type `"} + *clkType->name() + "`";
 
         rows.push_back(std::make_unique<_SectionRow>(title));
 
@@ -319,24 +331,24 @@ void TraceInfoView::_buildTraceInfoRows(const Metadata& metadata)
         }
 
         rows.push_back(std::make_unique<_SIntPropRow>("Frequency (Hz)",
-                                                      static_cast<long long>(clkType->freq())));
+                                                      static_cast<long long>(clkType->frequency())));
         rows.push_back(std::make_unique<_SIntPropRow>("Offset (s)",
                                                       static_cast<long long>(clkType->offset().seconds())));
         rows.push_back(std::make_unique<_SIntPropRow>("Offset (cycles)",
                                                       static_cast<long long>(clkType->offset().cycles())));
-        rows.push_back(std::make_unique<_SIntPropRow>("Error (cycles)",
-                                                      static_cast<long long>(clkType->error())));
-        rows.push_back(std::make_unique<_StrPropRow>("Is absolute",
-                                                     clkType->isAbsolute() ? "Yes" : "No"));
+        rows.push_back(std::make_unique<_SIntPropRow>("Precision (cycles)",
+                                                      static_cast<long long>(clkType->precision())));
+        rows.push_back(std::make_unique<_StrPropRow>("Origin is Unix epoch",
+                                                     clkType->originIsUnixEpoch() ? "Yes" : "No"));
     }
 
-    _traceInfo[&traceType] = std::move(rows);
+    _traceInfo[&trace] = std::move(rows);
 }
 
 void TraceInfoView::_buildRows()
 {
     for (const auto& dsfState : _state->dsFileStates()) {
-        this->_buildTraceInfoRows(dsfState->metadata());
+        this->_buildTraceInfoRows(dsfState->dsFile().trace());
     }
 
     for (const auto& traceInfo : _traceInfo) {
@@ -404,6 +416,9 @@ void TraceInfoView::_drawRows()
                 } else {
                     this->_safePrint("%s", utils::sepNumber(vRow->val, ',').c_str());
                 }
+            } else if (const auto vRow = dynamic_cast<const _ErrorPropRow *>(row.get())) {
+                this->_stylist().error(*this);
+                this->_safePrint("%s", vRow->val.c_str());
             } else if (const auto vRow = dynamic_cast<const _StrPropRow *>(row.get())) {
                 this->_safePrint("%s", vRow->val.c_str());
             } else if (const auto vRow = dynamic_cast<const _DataLenPropRow *>(row.get())) {
@@ -431,7 +446,7 @@ void TraceInfoView::_drawRows()
 void TraceInfoView::_stateChanged(const Message msg)
 {
     if (msg == Message::ACTIVE_DS_FILE_CHANGED) {
-        _rows = &_traceInfo[_state->metadata().traceType().get()];
+        _rows = &_traceInfo[&_state->trace()];
         this->_index(0);
         this->_rowCount(_rows->size());
         this->_redrawContent();

@@ -12,8 +12,7 @@
 #include <cstdint>
 #include <ostream>
 #include <boost/operators.hpp>
-#include <yactfr/element.hpp>
-#include <yactfr/metadata/clock-type.hpp>
+#include <yactfr/yactfr.hpp>
 
 #include "ts.hpp"
 #include "duration.hpp"

@@ -9,7 +9,7 @@
 #define _JACQUES_DATA_PKT_CHECKPOINTS_BUILD_LISTENER_HPP
 
 #include <memory>
-#include <yactfr/metadata/fwd.hpp>
+#include <yactfr/yactfr.hpp>
 
 #include "er.hpp"
 #include "pkt-index-entry.hpp"

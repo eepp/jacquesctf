@@ -6,8 +6,7 @@
  */
 
 #include <algorithm>
-#include <yactfr/metadata/string-type.hpp>
-#include <yactfr/metadata/struct-type.hpp>
+#include <yactfr/yactfr.hpp>
 
 #include "pkt.hpp"
 #include "content-pkt-region.hpp"
@@ -67,7 +66,7 @@ void Pkt::_ensureErIsCached(const Index indexInPkt)
     _it.restorePosition(cp->second);
 
     while (true) {
-        if (_it->kind() == yactfr::Element::Kind::EVENT_RECORD_BEGINNING) {
+        if (_it->isEventRecordBeginningElement()) {
             if (curIndex == toCacheIndexInPkt) {
                 const auto count = std::min(_erCacheMaxSize, _checkpoints.erCount() - curIndex);
 
@@ -128,7 +127,7 @@ void Pkt::_ensureOffsetInPktBitsIsCached(const Index offsetInPktBits)
 
     // find closest event record before or containing offset
     while (true) {
-        if (_it->kind() == yactfr::Element::Kind::EVENT_RECORD_BEGINNING) {
+        if (_it->isEventRecordBeginningElement()) {
             if (this->_itOffsetInPktBits() == offsetInPktBits) {
                 break;
             } else if (this->_itOffsetInPktBits() > offsetInPktBits) {
@@ -137,8 +136,7 @@ void Pkt::_ensureOffsetInPktBitsIsCached(const Index offsetInPktBits)
                 --curIndex;
                 break;
             }
-
-        } else if (_it->kind() == yactfr::Element::Kind::EVENT_RECORD_END) {
+        } else if (_it->isEventRecordEndElement()) {
             ++curIndex;
         }
 
@@ -183,47 +181,70 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
     PktRegion::SP region;
 
     switch (_it->kind()) {
-    case ElemKind::SIGNED_INT:
-    case ElemKind::SIGNED_ENUM:
-        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::SignedIntElement>(scope);
-        break;
-
-    case ElemKind::UNSIGNED_INT:
-    case ElemKind::UNSIGNED_ENUM:
-        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::UnsignedIntElement>(scope);
-        break;
-
-    case ElemKind::FLOAT:
-        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FloatElement>(scope);
-        break;
-
-    case ElemKind::STRING_BEGINNING:
-    case ElemKind::STATIC_TEXT_ARRAY_BEGINNING:
-    case ElemKind::DYNAMIC_TEXT_ARRAY_BEGINNING:
+    case ElemKind::FIXED_LENGTH_BIT_ARRAY:
     {
-        // strings are always aligned within the packet
+        const auto val = _it->asFixedLengthBitArrayElement().unsignedIntegerValue();
+
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthBitArrayElement>(scope,
+                                                                                                 val);
+        break;
+    }
+
+    case ElemKind::FIXED_LENGTH_BOOLEAN:
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthBooleanElement>(scope);
+        break;
+
+    case ElemKind::FIXED_LENGTH_SIGNED_INTEGER:
+    case ElemKind::FIXED_LENGTH_SIGNED_ENUMERATION:
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthSignedIntegerElement>(scope);
+        break;
+
+    case ElemKind::FIXED_LENGTH_UNSIGNED_INTEGER:
+    case ElemKind::FIXED_LENGTH_UNSIGNED_ENUMERATION:
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthUnsignedIntegerElement>(scope);
+        break;
+
+    case ElemKind::FIXED_LENGTH_FLOATING_POINT_NUMBER:
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthFloatingPointNumberElement>(scope);
+        break;
+
+    case ElemKind::VARIABLE_LENGTH_BIT_ARRAY:
+    {
+        const auto val = _it->asVariableLengthBitArrayElement().unsignedIntegerValue();
+
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::VariableLengthBitArrayElement>(scope,
+                                                                                                    val);
+        break;
+    }
+
+    case ElemKind::VARIABLE_LENGTH_SIGNED_INTEGER:
+    case ElemKind::VARIABLE_LENGTH_SIGNED_ENUMERATION:
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::VariableLengthSignedIntegerElement>(scope);
+        break;
+
+    case ElemKind::VARIABLE_LENGTH_UNSIGNED_INTEGER:
+    case ElemKind::VARIABLE_LENGTH_UNSIGNED_ENUMERATION:
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::VariableLengthUnsignedIntegerElement>(scope);
+        break;
+
+    case ElemKind::NULL_TERMINATED_STRING_BEGINNING:
+    case ElemKind::STATIC_LENGTH_STRING_BEGINNING:
+    case ElemKind::DYNAMIC_LENGTH_STRING_BEGINNING:
+    {
+        // null-terminated strings are always byte-aligned within the packet
         assert(this->_itOffsetInPktBits() % 8 == 0);
 
-        // get appropriate data type
-        const yactfr::DataType *dt;
-
-        switch (_it->kind()) {
-        case ElemKind::STRING_BEGINNING:
-            dt = &static_cast<const yactfr::StringBeginningElement&>(*_it).type();
-            break;
-
-        case ElemKind::STATIC_TEXT_ARRAY_BEGINNING:
-            dt = &static_cast<const yactfr::StaticTextArrayBeginningElement&>(*_it).type();
-            break;
-
-        case ElemKind::DYNAMIC_TEXT_ARRAY_BEGINNING:
-            dt = &static_cast<const yactfr::DynamicTextArrayBeginningElement&>(*_it).type();
-            break;
-        default:
-            std::abort();
-        }
-
-        assert(dt);
+        // get corresponding data type
+        auto& dt = [this]() -> const yactfr::DataType& {
+            if (_it->isNullTerminatedStringBeginningElement()) {
+                return _it->asNullTerminatedStringBeginningElement().type();
+            } else if (_it->isStaticLengthStringBeginningElement()) {
+                return _it->asStaticLengthStringBeginningElement().type();
+            } else {
+                assert(_it->isDynamicLengthStringBeginningElement());
+                return _it->asDynamicLengthStringBeginningElement().type();
+            }
+        }();
 
         const auto offsetStartBits = this->_itOffsetInPktBits();
         const auto bufStart = _mmapFile->addr() + this->_itOffsetInPktBytes();
@@ -231,19 +252,19 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
 
         ++_it;
 
-        while (_it->kind() != ElemKind::STRING_END &&
-                _it->kind() != ElemKind::STATIC_TEXT_ARRAY_END &&
-                _it->kind() != ElemKind::DYNAMIC_TEXT_ARRAY_END) {
-            assert(_it->kind() == ElemKind::SUBSTRING);
+        while (!_it->isNullTerminatedStringEndElement() &&
+                !_it->isStaticLengthStringEndElement() &&
+                !_it->isDynamicLengthStringEndElement()) {
+            assert(_it->isSubstringElement());
 
             // "consume" this substring
-            bufEnd += static_cast<const yactfr::SubstringElement&>(*_it).size();
+            bufEnd += _it->asSubstringElement().size();
             ++_it;
         }
 
         /*
-         * Find end of string in buffer. std::find() returns either
-         * the location of the (first) null character or `bufEnd`.
+         * Find end of string in buffer. std::find() returns either the
+         * location of the (first) null character or `bufEnd`.
          */
         const auto bufStrEnd = std::find(bufStart, bufEnd, 0);
 
@@ -258,9 +279,48 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
             DataLen::fromBytes(bufEnd - bufStart)
         };
 
-        // okay to move the scope here, it's never used afterwards
-        region = std::make_shared<ContentPktRegion>(segment, std::move(scope), *dt,
-                                                    ContentPktRegion::Val {str});
+        region = std::make_shared<ContentPktRegion>(segment, std::move(scope), dt,
+                                                    ContentPktRegion::Val {std::move(str)});
+        break;
+    }
+
+    case ElemKind::STATIC_LENGTH_BLOB_BEGINNING:
+    case ElemKind::DYNAMIC_LENGTH_BLOB_BEGINNING:
+    {
+        // BLOBs are always byte-aligned within the packet
+        assert(this->_itOffsetInPktBits() % 8 == 0);
+
+        // get corresponding data type
+        auto& dt = [this]() -> const yactfr::DataType& {
+            if (_it->isStaticLengthBlobBeginningElement()) {
+                return _it->asStaticLengthBlobBeginningElement().type();
+            } else {
+                assert(_it->isDynamicLengthBlobBeginningElement());
+                return _it->asDynamicLengthBlobBeginningElement().type();
+            }
+        }();
+
+        const auto offsetStartBits = this->_itOffsetInPktBits();
+        const auto bufStart = _mmapFile->addr() + this->_itOffsetInPktBytes();
+        auto bufEnd = bufStart;
+
+        ++_it;
+
+        while (!_it->isStaticLengthBlobEndElement() && !_it->isDynamicLengthBlobEndElement()) {
+            assert(_it->isBlobSectionElement());
+
+            // "consume" this BLOB section
+            bufEnd += _it->asBlobSectionElement().size();
+            ++_it;
+        }
+
+        const PktSegment segment {
+            offsetStartBits,
+            DataLen::fromBytes(bufEnd - bufStart)
+        };
+
+        region = std::make_shared<ContentPktRegion>(segment, std::move(scope), dt,
+                                                    ContentPktRegion::Val {nullptr});
         break;
     }
 
@@ -269,7 +329,7 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
     }
 
     assert(region);
-    this->_trySetPreviousRegionOffsetInPktBits(*region);
+    this->_trySetPrevRegionOffsetInPktBits(*region);
     _curRegionCache.push_back(std::move(region));
 
     /*
@@ -309,7 +369,7 @@ void Pkt::_tryCachePaddingRegionBeforeCurIt(Scope::SP scope)
 
     auto region = std::make_shared<PaddingPktRegion>(segment, std::move(scope));
 
-    this->_trySetPreviousRegionOffsetInPktBits(*region);
+    this->_trySetPrevRegionOffsetInPktBits(*region);
     _curRegionCache.push_back(std::move(region));
 }
 
@@ -337,14 +397,23 @@ void Pkt::_cachePreambleRegions()
         while (!isDone) {
             // TODO: replace with element visitor
             switch (_it->kind()) {
-            case ElemKind::SIGNED_INT:
-            case ElemKind::UNSIGNED_INT:
-            case ElemKind::SIGNED_ENUM:
-            case ElemKind::UNSIGNED_ENUM:
-            case ElemKind::FLOAT:
-            case ElemKind::STRING_BEGINNING:
-            case ElemKind::STATIC_TEXT_ARRAY_BEGINNING:
-            case ElemKind::DYNAMIC_TEXT_ARRAY_BEGINNING:
+            case ElemKind::FIXED_LENGTH_BIT_ARRAY:
+            case ElemKind::FIXED_LENGTH_BOOLEAN:
+            case ElemKind::FIXED_LENGTH_SIGNED_INTEGER:
+            case ElemKind::FIXED_LENGTH_UNSIGNED_INTEGER:
+            case ElemKind::FIXED_LENGTH_SIGNED_ENUMERATION:
+            case ElemKind::FIXED_LENGTH_UNSIGNED_ENUMERATION:
+            case ElemKind::FIXED_LENGTH_FLOATING_POINT_NUMBER:
+            case ElemKind::VARIABLE_LENGTH_BIT_ARRAY:
+            case ElemKind::VARIABLE_LENGTH_SIGNED_INTEGER:
+            case ElemKind::VARIABLE_LENGTH_UNSIGNED_INTEGER:
+            case ElemKind::VARIABLE_LENGTH_SIGNED_ENUMERATION:
+            case ElemKind::VARIABLE_LENGTH_UNSIGNED_ENUMERATION:
+            case ElemKind::NULL_TERMINATED_STRING_BEGINNING:
+            case ElemKind::STATIC_LENGTH_STRING_BEGINNING:
+            case ElemKind::DYNAMIC_LENGTH_STRING_BEGINNING:
+            case ElemKind::STATIC_LENGTH_BLOB_BEGINNING:
+            case ElemKind::DYNAMIC_LENGTH_BLOB_BEGINNING:
                 this->_tryCachePaddingRegionBeforeCurIt(curScope);
 
                 // _cacheContentRegionAtCurIt() increments the iterator
@@ -356,20 +425,16 @@ void Pkt::_cachePreambleRegions()
                 // cache padding before scope
                 this->_tryCachePaddingRegionBeforeCurIt(curScope);
 
-                auto& elem = static_cast<const yactfr::ScopeBeginningElement&>(*_it);
-
-                curScope = std::make_shared<Scope>(elem.scope());
+                curScope = std::make_shared<Scope>(_it->asScopeBeginningElement().scope());
                 curScope->segment().offsetInPktBits(this->_itOffsetInPktBits());
                 ++_it;
                 break;
             }
 
-            case ElemKind::STRUCT_BEGINNING:
+            case ElemKind::STRUCTURE_BEGINNING:
             {
                 if (curScope && !curScope->dt()) {
-                    auto& elem = static_cast<const yactfr::StructBeginningElement&>(*_it);
-
-                    curScope->dt(elem.type());
+                    curScope->dt(_it->asStructureBeginningElement().type());
                 }
 
                 ++_it;
@@ -394,7 +459,7 @@ void Pkt::_cachePreambleRegions()
 
             case ElemKind::PACKET_CONTENT_END:
                 // cache padding before end of packet
-                while (_it->kind() != ElemKind::PACKET_END) {
+                while (!_it->isPacketEndElement()) {
                     ++_it;
                 }
 
@@ -420,12 +485,11 @@ void Pkt::_cachePreambleRegions()
         const auto offsetEndBits = _indexEntry->effectiveTotalLen().bits();
 
         if (offsetEndBits != offsetStartBits) {
-            const PktSegment segment {
+            auto region = std::make_shared<ErrorPktRegion>(PktSegment {
                 offsetStartBits, offsetEndBits - offsetStartBits, bo
-            };
-            auto region = std::make_shared<ErrorPktRegion>(segment);
+            });
 
-            this->_trySetPreviousRegionOffsetInPktBits(*region);
+            this->_trySetPrevRegionOffsetInPktBits(*region);
             _curRegionCache.push_back(std::move(region));
         }
     }
@@ -449,14 +513,23 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
 
         // TODO: replace with element visitor
         switch (_it->kind()) {
-        case ElemKind::SIGNED_INT:
-        case ElemKind::UNSIGNED_INT:
-        case ElemKind::SIGNED_ENUM:
-        case ElemKind::UNSIGNED_ENUM:
-        case ElemKind::FLOAT:
-        case ElemKind::STRING_BEGINNING:
-        case ElemKind::STATIC_TEXT_ARRAY_BEGINNING:
-        case ElemKind::DYNAMIC_TEXT_ARRAY_BEGINNING:
+        case ElemKind::FIXED_LENGTH_BIT_ARRAY:
+        case ElemKind::FIXED_LENGTH_BOOLEAN:
+        case ElemKind::FIXED_LENGTH_SIGNED_INTEGER:
+        case ElemKind::FIXED_LENGTH_UNSIGNED_INTEGER:
+        case ElemKind::FIXED_LENGTH_SIGNED_ENUMERATION:
+        case ElemKind::FIXED_LENGTH_UNSIGNED_ENUMERATION:
+        case ElemKind::FIXED_LENGTH_FLOATING_POINT_NUMBER:
+        case ElemKind::VARIABLE_LENGTH_BIT_ARRAY:
+        case ElemKind::VARIABLE_LENGTH_SIGNED_INTEGER:
+        case ElemKind::VARIABLE_LENGTH_UNSIGNED_INTEGER:
+        case ElemKind::VARIABLE_LENGTH_SIGNED_ENUMERATION:
+        case ElemKind::VARIABLE_LENGTH_UNSIGNED_ENUMERATION:
+        case ElemKind::NULL_TERMINATED_STRING_BEGINNING:
+        case ElemKind::STATIC_LENGTH_STRING_BEGINNING:
+        case ElemKind::DYNAMIC_LENGTH_STRING_BEGINNING:
+        case ElemKind::STATIC_LENGTH_BLOB_BEGINNING:
+        case ElemKind::DYNAMIC_LENGTH_BLOB_BEGINNING:
             this->_tryCachePaddingRegionBeforeCurIt(curScope);
 
             // _cacheContentRegionAtCurIt() increments the iterator
@@ -468,20 +541,16 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
             // cache padding before scope
             this->_tryCachePaddingRegionBeforeCurIt(curScope);
 
-            auto& elem = static_cast<const yactfr::ScopeBeginningElement&>(*_it);
-
-            curScope = std::make_shared<Scope>(curEr, elem.scope());
+            curScope = std::make_shared<Scope>(curEr, _it->asScopeBeginningElement().scope());
             curScope->segment().offsetInPktBits(this->_itOffsetInPktBits());
             ++_it;
             break;
         }
 
-        case ElemKind::STRUCT_BEGINNING:
+        case ElemKind::STRUCTURE_BEGINNING:
         {
             if (curScope && !curScope->dt()) {
-                auto& elem = static_cast<const yactfr::StructBeginningElement&>(*_it);
-
-                curScope->dt(elem.type());
+                curScope->dt(_it->asStructureBeginningElement().type());
             }
 
             ++_it;
@@ -512,7 +581,7 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
         case ElemKind::EVENT_RECORD_END:
             if (curEr) {
                 curEr->segment().len(this->_itOffsetInPktBits() -
-                                    curEr->segment().offsetInPktBits());
+                                     curEr->segment().offsetInPktBits());
                 curScope = nullptr;
                 curEr = nullptr;
                 ++erIndexInPkt;
@@ -521,23 +590,26 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
             ++_it;
             break;
 
-        case ElemKind::EVENT_RECORD_TYPE:
-            if (curEr) {
-                auto& elem = static_cast<const yactfr::EventRecordTypeElement&>(*_it);
+        case ElemKind::EVENT_RECORD_INFO:
+        {
+            auto& elem = _it->asEventRecordInfoElement();
 
-                curEr->type(elem.eventRecordType());
+            if (curEr && elem.type()) {
+                curEr->type(*elem.type());
             }
 
             ++_it;
             break;
+        }
 
-        case ElemKind::CLOCK_VALUE:
-            if (curEr) {
-                if (!curEr->firstTs() && _metadata->isCorrelatable()) {
-                    auto& elem = static_cast<const yactfr::ClockValueElement&>(*_it);
-
-                    curEr->firstTs(Ts {elem});
-                }
+        case ElemKind::DEFAULT_CLOCK_VALUE:
+            if (curEr && _metadata->isCorrelatable()) {
+                assert(_indexEntry->dst());
+                assert(_indexEntry->dst()->defaultClockType());
+                curEr->ts(Ts {
+                    _it->asDefaultClockValueElement().cycles(),
+                    *_indexEntry->dst()->defaultClockType()
+                });
             }
 
             ++_it;
@@ -554,7 +626,7 @@ void Pkt::_cacheRegionsFromOneErAtCurIt(const Index indexInPkt)
 {
     using ElemKind = yactfr::Element::Kind;
 
-    assert(_it->kind() == ElemKind::EVENT_RECORD_BEGINNING);
+    assert(_it->isEventRecordBeginningElement());
     this->_cacheRegionsAtCurIt(ElemKind::EVENT_RECORD_END, indexInPkt);
 }
 
@@ -580,7 +652,7 @@ void Pkt::_cacheRegionsAtCurItUntilError(const Index initErIndexInPkt)
             };
             auto region = std::make_shared<ErrorPktRegion>(segment);
 
-            this->_trySetPreviousRegionOffsetInPktBits(*region);
+            this->_trySetPrevRegionOffsetInPktBits(*region);
             _curRegionCache.push_back(std::move(region));
         }
     }
@@ -604,10 +676,7 @@ void Pkt::_cacheRegionsFromErsAtCurIt(const Index erIndexInPkt, const Size erCou
      *             Cache any padding region after the last event record.
      */
     assert(erCount > 0);
-
-    using ElemKind = yactfr::Element::Kind;
-
-    assert(_it->kind() == ElemKind::EVENT_RECORD_BEGINNING);
+    assert(_it->isEventRecordBeginningElement());
     _curRegionCache.clear();
     _curErCache.clear();
 
@@ -621,8 +690,8 @@ void Pkt::_cacheRegionsFromErsAtCurIt(const Index erIndexInPkt, const Size erCou
     assert(erIndexInPkt <= endErIndexInPktBeforeLast);
 
     for (auto index = erIndexInPkt; index < endErIndexInPktBeforeLast; ++index) {
-        while (_it->kind() != ElemKind::EVENT_RECORD_BEGINNING) {
-            assert(_it->kind() != ElemKind::PACKET_CONTENT_END);
+        while (!_it->isEventRecordBeginningElement()) {
+            assert(!_it->isPacketEndElement());
             ++_it;
         }
 
@@ -641,7 +710,7 @@ void Pkt::_cacheRegionsFromErsAtCurIt(const Index erIndexInPkt, const Size erCou
             this->_cacheRegionsAtCurItUntilError(endErIndexInPktBeforeLast);
         } else {
             // end of packet: also cache any padding before the end of packet
-            while (_it->kind() != ElemKind::PACKET_END) {
+            while (!_it->isPacketEndElement()) {
                 ++_it;
             }
 
@@ -706,8 +775,8 @@ const PktRegion *Pkt::previousRegion(const PktRegion& region)
         return nullptr;
     }
 
-    if (region.previousRegionOffsetInPktBits()) {
-        return &this->regionAtOffsetInPktBits(*region.previousRegionOffsetInPktBits());
+    if (region.prevRegionOffsetInPktBits()) {
+        return &this->regionAtOffsetInPktBits(*region.prevRegionOffsetInPktBits());
     }
 
     return &this->regionAtOffsetInPktBits(region.segment().offsetInPktBits() - 1);

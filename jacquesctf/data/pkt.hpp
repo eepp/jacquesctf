@@ -11,11 +11,7 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
-#include <yactfr/element-sequence.hpp>
-#include <yactfr/element-sequence-iterator.hpp>
-#include <yactfr/data-source.hpp>
-#include <yactfr/metadata/float-type.hpp>
-#include <yactfr/metadata/int-type.hpp>
+#include <yactfr/yactfr.hpp>
 #include <boost/core/noncopyable.hpp>
 
 #include "pkt-index-entry.hpp"
@@ -50,20 +46,19 @@ namespace jacques {
  * packet regions. The caching operation performed by
  * _ensureErIsCached() makes sure that all the packet regions of at most
  * `_erCacheMaxSize` event records starting at the requested index minus
- * `_erCacheMaxSize / 2` are in cache. Substracting
- * `_erCacheMaxSize / 2` makes packet regions and event records
- * available "around" the requested index, which makes sense for a
- * packet inspection activity because the user is typically inspecting
- * around a given offset.
+ * `_erCacheMaxSize / 2` are in cache. Subtracting `_erCacheMaxSize / 2`
+ * makes packet regions and event records available "around" the
+ * requested index, which makes sense for a packet inspection activity
+ * because the user is typically inspecting around a given offset.
  *
  * When a packet object is constructed, it caches everything known to be
  * in the preamble segment, that is, everything before the first event
  * record (if any), or all the regions of the packet otherwise
  * (including any padding or error packet region before the end of the
  * packet). This preamble packet region cache is kept as a separate
- * cache and copied back to the working cache when we make request an
- * offset located within it. When the working cache is the preamble
- * cache, the event record cache is empty.
+ * cache and copied back to the working cache when we request an offset
+ * located within it. When the working cache is the preamble cache, the
+ * event record cache is empty.
  *
  *     preamble             ER 0          ER 1            ER 2
  *     #################----**********----***********-----********----
@@ -86,9 +81,9 @@ namespace jacques {
  *     preamble packet region cache
  *
  * If _cacheRegionsFromErsAtCurIt() adds anything to the packet region
- * cache, if the last event record to be part of the cache is the last
- * event record of the packet, it also adds any padding or error packet
- * region before the end of the packet:
+ * cache, and if the last event record to be part of the cache is the
+ * last event record of the packet, it also adds any padding or error
+ * packet region before the end of the packet:
  *
  *        ER 176   ER 177       ER 294      ER 295         ER 296
  *     ...*******--******----...********----**********-----*******---...
@@ -139,6 +134,11 @@ public:
                  std::unique_ptr<MemMappedFile> mmapFile,
                  PktCheckpointsBuildListener& pktCheckpointsBuildListener);
 
+    /*
+     * Appends packet regions to `regions` (calling
+     * ContainerT::push_back()) from `offsetInPktBits` to
+     * `endOffsetInPktBits` (excluded).
+     */
     template <typename ContainerT>
     void appendRegions(ContainerT& regions, const Index offsetInPktBits,
                        const Index endOffsetInPktBits)
@@ -338,16 +338,16 @@ private:
 
     /*
      * Makes sure that the event record at index `indexInPkt` exists in
-     * the caches. If it does not exist, this method caches the
+     * the caches. If it doesn't exist, then this method caches the
      * requested event record as well as half of `_erCacheMaxSize` event
-     * records around it (if possible), centering the requested event
-     * record within its cache.
+     * records before and after (if possible), "centering" the requested
+     * event record within its cache.
      */
     void _ensureErIsCached(Index indexInPkt);
 
     /*
      * Makes sure that a packet region containing the bit
-     * `offsetInPktBits` exists in cache. If it does not exist, the
+     * `offsetInPktBits` exists in cache. If it doesn't exist, the
      * method finds the closest event record containing this bit and
      * calls _ensureErIsCached() with its index.
      */
@@ -355,7 +355,7 @@ private:
 
     /*
      * Appends all the remaining packet regions starting at the current
-     * iterator until any decoding error and then an error packet
+     * iterator until any decoding error, and then an error packet
      * region.
      */
     void _cacheRegionsAtCurItUntilError(Index initErIndexInPkt);
@@ -387,7 +387,7 @@ private:
      * iterator. This method uses the last packet region of the current
      * cache to know if there's padding, and if there is, what should be
      * its byte order. The padding packet region is assigned scope
-     * `scope` (can be `nullptr`).
+     * `scope` (may be `nullptr`).
      */
     void _tryCachePaddingRegionBeforeCurIt(Scope::SP scope);
 
@@ -395,7 +395,7 @@ private:
      * Appends a content packet region to the current cache from the
      * element(s) at the current iterator. Increments the current
      * iterator so that it contains the following element. The content
-     * packet region is assigned scope `scope` (cannot be `nullptr`).
+     * packet region is assigned scope `scope` (may not be `nullptr`).
      */
     void _cacheContentRegionAtCurIt(Scope::SP scope);
 
@@ -486,31 +486,59 @@ private:
         return this->_itOffsetInPktBits() / 8;
     }
 
+    static Size _bitArrayElemLen(const yactfr::FixedLengthBitArrayElement& elem) noexcept
+    {
+        return elem.type().length();
+    }
+
+    static Size _bitArrayElemLen(const yactfr::VariableLengthBitArrayElement& elem) noexcept
+    {
+        // `elem.length()` is the length of the decoded bits
+        return elem.length() + elem.length() / 7;
+    }
+
     /*
-     * Creates a content packet region from the element of the current
-     * iterator known to have type `ElemT`. The content packet region is
-     * assigned scope `scope` (cannot be `nullptr`).
+     * Creates and returns a content packet region from the bit array
+     * element of the current iterator known to have the type `ElemT`
+     * and having the value `val`.
+     *
+     * The created content packet region is assigned scope `scope` (may
+     * not be `nullptr`).
+     */
+    template <typename ElemT, typename ValT>
+    ContentPktRegion::SP _contentRegionFromBitArrayElemAtCurIt(Scope::SP scope, const ValT val)
+    {
+        assert(scope);
+
+        auto& elem = static_cast<const ElemT&>(*_it);
+        const PktSegment segment {this->_itOffsetInPktBits(), Pkt::_bitArrayElemLen(elem)};
+
+        return std::make_shared<ContentPktRegion>(segment, std::move(scope), elem.type(),
+                                                  ContentPktRegion::Val {val});
+    }
+
+    /*
+     * Creates and returns a content packet region from the bit array
+     * element of the current iterator known to have the type `ElemT`.
+     *
+     * The content packet region is assigned scope `scope` (may not be
+     * `nullptr`).
      */
     template <typename ElemT>
     ContentPktRegion::SP _contentRegionFromBitArrayElemAtCurIt(Scope::SP scope)
     {
         auto& elem = static_cast<const ElemT&>(*_it);
-        const PktSegment segment {
-            this->_itOffsetInPktBits(), elem.type().size()
-        };
 
-        // okay to move the scope here, it's never used afterwards
-        return std::make_shared<ContentPktRegion>(segment, std::move(scope), elem.type(),
-                                                  ContentPktRegion::Val {elem.value()});
+        return this->_contentRegionFromBitArrayElemAtCurIt<ElemT>(std::move(scope), elem.value());
     }
 
-    void _trySetPreviousRegionOffsetInPktBits(PktRegion& region) const
+    void _trySetPrevRegionOffsetInPktBits(PktRegion& region) const
     {
         if (_curRegionCache.empty()) {
             return;
         }
 
-        region.previousRegionOffsetInPktBits(_curRegionCache.back()->segment().offsetInPktBits());
+        region.prevRegionOffsetInPktBits(_curRegionCache.back()->segment().offsetInPktBits());
     }
 
     template <typename ContainerT, typename IterT>
@@ -535,14 +563,14 @@ private:
 
         assert(er);
 
-        if (er->firstTs() && _indexEntry->endTs() &&
-                prop >= std::forward<GetProcFuncT>(getProcFuncT)(*er->firstTs()) &&
-                prop < std::forward<GetProcFuncT>(getProcFuncT)(*_indexEntry->endTs())) {
+        if (er->ts() && _indexEntry->endTs() &&
+                prop >= getProcFuncT(*er->ts()) &&
+                prop < getProcFuncT(*_indexEntry->endTs())) {
             // special case: between last event record and end of packet
             return er.get();
         }
 
-        const auto cp = std::forward<CpNearestFuncT>(cpNearestFunc)(prop);
+        const auto cp = cpNearestFunc(prop);
 
         if (!cp) {
             return nullptr;
@@ -552,29 +580,26 @@ private:
 
         auto curIndex = cp->first->indexInPkt();
         auto inEr = false;
-        boost::optional<Ts> firstTs;
+        boost::optional<Ts> ts;
         boost::optional<Index> indexInPkt;
 
         while (_it != _endIt) {
-            switch (_it->kind()) {
-            case yactfr::Element::Kind::EVENT_RECORD_BEGINNING:
+            if (_it->isEventRecordBeginningElement()) {
                 inEr = true;
-                firstTs = boost::none;
+                ts = boost::none;
                 ++_it;
-                break;
+            } else if (_it->isDefaultClockValueElement()) {
+                if (inEr) {
+                    auto& elem = _it->asDefaultClockValueElement();
 
-            case yactfr::Element::Kind::CLOCK_VALUE:
-            {
-                if (firstTs || !inEr) {
-                    ++_it;
-                    break;
+                    assert(_indexEntry->dst());
+                    assert(_indexEntry->dst()->defaultClockType());
+                    ts = Ts {elem.cycles(), *_indexEntry->dst()->defaultClockType()};
                 }
 
-                auto& elem = static_cast<const yactfr::ClockValueElement&>(*_it);
-
-                firstTs = Ts {elem};
-
-                const auto erProp = std::forward<GetProcFuncT>(getProcFuncT)(*firstTs);
+                ++_it;
+            } else if (_it->isEventRecordInfoElement()) {
+                const auto erProp = getProcFuncT(*ts);
 
                 if (erProp == prop) {
                     indexInPkt = curIndex;
@@ -590,19 +615,12 @@ private:
                 } else {
                     ++_it;
                 }
-
-                break;
-            }
-
-            case yactfr::Element::Kind::EVENT_RECORD_END:
+            } else if (_it->isEventRecordEndElement()) {
                 inEr = false;
                 ++curIndex;
                 ++_it;
-                break;
-
-            default:
+            } else {
                 ++_it;
-                break;
             }
         }
 

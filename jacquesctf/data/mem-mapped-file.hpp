@@ -25,8 +25,7 @@ class MemMappedFile final :
 {
 public:
     explicit MemMappedFile(boost::filesystem::path path,
-                              const boost::optional<int>& fd = boost::none);
-
+                           const boost::optional<int>& fd = boost::none);
     ~MemMappedFile();
 
 public:
