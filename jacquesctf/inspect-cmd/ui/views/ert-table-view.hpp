@@ -48,7 +48,7 @@ protected:
 private:
     void _setColumnDescrs();
     void _buildRows(const State& state);
-    void _resetRow(const std::vector<TableViewColumnDescr>& descrs);
+    void _resetRow();
     void _buildLogLevelNames();
 
 private:

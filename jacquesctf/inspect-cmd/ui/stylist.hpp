@@ -102,7 +102,7 @@ public:
     void pktDataViewErFirstPktRegion(const View& view) const;
     void pktDataViewBookmark(const View& view, unsigned int id) const;
     void pktDataViewSel(const View& view, const PktDataViewSelType& selType) const;
-    void pktDataViewAuxSel(const View& view, const PktDataViewSelType& selType) const;
+    void pktDataViewAuxSel(const View& view) const;
 
 private:
     struct _Style {

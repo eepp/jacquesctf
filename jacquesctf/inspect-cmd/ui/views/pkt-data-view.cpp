@@ -438,7 +438,7 @@ void PktDataView::_drawChar(const _Char& ch) const
         if (ch.pktRegions.size() == 1) {
             this->_stylist().pktDataViewSel(*this, Stylist::PktDataViewSelType::CUR);
         } else {
-            this->_stylist().pktDataViewAuxSel(*this, Stylist::PktDataViewSelType::CUR);
+            this->_stylist().pktDataViewAuxSel(*this);
         }
 
         this->_putChar(ch.pt, ch.val);

@@ -9,11 +9,11 @@
 
 namespace jacques {
 
-void PktCheckpointsBuildListener::_startBuild(const PktIndexEntry& pktIndexEntry)
+void PktCheckpointsBuildListener::_startBuild(const PktIndexEntry&)
 {
 }
 
-void PktCheckpointsBuildListener::_update(const Er& er)
+void PktCheckpointsBuildListener::_update(const Er&)
 {
 }
 

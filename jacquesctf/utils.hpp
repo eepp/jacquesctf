@@ -108,7 +108,7 @@ void printMetadataParseError(std::ostream& os, const std::string& path,
 
 namespace internal {
 
-static void maybeAppendPeriod(std::string& str)
+static inline void maybeAppendPeriod(std::string& str)
 {
     if (str.empty()) {
         return;
@@ -119,8 +119,8 @@ static void maybeAppendPeriod(std::string& str)
     }
 }
 
-static std::string formatMetadataParseError(const std::string& path,
-                                            const yactfr::MetadataParseError& error)
+static inline std::string formatMetadataParseError(const std::string& path,
+                                                   const yactfr::MetadataParseError& error)
 {
     std::ostringstream ss;
 

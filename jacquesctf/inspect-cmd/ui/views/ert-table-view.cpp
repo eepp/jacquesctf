@@ -29,7 +29,7 @@ void ErtTableView::_resized()
     this->_setColumnDescrs();
 }
 
-void ErtTableView::_resetRow(const std::vector<TableViewColumnDescr>& descrs)
+void ErtTableView::_resetRow()
 {
     _row.clear();
     _row.push_back(std::make_unique<UIntTableViewCell>(TableViewCell::TextAlign::RIGHT));
@@ -51,7 +51,7 @@ void ErtTableView::_setColumnDescrs()
         this->_contentSize(descrs.size()) - descrs[0].contentWidth()
     };
 
-    this->_resetRow(descrs);
+    this->_resetRow();
     this->_colDescrs(std::move(descrs));
 }
 

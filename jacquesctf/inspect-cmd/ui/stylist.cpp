@@ -421,7 +421,7 @@ void Stylist::pktDataViewSel(const View& view, const PktDataViewSelType& selType
     this->_applyStyle(view, styleId, A_BOLD);
 }
 
-void Stylist::pktDataViewAuxSel(const View& view, const PktDataViewSelType& selType) const
+void Stylist::pktDataViewAuxSel(const View& view) const
 {
     this->_applyStyle(view, _StyleId::STD, A_BOLD | A_REVERSE);
 }

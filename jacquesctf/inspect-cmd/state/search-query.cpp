@@ -253,7 +253,7 @@ static std::unique_ptr<const SearchQuery> parseTs(std::string::const_iterator& i
 
 static std::unique_ptr<const SearchQuery> parseErtId(std::string::const_iterator& it,
                                                      std::string::const_iterator end,
-                                                     const bool isDiff, const long long mul)
+                                                     const bool isDiff)
 {
     if (it == end) {
         return nullptr;
@@ -281,7 +281,7 @@ static std::unique_ptr<const SearchQuery> parseErtId(std::string::const_iterator
 
 static std::unique_ptr<const SearchQuery> parseErtName(std::string::const_iterator& it,
                                                        std::string::const_iterator end,
-                                                       const bool isDiff, const long long mul)
+                                                       const bool isDiff)
 {
     if (it == end) {
         return nullptr;
@@ -365,11 +365,11 @@ std::unique_ptr<const SearchQuery> parseSearchQuery(const std::string& input)
         break;
 
     case '%':
-        ret = parseErtId(it, input.end(), isDiff, mul);
+        ret = parseErtId(it, input.end(), isDiff);
         break;
 
     case '/':
-        ret = parseErtName(it, input.end(), isDiff, mul);
+        ret = parseErtName(it, input.end(), isDiff);
         break;
 
     default:

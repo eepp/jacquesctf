@@ -383,10 +383,6 @@ std::string escapeStr(const std::string& str)
                 outStr += "\\b";
                 break;
 
-            case '\e':
-                outStr += "\\e";
-                break;
-
             case '\f':
                 outStr += "\\f";
                 break;
@@ -411,8 +407,7 @@ std::string escapeStr(const std::string& str)
             {
                 std::array<char, 8> buf;
 
-                std::sprintf(buf.data(), "\\x%02x",
-                             static_cast<unsigned int>(uch));
+                std::sprintf(buf.data(), "\\x%02x", static_cast<unsigned int>(uch));
                 outStr += buf.data();
             }
             }
