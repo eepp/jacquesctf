@@ -148,13 +148,13 @@ void View::_decorate() const
     if (_moreTop) {
         assert(_decoStyle != DecorationStyle::BORDERLESS);
         _myStylist->viewHasMore(*this);
-        mvwprintw(_curWindow, 0, moreX, moreStr);
+        mvwprintw(_curWindow, 0, moreX, "%s", moreStr);
     }
 
     if (_moreBottom) {
         assert(_decoStyle != DecorationStyle::BORDERLESS);
         _myStylist->viewHasMore(*this);
-        mvwprintw(_curWindow, _rect.h - 1, moreX, moreStr);
+        mvwprintw(_curWindow, _rect.h - 1, moreX, "%s", moreStr);
     }
 }
 
