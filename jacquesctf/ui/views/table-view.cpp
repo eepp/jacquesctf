@@ -1,0 +1,653 @@
+/*
+ * Copyright (C) 2018 Philippe Proulx <eepp.ca> - All Rights Reserved
+ *
+ * Unauthorized copying of this file, via any medium, is strictly
+ * prohibited. Proprietary and confidential.
+ */
+
+#include <cassert>
+#include <array>
+#include <cinttypes>
+#include <cstring>
+#include <cstdio>
+#include <curses.h>
+
+#include "table-view.hpp"
+#include "utils.hpp"
+#include "stylist.hpp"
+
+namespace jacques {
+
+TableView::TableView(const Rectangle& rect, const std::string& title,
+                     const DecorationStyle decoStyle,
+                     std::shared_ptr<const Stylist> stylist) :
+    View {rect, title, decoStyle, stylist},
+    _visibleRowCount {this->contentRect().h - 1}
+{
+    assert(this->contentRect().h >= 2);
+}
+
+TableViewColumnDescription::TableViewColumnDescription(const std::string& title,
+                                                       const Size contentWidth) :
+    _title {title},
+    _contentWidth {contentWidth}
+{
+}
+
+void TableView::_columnDescriptions(std::vector<TableViewColumnDescription>&& columnDescriptions)
+{
+    _columnDescrs = std::move(columnDescriptions);
+    this->_drawHeader();
+    this->_redrawRows();
+}
+
+void TableView::_redrawContent()
+{
+    this->_drawHeader();
+    this->_redrawRows();
+}
+
+void TableView::_baseIndex(const Index baseIndex, const bool draw)
+{
+    if (_baseIdx == baseIndex) {
+        return;
+    }
+
+    if (!this->_hasIndex(baseIndex)) {
+        return;
+    }
+
+    _baseIdx = baseIndex;
+
+    if (_selectionIdx < _baseIdx) {
+        _selectionIdx = _baseIdx;
+    } else if (_selectionIdx >= _baseIdx + _visibleRowCount) {
+        _selectionIdx = _baseIdx + _visibleRowCount - 1;
+    }
+
+    if (draw) {
+        this->_redrawRows();
+    }
+}
+
+void TableView::_selectionIndex(const Index index, const bool draw)
+{
+    if (!this->_hasIndex(index)) {
+        return;
+    }
+
+    const auto oldSelectionIdx = _selectionIdx;
+
+    _selectionIdx = index;
+
+    if (index < _baseIdx) {
+        this->_baseIndex(index, draw);
+        return;
+    } else if (index >= _baseIdx + _visibleRowCount) {
+        this->_baseIndex(index - _visibleRowCount + 1, draw);
+        return;
+    }
+
+    if (draw) {
+        this->_drawRow(oldSelectionIdx);
+        this->_drawRow(_selectionIdx);
+    }
+}
+
+void TableView::_drawHeader()
+{
+    this->_stylist().tableViewHeader(*this);
+    this->_putChar({0, 0}, ' ');
+
+    for (Index x = 1; x < this->contentRect().w; ++x) {
+        this->_appendChar(' ');
+    }
+
+    Index x = 0;
+
+    for (auto it = std::begin(_columnDescrs); it != std::end(_columnDescrs); ++it) {
+        this->_moveAndPrint({x, 0}, "%s", it->title().c_str());
+
+        if (it == std::end(_columnDescrs) - 1) {
+            break;
+        }
+
+        x += it->contentWidth();
+        this->_putChar({x, 0}, ACS_VLINE);
+        x += 1;
+    }
+}
+
+TableViewCell::~TableViewCell()
+{
+}
+
+TableViewCell::TableViewCell(const TextAlignment textAlignment) :
+    _textAlignment(textAlignment)
+{
+}
+
+TextTableViewCell::TextTableViewCell(const TextAlignment textAlignment) :
+    TableViewCell {textAlignment}
+{
+}
+
+PathTableViewCell::PathTableViewCell() :
+    TableViewCell {TextAlignment::LEFT}
+{
+}
+
+BoolTableViewCell::BoolTableViewCell(const TextAlignment textAlignment) :
+    TableViewCell {textAlignment}
+{
+}
+
+IntTableViewCell::IntTableViewCell(const TextAlignment textAlignment) :
+    TableViewCell {textAlignment}
+{
+}
+
+SignedIntTableViewCell::SignedIntTableViewCell(const TextAlignment textAlignment) :
+    IntTableViewCell {textAlignment}
+{
+}
+
+UnsignedIntTableViewCell::UnsignedIntTableViewCell(const TextAlignment textAlignment) :
+    IntTableViewCell {textAlignment}
+{
+}
+
+DataSizeTableViewCell::DataSizeTableViewCell(const utils::SizeFormatMode formatMode) :
+    TableViewCell {TextAlignment::RIGHT},
+    _formatMode {formatMode}
+{
+}
+
+TimestampTableViewCell::TimestampTableViewCell(const TimestampFormatMode formatMode) :
+    TableViewCell {TextAlignment::RIGHT},
+    _ts {0, 1'000'000'000ULL, 0, 0},
+    _formatMode {formatMode}
+{
+}
+
+DurationTableViewCell::DurationTableViewCell(const TimestampFormatMode formatMode) :
+    TableViewCell {TextAlignment::RIGHT},
+    _tsBegin {0, 1'000'000'000ULL, 0, 0},
+    _tsEnd {0, 1'000'000'000ULL, 0, 0},
+    _formatMode {formatMode}
+{
+}
+
+void TableView::_clearRow(const Index contentY)
+{
+    Index x = 0;
+
+    this->_putChar({x, contentY}, ' ');
+
+    for (Index x = 1; x < this->contentRect().w; ++x) {
+        this->_appendChar(' ');
+    }
+}
+
+void TableView::_drawCellAlignedText(const Point& contentPos,
+                                     const Size cellWidth,
+                                     const char * const text,
+                                     Size textWidth, const bool selected,
+                                     const TableViewCell::TextAlignment alignment)
+{
+    bool textMore = false;
+
+    if (textWidth > cellWidth) {
+        textWidth = cellWidth;
+        textMore = true;
+    }
+
+    Index startX = contentPos.x;
+
+    if (alignment == TableViewCell::TextAlignment::RIGHT) {
+        startX = contentPos.x + cellWidth - textWidth;
+    }
+
+    // clear row first because we might have a background color to apply
+    for (Index at = 0; at < cellWidth; ++at) {
+        this->_putChar({contentPos.x + at, contentPos.y}, ' ');
+    }
+
+    for (Index at = 0; at < textWidth; ++at) {
+        this->_putChar({startX + at, contentPos.y}, text[at]);
+    }
+
+    if (textMore) {
+        if (!selected) {
+            this->_stylist().textMore(*this);
+        }
+
+        this->_putChar({startX + textWidth - 1, contentPos.y}, ACS_RARROW);
+    }
+}
+
+void TableView::_drawCell(const Point& contentPos,
+                          const TableViewColumnDescription& descr,
+                          const TableViewCell& cell, const bool selected)
+{
+    const auto customStyle = !selected &&
+                             cell.style() == TableViewCell::Style::NORMAL;
+
+    if (!selected) {
+        if (cell.style() == TableViewCell::Style::ERROR) {
+            this->_stylist().tableViewErrorCell(*this);
+        } else if (cell.style() == TableViewCell::Style::WARNING) {
+            this->_stylist().tableViewWarningCell(*this);
+        }
+    }
+
+    if (cell.na()) {
+        if (customStyle) {
+            this->_stylist().tableViewNaCell(*this, cell.emphasized());
+        }
+
+        this->_drawCellAlignedText(contentPos, descr.contentWidth(), "N/A", 3,
+                                   selected, cell.textAlignment());
+        return;
+    }
+
+    if (const auto rCell = dynamic_cast<const TextTableViewCell *>(&cell)) {
+        if (customStyle) {
+            this->_stylist().tableViewTextCell(*this, cell.emphasized());
+        }
+
+        this->_drawCellAlignedText(contentPos, descr.contentWidth(),
+                                   rCell->text().c_str(), rCell->text().size(),
+                                   selected, cell.textAlignment());
+    } else if (const auto rCell = dynamic_cast<const BoolTableViewCell *>(&cell)) {
+        if (customStyle) {
+            this->_stylist().tableViewBoolCell(*this, rCell->value(),
+                                               cell.emphasized());
+        }
+
+        this->_drawCellAlignedText(contentPos, descr.contentWidth(),
+                                   rCell->value() ? "Yes" : "No",
+                                   rCell->value() ? 3 : 2,
+                                   selected, cell.textAlignment());
+    } else if (const auto dsCell = dynamic_cast<const DataSizeTableViewCell *>(&cell)) {
+        const auto parts = dsCell->size().format(dsCell->formatMode(), ',');
+        const char *fmt = "%s %s";
+        std::array<char, 32> buf;
+
+        if (dsCell->formatMode() == utils::SizeFormatMode::FULL_FLOOR ||
+                dsCell->formatMode() == utils::SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS) {
+            fmt = "%s%4s";
+        }
+
+        std::sprintf(buf.data(), fmt, parts.first.c_str(),
+                     parts.second.c_str());
+
+        if (customStyle) {
+            this->_stylist().tableViewTextCell(*this, cell.emphasized());
+        }
+
+        this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(),
+                                   std::strlen(buf.data()), selected,
+                                   cell.textAlignment());
+    } else if (const auto rCell = dynamic_cast<const IntTableViewCell *>(&cell)) {
+        std::array<char, 32> buf;
+        const char *fmt = nullptr;
+
+        if (rCell->radix() == IntTableViewCell::Radix::OCT) {
+            if (rCell->radixPrefix()) {
+                fmt = "0%llo";
+            } else {
+                fmt = "%llo";
+            }
+        } else if (rCell->radix() == IntTableViewCell::Radix::HEX) {
+            if (rCell->radixPrefix()) {
+                fmt = "0x%llx";
+            } else {
+                fmt = "%llx";
+            }
+        }
+
+        if (const auto intCell = dynamic_cast<const SignedIntTableViewCell *>(&cell)) {
+            assert(rCell->radix() == IntTableViewCell::Radix::DEC);
+
+            if (intCell->sep()) {
+                std::sprintf(buf.data(), "%s",
+                             utils::sepNumber(intCell->value(), ',').c_str());
+            } else {
+                fmt = "%lld";
+            }
+
+            if (fmt) {
+                std::sprintf(buf.data(), fmt, intCell->value());
+            }
+        } else if (auto intCell = dynamic_cast<const UnsignedIntTableViewCell *>(&cell)) {
+            assert(rCell->radix() == IntTableViewCell::Radix::DEC);
+
+            if (intCell->sep()) {
+                std::sprintf(buf.data(), "%s",
+                             utils::sepNumber(static_cast<long long>(intCell->value()), ',').c_str());
+            } else {
+                fmt = "%llu";
+            }
+
+            if (fmt) {
+                std::sprintf(buf.data(), fmt, intCell->value());
+            }
+        } else {
+            std::abort();
+        }
+
+        if (customStyle) {
+            this->_stylist().tableViewTextCell(*this, cell.emphasized());
+        }
+
+        this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(),
+                                   std::strlen(buf.data()), selected,
+                                   cell.textAlignment());
+    } else if (const auto rCell = dynamic_cast<const TimestampTableViewCell *>(&cell)) {
+        std::array<char, 32> buf;
+        Size bufSize = buf.size();
+        auto bufPtr = buf.data();
+
+        switch (rCell->formatMode()) {
+        case TimestampFormatMode::NS_FROM_EPOCH:
+            buf[0] = '*';
+            --bufSize;
+            bufPtr = &buf[1];
+            break;
+
+        case TimestampFormatMode::CYCLES:
+            buf[0] = '*';
+            buf[1] = '*';
+            bufSize -= 2;
+            bufPtr = &buf[2];
+            break;
+
+        default:
+            break;
+        }
+
+        rCell->ts().format(bufPtr, bufSize, rCell->formatMode());
+
+        if (customStyle) {
+            this->_stylist().tableViewTextCell(*this, cell.emphasized());
+        }
+
+        this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(),
+                                   std::strlen(buf.data()), selected,
+                                   cell.textAlignment());
+    } else if (const auto rCell = dynamic_cast<const DurationTableViewCell *>(&cell)) {
+        if (customStyle) {
+            this->_stylist().tableViewTextCell(*this, cell.emphasized());
+        }
+
+        std::array<char, 32> buf;
+
+        switch (rCell->formatMode()) {
+        case TimestampFormatMode::LONG:
+        case TimestampFormatMode::SHORT:
+        {
+            rCell->duration().format(buf.data(), buf.size());
+            break;
+        }
+
+        case TimestampFormatMode::NS_FROM_EPOCH:
+            std::sprintf(buf.data(), "%lld", rCell->duration().ns());
+            break;
+
+        case TimestampFormatMode::CYCLES:
+            if (!rCell->cycleDiffAvailable()) {
+                if (customStyle) {
+                    this->_stylist().tableViewNaCell(*this, cell.emphasized());
+                }
+
+                this->_drawCellAlignedText(contentPos, descr.contentWidth(),
+                                           "N/A", 3, selected,
+                                           cell.textAlignment());
+                break;
+            }
+
+            std::sprintf(buf.data(), "%lld", rCell->cycleDiff());
+            break;
+
+        default:
+            break;
+        }
+
+        this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(),
+                                   std::strlen(buf.data()), selected,
+                                   cell.textAlignment());
+    } else if (const auto pCell = dynamic_cast<const PathTableViewCell *>(&cell)) {
+        std::string dirName, filename;
+
+        assert(!pCell->path().empty());
+        std::tie(dirName, filename) = utils::formatPath(pCell->path(),
+                                                        descr.contentWidth());
+
+        auto curPos = contentPos;
+
+        if (!dirName.empty()) {
+            if (customStyle) {
+                this->_stylist().tableViewTextCell(*this, false);
+            }
+
+            this->_drawCellAlignedText(curPos, descr.contentWidth(),
+                                       dirName.c_str(), dirName.size(),
+                                       selected,
+                                       TableViewCell::TextAlignment::LEFT);
+            curPos.x += dirName.size();
+            this->_drawCellAlignedText(curPos, descr.contentWidth(),
+                                       "/", 1, selected,
+                                       TableViewCell::TextAlignment::LEFT);
+            curPos.x += 1;
+        }
+
+        if (customStyle) {
+            this->_stylist().tableViewTextCell(*this, cell.emphasized());
+        }
+
+        this->_drawCellAlignedText(curPos, descr.contentWidth(),
+                                   filename.c_str(), filename.size(), selected,
+                                   TableViewCell::TextAlignment::LEFT);
+    } else {
+        std::abort();
+    }
+}
+
+void TableView::_drawCells(const Index index,
+                           const std::vector<std::unique_ptr<TableViewCell>>& cells)
+{
+    assert(cells.size() == _columnDescrs.size());
+
+    const auto selected = this->_indexIsSelected(index);
+    Index x = 0;
+    const auto y = _contentYFromIndex(index);
+    const bool error = cells.front()->style() == TableViewCell::Style::ERROR;
+
+    if (selected) {
+        this->_stylist().tableViewSelection(*this, error);
+    } else {
+        this->_stylist().tableViewSep(*this);
+    }
+
+    this->_clearRow(y);
+
+    for (Index column = 0; column < cells.size(); ++column) {
+        const auto& descr = _columnDescrs[column];
+
+        this->_drawCell({x, y}, _columnDescrs[column], *cells[column], selected);
+        x += descr.contentWidth();
+
+        if (!selected) {
+            this->_stylist().tableViewSep(*this);
+        }
+
+        if (column == cells.size() - 1) {
+            break;
+        }
+
+        if (selected) {
+            this->_stylist().tableViewSelectionSep(*this, error);
+        }
+
+        this->_putChar({x, y}, ACS_VLINE);
+
+        if (selected) {
+            this->_stylist().tableViewSelection(*this, error);
+        }
+
+        x += 1;
+    }
+}
+
+void TableView::_drawWarningRow(const Index index, const std::string& msg)
+{
+    const auto selected = this->_indexIsSelected(index);
+    const Index x = (this->contentRect().w - msg.size()) / 2;
+    const auto y = _contentYFromIndex(index);
+
+    if (selected) {
+        this->_stylist().tableViewSelection(*this);
+    } else {
+        this->_stylist().tableViewWarningCell(*this);
+    }
+
+    this->_clearRow(y);
+    this->_moveAndPrint({x, y}, "%s", msg.c_str());
+}
+
+void TableView::_redrawRows()
+{
+    Index idx = _baseIdx;
+
+    for (idx = _baseIdx; idx < _baseIdx + _visibleRowCount; ++idx) {
+        if (this->_hasIndex(idx)) {
+            this->_drawRow(idx);
+        } else {
+            break;
+        }
+    }
+
+    this->_stylist().tableViewSep(*this);
+
+    for (; idx < _baseIdx + _visibleRowCount; ++idx) {
+        this->_clearRow(this->_contentYFromIndex(idx));
+    }
+
+    this->_hasMoreTop(_baseIdx > 0);
+    this->_hasMoreBottom(this->_hasIndex(_baseIdx + _visibleRowCount));
+}
+
+void TableView::_resized()
+{
+    _visibleRowCount = this->contentRect().h - 1;
+    _selectionIdx = std::min(_selectionIdx,
+                             _baseIdx + _visibleRowCount - 1);
+}
+
+void TableView::_next(Size count)
+{
+    assert(count > 0);
+
+    const auto oldSelectionIndex = _selectionIdx;
+
+    while (true) {
+        this->_selectionIndex(_selectionIdx + count);
+
+        if (_selectionIdx != oldSelectionIndex) {
+            break;
+        }
+
+        --count;
+
+        if (count == 0) {
+            break;
+        }
+    }
+}
+
+void TableView::_prev(Size count)
+{
+    if (_selectionIdx == 0) {
+        return;
+    }
+
+    if (count > _selectionIdx) {
+        count = _selectionIdx;
+    }
+
+    this->_selectionIndex(_selectionIdx - count);
+}
+
+Size TableView::_maxRowCountFromIndex(const Index index)
+{
+    Size rows = 0;
+
+    while (rows < _visibleRowCount) {
+        if (!this->_hasIndex(index + rows)) {
+            break;
+        }
+
+        ++rows;
+    }
+
+    return rows;
+}
+
+void TableView::next()
+{
+    this->_next(1);
+}
+
+void TableView::prev()
+{
+    this->_prev(1);
+}
+
+void TableView::pageDown()
+{
+    this->_next(_visibleRowCount - 1);
+}
+
+void TableView::pageUp()
+{
+    this->_prev(_visibleRowCount - 1);
+}
+
+void TableView::centerSelectedRow()
+{
+    if (_baseIdx == 0 && this->_maxRowCountFromIndex(0) < _visibleRowCount) {
+        // all rows already visible
+        return;
+    }
+
+    long long newBaseIndex = static_cast<long long>(_selectionIdx -
+                                                    _visibleRowCount / 2);
+
+    if (newBaseIndex < 0) {
+        // row is in the first half
+        this->_baseIndex(0);
+        return;
+    }
+
+    const auto rowCountsFromNewBaseIdx = this->_maxRowCountFromIndex(newBaseIndex);
+
+    if (rowCountsFromNewBaseIdx < _visibleRowCount) {
+        // row is in the last half
+        this->_baseIndex(static_cast<Index>(newBaseIndex) + rowCountsFromNewBaseIdx - _visibleRowCount);
+        return;
+    }
+
+    this->_baseIndex(static_cast<Index>(newBaseIndex));
+}
+
+void TableView::selectFirst()
+{
+    this->_selectionIndex(0);
+}
+
+void TableView::_selectLast()
+{
+}
+
+} // namespace jacques
