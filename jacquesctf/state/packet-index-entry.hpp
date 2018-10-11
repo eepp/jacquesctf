@@ -95,6 +95,7 @@ public:
         return _indexInDataStream + 1;
     }
 
+    // can be `nullptr` if this entry is invalid
     const yactfr::DataStreamType *dataStreamType() const noexcept
     {
         return _dst;
