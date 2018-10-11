@@ -79,8 +79,9 @@ namespace jacques {
  * cause trouble when viewing the border between two sections at the
  * same time, in which case this specific request will be slower than
  * usual. The larger the section size, the less this happens when
- * inspecting a given packet. Note that users (views) can have their own
- * cache too to mitigate this delay.
+ * inspecting a given packet, however the slower it is when it does
+ * happen. Note that users (views) can have their own cache too to
+ * mitigate this delay.
  *
  * Because elements are sorted in the caches, we can perform a binary
  * search to find a specific element using one of its intrinsically
@@ -137,83 +138,13 @@ public:
 private:
     boost::optional<Index> _dataRegionIndexInCache(Index offsetInPacketBits);
     boost::optional<Index> _eventRecordIndexInCacheByOffsetInPacketBits(Index offsetInPacketBits);
+    void _cacheEventRecordsAtIndexInPacket(const Index reqIndexInPacket);
+    void _cacheEventRecordsFromCurIt(Index indexInPacket);
 
     Index _eventRecordIndexInCacheFromIndexInPacket(const Index indexInPacket)
     {
         const auto baseIndex = this->_eventRecordBaseIndexInCacheFromIndexInPacket(indexInPacket);
         return indexInPacket - baseIndex;
-    }
-
-    void _cacheEventRecordsAtIndexInPacket(const Index reqIndexInPacket)
-    {
-        const auto baseIndex = this->_eventRecordBaseIndexInCacheFromIndexInPacket(reqIndexInPacket);
-
-        if (!_eventRecordCache.empty() &&
-                _eventRecordCache.front()->indexInPacket() == baseIndex) {
-            // already in cache
-            return;
-        }
-
-        // are we asking to cache what immediately follows the current cache?
-        if (!_eventRecordCache.empty()) {
-            if (baseIndex == _eventRecordCache.front()->indexInPacket() + _eventRecordCacheMaxSize) {
-                _it.restorePosition(_posAfterEventRecordCache);
-                this->_cacheEventRecordsFromCurIt(baseIndex);
-                return;
-            }
-        }
-
-        // find nearest event record checkpoint
-        auto cp = _checkpoints.nearestCheckpointBeforeOrAtIndex(baseIndex);
-
-        assert(cp);
-
-        auto curIndex = cp->first->indexInPacket();
-
-        _it.restorePosition(cp->second);
-
-        while (true) {
-            if (_it->kind() == yactfr::Element::Kind::EVENT_RECORD_BEGINNING) {
-                if (curIndex == baseIndex) {
-                    this->_cacheEventRecordsFromCurIt(baseIndex);
-                    return;
-                }
-
-                ++curIndex;
-            }
-
-            ++_it;
-        }
-    }
-
-    void _cacheEventRecordsFromCurIt(Index indexInPacket)
-    {
-        assert(this->_eventRecordBaseIndexInCacheFromIndexInPacket(indexInPacket) == indexInPacket);
-        _eventRecordCache.clear();
-
-        const auto count = std::min(_eventRecordCacheMaxSize,
-                                    _checkpoints.eventRecordCount() - indexInPacket);
-        const auto offsetInDataStreamBytes = _indexEntry->offsetInDataStreamBytes();
-        Index i = 0;
-
-        while (i < count) {
-            if (_it->kind() == yactfr::Element::Kind::EVENT_RECORD_BEGINNING) {
-                auto eventRecord = EventRecord::createFromPacketSequenceIterator(_it,
-                                                                                 *_metadata,
-                                                                                 offsetInDataStreamBytes,
-                                                                                 indexInPacket);
-                _eventRecordCache.push_back(std::move(eventRecord));
-                ++indexInPacket;
-                ++i;
-                assert(_it->kind() == yactfr::Element::Kind::EVENT_RECORD_END);
-                continue;
-            }
-
-            ++_it;
-        }
-
-        assert(_it->kind() == yactfr::Element::Kind::EVENT_RECORD_END);
-        _it.savePosition(_posAfterEventRecordCache);
     }
 
     Index _eventRecordBaseIndexInCacheFromIndexInPacket(const Index indexInPacket)
