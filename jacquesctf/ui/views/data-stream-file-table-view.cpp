@@ -47,7 +47,7 @@ void DataStreamFileTableView::_setColumnDescriptions()
         TableViewColumnDescription {"Packets", 12},
         TableViewColumnDescription {"Timestamp: beginning", 29},
         TableViewColumnDescription {"Timestamp: end", 29},
-        TableViewColumnDescription {"Duration", 20},
+        TableViewColumnDescription {"Duration", 23},
         TableViewColumnDescription {"DST ID", 6},
         TableViewColumnDescription {"DS ID", 5},
     };

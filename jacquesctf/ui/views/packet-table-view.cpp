@@ -34,12 +34,12 @@ void PacketTableView::_setColumnDescriptions()
 {
     std::vector<TableViewColumnDescription> descrs {
         TableViewColumnDescription {"Index", 12},
-        TableViewColumnDescription {"Offset (B)", 16},
+        TableViewColumnDescription {"Offset", 16},
         TableViewColumnDescription {"Total size", 16},
         TableViewColumnDescription {"Content size", 16},
         TableViewColumnDescription {"Timestamp: beginning", 29},
         TableViewColumnDescription {"Timestamp: end", 29},
-        TableViewColumnDescription {"Duration", 20},
+        TableViewColumnDescription {"Duration", 23},
         TableViewColumnDescription {"Event records", 14},
         TableViewColumnDescription {"DST ID", 6},
         TableViewColumnDescription {"DS ID", 5},

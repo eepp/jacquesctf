@@ -58,7 +58,7 @@ void EventRecordTableView::_setColumnDescriptions()
 {
     std::vector<TableViewColumnDescription> descrs {
         TableViewColumnDescription {"Index", 12},
-        TableViewColumnDescription {"Pkt offset (b)", 16},
+        TableViewColumnDescription {"Packet offset", 16},
         TableViewColumnDescription {"Size", 14},
         TableViewColumnDescription {"ERT name", 8},
         TableViewColumnDescription {"ERT ID", 8},
