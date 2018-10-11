@@ -278,19 +278,23 @@ static bool tryStartInteractive(const Config& cfg)
                                                    stylist, state);
 
     // create screens
-    auto inspectScreen = std::make_unique<InspectScreen>(screenRect, cfg,
-                                                         stylist, state);
-    auto packetsScreen = std::make_unique<PacketsScreen>(screenRect, cfg,
-                                                         stylist, state);
-    auto dsfScreen = std::make_unique<DataStreamFilesScreen>(screenRect, cfg,
-                                                             stylist, state);
-    auto helpScreen = std::make_unique<HelpScreen>(screenRect, cfg, stylist,
-                                                   state);
-    auto dataTypesScreen = std::make_unique<DataTypesScreen>(screenRect, cfg,
-                                                             stylist, state);
-    auto traceInfosScreen = std::make_unique<TraceInfosScreen>(screenRect, cfg,
+    const auto inspectScreen = std::make_unique<InspectScreen>(screenRect, cfg,
                                                                stylist, state);
-    std::vector<Screen*> screens {
+    const auto packetsScreen = std::make_unique<PacketsScreen>(screenRect, cfg,
+                                                               stylist, state);
+    const auto dsfScreen = std::make_unique<DataStreamFilesScreen>(screenRect,
+                                                                   cfg, stylist,
+                                                                   state);
+    const auto helpScreen = std::make_unique<HelpScreen>(screenRect, cfg,
+                                                         stylist, state);
+    const auto dataTypesScreen = std::make_unique<DataTypesScreen>(screenRect,
+                                                                   cfg, stylist,
+                                                                   state);
+    const auto traceInfosScreen = std::make_unique<TraceInfosScreen>(screenRect,
+                                                                     cfg,
+                                                                     stylist,
+                                                                     state);
+    const std::vector<Screen *> screens {
         inspectScreen.get(),
         packetsScreen.get(),
         dsfScreen.get(),
@@ -479,7 +483,8 @@ bool startInteractive(const Config& cfg)
 
     /*
      * Initial refresh() because getch() implicitly calls refresh(),
-     * which dumps stdscr the first time, effectively clearing the screen.
+     * which dumps stdscr the first time, effectively clearing the
+     * screen.
      */
     refresh();
 
