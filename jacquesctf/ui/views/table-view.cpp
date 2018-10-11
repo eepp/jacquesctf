@@ -670,12 +670,35 @@ void TableView::prev()
 
 void TableView::pageDown()
 {
-    this->_next(_visibleRowCount - 1);
+    const auto idealNewBaseIndex = _baseIdx + _visibleRowCount;
+    auto effectiveNewBaseIndex = idealNewBaseIndex;
+
+    while (!this->_hasIndex(effectiveNewBaseIndex)) {
+        --effectiveNewBaseIndex;
+    }
+
+    if (idealNewBaseIndex != effectiveNewBaseIndex) {
+        this->_selectionIndex(effectiveNewBaseIndex);
+    } else {
+        const auto oldSelectionIndex = _selectionIdx;
+
+        this->_baseIndex(effectiveNewBaseIndex);
+        this->_selectionIndex(oldSelectionIndex + _visibleRowCount);
+    }
 }
 
 void TableView::pageUp()
 {
-    this->_prev(_visibleRowCount - 1);
+    Index newBaseIndex = 0;
+    Index newSelectionIndex = 0;
+
+    if (_baseIdx >= _visibleRowCount) {
+        newBaseIndex = _baseIdx - _visibleRowCount;
+        newSelectionIndex = _selectionIdx - _visibleRowCount;
+    }
+
+    this->_baseIndex(newBaseIndex);
+    this->_selectionIndex(newSelectionIndex);
 }
 
 void TableView::centerSelectedRow()
