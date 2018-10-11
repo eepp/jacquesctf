@@ -177,11 +177,16 @@ void TraceInfosView::_buildTraceInfoRows(const Metadata &metadata)
 
         assert(firstTs);
         assert(lastTs);
+        rows.push_back(std::make_unique<_SepRow>());
 
         const auto disjointDuration = Duration {
             (*lastTs - *firstTs).ns() - intersectDuration.ns()
         };
 
+        rows.push_back(std::make_unique<_DurationPropRow>("Beginning to intersection",
+                                                          *intersectFirstTs - *firstTs));
+        rows.push_back(std::make_unique<_DurationPropRow>("Intersection to end",
+                                                          *lastTs - *intersectLastTs));
         rows.push_back(std::make_unique<_DurationPropRow>("Disjoint duration",
                                                           disjointDuration));
     } else {
