@@ -69,7 +69,7 @@ add_executable (
     ui/screens/inspect-screen.cpp
     ui/screens/packets-screen.cpp
     ui/screens/screen.cpp
-    ui/screens/trace-infos-screen.cpp
+    ui/screens/trace-info-screen.cpp
     ui/search-controller.cpp
     ui/stylist.cpp
     ui/views/abstract-data-type-details.cpp
@@ -91,7 +91,7 @@ add_executable (
     ui/views/status-view.cpp
     ui/views/table-view.cpp
     ui/views/text-input-view.cpp
-    ui/views/trace-infos-view.cpp
+    ui/views/trace-info-view.cpp
     ui/views/view.cpp
     utils.cpp
 )

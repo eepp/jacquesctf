@@ -11,33 +11,33 @@
 #include <unistd.h>
 
 #include "config.hpp"
-#include "trace-infos-screen.hpp"
-#include "trace-infos-view.hpp"
+#include "trace-info-screen.hpp"
+#include "trace-info-view.hpp"
 #include "stylist.hpp"
 #include "state.hpp"
 
 namespace jacques {
 
-TraceInfosScreen::TraceInfosScreen(const Rectangle& rect, const Config& cfg,
-                                   std::shared_ptr<const Stylist> stylist,
-                                   std::shared_ptr<State> state) :
+TraceInfoScreen::TraceInfoScreen(const Rectangle& rect, const Config& cfg,
+                                 std::shared_ptr<const Stylist> stylist,
+                                 std::shared_ptr<State> state) :
     Screen {rect, cfg, stylist, state},
-    _view {std::make_unique<TraceInfosView>(rect, stylist, state)}
+    _view {std::make_unique<TraceInfoView>(rect, stylist, state)}
 {
     _view->focus();
 }
 
-void TraceInfosScreen::_redraw()
+void TraceInfoScreen::_redraw()
 {
     _view->redraw();
 }
 
-void TraceInfosScreen::_resized()
+void TraceInfoScreen::_resized()
 {
     _view->moveAndResize(this->rect());
 }
 
-void TraceInfosScreen::_visibilityChanged()
+void TraceInfoScreen::_visibilityChanged()
 {
     _view->isVisible(this->isVisible());
 
@@ -46,7 +46,7 @@ void TraceInfosScreen::_visibilityChanged()
     }
 }
 
-KeyHandlingReaction TraceInfosScreen::_handleKey(const int key)
+KeyHandlingReaction TraceInfoScreen::_handleKey(const int key)
 {
     switch (key) {
     case KEY_UP:

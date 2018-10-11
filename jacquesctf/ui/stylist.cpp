@@ -47,7 +47,7 @@ Stylist::Stylist()
     this->_initColor(_COLOR_ID_DETAILS_VIEW_ENUM_DATA_TYPE_MEMBER_RANGE, COLOR_CYAN, -1);
     this->_initColor(_COLOR_ID_DETAILS_VIEW_PROP_KEY, COLOR_GREEN, -1);
     this->_initColor(_COLOR_ID_DETAILS_VIEW_PROP_VALUE, COLOR_GREEN, -1);
-    this->_initColor(_COLOR_ID_TRACE_INFOS_VIEW_PROP_VALUE, COLOR_GREEN, -1);
+    this->_initColor(_COLOR_ID_TRACE_INFO_VIEW_PROP_VALUE, COLOR_GREEN, -1);
     this->_initColor(_COLOR_ID_PACKET_DECODING_ERROR_DETAILS_VIEW, COLOR_WHITE, COLOR_RED);
     this->_initColor(_COLOR_ID_SEARCH_INPUT_VIEW_PREFIX, COLOR_CYAN, -1);
     this->_initColor(_COLOR_ID_SEARCH_INPUT_VIEW_ADD_SUB, COLOR_GREEN, -1);
@@ -352,20 +352,20 @@ void Stylist::detailsViewPropValue(WINDOW *window) const
     this->_color(window, _COLOR_ID_DETAILS_VIEW_PROP_VALUE);
 }
 
-void Stylist::traceInfosViewSection(const View& view) const
+void Stylist::traceInfoViewSection(const View& view) const
 {
     this->_attrsReset(view);
     this->_color(view, _COLOR_ID_DETAILS_VIEW_SUBTITLE);
     this->_attrs(view, A_BOLD);
 }
 
-void Stylist::traceInfosViewPropKey(const View& view) const
+void Stylist::traceInfoViewPropKey(const View& view) const
 {
     this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_TRACE_INFOS_VIEW_PROP_VALUE);
+    this->_color(view, _COLOR_ID_TRACE_INFO_VIEW_PROP_VALUE);
 }
 
-void Stylist::traceInfosViewPropValue(const View& view) const
+void Stylist::traceInfoViewPropValue(const View& view) const
 {
     this->std(view, false);
 }

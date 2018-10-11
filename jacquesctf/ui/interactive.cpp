@@ -22,7 +22,7 @@
 #include "packets-screen.hpp"
 #include "data-stream-files-screen.hpp"
 #include "data-types-screen.hpp"
-#include "trace-infos-screen.hpp"
+#include "trace-info-screen.hpp"
 #include "status-view.hpp"
 #include "packet-index-build-progress-view.hpp"
 #include "packet-checkpoints-build-progress-view.hpp"
@@ -290,17 +290,17 @@ static bool tryStartInteractive(const Config& cfg)
     const auto dataTypesScreen = std::make_unique<DataTypesScreen>(screenRect,
                                                                    cfg, stylist,
                                                                    state);
-    const auto traceInfosScreen = std::make_unique<TraceInfosScreen>(screenRect,
-                                                                     cfg,
-                                                                     stylist,
-                                                                     state);
+    const auto traceInfoScreen = std::make_unique<TraceInfoScreen>(screenRect,
+                                                                   cfg,
+                                                                   stylist,
+                                                                   state);
     const std::vector<Screen *> screens {
         inspectScreen.get(),
         packetsScreen.get(),
         dsfScreen.get(),
         helpScreen.get(),
         dataTypesScreen.get(),
-        traceInfosScreen.get(),
+        traceInfoScreen.get(),
     };
 
     // goto first packet if available: this creates it and shows the progress
@@ -402,12 +402,12 @@ static bool tryStartInteractive(const Config& cfg)
             break;
 
         case 'i':
-            if (curScreen == traceInfosScreen.get()) {
+            if (curScreen == traceInfoScreen.get()) {
                 break;
             }
 
             curScreen->isVisible(false);
-            curScreen = traceInfosScreen.get();
+            curScreen = traceInfoScreen.get();
             curScreen->isVisible(true);
             break;
 

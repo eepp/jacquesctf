@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_TRACE_TYPE_INFOS_VIEW_HPP
-#define _JACQUES_TRACE_TYPE_INFOS_VIEW_HPP
+#ifndef _JACQUES_TRACE_TYPE_INFO_VIEW_HPP
+#define _JACQUES_TRACE_TYPE_INFO_VIEW_HPP
 
 #include <unordered_map>
 #include <vector>
@@ -20,13 +20,13 @@
 
 namespace jacques {
 
-class TraceInfosView :
+class TraceInfoView :
     public ScrollView
 {
 public:
-    explicit TraceInfosView(const Rectangle& rect,
-                            std::shared_ptr<const Stylist> stylist,
-                            std::shared_ptr<State> state);
+    explicit TraceInfoView(const Rectangle& rect,
+                           std::shared_ptr<const Stylist> stylist,
+                           std::shared_ptr<State> state);
 
 private:
     void _drawRows() override;
@@ -149,10 +149,10 @@ private:
 private:
     std::shared_ptr<State> _state;
     const ViewStateObserverGuard _stateObserverGuard;
-    std::unordered_map<const yactfr::TraceType *, Rows> _traceInfos;
+    std::unordered_map<const yactfr::TraceType *, Rows> _traceInfo;
     const Rows *_rows = nullptr;
 };
 
 } // namespace jacques
 
-#endif // _JACQUES_TRACE_TYPE_INFOS_VIEW_HPP
+#endif // _JACQUES_TRACE_TYPE_INFO_VIEW_HPP

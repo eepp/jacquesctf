@@ -63,9 +63,9 @@ public:
     void detailsViewEnumDataTypeMemberRange(WINDOW *window) const;
     void detailsViewPropKey(WINDOW *window) const;
     void detailsViewPropValue(WINDOW *window) const;
-    void traceInfosViewSection(const View& view) const;
-    void traceInfosViewPropKey(const View& view) const;
-    void traceInfosViewPropValue(const View& view) const;
+    void traceInfoViewSection(const View& view) const;
+    void traceInfoViewPropKey(const View& view) const;
+    void traceInfoViewPropValue(const View& view) const;
     void packetDecodingErrorDetailsView(const View& view,
                                         bool emphasized = false) const;
     void error() const;
@@ -139,7 +139,7 @@ private:
         _COLOR_ID_DETAILS_VIEW_ENUM_DATA_TYPE_MEMBER_RANGE,
         _COLOR_ID_DETAILS_VIEW_PROP_KEY,
         _COLOR_ID_DETAILS_VIEW_PROP_VALUE,
-        _COLOR_ID_TRACE_INFOS_VIEW_PROP_VALUE,
+        _COLOR_ID_TRACE_INFO_VIEW_PROP_VALUE,
         _COLOR_ID_PACKET_DECODING_ERROR_DETAILS_VIEW,
         _COLOR_ID_SEARCH_INPUT_VIEW_PREFIX,
         _COLOR_ID_SEARCH_INPUT_VIEW_ADD_SUB,

@@ -16,7 +16,7 @@
 #include <yactfr/metadata/data-stream-type.hpp>
 #include <yactfr/metadata/clock-type.hpp>
 
-#include "trace-infos-view.hpp"
+#include "trace-info-view.hpp"
 #include "timestamp.hpp"
 #include "time-ops.hpp"
 #include "stylist.hpp"
@@ -24,28 +24,28 @@
 
 namespace jacques {
 
-TraceInfosView::_Row::~_Row()
+TraceInfoView::_Row::~_Row()
 {
 }
 
-TraceInfosView::TraceInfosView(const Rectangle& rect,
-                               std::shared_ptr<const Stylist> stylist,
-                               std::shared_ptr<State> state) :
+TraceInfoView::TraceInfoView(const Rectangle& rect,
+                             std::shared_ptr<const Stylist> stylist,
+                             std::shared_ptr<State> state) :
     ScrollView {rect, "Trace info", DecorationStyle::BORDERS, stylist},
     _state {state},
     _stateObserverGuard {*state, *this}
 {
     this->_buildRows();
-    _rows = &_traceInfos[state->activeDataStreamFileState().metadata().traceType().get()];
+    _rows = &_traceInfo[state->activeDataStreamFileState().metadata().traceType().get()];
     this->_rowCount(_rows->size());
     this->_drawRows();
 }
 
-void TraceInfosView::_buildTraceInfoRows(const Metadata &metadata)
+void TraceInfoView::_buildTraceInfoRows(const Metadata &metadata)
 {
     auto& traceType = *metadata.traceType();
 
-    if (_traceInfos.find(&traceType) != std::end(_traceInfos)) {
+    if (_traceInfo.find(&traceType) != std::end(_traceInfo)) {
         return;
     }
 
@@ -317,18 +317,18 @@ void TraceInfosView::_buildTraceInfoRows(const Metadata &metadata)
                                                         clockType->isAbsolute() ? "Yes" : "No"));
     }
 
-    _traceInfos[&traceType] = std::move(rows);
+    _traceInfo[&traceType] = std::move(rows);
 }
 
-void TraceInfosView::_buildRows()
+void TraceInfoView::_buildRows()
 {
     for (const auto& dsfState : _state->dataStreamFileStates()) {
         this->_buildTraceInfoRows(dsfState->metadata());
     }
 
-    for (auto& traceInfos : _traceInfos) {
+    for (auto& traceInfo : _traceInfo) {
         Size longestKeySize = 0;
-        auto it = std::begin(traceInfos.second);
+        auto it = std::begin(traceInfo.second);
         auto lastSectionIt = it;
         const auto setValueOffsets = [&longestKeySize, &lastSectionIt, &it]() {
             while (lastSectionIt != it) {
@@ -343,7 +343,7 @@ void TraceInfosView::_buildRows()
             lastSectionIt = it;
         };
 
-        while (it != std::end(traceInfos.second)) {
+        while (it != std::end(traceInfo.second)) {
             const auto& row = *it;
 
             if (const auto sRow = dynamic_cast<const _SectionRow *>(row.get())) {
@@ -360,7 +360,7 @@ void TraceInfosView::_buildRows()
     }
 }
 
-void TraceInfosView::_drawRows()
+void TraceInfoView::_drawRows()
 {
     this->_stylist().std(*this);
     this->_clearContent();
@@ -377,14 +377,14 @@ void TraceInfosView::_drawRows()
 
         if (const auto sRow = dynamic_cast<const _SectionRow *>(row.get())) {
             this->_moveCursor({0, y});
-            this->_stylist().traceInfosViewSection(*this);
+            this->_stylist().traceInfoViewSection(*this);
             this->_safePrint("%s:", sRow->title.c_str());
         } else if (const auto sRow = dynamic_cast<const _PropRow *>(row.get())) {
             this->_moveCursor({2, y});
-            this->_stylist().traceInfosViewPropKey(*this);
+            this->_stylist().traceInfoViewPropKey(*this);
             this->_safePrint("%s:", sRow->key.c_str());
             this->_moveCursor({sRow->valueOffset + 2, y});
-            this->_stylist().traceInfosViewPropValue(*this);
+            this->_stylist().traceInfoViewPropValue(*this);
 
             if (const auto vRow = dynamic_cast<const _SignedIntPropRow *>(row.get())) {
                 if (vRow->sepNumber) {
@@ -410,16 +410,16 @@ void TraceInfosView::_drawRows()
             }
         } else if (const auto sRow = dynamic_cast<const _SepRow *>(row.get())) {
             this->_moveCursor({2, y});
-            this->_stylist().traceInfosViewPropKey(*this);
+            this->_stylist().traceInfoViewPropKey(*this);
             this->_moveAndPrint({2, y}, "---");
         }
     }
 }
 
-void TraceInfosView::_stateChanged(const Message& msg)
+void TraceInfoView::_stateChanged(const Message& msg)
 {
     if (dynamic_cast<const ActiveDataStreamFileChangedMessage *>(&msg)) {
-        _rows = &_traceInfos[_state->activeDataStreamFileState().metadata().traceType().get()];
+        _rows = &_traceInfo[_state->activeDataStreamFileState().metadata().traceType().get()];
         this->_index(0);
         this->_rowCount(_rows->size());
         this->_redrawContent();
