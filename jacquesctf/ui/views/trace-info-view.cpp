@@ -66,7 +66,7 @@ void TraceInfoView::_buildTraceInfoRows(const Metadata &metadata)
     boost::optional<Timestamp> intersectFirstTs;
     boost::optional<Timestamp> intersectLastTs;
     Size packetCount = 0;
-    std::unordered_set<Index> dataStreamIds;
+    std::set<std::pair<Index, Index>> dataStreamIds;
 
     for (const auto& dsfState : _state->dataStreamFileStates()) {
         auto dsfStateTraceType = dsfState->metadata().traceType().get();
@@ -87,11 +87,19 @@ void TraceInfoView::_buildTraceInfoRows(const Metadata &metadata)
 
         if (dsFile.packetCount() > 0) {
             const auto &dataStreamId = dsFile.packetIndexEntry(0).dataStreamId();
+            const auto dst = dsFile.packetIndexEntry(0).dataStreamType();
 
-            if (dataStreamId) {
-                dataStreamIds.insert(*dataStreamId);
+            if (dataStreamId && dst) {
+                dataStreamIds.insert({
+                    dsFile.packetIndexEntry(0).dataStreamType()->id(),
+                    *dataStreamId
+                });
+            } else if (dst) {
+                dataStreamIds.insert({
+                    dsFile.packetIndexEntry(0).dataStreamType()->id(), 0
+                });
             } else {
-                dsfWithoutDsIdCount++;
+                ++dsfWithoutDsIdCount;
             }
 
             const auto& firstPacketIndexEntry = dsFile.packetIndexEntries().front();
