@@ -32,7 +32,7 @@ public:
      * Bytes of this region. It can contain more bytes than the actual
      * region described by the region's segment. The exact bit where the
      * data starts within the first byte is given by
-     * DataSegment::offsetInPacketExtraBits() for this region's segment.
+     * segment().offsetInPacketExtraBits().
      */
     using Data = std::vector<std::uint8_t>;
 
