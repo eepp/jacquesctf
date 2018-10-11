@@ -24,7 +24,7 @@ enum class TimestampFormatMode
 {
     LONG,
     SHORT,
-    NS_FROM_EPOCH,
+    NS_FROM_ORIGIN,
     CYCLES,
 };
 
@@ -61,9 +61,9 @@ public:
         return _freq;
     }
 
-    long long nsFromEpoch() const noexcept
+    long long nsFromOrigin() const noexcept
     {
-        return _nsFromEpoch;
+        return _nsFromOrigin;
     }
 
     unsigned int ns() const noexcept
@@ -112,18 +112,18 @@ public:
 
     bool operator==(const Timestamp& other) const noexcept
     {
-        return _nsFromEpoch == other._nsFromEpoch;
+        return _nsFromOrigin == other._nsFromOrigin;
     }
 
     bool operator<(const Timestamp& other) const noexcept
     {
-        return _nsFromEpoch < other._nsFromEpoch;
+        return _nsFromOrigin < other._nsFromOrigin;
     }
 
 private:
     unsigned long long _cycles;
     unsigned long long _freq;
-    long long _nsFromEpoch;
+    long long _nsFromOrigin;
     unsigned int _ns,
                  _second,
                  _minute,

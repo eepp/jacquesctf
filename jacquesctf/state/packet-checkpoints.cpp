@@ -197,21 +197,21 @@ const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointAfterOf
 
 const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeOrAtTimestamp(const Timestamp& ts) const
 {
-    return this->nearestCheckpointBeforeOrAtNsFromEpoch(ts.nsFromEpoch());
+    return this->nearestCheckpointBeforeOrAtNsFromEpoch(ts.nsFromOrigin());
 }
 
 const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeTimestamp(const Timestamp& ts) const
 {
-    return this->nearestCheckpointBeforeNsFromEpoch(ts.nsFromEpoch());
+    return this->nearestCheckpointBeforeNsFromEpoch(ts.nsFromOrigin());
 }
 
 const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointAfterTimestamp(const Timestamp& ts) const
 {
-    return this->nearestCheckpointAfterNsFromEpoch(ts.nsFromEpoch());
+    return this->nearestCheckpointAfterNsFromEpoch(ts.nsFromOrigin());
 }
 
-static bool nsFromEpochLessThan(const PacketCheckpoints::Checkpoint& checkpoint,
-                                       const long long nsFromEpoch)
+static bool nsFromOriginLessThan(const PacketCheckpoints::Checkpoint& checkpoint,
+                                 const long long nsFromOrigin)
 {
     const auto& eventRecord = *checkpoint.first;
 
@@ -219,24 +219,24 @@ static bool nsFromEpochLessThan(const PacketCheckpoints::Checkpoint& checkpoint,
         return false;
     }
 
-    return eventRecord.firstTimestamp()->nsFromEpoch() < nsFromEpoch;
+    return eventRecord.firstTimestamp()->nsFromOrigin() < nsFromOrigin;
 }
 
-static bool nsFromEpochEqual(const EventRecord& eventRecord,
-                                    const long long nsFromEpoch)
+static bool nsFromOriginEqual(const EventRecord& eventRecord,
+                              const long long nsFromOrigin)
 {
     if (!eventRecord.firstTimestamp()) {
         return false;
     }
 
-    return eventRecord.firstTimestamp()->nsFromEpoch() == nsFromEpoch;
+    return eventRecord.firstTimestamp()->nsFromOrigin() == nsFromOrigin;
 }
 
-const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeOrAtNsFromEpoch(const long long nsFromEpoch) const
+const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeOrAtNsFromEpoch(const long long nsFromOrigin) const
 {
-    const auto checkpoint = this->_nearestCheckpointBeforeOrAt(nsFromEpoch,
-                                                               nsFromEpochLessThan,
-                                                               nsFromEpochEqual);
+    const auto checkpoint = this->_nearestCheckpointBeforeOrAt(nsFromOrigin,
+                                                               nsFromOriginLessThan,
+                                                               nsFromOriginEqual);
 
     if (!checkpoint) {
         return nullptr;
@@ -250,10 +250,10 @@ const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeO
     return checkpoint;
 }
 
-const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeNsFromEpoch(const long long nsFromEpoch) const
+const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeNsFromEpoch(const long long nsFromOrigin) const
 {
-    const auto checkpoint = this->_nearestCheckpointBefore(nsFromEpoch,
-                                                           nsFromEpochLessThan);
+    const auto checkpoint = this->_nearestCheckpointBefore(nsFromOrigin,
+                                                           nsFromOriginLessThan);
 
     if (!checkpoint) {
         return nullptr;
@@ -267,10 +267,10 @@ const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeN
     return checkpoint;
 }
 
-const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointAfterNsFromEpoch(const long long nsFromEpoch) const
+const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointAfterNsFromEpoch(const long long nsFromOrigin) const
 {
-    const auto checkpoint = this->_nearestCheckpointAfter(nsFromEpoch,
-                                                          [](const auto nsFromEpoch,
+    const auto checkpoint = this->_nearestCheckpointAfter(nsFromOrigin,
+                                                          [](const auto nsFromOrigin,
                                                              const auto& checkpoint) {
         const auto& eventRecord = *checkpoint.first;
 
@@ -278,7 +278,7 @@ const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointAfterNs
             return false;
         }
 
-        return nsFromEpoch < eventRecord.firstTimestamp()->nsFromEpoch();
+        return nsFromOrigin < eventRecord.firstTimestamp()->nsFromOrigin();
     });
 
     if (!checkpoint) {

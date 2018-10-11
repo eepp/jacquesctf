@@ -62,7 +62,7 @@ void EventRecordTableView::_setColumnDescriptions()
         TableViewColumnDescription {"Size", 14},
         TableViewColumnDescription {"ERT name", 8},
         TableViewColumnDescription {"ERT ID", 8},
-        TableViewColumnDescription {"Timestamp: first", 29},
+        TableViewColumnDescription {"Timestamp: first", 30},
     };
 
     const auto accOp = [](Size sz, const TableViewColumnDescription& descr) {

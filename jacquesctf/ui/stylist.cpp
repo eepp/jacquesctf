@@ -30,6 +30,7 @@ Stylist::Stylist()
     this->_initColor(_COLOR_ID_TABLE_VIEW_SELECTION, COLOR_WHITE, COLOR_CYAN);
     this->_initColor(_COLOR_ID_TABLE_VIEW_SELECTION_ERROR, COLOR_WHITE, COLOR_RED);
     this->_initColor(_COLOR_ID_TABLE_VIEW_TEXT_CELL_EMPHASIZED, COLOR_YELLOW, -1);
+    this->_initColor(_COLOR_ID_TABLE_VIEW_TS_CELL_NS_PART, COLOR_CYAN, -1);
     this->_initColor(_COLOR_ID_TEXT_MORE, COLOR_MAGENTA, -1);
     this->_initColor(_COLOR_ID_TABLE_VIEW_SEP, COLOR_GREEN, -1);
     this->_initColor(_COLOR_ID_HELP_VIEW_SECTION, COLOR_GREEN, -1);
@@ -116,7 +117,7 @@ void Stylist::viewHasMore(const View& view) const
 }
 
 void Stylist::tableViewTextCell(const View& view,
-                                        const bool emphasized) const
+                                const bool emphasized) const
 {
     this->_attrsReset(view);
 
@@ -127,8 +128,19 @@ void Stylist::tableViewTextCell(const View& view,
     }
 }
 
+void Stylist::tableViewTsCellNsPart(const View& view,
+                                    const bool emphasized) const
+{
+    this->_attrsReset(view);
+    this->_color(view, _COLOR_ID_TABLE_VIEW_TS_CELL_NS_PART);
+
+    if (emphasized) {
+        this->_attrs(view, A_BOLD);
+    }
+}
+
 void Stylist::tableViewNaCell(const View& view,
-                                      const bool emphasized) const
+                              const bool emphasized) const
 {
     this->_attrsReset(view);
     this->_color(view, _COLOR_ID_STD);
@@ -140,7 +152,7 @@ void Stylist::tableViewNaCell(const View& view,
 }
 
 void Stylist::tableViewBoolCell(const View& view, const bool value,
-                                        const bool emphasized) const
+                                const bool emphasized) const
 {
     this->_attrsReset(view);
     this->_color(view, value ? _COLOR_ID_BOOL_YES : _COLOR_ID_BOOL_NO);

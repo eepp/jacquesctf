@@ -29,7 +29,7 @@ PacketsScreen::PacketsScreen(const Rectangle& rect, const Config& cfg,
     _searchController {*this, stylist},
     _tsFormatModeWheel {
         TimestampFormatMode::LONG,
-        TimestampFormatMode::NS_FROM_EPOCH,
+        TimestampFormatMode::NS_FROM_ORIGIN,
         TimestampFormatMode::CYCLES,
     },
     _dsFormatModeWheel {

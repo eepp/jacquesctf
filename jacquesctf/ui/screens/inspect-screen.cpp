@@ -28,7 +28,7 @@ InspectScreen::InspectScreen(const Rectangle& rect, const Config& cfg,
     },
     _tsFormatModeWheel {
         TimestampFormatMode::LONG,
-        TimestampFormatMode::NS_FROM_EPOCH,
+        TimestampFormatMode::NS_FROM_ORIGIN,
         TimestampFormatMode::CYCLES,
     },
     _dsFormatModeWheel {

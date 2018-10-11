@@ -466,6 +466,7 @@ protected:
 
 private:
     void _clearRow(Index y);
+    void _clearCell(const Point& pos, Size cellWidth);
     void _drawCellAlignedText(const Point& pos, Size cellWidth,
                               const char *text, Size textWidth, bool selected,
                               TableViewCell::TextAlignment alignment);

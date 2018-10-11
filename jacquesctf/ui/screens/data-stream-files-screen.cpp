@@ -25,7 +25,7 @@ DataStreamFilesScreen::DataStreamFilesScreen(const Rectangle& rect, const Config
     _view {std::make_unique<DataStreamFileTableView>(rect, stylist, state)},
     _tsFormatModeWheel {
         TimestampFormatMode::LONG,
-        TimestampFormatMode::NS_FROM_EPOCH,
+        TimestampFormatMode::NS_FROM_ORIGIN,
         TimestampFormatMode::CYCLES,
     },
     _dsFormatModeWheel {

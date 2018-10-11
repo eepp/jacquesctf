@@ -189,6 +189,13 @@ void TableView::_clearRow(const Index contentY)
     }
 }
 
+void TableView::_clearCell(const Point& pos, Size cellWidth)
+{
+    for (Index at = 0; at < cellWidth; ++at) {
+        this->_putChar({pos.x + at, pos.y}, ' ');
+    }
+}
+
 void TableView::_drawCellAlignedText(const Point& contentPos,
                                      const Size cellWidth,
                                      const char * const text,
@@ -208,11 +215,10 @@ void TableView::_drawCellAlignedText(const Point& contentPos,
         startX = contentPos.x + cellWidth - textWidth;
     }
 
-    // clear row first because we might have a background color to apply
-    for (Index at = 0; at < cellWidth; ++at) {
-        this->_putChar({contentPos.x + at, contentPos.y}, ' ');
-    }
+    // clear cell first because we might have a background color to apply
+    this->_clearCell(contentPos, cellWidth);
 
+    // write text
     for (Index at = 0; at < textWidth; ++at) {
         this->_putChar({startX + at, contentPos.y}, text[at]);
     }
@@ -346,42 +352,72 @@ void TableView::_drawCell(const Point& contentPos,
                                    cell.textAlignment());
     } else if (const auto rCell = dynamic_cast<const TimestampTableViewCell *>(&cell)) {
         std::array<char, 32> buf;
-        Size bufSize = buf.size();
-        auto bufPtr = buf.data();
 
         switch (rCell->formatMode()) {
-        case TimestampFormatMode::NS_FROM_EPOCH:
-            buf[0] = '*';
-            --bufSize;
-            bufPtr = &buf[1];
+        case TimestampFormatMode::LONG:
+        case TimestampFormatMode::SHORT:
+            rCell->ts().format(buf.data(), buf.size(), rCell->formatMode());
+
+            if (customStyle) {
+                this->_stylist().tableViewTextCell(*this, cell.emphasized());
+            }
+
+            this->_drawCellAlignedText(contentPos, descr.contentWidth(),
+                                       buf.data(), std::strlen(buf.data()),
+                                       selected, cell.textAlignment());
             break;
+
+        case TimestampFormatMode::NS_FROM_ORIGIN:
+        {
+            const auto parts = utils::formatNs(rCell->ts().nsFromOrigin(), ',');
+            const auto partsWidth = parts.first.size() + parts.second.size() + 4;
+            const auto startPos = Point {
+                contentPos.x + descr.contentWidth() - partsWidth, contentPos.y
+            };
+
+            if (customStyle) {
+                this->_stylist().tableViewTextCell(*this, cell.emphasized());
+            }
+
+            this->_clearCell(contentPos, descr.contentWidth());
+            this->_moveAndPrint(startPos, "%s,", parts.first.c_str());
+
+            if (customStyle) {
+                this->_stylist().tableViewTsCellNsPart(*this, cell.emphasized());
+            }
+
+            this->_print("%s", parts.second.c_str());
+
+            if (customStyle) {
+                this->_stylist().tableViewTextCell(*this, cell.emphasized());
+            }
+
+            this->_print(" ns");
+            break;
+        }
 
         case TimestampFormatMode::CYCLES:
-            buf[0] = '*';
-            buf[1] = '*';
-            bufSize -= 2;
-            bufPtr = &buf[2];
-            break;
+        {
+            const auto str = utils::sepNumber(rCell->ts().cycles(), ',') + " cc";
 
-        default:
+            if (customStyle) {
+                this->_stylist().tableViewTextCell(*this, cell.emphasized());
+            }
+
+            this->_drawCellAlignedText(contentPos, descr.contentWidth(),
+                                       str.c_str(), str.size(), selected,
+                                       cell.textAlignment());
             break;
         }
-
-        rCell->ts().format(bufPtr, bufSize, rCell->formatMode());
-
-        if (customStyle) {
-            this->_stylist().tableViewTextCell(*this, cell.emphasized());
         }
-
-        this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(),
-                                   std::strlen(buf.data()), selected,
-                                   cell.textAlignment());
     } else if (const auto rCell = dynamic_cast<const DurationTableViewCell *>(&cell)) {
         if (customStyle) {
             this->_stylist().tableViewTextCell(*this, cell.emphasized());
         }
 
         std::array<char, 32> buf;
+
+        buf[0] = '\0';
 
         switch (rCell->formatMode()) {
         case TimestampFormatMode::LONG:
@@ -391,9 +427,34 @@ void TableView::_drawCell(const Point& contentPos,
             break;
         }
 
-        case TimestampFormatMode::NS_FROM_EPOCH:
-            std::sprintf(buf.data(), "%lld", rCell->duration().ns());
+        case TimestampFormatMode::NS_FROM_ORIGIN:
+        {
+            const auto parts = utils::formatNs(rCell->duration().ns(), ',');
+            const auto partsWidth = parts.first.size() + parts.second.size() + 4;
+            const auto startPos = Point {
+                contentPos.x + descr.contentWidth() - partsWidth, contentPos.y
+            };
+
+            if (customStyle) {
+                this->_stylist().tableViewTextCell(*this, cell.emphasized());
+            }
+
+            this->_clearCell(contentPos, descr.contentWidth());
+            this->_moveAndPrint(startPos, "%s,", parts.first.c_str());
+
+            if (customStyle) {
+                this->_stylist().tableViewTsCellNsPart(*this, cell.emphasized());
+            }
+
+            this->_print("%s", parts.second.c_str());
+
+            if (customStyle) {
+                this->_stylist().tableViewTextCell(*this, cell.emphasized());
+            }
+
+            this->_print(" ns");
             break;
+        }
 
         case TimestampFormatMode::CYCLES:
             if (!rCell->cycleDiffAvailable()) {
@@ -407,16 +468,19 @@ void TableView::_drawCell(const Point& contentPos,
                 break;
             }
 
-            std::sprintf(buf.data(), "%lld", rCell->cycleDiff());
+            std::sprintf(buf.data(), "%s cc", utils::sepNumber(rCell->cycleDiff(),
+                                                            ',').c_str());
             break;
 
         default:
             break;
         }
 
-        this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(),
-                                   std::strlen(buf.data()), selected,
-                                   cell.textAlignment());
+        if (std::strlen(buf.data()) > 0) {
+            this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(),
+                                       std::strlen(buf.data()), selected,
+                                       cell.textAlignment());
+        }
     } else if (const auto pCell = dynamic_cast<const PathTableViewCell *>(&cell)) {
         std::string dirName, filename;
 

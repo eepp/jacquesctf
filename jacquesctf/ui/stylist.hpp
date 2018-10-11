@@ -21,6 +21,7 @@ public:
     void viewBorder(const View& view, bool focused, bool emphasized) const;
     void viewTitle(const View& view, bool focused, bool emphasized) const;
     void viewHasMore(const View& view) const;
+    void tableViewTsCellNsPart(const View& view, bool emphasized) const;
     void tableViewTextCell(const View& view, bool emphasized) const;
     void tableViewNaCell(const View& view, bool emphasized) const;
     void tableViewBoolCell(const View& view, bool value,
@@ -125,6 +126,7 @@ private:
         _COLOR_ID_TABLE_VIEW_WARNING_CELL,
         _COLOR_ID_TABLE_VIEW_ERROR_CELL,
         _COLOR_ID_TABLE_VIEW_TEXT_CELL_EMPHASIZED,
+        _COLOR_ID_TABLE_VIEW_TS_CELL_NS_PART,
         _COLOR_ID_HELP_VIEW_SECTION,
         _COLOR_ID_HELP_VIEW_KEY,
         _COLOR_ID_STATUS_VIEW_STD,

@@ -55,7 +55,8 @@ std::pair<std::string, std::string> formatPath(const boost::filesystem::path& pa
     return std::make_pair(dirNameStr, filenameStr);
 }
 
-std::string sepNumber(const long long value, const char sep)
+template <typename T>
+static std::string sepNumber(const T value, const char sep, const char *fmt)
 {
     /*
      * 1. Convert absolute value to string.
@@ -66,8 +67,9 @@ std::string sepNumber(const long long value, const char sep)
      * 5. Reverse the whole string.
      */
     std::array<char, 64> buf;
-    const auto count = static_cast<long long>(std::sprintf(buf.data(), "%lld",
-                                                           std::abs(value)));
+    const auto absValue = std::is_signed<T>::value ?
+                          std::abs(static_cast<long long>(value)) : value;
+    const auto count = std::sprintf(buf.data(), fmt, absValue);
     Index i = 0;
     std::string ret;
 
@@ -91,6 +93,16 @@ std::string sepNumber(const long long value, const char sep)
 
     std::reverse(std::begin(ret), std::end(ret));
     return ret;
+}
+
+std::string sepNumber(const long long value, const char sep)
+{
+    return sepNumber(value, sep, "%lld");
+}
+
+std::string sepNumber(const unsigned long long value, const char sep)
+{
+    return sepNumber(value, sep, "%llu");
 }
 
 std::string wrapText(const std::string& text, const Size lineLength)
@@ -294,7 +306,7 @@ std::pair<std::string, std::string> formatSize(const Size sizeBits,
                 extraBits > 0) {
             if (sep) {
                 std::sprintf(buf.data(), "%s+%llu",
-                             utils::sepNumber(static_cast<long long>(sizeBytes), *sep).c_str(),
+                             sepNumber(static_cast<long long>(sizeBytes), *sep).c_str(),
                              extraBits);
             } else {
                 std::sprintf(buf.data(), "%llu+%llu", sizeBytes, extraBits);
@@ -302,7 +314,7 @@ std::pair<std::string, std::string> formatSize(const Size sizeBits,
         } else {
             if (sep) {
                 std::sprintf(buf.data(), "%s",
-                             utils::sepNumber(static_cast<long long>(sizeBytes), *sep).c_str());
+                             sepNumber(static_cast<long long>(sizeBytes), *sep).c_str());
             } else {
                 std::sprintf(buf.data(), "%llu", sizeBytes);
             }
@@ -315,7 +327,7 @@ std::pair<std::string, std::string> formatSize(const Size sizeBits,
 
         if (sep) {
             std::sprintf(buf.data(), "%s",
-                         utils::sepNumber(static_cast<long long>(sizeBits), *sep).c_str());
+                         sepNumber(static_cast<long long>(sizeBits), *sep).c_str());
         } else {
             std::sprintf(buf.data(), "%llu", sizeBits);
         }
@@ -324,6 +336,27 @@ std::pair<std::string, std::string> formatSize(const Size sizeBits,
     }
 
     return {buf.data(), unit};
+}
+
+std::pair<std::string, std::string> formatNs(long long ns,
+                                             const boost::optional<char>& sep)
+{
+    constexpr auto nsInS = 1'000'000'000LL;
+    const auto absNs = std::abs(ns);
+    const auto absSOnly = (absNs / nsInS);
+    const auto nsOnly = absNs % nsInS;
+    std::string sStr;
+
+    if (ns < 0) {
+        sStr = "-";
+    }
+
+    sStr += sep ? sepNumber(absSOnly, *sep) : std::to_string(absSOnly);
+
+    const auto nsStr = sep ? sepNumber(nsOnly, *sep, "%09llu") :
+                       std::to_string(nsOnly);
+
+    return {sStr, nsStr};
 }
 
 } // namespace utils

@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cinttypes>
+#include <limits>
 #include <curses.h>
 #include <time.h>
 
@@ -24,35 +25,45 @@ Timestamp::Timestamp(const unsigned long long cycles,
     _cycles {cycles},
     _freq {frequency}
 {
-    auto llCycles = static_cast<long long>(cycles);
-    const auto llFreq = static_cast<long long>(frequency);
-    auto llOffsetCycles = static_cast<long long>(offsetCycles);
-    const auto llSecondsInOffsetCycles = llOffsetCycles / llFreq;
-    const auto llSecondsInCycles = llCycles / llFreq;
-    constexpr auto nsInS = 1'000'000'000LL;
+    assert(offsetCycles < frequency);
 
-    offsetSeconds += llSecondsInOffsetCycles;
-    llOffsetCycles -= llSecondsInOffsetCycles * llFreq;
-    offsetSeconds += llSecondsInCycles;
-    llCycles -= llSecondsInCycles * llFreq;
+    const auto secondsInCycles = cycles / frequency;
+    constexpr auto nsInS = 1'000'000'000ULL;
+    constexpr auto llNsInS = static_cast<long long>(nsInS);
 
-    assert(llCycles >= 0);
-    assert(llFreq >= 0);
-    assert(llOffsetCycles >= 0);
+    offsetSeconds += secondsInCycles;
 
-    const auto offsetNs = (llOffsetCycles * nsInS) / llFreq +
-                          offsetSeconds * nsInS;
-    _nsFromEpoch = offsetNs + (llCycles * nsInS) / llFreq;
+    const auto reducedCycles = cycles - secondsInCycles * frequency;
+    constexpr auto maxUll = std::numeric_limits<unsigned long long>::max();
+    unsigned long long offsetNsPart;
+
+    if (offsetCycles + reducedCycles <= maxUll / nsInS) {
+        offsetNsPart = (offsetCycles + reducedCycles) * nsInS / frequency;
+    } else {
+        /*
+         * FIXME: There could be a 1-ns error here, because we're
+         * converting to nanoseconds two times (offset and value) and
+         * adding those results: if the (real) results were to be 45.6
+         * ns and 12.7 ns, for example, which are in fact 45 and 12
+         * because of the integer divisions, then the result should be
+         * 58 ns, not 57 ns.
+         */
+        offsetNsPart = (offsetCycles * nsInS / frequency) +
+                       (reducedCycles * nsInS / frequency);
+    }
+
+    _nsFromOrigin = offsetSeconds * llNsInS +
+                    static_cast<long long>(offsetNsPart);
 
     time_t secondsFloor;
 
     static_assert(sizeof(time_t) >= 8, "Expecting a 64-bit time_t.");
 
     // I'm pretty sure there's a way to do this without branching
-    if (_nsFromEpoch < 0) {
-        secondsFloor = static_cast<time_t>((_nsFromEpoch - nsInS) / nsInS);
+    if (_nsFromOrigin < 0) {
+        secondsFloor = static_cast<time_t>((_nsFromOrigin - llNsInS) / llNsInS);
     } else {
-        secondsFloor = static_cast<time_t>(_nsFromEpoch / nsInS);
+        secondsFloor = static_cast<time_t>(_nsFromOrigin / llNsInS);
     }
 
     tm tm;
@@ -60,10 +71,10 @@ Timestamp::Timestamp(const unsigned long long cycles,
     localtime_r(&secondsFloor, &tm);
 
     // this too
-    if (_nsFromEpoch < 0) {
-        _ns = std::abs((std::abs(_nsFromEpoch) % nsInS) - nsInS);
+    if (_nsFromOrigin < 0) {
+        _ns = std::abs((std::abs(_nsFromOrigin) % llNsInS) - llNsInS);
     } else {
-        _ns = _nsFromEpoch % nsInS;
+        _ns = _nsFromOrigin % llNsInS;
     }
 
     _second = tm.tm_sec;
@@ -109,8 +120,8 @@ void Timestamp::format(char * const buf, const Size bufSize,
                       _hour, _minute, _second, _ns);
         break;
 
-    case TimestampFormatMode::NS_FROM_EPOCH:
-        std::snprintf(buf, bufSize, "%lld", _nsFromEpoch);
+    case TimestampFormatMode::NS_FROM_ORIGIN:
+        std::snprintf(buf, bufSize, "%lld", _nsFromOrigin);
         break;
 
     case TimestampFormatMode::CYCLES:

@@ -23,7 +23,7 @@ namespace jacques {
 static inline
 Duration operator-(const Timestamp& left, const Timestamp& right)
 {
-    const auto diff = left.nsFromEpoch() - right.nsFromEpoch();
+    const auto diff = left.nsFromOrigin() - right.nsFromOrigin();
 
     assert(diff >= 0);
     return Duration {static_cast<unsigned long long>(diff)};

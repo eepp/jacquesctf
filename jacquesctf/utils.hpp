@@ -65,6 +65,7 @@ std::string wrapText(const std::string& text, Size lineLength);
  *     -21843812 -> -21,843,812
  */
 std::string sepNumber(long long value, char sep = ' ');
+std::string sepNumber(unsigned long long value, char sep = ' ');
 
 /*
  * Used as such:
@@ -89,6 +90,9 @@ enum class SizeFormatMode
 std::pair<std::string, std::string> formatSize(Size sizeBits,
                                                SizeFormatMode formatMode = SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS,
                                                const boost::optional<char>& sep = boost::none);
+
+std::pair<std::string, std::string> formatNs(long long ns,
+                                             const boost::optional<char>& sep = boost::none);
 
 } // namespace utils
 } // namespace jacques
