@@ -708,8 +708,8 @@ void TableView::centerSelectedRow()
         return;
     }
 
-    long long newBaseIndex = static_cast<long long>(_selectionIdx -
-                                                    _visibleRowCount / 2);
+    const auto newBaseIndex = static_cast<long long>(_selectionIdx -
+                                                     _visibleRowCount / 2);
 
     if (newBaseIndex < 0) {
         // row is in the first half
