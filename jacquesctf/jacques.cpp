@@ -18,8 +18,13 @@
 #include "config.hpp"
 #include "interactive.hpp"
 #include "utils.hpp"
+#include "logging.hpp"
+#include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/null_sink.h"
 
 namespace jacques {
+
+std::shared_ptr<spdlog::logger> theLogger;
 
 static void appendPeriod(std::ostream& stream, const char *what)
 {
@@ -58,6 +63,7 @@ static void printCliUsage(const char *cmdName)
                  std::endl <<
                  "  --bytes-per-row-bin=COUNT, -b COUNT    Show COUNT bytes/row in binary mode" << std::endl <<
                  "  --bytes-per-row-hex=COUNT, -x COUNT    Show COUNT bytes/row in hex mode" << std::endl <<
+                 "  --log                                  Enable logging (`log.txt`)" << std::endl <<
                  "  --help, -h                             Print usage and exit" << std::endl <<
                  "  --version, -V                          Print version and exit" << std::endl <<
                  std::endl <<
@@ -98,13 +104,28 @@ static bool printMetadataText(const Config& cfg)
     return true;
 }
 
+static void createTheLogger(const Config& cfg)
+{
+    if (cfg.enableLogging()) {
+        theLogger = spdlog::basic_logger_st("jacques", "log.txt", true);
+        theLogger->set_level(spdlog::level::debug);
+    } else {
+        theLogger = spdlog::null_logger_st("jacques");
+        theLogger->set_level(spdlog::level::off);
+    }
+}
+
 static bool jacques(const int argc, const char *argv[])
 {
+
     auto cfg = createConfig(argc, argv);
 
     if (!cfg) {
         return false;
     }
+
+    createTheLogger(*cfg);
+    theLogger->info("Starting Jacques CTF {}.", JACQUES_VERSION);
 
     switch (cfg->command()) {
     case Config::Command::PRINT_CLI_USAGE:
@@ -123,6 +144,7 @@ static bool jacques(const int argc, const char *argv[])
         return startInteractive(*cfg);
     }
 
+    theLogger->info("Ending Jacques CTF {}.", JACQUES_VERSION);
     return true;
 }
 

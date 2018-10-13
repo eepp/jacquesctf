@@ -145,6 +145,7 @@ void Config::_parseArgs(const int argc, const char *argv[])
     optDesc.add_options()
         ("help,h", "")
         ("version,V", "")
+        ("log", "")
         ("bytes-per-row-bin,b", bpo::value<int>(), "")
         ("bytes-per-row-hex,x", bpo::value<int>(), "")
         ("paths", bpo::value<std::vector<std::string>>(), "");
@@ -218,6 +219,11 @@ void Config::_parseArgs(const int argc, const char *argv[])
         }
 
         _bytesPerRowHex = value;
+    }
+
+    if (vm.count("log")) {
+        _enableLogging = true;
+        return;
     }
 }
 

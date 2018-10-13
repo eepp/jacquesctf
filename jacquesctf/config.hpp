@@ -63,6 +63,11 @@ public:
         return _bytesPerRowHex;
     }
 
+    bool enableLogging() const
+    {
+        return _enableLogging;
+    }
+
 private:
     void _parseArgs(int argc, const char *argv[]);
     void _expandPaths();
@@ -72,6 +77,7 @@ private:
 	std::list<boost::filesystem::path> _filePaths;
 	unsigned int _bytesPerRowBin = 4;
 	unsigned int _bytesPerRowHex = 16;
+    bool _enableLogging = false;
 };
 
 } // namespace jacques

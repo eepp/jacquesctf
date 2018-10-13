@@ -30,6 +30,10 @@
 #include "utils.hpp"
 #include "packet-checkpoints-build-listener.hpp"
 #include "data-size.hpp"
+#include "logging.hpp"
+#include "data-region.hpp"
+#include "padding-data-region.hpp"
+#include "content-data-region.hpp"
 
 namespace jacques {
 
@@ -41,6 +45,7 @@ static bool screenInited = false;
 static void finiScreen()
 {
     if (screenInited) {
+        theLogger->info("Uninitializing terminal.");
         curs_set(1);
         endwin();
         screenInited = false;
@@ -60,15 +65,19 @@ static bool termSizeOk()
  */
 static bool initScreen()
 {
+    theLogger->info("Initializing terminal.");
     initscr();
+    theLogger->info("Terminal size: {}x{}.", COLS, LINES);
     screenInited = true;
 
     if (!has_colors() || !termSizeOk()) {
         finiScreen();
 
         if (!has_colors()) {
+            theLogger->error("Terminal does not support colors.");
             utils::error() << "Cannot continue: your terminal does not support colors.\n";
         } else if (!termSizeOk()) {
+            theLogger->error("Terminal is too small.");
             utils::error() << "Cannot continue: terminal size must be at least 80x16.\n";
         }
 
@@ -88,6 +97,7 @@ static bool initScreen()
 static void sigHandler(const int signo)
 {
     if (signo == SIGINT) {
+        theLogger->info("Got SIGINT: terminating now.");
         finiScreen();
         std::cerr << '\n';
         utils::error() << "Interrupted by user.\n";
@@ -97,6 +107,8 @@ static void sigHandler(const int signo)
 
 static void registerSignals()
 {
+    theLogger->info("Registering SIGINT signal.");
+
     auto ret = signal(SIGINT, sigHandler);
 
     assert(ret != SIG_ERR);
@@ -111,6 +123,8 @@ static bool init()
 
 static void buildIndexes(State& state, std::shared_ptr<const Stylist> stylist)
 {
+    theLogger->info("Building indexes.");
+
     const auto screenRect = Rectangle {{0, 0}, static_cast<Size>(COLS),
                                        static_cast<Size>(LINES)};
     const auto view = std::make_unique<PacketIndexBuildProgressView>(screenRect,
@@ -129,6 +143,10 @@ static void buildIndexes(State& state, std::shared_ptr<const Stylist> stylist)
         auto& dsf = dsfStateUp->dataStreamFile();
 
         view->dataStreamFile(dsf);
+
+        theLogger->info("Building packet index for data stream file `{}` "
+                        "({} B).", dsf.path().string(),
+                        dsf.fileSize().bytes());
         dsf.buildIndex(func, 443);
     }
 }
@@ -214,10 +232,22 @@ private:
     Screen * const * const _curScreen;
 };
 
+class PrintVisitor :
+    public boost::static_visitor<>
+{
+public:
+    template <typename T>
+    void operator()(const T& val) const
+    {
+        std::cout << val;
+    }
+};
+
 static bool tryStartInteractive(const Config& cfg)
 {
     auto stylist = std::make_shared<const Stylist>();
 
+    theLogger->info("Opening data stream files.");
     showFullScreenMessage("Opening data stream files...", stylist);
 
     Screen *curScreen = nullptr;
@@ -251,6 +281,7 @@ static bool tryStartInteractive(const Config& cfg)
 
     if (state->dataStreamFileStates().empty()) {
         finiScreen();
+        theLogger->warn("All data stream files to inspect are empty.");
         utils::error() << "All data stream files to inspect are empty.\n";
         return false;
     }
@@ -278,6 +309,7 @@ static bool tryStartInteractive(const Config& cfg)
                                                    stylist, state);
 
     // create screens
+    theLogger->info("Creating screens.");
     const auto inspectScreen = std::make_unique<InspectScreen>(screenRect, cfg,
                                                                stylist, state);
     const auto packetsScreen = std::make_unique<PacketsScreen>(screenRect, cfg,
@@ -307,8 +339,56 @@ static bool tryStartInteractive(const Config& cfg)
     showFullScreenMessage("Selecting initial packet...", stylist);
 
     if (state->activeDataStreamFileState().dataStreamFile().packetCount() > 0) {
+        theLogger->info("Selecting initial packet.");
         state->gotoPacket(0);
     }
+
+#if 0
+    {
+        finiScreen();
+        std::vector<DataRegion::SP> regions;
+
+        auto& packet = state->activeDataStreamFileState().activePacket();
+
+        packet.appendDataRegionsAtOffsetInPacketBits(regions, 29'368, 29'368 + 552);
+
+        for (const auto& region : regions) {
+            std::cout << "[" << region->segment().offsetInPacketBits() <<
+                         ", " << region->segment().offsetInPacketBits() + region->segment().size().bits() <<
+                         "[ (" << region->segment().size().bits() << ")";
+
+            if (region->hasScope()) {
+                std::cout << " {scope " <<
+                             static_cast<int>(region->scope().scope()) <<
+                             " [" << region->scope().segment().offsetInPacketBits() <<
+                             ", " << region->scope().segment().offsetInPacketBits() + region->scope().segment().size().bits() <<
+                             "[ (" << region->scope().segment().size().bits() << ")}";
+            }
+
+            if (region->byteOrder()) {
+                if (*region->byteOrder() == ByteOrder::BIG) {
+                    std::cout << " BE";
+                } else {
+                    std::cout << " LE";
+                }
+            }
+
+            if (auto sRegion = dynamic_cast<const ContentDataRegion *>(region.get())) {
+                std::cout << " CR ";
+
+                if (sRegion->value()) {
+                    boost::apply_visitor(PrintVisitor {}, *sRegion->value());
+                }
+            } else if (auto sRegion = dynamic_cast<const PaddingDataRegion *>(region.get())) {
+                std::cout << " PR";
+            }
+
+            std::cout << std::endl;
+        }
+
+        std::exit(0);
+    }
+#endif
 
     // draw status
     statusView->isVisible(true);
@@ -334,11 +414,16 @@ static bool tryStartInteractive(const Config& cfg)
     doupdate();
 
     while (!done) {
+        theLogger->debug("Waiting for key.");
         const auto ch = getch();
         bool renderStatus = true;
 
+        theLogger->debug("Got key `{}`.", ch);
+
         switch (ch) {
         case KEY_RESIZE:
+            theLogger->info("Terminal was resized: {}x{}.", COLS, LINES);
+
             // it looks like clearing and refreshing stdscr is required
             clear();
             refresh();
@@ -353,18 +438,24 @@ static bool tryStartInteractive(const Config& cfg)
 
             screenRect = Rectangle {{0, 0}, static_cast<Size>(COLS),
                                     static_cast<Size>(LINES) - 1};
+
+            theLogger->info("Moving and resizing status view.");
             statusView->moveAndResize(Rectangle {{0, screenRect.h},
                                                  screenRect.w, 1});
+            theLogger->info("Moving and resizing all screens.");
 
             for (auto screen : screens) {
                 screen->resize(screenRect.w, screenRect.h);
             }
 
+            theLogger->info("Redrawing current screen after move/resize.");
             curScreen->redraw();
+            theLogger->info("Redrawing status view after move/resize.");
             statusView->redraw();
             break;
 
         case 'r':
+            theLogger->info("Redrawing application (force).");
             clear();
             refresh();
             statusView->redraw();
@@ -376,6 +467,7 @@ static bool tryStartInteractive(const Config& cfg)
                 break;
             }
 
+            theLogger->info("Going to \"Packets\" screen.");
             curScreen->isVisible(false);
             curScreen = packetsScreen.get();
             curScreen->isVisible(true);
@@ -386,6 +478,7 @@ static bool tryStartInteractive(const Config& cfg)
                 break;
             }
 
+            theLogger->info("Going to \"Data stream files\" screen.");
             curScreen->isVisible(false);
             curScreen = dsfScreen.get();
             curScreen->isVisible(true);
@@ -396,6 +489,7 @@ static bool tryStartInteractive(const Config& cfg)
                 break;
             }
 
+            theLogger->info("Going to \"Data stream types\" screen.");
             curScreen->isVisible(false);
             curScreen = dataTypesScreen.get();
             curScreen->isVisible(true);
@@ -406,6 +500,7 @@ static bool tryStartInteractive(const Config& cfg)
                 break;
             }
 
+            theLogger->info("Going to \"Trace info\" screen.");
             curScreen->isVisible(false);
             curScreen = traceInfoScreen.get();
             curScreen->isVisible(true);
@@ -417,6 +512,7 @@ static bool tryStartInteractive(const Config& cfg)
                 break;
             }
 
+            theLogger->info("Going to \"Help\" screen.");
             prevScreen = curScreen;
             curScreen->isVisible(false);
             curScreen = helpScreen.get();
@@ -427,10 +523,12 @@ static bool tryStartInteractive(const Config& cfg)
             if (curScreen == inspectScreen.get()) {
                 break;
             } else if (curScreen == helpScreen.get()) {
+                theLogger->info("Going to previous screen.");
                 curScreen->isVisible(false);
                 curScreen = prevScreen;
                 curScreen->isVisible(true);
             } else {
+                theLogger->info("Going to \"Packet inspection\" screen.");
                 curScreen->isVisible(false);
                 curScreen = inspectScreen.get();
                 curScreen->isVisible(true);
@@ -440,6 +538,7 @@ static bool tryStartInteractive(const Config& cfg)
 
         case KEY_F(10):
         case 'Q':
+            theLogger->info("Quitting.");
             done = true;
             break;
 
@@ -448,12 +547,14 @@ static bool tryStartInteractive(const Config& cfg)
 
             switch (reaction) {
             case KeyHandlingReaction::RETURN_TO_INSPECT:
+                theLogger->info("Returning to \"Packet inspection\" screen.");
                 curScreen->isVisible(false);
                 curScreen = inspectScreen.get();
                 curScreen->isVisible(true);
                 break;
 
             case KeyHandlingReaction::RETURN_TO_PACKETS:
+                theLogger->info("Returning to \"Packets\" screen.");
                 curScreen->isVisible(false);
                 curScreen = packetsScreen.get();
                 curScreen->isVisible(true);
@@ -465,9 +566,11 @@ static bool tryStartInteractive(const Config& cfg)
         }
 
         if (renderStatus) {
+            theLogger->debug("Refreshing status view.");
             statusView->refresh();
         }
 
+        theLogger->debug("Updating terminal.");
         doupdate();
     }
 
@@ -476,6 +579,8 @@ static bool tryStartInteractive(const Config& cfg)
 
 bool startInteractive(const Config& cfg)
 {
+    theLogger->info("Starting interactive Jacques.");
+
     if (!init()) {
         utils::error() << "Cannot initialize screen and signal handling.\n";
         return false;
@@ -493,12 +598,14 @@ bool startInteractive(const Config& cfg)
     try {
         res = tryStartInteractive(cfg);
     } catch (const std::exception& ex) {
+        theLogger->error("Unhandled exception: {}.", ex.what());
         finiScreen();
         utils::error() << "Unhandled exception: " << ex.what() << std::endl;
         return false;
     }
 
     finiScreen();
+    theLogger->info("Ending interactive Jacques.");
     return res;
 }
 

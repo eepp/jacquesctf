@@ -28,8 +28,12 @@ ContentDataRegion::ContentDataRegion(const DataSegment& segment, Data&& data,
                                      Scope::SP scope,
                                      const yactfr::DataType& dataType,
                                      const boost::optional<Value>& value) :
-    DataRegion {segment, std::move(data), byteOrderFromDataType(dataType)},
-    _scope {std::move(scope)},
+    DataRegion {
+        segment,
+        std::move(data),
+        std::move(scope),
+        byteOrderFromDataType(dataType)
+    },
     _dataType {&dataType},
     _value {value}
 {

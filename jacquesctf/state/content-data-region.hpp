@@ -34,16 +34,6 @@ public:
                                const yactfr::DataType& dataType,
                                const boost::optional<Value>& value);
 
-    const Scope& scope() const noexcept
-    {
-        return *_scope;
-    }
-
-    Scope::SP scopePtr() const
-    {
-        return _scope;
-    }
-
     const yactfr::DataType& dataType() const noexcept
     {
         return *_dataType;
@@ -55,7 +45,6 @@ public:
     }
 
 private:
-    Scope::SP _scope;
     const yactfr::DataType *_dataType;
     boost::optional<Value> _value;
 };

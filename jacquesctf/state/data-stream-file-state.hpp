@@ -33,6 +33,7 @@ public:
                                  const boost::filesystem::path& path,
                                  std::shared_ptr<const Metadata> metadata,
                                  std::shared_ptr<PacketCheckpointsBuildListener> packetCheckpointsBuildListener);
+    ~DataStreamFileState();
     void gotoOffsetBits(Index offsetBits);
     void gotoOffsetBytes(Index offsetBytes);
     void gotoPacket(Index index);
@@ -76,11 +77,6 @@ public:
         return _curOffsetInPacketBits;
     }
 
-    boost::optional<Index> curEventRecordIndex()
-    {
-        return this->activePacket().eventRecordIndexInPacketAtOffsetInPacketBits(_curOffsetInPacketBits);
-    }
-
     const Metadata& metadata() const
     {
         return *_metadata;
@@ -101,6 +97,7 @@ private:
     yactfr::PacketSequence _seq;
     DataStreamFile _dataStreamFile;
     LruCache<Index, Packet::SP> _packetCache;
+    int _fd;
 };
 
 } // namespace jacques

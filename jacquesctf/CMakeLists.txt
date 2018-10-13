@@ -51,6 +51,7 @@ add_executable (
     state/duration.cpp
     state/event-record.cpp
     state/message-visitor.cpp
+    state/memory-mapped-file.cpp
     state/metadata-store.cpp
     state/metadata.cpp
     state/packet-checkpoints-build-listener.cpp
@@ -102,6 +103,7 @@ target_include_directories (
     ${CMAKE_CURRENT_SOURCE_DIR}/ui/views
     ${CMAKE_CURRENT_SOURCE_DIR}/ui/screens
     ${CMAKE_CURRENT_SOURCE_DIR}/state
+    ${CMAKE_SOURCE_DIR}/logging
     ${CURSES_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${YACTFR_INCLUDE_DIR}

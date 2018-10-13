@@ -10,8 +10,9 @@
 namespace jacques {
 
 PaddingDataRegion::PaddingDataRegion(const DataSegment& segment, Data&& data,
+                                     Scope::SP scope,
                                      const boost::optional<ByteOrder>& byteOrder) :
-    DataRegion {segment, std::move(data), byteOrder}
+    DataRegion {segment, std::move(data), std::move(scope), byteOrder}
 {
 }
 

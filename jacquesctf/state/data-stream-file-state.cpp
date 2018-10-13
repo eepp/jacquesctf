@@ -6,10 +6,14 @@
  */
 
 #include <cassert>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "data-stream-file-state.hpp"
 #include "active-packet-changed-message.hpp"
 #include "state.hpp"
+#include "io-error.hpp"
 
 namespace jacques {
 
@@ -31,6 +35,18 @@ DataStreamFileState::DataStreamFileState(State& state,
     _packetCache {16}
 {
     _factory->expectedAccessPattern(yactfr::MemoryMappedFileViewFactory::AccessPattern::SEQUENTIAL);
+    _fd = open(path.string().c_str(), O_RDONLY);
+
+    if (_fd < 0) {
+        throw IOError {path, "Cannot open file."};
+    }
+}
+
+DataStreamFileState::~DataStreamFileState()
+{
+    if (_fd >= 0) {
+        (void) close(_fd);
+    }
 }
 
 void DataStreamFileState::gotoOffsetBits(const Index offsetBits)
@@ -102,11 +118,14 @@ Packet::SP DataStreamFileState::_packet(const Index index,
         packet = *packetPtr;
     } else {
         auto& packetIndexEntry = _dataStreamFile.packetIndexEntry(index);
+        auto mmapFile = std::make_unique<MemoryMappedFile>(_dataStreamFile.path(),
+                                                           _fd);
 
         buildListener.startBuild(packetIndexEntry);
         packet = std::make_shared<Packet>(packetIndexEntry, _seq,
                                           *_metadata,
                                           _factory->createDataSource(),
+                                          std::move(mmapFile),
                                           buildListener);
         buildListener.endBuild();
 

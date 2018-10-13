@@ -10,10 +10,16 @@
 namespace jacques {
 
 DataRegion::DataRegion(const DataSegment& segment, Data&& data,
+                       Scope::SP scope,
                        const boost::optional<ByteOrder>& byteOrder) :
     _segment {segment},
     _data {std::move(data)},
+    _scope {std::move(scope)},
     _byteOrder {byteOrder}
+{
+}
+
+DataRegion::~DataRegion()
 {
 }
 

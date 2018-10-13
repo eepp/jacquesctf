@@ -14,6 +14,7 @@
 #include <boost/optional.hpp>
 
 #include "data-segment.hpp"
+#include "scope.hpp"
 
 namespace jacques {
 
@@ -38,10 +39,27 @@ public:
 
 protected:
     explicit DataRegion(const DataSegment& segment,
-                        Data&& data,
+                        Data&& data, Scope::SP scope,
                         const boost::optional<ByteOrder>& byteOrder = boost::none);
 
 public:
+    virtual ~DataRegion();
+
+    bool hasScope() const noexcept
+    {
+        return static_cast<bool>(_scope);
+    }
+
+    const Scope& scope() const noexcept
+    {
+        return *_scope;
+    }
+
+    Scope::SP scopePtr() const
+    {
+        return _scope;
+    }
+
     const DataSegment& segment() const noexcept
     {
         return _segment;
@@ -70,6 +88,7 @@ public:
 private:
     DataSegment _segment;
     Data _data;
+    Scope::SP _scope;
     const boost::optional<ByteOrder> _byteOrder;
 };
 
