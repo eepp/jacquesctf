@@ -19,7 +19,7 @@ class PaddingDataRegion :
 {
 public:
     explicit PaddingDataRegion(const DataSegment& segment, Data&& data,
-                               ByteOrder byteOrder);
+                               const boost::optional<ByteOrder>& byteOrder);
 };
 
 } // namespace jacques

@@ -9,7 +9,7 @@
 
 namespace jacques {
 
-static ByteOrder byteOrderFromDataType(const yactfr::DataType& dataType)
+static boost::optional<ByteOrder> byteOrderFromDataType(const yactfr::DataType& dataType)
 {
     if (dataType.isBitArrayType()) {
         switch (dataType.asBitArrayType()->byteOrder()) {
@@ -21,7 +21,7 @@ static ByteOrder byteOrderFromDataType(const yactfr::DataType& dataType)
         }
     }
 
-    return ByteOrder::USELESS;
+    return boost::none;
 }
 
 ContentDataRegion::ContentDataRegion(const DataSegment& segment, Data&& data,
@@ -29,7 +29,7 @@ ContentDataRegion::ContentDataRegion(const DataSegment& segment, Data&& data,
                                      const yactfr::DataType& dataType,
                                      const boost::optional<Value>& value) :
     DataRegion {segment, std::move(data), byteOrderFromDataType(dataType)},
-    _scope {scope},
+    _scope {std::move(scope)},
     _dataType {&dataType},
     _value {value}
 {

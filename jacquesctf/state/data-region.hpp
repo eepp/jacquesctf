@@ -11,6 +11,7 @@
 #include <memory>
 #include <vector>
 #include <boost/operators.hpp>
+#include <boost/optional.hpp>
 
 #include "data-segment.hpp"
 
@@ -20,7 +21,6 @@ enum class ByteOrder
 {
     BIG,
     LITTLE,
-    USELESS,
 };
 
 class DataRegion
@@ -38,7 +38,8 @@ public:
 
 protected:
     explicit DataRegion(const DataSegment& segment,
-                        Data&& data, ByteOrder byteOrder);
+                        Data&& data,
+                        const boost::optional<ByteOrder>& byteOrder = boost::none);
 
 public:
     const DataSegment& segment() const noexcept
@@ -51,7 +52,7 @@ public:
         return _data;
     }
 
-    ByteOrder byteOrder() const noexcept
+    const boost::optional<ByteOrder>& byteOrder() const noexcept
     {
         return _byteOrder;
     }
@@ -69,7 +70,7 @@ public:
 private:
     DataSegment _segment;
     Data _data;
-    ByteOrder _byteOrder;
+    const boost::optional<ByteOrder> _byteOrder;
 };
 
 } // namespace jacques
