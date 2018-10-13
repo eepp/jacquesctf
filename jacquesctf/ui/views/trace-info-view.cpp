@@ -202,11 +202,12 @@ void TraceInfoView::_buildTraceInfoRows(const Metadata &metadata)
     }
 
     rows.push_back(std::make_unique<_EmptyRow>());
-    rows.push_back(std::make_unique<_SectionRow>("Metadata stream"));
+    rows.push_back(std::make_unique<_SectionRow>("Metadata stream info"));
 
     rows.push_back(std::make_unique<_StringPropRow>("Packetized",
                                                     metadata.streamPacketCount() ? "Yes" : "No"));
     rows.push_back(std::make_unique<_StringPropRow>("Path", metadata.path().string()));
+    rows.push_back(std::make_unique<_DataSizePropRow>("Size", metadata.fileSize()));
 
     if (metadata.streamPacketCount()) {
         const auto version = std::to_string(*metadata.streamMajorVersion()) + "." +
