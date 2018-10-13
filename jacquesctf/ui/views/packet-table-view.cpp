@@ -40,7 +40,7 @@ void PacketTableView::_setColumnDescriptions()
         TableViewColumnDescription {"Timestamp: beginning", 29},
         TableViewColumnDescription {"Timestamp: end", 29},
         TableViewColumnDescription {"Duration", 23},
-        TableViewColumnDescription {"Event records", 14},
+        TableViewColumnDescription {"Event records", 13},
         TableViewColumnDescription {"DST ID", 6},
         TableViewColumnDescription {"DS ID", 5},
         TableViewColumnDescription {"Seq num", 8},
