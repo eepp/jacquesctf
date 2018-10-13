@@ -20,6 +20,7 @@
 #include <boost/optional.hpp>
 
 #include "aliases.hpp"
+#include "data-size.hpp"
 
 namespace jacques {
 
@@ -33,6 +34,10 @@ public:
 
 public:
     explicit Metadata(const boost::filesystem::path& path);
+    const yactfr::DataType *dataTypeParent(const yactfr::DataType& dataType) const;
+    yactfr::Scope dataTypeScope(const yactfr::DataType& dataType) const;
+    bool dataTypeIsScopeRoot(const yactfr::DataType& dataType) const;
+    DataSize fileSize() const noexcept;
 
     const boost::filesystem::path& path() const noexcept
     {
@@ -84,14 +89,11 @@ public:
         return _traceType;
     }
 
+    // true if all clock types are absolute or have the same UUID
     bool isCorrelatable() const noexcept
     {
         return _isCorrelatable;
     }
-
-    const yactfr::DataType *dataTypeParent(const yactfr::DataType& dataType) const;
-    yactfr::Scope dataTypeScope(const yactfr::DataType& dataType) const;
-    bool dataTypeIsScopeRoot(const yactfr::DataType& dataType) const;
 
 private:
     void _setDataTypeParents();

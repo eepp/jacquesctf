@@ -23,7 +23,9 @@
 
 namespace jacques {
 
-Metadata::Metadata(const boost::filesystem::path& path) :
+namespace bfs = boost::filesystem;
+
+Metadata::Metadata(const bfs::path& path) :
     _path {path}
 {
     try {
@@ -255,6 +257,11 @@ bool Metadata::dataTypeIsScopeRoot(const yactfr::DataType& dataType) const
     }
 
     return true;
+}
+
+DataSize Metadata::fileSize() const noexcept
+{
+    return DataSize::fromBytes(bfs::file_size(_path));
 }
 
 } // namespace jacques
