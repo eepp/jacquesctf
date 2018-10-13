@@ -15,6 +15,13 @@
 
 namespace jacques {
 
+/*
+ * A data segment is a section of a packet: it is specified by an
+ * offset within the packet and a size.
+ *
+ * Data segments are comparable as long as they are known to be part of
+ * the same packet and disjoint: only their offsets are compared.
+ */
 struct DataSegment :
     public boost::totally_ordered<DataSegment>
 {
@@ -46,12 +53,12 @@ struct DataSegment :
         _size = size;
     }
 
-    bool operator<(const DataSegment& other)
+    bool operator<(const DataSegment& other) const noexcept
     {
         return _offsetInPacketBits < other._offsetInPacketBits;
     }
 
-    bool operator==(const DataSegment& other)
+    bool operator==(const DataSegment& other) const noexcept
     {
         return _offsetInPacketBits == other._offsetInPacketBits;
     }
