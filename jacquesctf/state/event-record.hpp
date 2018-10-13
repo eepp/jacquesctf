@@ -25,7 +25,7 @@ class EventRecord :
     public boost::totally_ordered<EventRecord>
 {
 public:
-    using SP = std::shared_ptr<const EventRecord>;
+    using SP = std::shared_ptr<EventRecord>;
 
 public:
     static SP createFromPacketSequenceIterator(yactfr::PacketSequenceIterator& it,
@@ -34,14 +34,20 @@ public:
                                                Index indexInPacket);
 
 public:
+    explicit EventRecord(Index indexInPacket);
     explicit EventRecord(const yactfr::EventRecordType& type,
-                         Index indexInPacket,
-                         boost::optional<Timestamp> firstTs,
+                         const Index indexInPacket,
+                         const boost::optional<Timestamp>& firstTs,
                          const DataSegment& segment);
 
     const yactfr::EventRecordType& type() const noexcept
     {
         return *_type;
+    }
+
+    void type(const yactfr::EventRecordType& type) noexcept
+    {
+        _type = &type;
     }
 
     Index indexInPacket() const noexcept
@@ -59,9 +65,24 @@ public:
         return _segment;
     }
 
+    DataSegment& segment() noexcept
+    {
+        return _segment;
+    }
+
+    void segment(const DataSegment& segment) noexcept
+    {
+        _segment = segment;
+    }
+
     const boost::optional<Timestamp>& firstTimestamp() const noexcept
     {
         return _firstTs;
+    }
+
+    void firstTimestamp(const Timestamp& firstTs) noexcept
+    {
+        _firstTs = firstTs;
     }
 
     bool operator<(const EventRecord& other) const noexcept
@@ -75,7 +96,7 @@ public:
     }
 
 private:
-    const yactfr::EventRecordType *_type;
+    const yactfr::EventRecordType *_type = nullptr;
     Index _indexInPacket;
     boost::optional<Timestamp> _firstTs;
     DataSegment _segment;

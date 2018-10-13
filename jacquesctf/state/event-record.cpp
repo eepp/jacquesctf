@@ -12,13 +12,18 @@
 namespace jacques {
 
 EventRecord::EventRecord(const yactfr::EventRecordType& type,
-                         Index indexInPacket,
-                         boost::optional<Timestamp> firstTs,
+                         const Index indexInPacket,
+                         const boost::optional<Timestamp>& firstTs,
                          const DataSegment& segment) :
     _type {&type},
     _indexInPacket {indexInPacket},
     _firstTs {firstTs},
     _segment {segment}
+{
+}
+
+EventRecord::EventRecord(Index indexInPacket) :
+    _indexInPacket {indexInPacket}
 {
 }
 
