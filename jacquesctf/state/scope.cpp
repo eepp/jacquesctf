@@ -9,12 +9,21 @@
 
 namespace jacques {
 
-Scope::Scope(EventRecord::SP eventRecord, yactfr::Scope scope,
-             const yactfr::DataType& rootDataType, const DataSegment& segment) :
-    _eventRecord {eventRecord},
+Scope::Scope(EventRecord::SP eventRecord, const yactfr::Scope scope,
+             const DataSegment& segment) :
+    _eventRecord {std::move(eventRecord)},
     _scope {scope},
-    _rootDataType {&rootDataType},
     _segment {segment}
+{
+}
+
+Scope::Scope(EventRecord::SP eventRecord, const yactfr::Scope scope) :
+    Scope {std::move(eventRecord), scope, {}}
+{
+}
+
+Scope::Scope(const yactfr::Scope scope) :
+    Scope {nullptr, scope, {}}
 {
 }
 

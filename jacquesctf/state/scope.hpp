@@ -22,8 +22,9 @@ public:
     using SP = std::shared_ptr<Scope>;
 
 public:
+    explicit Scope(yactfr::Scope scope);
+    explicit Scope(EventRecord::SP eventRecord, yactfr::Scope scope);
     explicit Scope(EventRecord::SP eventRecord, yactfr::Scope scope,
-                   const yactfr::DataType& rootDataType,
                    const DataSegment& segment);
 
     const EventRecord *eventRecord() const noexcept
@@ -41,20 +42,24 @@ public:
         return _scope;
     }
 
-    const yactfr::DataType& rootDataType() const noexcept
-    {
-        return *_rootDataType;
-    }
-
     const DataSegment& segment() const noexcept
     {
         return _segment;
     }
 
+    DataSegment& segment() noexcept
+    {
+        return _segment;
+    }
+
+    void segment(const DataSegment& segment) noexcept
+    {
+        _segment = segment;
+    }
+
 private:
     EventRecord::SP _eventRecord;
-    yactfr::Scope _scope;
-    const yactfr::DataType *_rootDataType;
+    const yactfr::Scope _scope;
     DataSegment _segment;
 };
 
