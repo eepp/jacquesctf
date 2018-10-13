@@ -62,11 +62,26 @@ void Metadata::_setIsCorrelatable()
 
     bool hasAbsolute = false;
     bool hasNonAbsolute = false;
+    const boost::uuids::uuid *uuid = nullptr;
 
     for (auto& clockType : _traceType->clockTypes()) {
         if (clockType->isAbsolute()) {
             hasAbsolute = true;
         } else {
+            if (uuid) {
+                if (clockType->uuid()) {
+                    if (*clockType->uuid() != *uuid) {
+                        return;
+                    }
+                } else {
+                    return;
+                }
+            } else {
+                if (clockType->uuid()) {
+                    uuid = &(*clockType->uuid());
+                }
+            }
+
             hasNonAbsolute = true;
         }
     }
