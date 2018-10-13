@@ -33,6 +33,11 @@ struct DataSegment :
         return _offsetInPacketBits;
     }
 
+    Index endOffsetInPacketBits() const noexcept
+    {
+        return _offsetInPacketBits + _size.bits();
+    }
+
     void offsetInPacketBits(const Index offsetInPacketBits) noexcept
     {
         _offsetInPacketBits = offsetInPacketBits;
