@@ -29,7 +29,8 @@ Packet::Packet(const PacketIndexEntry& indexEntry,
     _endIt {std::end(seq)},
     _checkpoints {
         seq, metadata, *_indexEntry, 20011, packetCheckpointsBuildListener,
-    }
+    },
+    _lruDataRegionCache {1000}
 {
     _mmapFile->map(_indexEntry->offsetInDataStreamBytes(),
                    _indexEntry->totalSize());
@@ -39,6 +40,16 @@ Packet::Packet(const PacketIndexEntry& indexEntry,
                      reinterpret_cast<std::uintptr_t>(_mmapFile->addr()),
                      _mmapFile->offsetBytes(), _mmapFile->size().bytes(),
                      _mmapFile->fileSize().bytes());
+
+    if (_checkpoints.eventRecordCount() > 0) {
+        // preamble is until beginning of first event record
+        _preambleSize = _checkpoints.firstEventRecord()->segment().offsetInPacketBits();
+    } else {
+        // preamble is the only content
+        _preambleSize = _indexEntry->contentSize();
+    }
+
+    theLogger->debug("Preamble size: {} b.", _preambleSize.bits());
 }
 
 void Packet::_ensureEventRecordIsCached(const Index indexInPacket)
@@ -87,6 +98,12 @@ void Packet::_ensureEventRecordIsCached(const Index indexInPacket)
 void Packet::_ensureOffsetInPacketBitsIsCached(const Index offsetInPacketBits)
 {
     if (this->_dataRegionCacheContainsOffsetInPacketBits(offsetInPacketBits)) {
+        return;
+    }
+
+    // preamble?
+    if (offsetInPacketBits < _preambleSize.bits()) {
+        this->_cachePacketPreambleDataRegions();
         return;
     }
 
@@ -256,6 +273,16 @@ void Packet::_cachePacketPreambleDataRegions()
     theLogger->debug("Caching preamble data regions.");
 
     using ElemKind = yactfr::Element::Kind;
+
+    // already cached?
+    if (!_dataRegionCache.empty()) {
+        const auto& firstDataRegion = *_dataRegionCache.front();
+
+        if (firstDataRegion.segment().offsetInPacketBits() == 0) {
+            theLogger->debug("Preamble data regions are already cached.");
+            return;
+        }
+    }
 
     // clear current cache
     _dataRegionCache.clear();
@@ -478,23 +505,12 @@ void Packet::appendDataRegionsAtOffsetInPacketBits(std::vector<DataRegion::SP>& 
     assert(offsetInPacketBits < _indexEntry->totalSize().bits());
     assert(endOffsetInPacketBits <= _indexEntry->totalSize().bits());
     assert(offsetInPacketBits < endOffsetInPacketBits);
-
-    DataSize preambleSize;
-
-    if (_checkpoints.eventRecordCount() > 0) {
-        // preamble is until beginning of first event record
-        preambleSize = _checkpoints.firstEventRecord()->segment().offsetInPacketBits();
-    } else {
-        // preamble is the only content
-        preambleSize = _indexEntry->contentSize();
-    }
-
-    theLogger->debug("Preamble size: {} b.", preambleSize.bits());
+    theLogger->debug("Preamble size: {} b.", _preambleSize.bits());
 
     Index curOffsetInPacketBits;
 
     // append preamble regions if needed
-    if (offsetInPacketBits < preambleSize.bits()) {
+    if (offsetInPacketBits < _preambleSize.bits()) {
         this->_cachePacketPreambleDataRegions();
 
         auto it = this->_dataRegionCacheItBeforeOrAtOffsetInPacketBits(offsetInPacketBits);
@@ -564,6 +580,32 @@ void Packet::appendDataRegionsAtOffsetInPacketBits(std::vector<DataRegion::SP>& 
             }
         }
     }
+}
+
+const DataRegion& Packet::dataRegionAtOffsetInPacketBits(const Index offsetInPacketBits)
+{
+    theLogger->debug("Requesting single data region at offset {} b.",
+                     offsetInPacketBits);
+
+    auto dataRegionFromLru = _lruDataRegionCache.get(offsetInPacketBits);
+
+    if (dataRegionFromLru) {
+        theLogger->debug("LRU cache hit: cache size {}.",
+                         _lruDataRegionCache.size());
+        return **dataRegionFromLru;
+    }
+
+    theLogger->debug("LRU cache miss: cache size {}.",
+                     _lruDataRegionCache.size());
+    this->_ensureOffsetInPacketBitsIsCached(offsetInPacketBits);
+
+    const auto it = _dataRegionCacheItBeforeOrAtOffsetInPacketBits(offsetInPacketBits);
+    const auto& dataRegion = **it;
+
+    assert(dataRegion.segment().offsetInPacketBits() == offsetInPacketBits);
+    theLogger->debug("Adding to LRU cache (offset {} b).", offsetInPacketBits);
+    _lruDataRegionCache.insert(offsetInPacketBits, *it);
+    return dataRegion;
 }
 
 } // namespace jacques

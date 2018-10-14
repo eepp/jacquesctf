@@ -95,6 +95,14 @@ namespace jacques {
  * time. To help with the scenario where the user inspects the same
  * distant offsets often, we could create an LRU cache of data region
  * caches.
+ *
+ * There's also an LRU cache for frequently accessed data regions by
+ * offset (with dataRegionAtOffsetInPacketBits()): when there's a cache
+ * miss, the method calls _ensureOffsetInPacketBitsIsCached() to update
+ * the data region and event record caches and then adds the data region
+ * entry to the LRU cache. The LRU cache avoids performing a binary
+ * search by _dataRegionCacheItBeforeOrAtOffsetInPacketBits() every
+ * time.
  */
 class Packet
 {
@@ -111,6 +119,7 @@ public:
     void appendDataRegionsAtOffsetInPacketBits(std::vector<DataRegion::SP>& regions,
                                                Index offsetInPacketBits,
                                                Index endOffsetInPacketBits);
+    const DataRegion& dataRegionAtOffsetInPacketBits(Index offsetInPacketBits);
 
     const PacketIndexEntry& indexEntry() const noexcept
     {
@@ -345,7 +354,9 @@ private:
     PacketCheckpoints _checkpoints;
     DataRegionCache _dataRegionCache;
     EventRecordCache _eventRecordCache;
+    LruCache<Index, DataRegion::SP> _lruDataRegionCache;
     Size _eventRecordCacheMaxSize = 500;
+    DataSize _preambleSize;
 };
 
 } // namespace jacques

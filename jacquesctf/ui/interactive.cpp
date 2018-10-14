@@ -345,46 +345,60 @@ static bool tryStartInteractive(const Config& cfg)
 
 #if 0
     {
-        finiScreen();
-        std::vector<DataRegion::SP> regions;
+        const auto printRegion = [](const auto& region) {
+            std::cout << "[" << region.segment().offsetInPacketBits() <<
+                         ", " << region.segment().offsetInPacketBits() + region.segment().size().bits() <<
+                         "[ (" << region.segment().size().bits() << ")";
 
-        auto& packet = state->activeDataStreamFileState().activePacket();
-
-        packet.appendDataRegionsAtOffsetInPacketBits(regions, 29'368, 29'368 + 552);
-
-        for (const auto& region : regions) {
-            std::cout << "[" << region->segment().offsetInPacketBits() <<
-                         ", " << region->segment().offsetInPacketBits() + region->segment().size().bits() <<
-                         "[ (" << region->segment().size().bits() << ")";
-
-            if (region->hasScope()) {
+            if (region.hasScope()) {
                 std::cout << " {scope " <<
-                             static_cast<int>(region->scope().scope()) <<
-                             " [" << region->scope().segment().offsetInPacketBits() <<
-                             ", " << region->scope().segment().offsetInPacketBits() + region->scope().segment().size().bits() <<
-                             "[ (" << region->scope().segment().size().bits() << ")}";
+                             static_cast<int>(region.scope().scope()) <<
+                             " [" << region.scope().segment().offsetInPacketBits() <<
+                             ", " << region.scope().segment().offsetInPacketBits() + region.scope().segment().size().bits() <<
+                             "[ (" << region.scope().segment().size().bits() << ")}";
             }
 
-            if (region->byteOrder()) {
-                if (*region->byteOrder() == ByteOrder::BIG) {
+            if (region.byteOrder()) {
+                if (*region.byteOrder() == ByteOrder::BIG) {
                     std::cout << " BE";
                 } else {
                     std::cout << " LE";
                 }
             }
 
-            if (auto sRegion = dynamic_cast<const ContentDataRegion *>(region.get())) {
+            if (auto sRegion = dynamic_cast<const ContentDataRegion *>(&region)) {
                 std::cout << " CR ";
 
                 if (sRegion->value()) {
                     boost::apply_visitor(PrintVisitor {}, *sRegion->value());
                 }
-            } else if (auto sRegion = dynamic_cast<const PaddingDataRegion *>(region.get())) {
+            } else if (auto sRegion = dynamic_cast<const PaddingDataRegion *>(&region)) {
                 std::cout << " PR";
             }
 
             std::cout << std::endl;
+        };
+        finiScreen();
+        std::vector<DataRegion::SP> regions;
+
+        auto& packet = state->activeDataStreamFileState().activePacket();
+
+        /*
+        packet.appendDataRegionsAtOffsetInPacketBits(regions, 29'368, 29'368 + 552);
+
+        for (const auto& region : regions) {
+            printRegion(*region);
         }
+        */
+
+        printRegion(packet.dataRegionAtOffsetInPacketBits(1376));
+        printRegion(packet.dataRegionAtOffsetInPacketBits(439840));
+        printRegion(packet.dataRegionAtOffsetInPacketBits(439845));
+        printRegion(packet.dataRegionAtOffsetInPacketBits(1376));
+        printRegion(packet.dataRegionAtOffsetInPacketBits(67108688));
+        printRegion(packet.dataRegionAtOffsetInPacketBits(1040712));
+        printRegion(packet.dataRegionAtOffsetInPacketBits(0));
+        printRegion(packet.dataRegionAtOffsetInPacketBits(1376));
 
         std::exit(0);
     }
