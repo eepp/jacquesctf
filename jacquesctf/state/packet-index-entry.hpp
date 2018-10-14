@@ -25,8 +25,10 @@ public:
     explicit PacketIndexEntry(Index indexInDataStream,
                               Index offsetInDataStreamBytes,
                               boost::optional<Index> packetContextOffsetInPacketBits,
-                              DataSize totalSize,
-                              DataSize contentSize,
+                              const boost::optional<DataSize>& expectedTotalSize,
+                              const boost::optional<DataSize>& expectedContentSize,
+                              const DataSize& effectiveTotalSize,
+                              const DataSize& effectiveContentSize,
                               const yactfr::DataStreamType *dst,
                               boost::optional<Index> dataStreamId,
                               boost::optional<Timestamp> tsBegin,
@@ -50,14 +52,24 @@ public:
         return _packetContextOffsetInPacketBits;
     }
 
-    DataSize totalSize() const noexcept
+    const boost::optional<DataSize>& expectedTotalSize() const noexcept
     {
-        return _totalSize;
+        return _expectedTotalSize;
     }
 
-    DataSize contentSize() const noexcept
+    const boost::optional<DataSize>& expectedContentSize() const noexcept
     {
-        return _contentSize;
+        return _expectedContentSize;
+    }
+
+    const DataSize& effectiveTotalSize() const noexcept
+    {
+        return _effectiveTotalSize;
+    }
+
+    const DataSize& effectiveContentSize() const noexcept
+    {
+        return _effectiveContentSize;
     }
 
     const boost::optional<Timestamp>& tsBegin() const noexcept
@@ -135,8 +147,10 @@ private:
     const Index _indexInDataStream;
     const Size _offsetInDataStreamBytes;
     const boost::optional<Index> _packetContextOffsetInPacketBits;
-    const DataSize _totalSize;
-    const DataSize _contentSize;
+    const boost::optional<DataSize> _expectedTotalSize;
+    const boost::optional<DataSize> _expectedContentSize;
+    const DataSize _effectiveTotalSize;
+    const DataSize _effectiveContentSize;
     const yactfr::DataStreamType *_dst;
     const boost::optional<Index> _dataStreamId;
     const boost::optional<Timestamp> _tsBegin;

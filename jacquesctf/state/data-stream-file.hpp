@@ -76,22 +76,17 @@ public:
         return _fileSize;
     }
 
-    DataSize packetsSize() const noexcept
-    {
-        return _packetsSize;
-    }
-
     bool isComplete() const noexcept
     {
-        return _packetsSize == _fileSize;
+        return _isComplete;
     }
 
 private:
     struct _IndexBuildingState
     {
         boost::optional<Index> packetContextOffsetInPacketBits;
-        boost::optional<DataSize> packetSize;
-        boost::optional<DataSize> contentSize;
+        boost::optional<DataSize> expectedTotalSize;
+        boost::optional<DataSize> expectedContentSize;
         boost::optional<Timestamp> tsBegin;
         boost::optional<Timestamp> tsEnd;
         boost::optional<Index> dataStreamId;
@@ -114,10 +109,10 @@ private:
     const Metadata *_metadata;
     yactfr::PacketSequence *_seq;
     yactfr::MemoryMappedFileViewFactory *_factory;
-    DataSize _packetsSize = 0;
     DataSize _fileSize;
     std::vector<PacketIndexEntry> _index;
     bool _isIndexBuilt = false;
+    bool _isComplete = true;
 };
 
 } // namespace jacques

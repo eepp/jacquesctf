@@ -83,7 +83,7 @@ void PacketCheckpointsBuildProgressView::_drawProgress()
 
     const auto barW = this->contentRect().w - 2;
     const auto fBarProgW = (static_cast<double>(_eventRecord->segment().offsetInPacketBits()) /
-                            static_cast<double>(_packetIndexEntry->contentSize().bits())) *
+                            static_cast<double>(_packetIndexEntry->effectiveContentSize().bits())) *
                            static_cast<double>(barW);
     const auto barProgW = static_cast<Index>(fBarProgW);
     Index x = 1;
@@ -126,8 +126,8 @@ void PacketCheckpointsBuildProgressView::_drawProgress()
     this->_stylist().std(*this);
     this->_moveAndPrint({titleX, sizeY}, "Size:");
     this->_stylist().std(*this, true);
-    sizeUnit = _packetIndexEntry->contentSize().format(utils::SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS,
-                                                       ',');
+    sizeUnit = _packetIndexEntry->effectiveContentSize().format(utils::SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS,
+                                                                ',');
     this->_moveAndPrint({infoX, sizeY}, "%s %s",
                         sizeUnit.first.c_str(), sizeUnit.second.c_str());
 

@@ -33,7 +33,7 @@ Packet::Packet(const PacketIndexEntry& indexEntry,
     _lruDataRegionCache {1000}
 {
     _mmapFile->map(_indexEntry->offsetInDataStreamBytes(),
-                   _indexEntry->totalSize());
+                   _indexEntry->effectiveTotalSize());
     theLogger->debug("Packet's memory mapped file: path `{}`, address 0x{:x}, "
                      "offset {}, size {} B, file size {} B.",
                      _mmapFile->path().string(),
@@ -46,7 +46,7 @@ Packet::Packet(const PacketIndexEntry& indexEntry,
         _preambleSize = _checkpoints.firstEventRecord()->segment().offsetInPacketBits();
     } else {
         // preamble is the only content
-        _preambleSize = _indexEntry->contentSize();
+        _preambleSize = _indexEntry->effectiveContentSize();
     }
 
     theLogger->debug("Preamble size: {} b.", _preambleSize.bits());
@@ -503,8 +503,8 @@ void Packet::appendDataRegionsAtOffsetInPacketBits(std::vector<DataRegion::SP>& 
 {
     theLogger->debug("Appending data regions for user in [{} b, {} b[.",
                      offsetInPacketBits, endOffsetInPacketBits);
-    assert(offsetInPacketBits < _indexEntry->totalSize().bits());
-    assert(endOffsetInPacketBits <= _indexEntry->totalSize().bits());
+    assert(offsetInPacketBits < _indexEntry->effectiveTotalSize().bits());
+    assert(endOffsetInPacketBits <= _indexEntry->effectiveTotalSize().bits());
     assert(offsetInPacketBits < endOffsetInPacketBits);
     theLogger->debug("Preamble size: {} b.", _preambleSize.bits());
 

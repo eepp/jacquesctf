@@ -59,8 +59,10 @@ void TraceInfoView::_buildTraceInfoRows(const Metadata &metadata)
 
     Size dsfCount = 0;
     Size dsfWithoutDsIdCount = 0;
-    DataSize totalPacketsSize = 0;
-    DataSize totalPacketsContentSize = 0;
+    DataSize totalEffectivePacketsTotalSize = 0;
+    DataSize totalEffectivePacketsContentSize = 0;
+    DataSize totalExpectedPacketsTotalSize = 0;
+    DataSize totalExpectedPacketsContentSize = 0;
     boost::optional<Timestamp> firstTs;
     boost::optional<Timestamp> lastTs;
     boost::optional<Timestamp> intersectFirstTs;
@@ -79,10 +81,18 @@ void TraceInfoView::_buildTraceInfoRows(const Metadata &metadata)
 
         ++dsfCount;
         packetCount += dsFile.packetCount();
-        totalPacketsSize += dsFile.packetsSize();
 
         for (const auto& entry : dsFile.packetIndexEntries()) {
-            totalPacketsContentSize += entry.contentSize();
+            if (entry.expectedContentSize()) {
+                totalExpectedPacketsContentSize += *entry.expectedContentSize();
+            }
+
+            if (entry.expectedTotalSize()) {
+                totalExpectedPacketsTotalSize += *entry.expectedTotalSize();
+            }
+
+            totalEffectivePacketsContentSize += entry.effectiveContentSize();
+            totalEffectivePacketsTotalSize += entry.effectiveTotalSize();
         }
 
         if (dsFile.packetCount() > 0) {
@@ -136,21 +146,37 @@ void TraceInfoView::_buildTraceInfoRows(const Metadata &metadata)
     rows.push_back(std::make_unique<_SignedIntPropRow>("Packets",
                                                        static_cast<long long>(packetCount)));
     rows.push_back(std::make_unique<_SepRow>());
-    rows.push_back(std::make_unique<_DataSizePropRow>("Packets's total size",
-                                                      totalPacketsSize));
-    rows.push_back(std::make_unique<_DataSizePropRow>("Packets's total content size",
-                                                      totalPacketsContentSize));
-    rows.push_back(std::make_unique<_SignedIntPropRow>("Packets's total content size (b)",
-                                                       static_cast<long long>(totalPacketsContentSize.bits())));
+    rows.push_back(std::make_unique<_DataSizePropRow>("Effective packets's total size",
+                                                      totalEffectivePacketsTotalSize));
+    rows.push_back(std::make_unique<_DataSizePropRow>("Effective packets's total content size",
+                                                      totalEffectivePacketsContentSize));
+    rows.push_back(std::make_unique<_SignedIntPropRow>("Effective packets's total content size (b)",
+                                                       static_cast<long long>(totalEffectivePacketsContentSize.bits())));
 
-    const auto totalPacketsPaddingSize = totalPacketsSize -
-                                         totalPacketsContentSize;
+    const auto totalEffectivePacketsPaddingSize = totalEffectivePacketsTotalSize -
+                                                  totalEffectivePacketsContentSize;
 
-    rows.push_back(std::make_unique<_DataSizePropRow>("Packets's total padding size",
-                                                      totalPacketsPaddingSize));
-    rows.push_back(std::make_unique<_SignedIntPropRow>("Packets's total padding size (b)",
-                                                       static_cast<long long>(totalPacketsPaddingSize.bits())));
+    rows.push_back(std::make_unique<_DataSizePropRow>("Effective packets's total padding size",
+                                                      totalEffectivePacketsPaddingSize));
+    rows.push_back(std::make_unique<_SignedIntPropRow>("Effective packets's total padding size (b)",
+                                                       static_cast<long long>(totalEffectivePacketsPaddingSize.bits())));
     rows.push_back(std::make_unique<_SepRow>());
+    rows.push_back(std::make_unique<_DataSizePropRow>("Expected packets's total size",
+                                                      totalExpectedPacketsTotalSize));
+    rows.push_back(std::make_unique<_DataSizePropRow>("Expected packets's total content size",
+                                                      totalExpectedPacketsContentSize));
+    rows.push_back(std::make_unique<_SignedIntPropRow>("Expected packets's total content size (b)",
+                                                       static_cast<long long>(totalExpectedPacketsContentSize.bits())));
+
+    const auto totalExpectedPacketsPaddingSize = totalExpectedPacketsTotalSize -
+                                                 totalExpectedPacketsContentSize;
+
+    rows.push_back(std::make_unique<_DataSizePropRow>("Expected packets's total padding size",
+                                                      totalExpectedPacketsPaddingSize));
+    rows.push_back(std::make_unique<_SignedIntPropRow>("Expected packets's total padding size (b)",
+                                                       static_cast<long long>(totalExpectedPacketsPaddingSize.bits())));
+    rows.push_back(std::make_unique<_SepRow>());
+
 
     if (firstTs) {
         rows.push_back(std::make_unique<_TimestampPropRow>("Beginning", *firstTs));

@@ -44,46 +44,54 @@ void DataStreamFile::buildIndex(const BuildIndexProgressFunc& progressFunc,
 
 void DataStreamFile::_addPacketIndexEntry(const Index offsetInDataStreamBytes,
                                           const _IndexBuildingState& state,
-                                          const bool isInvalid)
+                                          bool isInvalid)
 {
-    auto packetSize = state.packetSize;
-    auto contentSize = state.contentSize;
+    auto expectedTotalSize = state.expectedTotalSize;
+    auto expectedContentSize = state.expectedContentSize;
 
-    if (!packetSize) {
-        if (isInvalid) {
-            packetSize = 0;
-        } else {
-            packetSize = _fileSize;
-        }
+    if (!expectedTotalSize && !isInvalid) {
+        expectedTotalSize = _fileSize;
     }
 
-    if (!contentSize) {
-        if (isInvalid) {
-            contentSize = 0;
-        } else {
-            contentSize = packetSize;
-        }
+    if (!expectedContentSize && !isInvalid) {
+        expectedContentSize = expectedTotalSize;
+    }
+
+    const auto availSize = DataSize::fromBytes(_fileSize.bytes() -
+                                               offsetInDataStreamBytes);
+    auto effectiveTotalSize = expectedTotalSize ? *expectedTotalSize : 0;
+
+    if (effectiveTotalSize > availSize) {
+        // not enough data
+        isInvalid = true;
+        effectiveTotalSize = availSize;
+        _isComplete = false;
+    }
+
+    auto effectiveContentSize = expectedContentSize ? *expectedContentSize : 0;
+
+    if (effectiveContentSize > effectiveTotalSize) {
+        isInvalid = true;
+        effectiveContentSize = effectiveTotalSize;
+        _isComplete = false;
     }
 
     _index.push_back(PacketIndexEntry {
         _index.size(), offsetInDataStreamBytes,
         state.packetContextOffsetInPacketBits,
-        *packetSize, *contentSize,
+        *expectedTotalSize, *expectedContentSize,
+        effectiveTotalSize, effectiveContentSize,
         state.dst, state.dataStreamId, state.tsBegin, state.tsEnd, state.seqNum,
         state.discardedEventRecordCounter, isInvalid,
     });
-
-    if (!isInvalid) {
-        _packetsSize += *packetSize;
-    }
 }
 
 void DataStreamFile::_resetIndexBuildingState(_IndexBuildingState& state)
 {
     state.inPacketContextScope = false;
     state.packetContextOffsetInPacketBits = boost::none;
-    state.packetSize = boost::none;
-    state.contentSize = boost::none;
+    state.expectedTotalSize = boost::none;
+    state.expectedContentSize = boost::none;
     state.tsBegin = boost::none;
     state.tsEnd = boost::none;
     state.seqNum = boost::none;
@@ -100,8 +108,6 @@ void DataStreamFile::_buildIndex(const BuildIndexProgressFunc& progressFunc,
     Index offsetBytes = 0;
     _IndexBuildingState state;
     bool packetStarted = false;
-
-    _packetsSize = 0;
 
     try {
         while (it != endIt) {
@@ -131,8 +137,8 @@ void DataStreamFile::_buildIndex(const BuildIndexProgressFunc& progressFunc,
                 if (elem.scope() != yactfr::Scope::PACKET_CONTEXT) {
                     break;
                 }
-
             }
+
             // fall through!
 
             case yactfr::Element::Kind::PACKET_CONTENT_END:
@@ -148,7 +154,7 @@ void DataStreamFile::_buildIndex(const BuildIndexProgressFunc& progressFunc,
                 this->_resetIndexBuildingState(state);
 
                 const auto nextOffsetBytes = offsetBytes +
-                                             _index.back().totalSize().bytes();
+                                             _index.back().effectiveTotalSize().bytes();
 
                 if (nextOffsetBytes >= _fileSize.bytes()) {
                     it = endIt;
@@ -163,7 +169,7 @@ void DataStreamFile::_buildIndex(const BuildIndexProgressFunc& progressFunc,
             {
                 auto& elem = static_cast<const yactfr::ExpectedPacketTotalSizeElement&>(*it);
 
-                state.packetSize = elem.expectedSize();
+                state.expectedTotalSize = elem.expectedSize();
                 break;
             }
 
@@ -171,7 +177,7 @@ void DataStreamFile::_buildIndex(const BuildIndexProgressFunc& progressFunc,
             {
                 auto& elem = static_cast<const yactfr::ExpectedPacketContentSizeElement&>(*it);
 
-                state.contentSize = elem.expectedSize();
+                state.expectedContentSize = elem.expectedSize();
                 break;
             }
 

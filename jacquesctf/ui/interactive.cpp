@@ -179,7 +179,7 @@ public:
 private:
     void _startBuild(const PacketIndexEntry& packetIndexEntry) override
     {
-        if (packetIndexEntry.totalSize() < 2_MiB) {
+        if (packetIndexEntry.effectiveTotalSize() < 2_MiB) {
             // too fast anyway
             return;
         }
@@ -383,14 +383,13 @@ static bool tryStartInteractive(const Config& cfg)
 
         auto& packet = state->activeDataStreamFileState().activePacket();
 
-        /*
-        packet.appendDataRegionsAtOffsetInPacketBits(regions, 29'368, 29'368 + 552);
+        //packet.appendDataRegionsAtOffsetInPacketBits(regions, 0, 7);
 
         for (const auto& region : regions) {
             printRegion(*region);
         }
-        */
 
+        /*
         printRegion(packet.dataRegionAtOffsetInPacketBits(1376));
         printRegion(packet.dataRegionAtOffsetInPacketBits(439840));
         printRegion(packet.dataRegionAtOffsetInPacketBits(439845));
@@ -399,6 +398,7 @@ static bool tryStartInteractive(const Config& cfg)
         printRegion(packet.dataRegionAtOffsetInPacketBits(1040712));
         printRegion(packet.dataRegionAtOffsetInPacketBits(0));
         printRegion(packet.dataRegionAtOffsetInPacketBits(1376));
+        */
 
         std::exit(0);
     }

@@ -131,8 +131,8 @@ void PacketTableView::_drawRow(const Index index)
 
     static_cast<UnsignedIntTableViewCell&>(*_row[0]).value(entry.natIndexInDataStream());
     static_cast<DataSizeTableViewCell&>(*_row[1]).size(entry.offsetInDataStreamBits());
-    static_cast<DataSizeTableViewCell&>(*_row[2]).size(entry.totalSize());
-    static_cast<DataSizeTableViewCell&>(*_row[3]).size(entry.contentSize());
+    static_cast<DataSizeTableViewCell&>(*_row[2]).size(entry.effectiveTotalSize());
+    static_cast<DataSizeTableViewCell&>(*_row[3]).size(entry.effectiveContentSize());
 
     Index at = 4;
 
