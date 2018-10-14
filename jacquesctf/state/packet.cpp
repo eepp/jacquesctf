@@ -474,14 +474,15 @@ void Packet::_cacheDataRegionsFromErsAtCurIt(const Index erIndexInPacket,
 
     for (Index index = erIndexInPacket; index < endErIndexInPacket; ++index) {
         while (_it->kind() != ElemKind::EVENT_RECORD_BEGINNING) {
-            assert (_it->kind() != ElemKind::PACKET_CONTENT_END);
+            assert(_it->kind() != ElemKind::PACKET_CONTENT_END);
             ++_it;
         }
 
         this->_cacheDataRegionsFromOneErAtCurIt(index);
     }
 
-    if (endErIndexInPacket == _checkpoints.eventRecordCount()) {
+    if (endErIndexInPacket == _checkpoints.eventRecordCount() &&
+            !_checkpoints.error()) {
         // end of packet: also cache any padding before the end of packet
         while (_it->kind() != ElemKind::PACKET_END) {
             ++_it;
