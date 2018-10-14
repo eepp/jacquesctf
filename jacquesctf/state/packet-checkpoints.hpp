@@ -308,6 +308,7 @@ private:
             return nullptr;
         }
 
+        // TODO: probably better to use std::upper_bound() here
         auto it = std::lower_bound(std::begin(_checkpoints),
                                    std::end(_checkpoints), prop, lessThanFunc);
 
