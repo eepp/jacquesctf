@@ -148,7 +148,7 @@ void DataStreamFile::_buildIndex(const BuildIndexProgressFunc& progressFunc,
                 this->_resetIndexBuildingState(state);
 
                 const auto nextOffsetBytes = offsetBytes +
-                                             _index.back().packetSize().bytes();
+                                             _index.back().totalSize().bytes();
 
                 if (nextOffsetBytes >= _fileSize.bytes()) {
                     it = endIt;

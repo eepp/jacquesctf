@@ -25,7 +25,7 @@ public:
     explicit PacketIndexEntry(Index indexInDataStream,
                               Index offsetInDataStreamBytes,
                               boost::optional<Index> packetContextOffsetInPacketBits,
-                              DataSize packetSize,
+                              DataSize totalSize,
                               DataSize contentSize,
                               const yactfr::DataStreamType *dst,
                               boost::optional<Index> dataStreamId,
@@ -50,9 +50,9 @@ public:
         return _packetContextOffsetInPacketBits;
     }
 
-    DataSize packetSize() const noexcept
+    DataSize totalSize() const noexcept
     {
-        return _packetSize;
+        return _totalSize;
     }
 
     DataSize contentSize() const noexcept
@@ -135,7 +135,7 @@ private:
     const Index _indexInDataStream;
     const Size _offsetInDataStreamBytes;
     const boost::optional<Index> _packetContextOffsetInPacketBits;
-    const DataSize _packetSize;
+    const DataSize _totalSize;
     const DataSize _contentSize;
     const yactfr::DataStreamType *_dst;
     const boost::optional<Index> _dataStreamId;

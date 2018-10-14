@@ -82,7 +82,7 @@ private:
     {
         ++_pktCount;
 
-        if (packetIndexEntry.packetSize() >= 2_MiB || _pktCount % 49 == 1) {
+        if (packetIndexEntry.totalSize() >= 2_MiB || _pktCount % 49 == 1) {
             _canUpdate = true;
         } else {
             _canUpdate = false;

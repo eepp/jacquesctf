@@ -179,7 +179,7 @@ public:
 private:
     void _startBuild(const PacketIndexEntry& packetIndexEntry) override
     {
-        if (packetIndexEntry.packetSize() < 2_MiB) {
+        if (packetIndexEntry.totalSize() < 2_MiB) {
             // too fast anyway
             return;
         }

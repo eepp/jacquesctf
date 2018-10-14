@@ -32,7 +32,7 @@ Packet::Packet(const PacketIndexEntry& indexEntry,
     }
 {
     _mmapFile->map(_indexEntry->offsetInDataStreamBytes(),
-                   _indexEntry->packetSize());
+                   _indexEntry->totalSize());
     theLogger->debug("Packet's memory mapped file: path `{}`, address 0x{:x}, "
                      "offset {}, size {} B, file size {} B.",
                      _mmapFile->path().string(),
@@ -475,8 +475,8 @@ void Packet::appendDataRegionsAtOffsetInPacketBits(std::vector<DataRegion::SP>& 
 {
     theLogger->debug("Appending data regions for user in [{} b, {} b[.",
                      offsetInPacketBits, endOffsetInPacketBits);
-    assert(offsetInPacketBits < _indexEntry->packetSize().bits());
-    assert(endOffsetInPacketBits <= _indexEntry->packetSize().bits());
+    assert(offsetInPacketBits < _indexEntry->totalSize().bits());
+    assert(endOffsetInPacketBits <= _indexEntry->totalSize().bits());
     assert(offsetInPacketBits < endOffsetInPacketBits);
 
     DataSize preambleSize;
