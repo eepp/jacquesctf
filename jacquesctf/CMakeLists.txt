@@ -49,9 +49,10 @@ add_executable (
     state/data-stream-file-state.cpp
     state/data-stream-file.cpp
     state/duration.cpp
+    state/error-data-region.cpp
     state/event-record.cpp
-    state/message-visitor.cpp
     state/memory-mapped-file.cpp
+    state/message-visitor.cpp
     state/metadata-store.cpp
     state/metadata.cpp
     state/packet-checkpoints-build-listener.cpp
