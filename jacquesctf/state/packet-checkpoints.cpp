@@ -9,6 +9,7 @@
 #include <algorithm>
 
 #include "packet-checkpoints.hpp"
+#include "logging.hpp"
 
 namespace jacques {
 
@@ -25,8 +26,13 @@ PacketCheckpoints::PacketCheckpoints(yactfr::PacketSequence& seq,
                                      const Size step,
                                      PacketCheckpointsBuildListener& packetCheckpointsBuildListener)
 {
+    // in case there's no event records
+    _preambleSize = packetIndexEntry.effectiveContentSize();
+
     this->_tryCreateCheckpoints(seq, metadata, packetIndexEntry,
                                 step, packetCheckpointsBuildListener);
+    theLogger->debug("Packet checkpoints: {}.", _checkpoints.size());
+    theLogger->debug("Preamble size: {} b.", _preambleSize.bits());
 }
 
 void PacketCheckpoints::_tryCreateCheckpoints(yactfr::PacketSequence& seq,
@@ -107,13 +113,24 @@ void PacketCheckpoints::_createCheckpoints(yactfr::PacketSequenceIterator& it,
     Index indexInPacket = 0;
 
     // create all checkpoints except (possibly) the last one
-    while (it->kind() != yactfr::Element::Kind::PACKET_CONTENT_END) {
+    while (it->kind() != yactfr::Element::Kind::PACKET_END) {
         if (it->kind() == yactfr::Element::Kind::EVENT_RECORD_BEGINNING) {
             const auto curIndexInPacket = indexInPacket;
 
             ++indexInPacket;
 
             if (curIndexInPacket % step == 0) {
+                if (curIndexInPacket == 0) {
+                    /*
+                     * The following call to _createCheckpoint() could
+                     * throw a decoding error, but we still want to
+                     * remember that we reached the first event record
+                     * without error, even if it is incomplete.
+                     */
+                    _preambleSize = it.offset() -
+                                    packetIndexEntry.offsetInDataStreamBits();
+                }
+
                 this->_createCheckpoint(it, metadata,
                                         packetIndexEntry,
                                         curIndexInPacket,
@@ -142,7 +159,7 @@ void PacketCheckpoints::_lastEventRecordPositions(yactfr::PacketSequenceIterator
 
     auto nextIndexInPacket = _checkpoints.back().first->indexInPacket();
 
-    while (it->kind() != yactfr::Element::Kind::PACKET_CONTENT_END) {
+    while (it->kind() != yactfr::Element::Kind::PACKET_END) {
         if (it->kind() == yactfr::Element::Kind::EVENT_RECORD_BEGINNING) {
             penultimatePos = std::move(lastPos);
             it.savePosition(lastPos);

@@ -20,6 +20,7 @@
 #include <yactfr/decoding-errors.hpp>
 
 #include "aliases.hpp"
+#include "data-size.hpp"
 #include "event-record.hpp"
 #include "timestamp.hpp"
 #include "packet-checkpoints-build-listener.hpp"
@@ -72,6 +73,11 @@ public:
     const Checkpoint *nearestCheckpointBeforeOrAtNsFromEpoch(long long nsFromEpoch) const;
     const Checkpoint *nearestCheckpointBeforeNsFromEpoch(long long nsFromEpoch) const;
     const Checkpoint *nearestCheckpointAfterNsFromEpoch(long long nsFromEpoch) const;
+
+    const DataSize& preambleSize()
+    {
+        return _preambleSize;
+    }
 
     EventRecord::SP nearestEventRecordBeforeOrAtIndex(Index indexInPacket) const
     {
@@ -379,6 +385,7 @@ private:
 private:
     Checkpoints _checkpoints;
     boost::optional<PacketDecodingError> _error;
+    DataSize _preambleSize;
 };
 
 } // namespace jacques
