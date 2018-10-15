@@ -37,7 +37,31 @@ void StatusView::_stateChanged(const Message& msg)
     if (dynamic_cast<const ActiveDataStreamFileChangedMessage *>(&msg) ||
             dynamic_cast<const ActivePacketChangedMessage *>(&msg)) {
         this->redraw();
+    } else if (dynamic_cast<const CurOffsetInPacketChangedMessage *>(&msg)) {
+        this->_drawOffset();
     }
+}
+
+void StatusView::_drawOffset()
+{
+    if (!_state->activeDataStreamFileState().hasActivePacket()) {
+        return;
+    }
+
+    const auto& activePacket = _state->activeDataStreamFileState().activePacket();
+
+    this->_stylist().statusViewStd(*this);
+
+    for (auto x = this->contentRect().w - 47; x < this->contentRect().w - 25; ++x) {
+        this->_putChar({x, 0}, ' ');
+    }
+
+    this->_moveAndPrint({this->contentRect().w - 47, 0}, "{");
+    this->_stylist().statusViewStd(*this, true);
+    this->_moveAndPrint({this->contentRect().w - 46, 0}, "%s",
+                        utils::sepNumber(activePacket.curOffsetInPacketBits(), ',').c_str());
+    this->_stylist().statusViewStd(*this);
+    this->_print("}");
 }
 
 void StatusView::_redrawContent()
@@ -62,7 +86,7 @@ void StatusView::_redrawContent()
     const auto count = _state->activeDataStreamFileState().dataStreamFile().packetCount();
 
     std::snprintf(packetCount.data(), packetCount.size(), "/%s",
-                  utils::sepNumber(static_cast<long long>(count), ',').c_str());
+                  utils::sepNumber(count, ',').c_str());
 
     auto pktInfoPos = Point {
         this->contentRect().w - std::strlen(packetCount.data()) - std::strlen(curPacket.data()) - 1,
@@ -79,19 +103,23 @@ void StatusView::_redrawContent()
 
     // packet sequence number
     if (_state->activeDataStreamFileState().hasActivePacket()) {
-        const auto seqNum = _state->activeDataStreamFileState().activePacket().indexEntry().seqNum();
+        const auto& activePacket = _state->activeDataStreamFileState().activePacket();
+        const auto& seqNum = activePacket.indexEntry().seqNum();
 
         if (seqNum) {
-            this->_moveAndPrint({this->contentRect().w - 31, 0}, "##");
+            this->_moveAndPrint({this->contentRect().w - 25, 0}, "##");
             this->_stylist().statusViewStd(*this, true);
-            this->_moveAndPrint({this->contentRect().w - 29, 0}, "%llu", *seqNum);
+            this->_moveAndPrint({this->contentRect().w - 23, 0}, "%s",
+                                utils::sepNumber(*seqNum, ',').c_str());
             this->_stylist().statusViewStd(*this);
         }
+
+        this->_drawOffset();
     }
 
     const auto& dsFileState = _state->activeDataStreamFileState();
     const auto& path = dsFileState.dataStreamFile().path();
-    const auto pathMaxLen = this->contentRect().w - 35;
+    const auto pathMaxLen = this->contentRect().w - 49;
     std::string dirNameStr, filenameStr;
 
     std::tie(dirNameStr, filenameStr) = utils::formatPath(path, pathMaxLen);

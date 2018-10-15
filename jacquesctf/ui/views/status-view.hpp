@@ -21,6 +21,7 @@ public:
                         std::shared_ptr<State> state);
 
 private:
+    void _drawOffset();
     void _stateChanged(const Message& msg) override;
     void _redrawContent() override;
 
