@@ -14,7 +14,7 @@
 
 namespace jacques {
 
-static constexpr Size keyWidth = 14;
+static constexpr Size keyWidth = 15;
 
 HelpView::HelpView(const Rectangle& rect,
                    std::shared_ptr<const Stylist> stylist) :
