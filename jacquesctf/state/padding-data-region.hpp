@@ -21,6 +21,9 @@ public:
     explicit PaddingDataRegion(const DataSegment& segment,
                                const DataRange& dataRange, Scope::SP scope,
                                const boost::optional<ByteOrder>& byteOrder);
+
+private:
+    void _accept(DataRegionVisitor& visitor) override;
 };
 
 } // namespace jacques

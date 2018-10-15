@@ -16,4 +16,9 @@ ErrorDataRegion::ErrorDataRegion(const DataSegment& segment,
 {
 }
 
+void ErrorDataRegion::_accept(DataRegionVisitor& visitor)
+{
+    visitor.visit(*this);
+}
+
 } // namespace jacques

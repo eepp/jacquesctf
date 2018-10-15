@@ -13,6 +13,7 @@
 #include <boost/operators.hpp>
 #include <boost/optional.hpp>
 
+#include "data-region-visitor.hpp"
 #include "data-segment.hpp"
 #include "scope.hpp"
 
@@ -78,6 +79,11 @@ protected:
 public:
     virtual ~DataRegion();
 
+    void accept(DataRegionVisitor& visitor)
+    {
+        this->_accept(visitor);
+    }
+
     bool hasScope() const noexcept
     {
         return static_cast<bool>(_scope);
@@ -117,6 +123,9 @@ public:
     {
         return _segment == other._segment;
     }
+
+private:
+    virtual void _accept(DataRegionVisitor& visitor) = 0;
 
 private:
     DataSegment _segment;

@@ -21,6 +21,9 @@ public:
     explicit ErrorDataRegion(const DataSegment& segment,
                              const DataRange& dataRange,
                              const boost::optional<ByteOrder>& byteOrder);
+
+private:
+    void _accept(DataRegionVisitor& visitor) override;
 };
 
 } // namespace jacques

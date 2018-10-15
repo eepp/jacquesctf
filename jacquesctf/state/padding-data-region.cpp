@@ -17,4 +17,9 @@ PaddingDataRegion::PaddingDataRegion(const DataSegment& segment,
 {
 }
 
+void PaddingDataRegion::_accept(DataRegionVisitor& visitor)
+{
+    visitor.visit(*this);
+}
+
 } // namespace jacques

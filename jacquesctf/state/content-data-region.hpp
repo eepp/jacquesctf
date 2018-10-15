@@ -45,6 +45,9 @@ public:
     }
 
 private:
+    void _accept(DataRegionVisitor& visitor) override;
+
+private:
     const yactfr::DataType *_dataType;
     boost::optional<Value> _value;
 };

@@ -40,4 +40,9 @@ ContentDataRegion::ContentDataRegion(const DataSegment& segment,
 {
 }
 
+void ContentDataRegion::_accept(DataRegionVisitor& visitor)
+{
+    visitor.visit(*this);
+}
+
 } // namespace jacques

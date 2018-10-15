@@ -44,6 +44,7 @@ add_executable (
     state/content-data-region.cpp
     state/cur-offset-in-packet-changed-message.cpp
     state/data-region.cpp
+    state/data-region-visitor.cpp
     state/data-segment.cpp
     state/data-size.cpp
     state/data-stream-file-state.cpp
