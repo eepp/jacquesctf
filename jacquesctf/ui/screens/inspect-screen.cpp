@@ -53,6 +53,7 @@ void InspectScreen::_resized()
     _decErrorView->moveAndResize(Rectangle {{this->rect().pos.x + 4,
                                              this->rect().h - 14},
                                             this->rect().w - 8, 12});
+    _ertView->centerSelectedRow(false);
 }
 
 void InspectScreen::_visibilityChanged()
