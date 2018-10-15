@@ -84,6 +84,10 @@ void DataStreamFileState::gotoPacket(const Index index)
 
 void DataStreamFileState::gotoPreviousPacket()
 {
+    if (_dataStreamFile.packetCount() == 0) {
+        return;
+    }
+
     if (_activePacketIndex == 0) {
         return;
     }
@@ -93,6 +97,10 @@ void DataStreamFileState::gotoPreviousPacket()
 
 void DataStreamFileState::gotoNextPacket()
 {
+    if (_dataStreamFile.packetCount() == 0) {
+        return;
+    }
+
     if (_activePacketIndex == _dataStreamFile.packetCount() - 1) {
         return;
     }
@@ -102,6 +110,10 @@ void DataStreamFileState::gotoNextPacket()
 
 void DataStreamFileState::gotoPreviousEventRecord()
 {
+    if (!_activePacket) {
+        return;
+    }
+
     if (_activePacket->eventRecordCount() == 0) {
         return;
     }
@@ -122,6 +134,10 @@ void DataStreamFileState::gotoPreviousEventRecord()
 
 void DataStreamFileState::gotoNextEventRecord()
 {
+    if (!_activePacket) {
+        return;
+    }
+
     if (_activePacket->eventRecordCount() == 0) {
         return;
     }
