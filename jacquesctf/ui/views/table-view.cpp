@@ -523,7 +523,7 @@ void TableView::_drawCells(const Index index,
 {
     assert(cells.size() == _columnDescrs.size());
 
-    const auto selected = this->_indexIsSelected(index);
+    const auto selected = _isSelectEnabled && this->_indexIsSelected(index);
     Index x = 0;
     const auto y = _contentYFromIndex(index);
     const bool error = cells.front()->style() == TableViewCell::Style::ERROR;
@@ -701,7 +701,7 @@ void TableView::pageUp()
     this->_selectionIndex(newSelectionIndex);
 }
 
-void TableView::centerSelectedRow()
+void TableView::centerSelectedRow(const bool draw)
 {
     if (_baseIdx == 0 && this->_maxRowCountFromIndex(0) < _visibleRowCount) {
         // all rows already visible
@@ -721,11 +721,12 @@ void TableView::centerSelectedRow()
 
     if (rowCountsFromNewBaseIdx < _visibleRowCount) {
         // row is in the last half
-        this->_baseIndex(static_cast<Index>(newBaseIndex) + rowCountsFromNewBaseIdx - _visibleRowCount);
+        this->_baseIndex(static_cast<Index>(newBaseIndex) +
+                         rowCountsFromNewBaseIdx - _visibleRowCount, draw);
         return;
     }
 
-    this->_baseIndex(static_cast<Index>(newBaseIndex));
+    this->_baseIndex(static_cast<Index>(newBaseIndex), draw);
 }
 
 void TableView::selectFirst()
@@ -735,6 +736,19 @@ void TableView::selectFirst()
 
 void TableView::_selectLast()
 {
+}
+
+void TableView::_isSelectionEnabled(const bool isEnabled, const bool draw)
+{
+    if (_isSelectEnabled == isEnabled) {
+        return;
+    }
+
+    _isSelectEnabled = isEnabled;
+
+    if (draw) {
+        this->_redrawRows();
+    }
 }
 
 } // namespace jacques

@@ -18,6 +18,7 @@
 #include "data-stream-file.hpp"
 #include "search-parser.hpp"
 #include "packet.hpp"
+#include "event-record.hpp"
 #include "metadata.hpp"
 #include "lru-cache.hpp"
 #include "packet-checkpoints-build-listener.hpp"
@@ -39,15 +40,17 @@ public:
     void gotoPacket(Index index);
     void gotoPreviousPacket();
     void gotoNextPacket();
+    void gotoPreviousEventRecord();
+    void gotoNextEventRecord();
     bool search(const SearchQuery& query);
     void analyzeAllPackets(PacketCheckpointsBuildListener& buildListener);
 
-    DataStreamFile& dataStreamFile()
+    DataStreamFile& dataStreamFile() noexcept
     {
         return _dataStreamFile;
     }
 
-    const DataStreamFile& dataStreamFile() const
+    const DataStreamFile& dataStreamFile() const noexcept
     {
         return _dataStreamFile;
     }
@@ -72,14 +75,34 @@ public:
         return _activePacketIndex;
     }
 
-    Index curOffsetInPacketBits() const
+    Index curOffsetInPacketBits() const noexcept
     {
-        return _curOffsetInPacketBits;
+        return _activePacket->curOffsetInPacketBits();
     }
 
-    const Metadata& metadata() const
+    void curOffsetInPacketBits(const Index offsetInPacketBits)
+    {
+        _activePacket->curOffsetInPacketBits(offsetInPacketBits);
+    }
+
+    const EventRecord *currentEventRecord()
+    {
+        return _activePacket->currentEventRecord();
+    }
+
+    const Metadata& metadata() const noexcept
     {
         return *_metadata;
+    }
+
+    State& state() noexcept
+    {
+        return *_state;
+    }
+
+    const State& state() const noexcept
+    {
+        return *_state;
     }
 
 private:
@@ -90,7 +113,6 @@ private:
     State *_state;
     Packet::SP _activePacket;
     Index _activePacketIndex;
-    Index _curOffsetInPacketBits = 0;
     std::shared_ptr<const Metadata> _metadata;
     std::shared_ptr<PacketCheckpointsBuildListener> _packetCheckpointsBuildListener;
     std::shared_ptr<yactfr::MemoryMappedFileViewFactory> _factory;

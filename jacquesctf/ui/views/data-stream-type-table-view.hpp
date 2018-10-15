@@ -26,6 +26,7 @@ public:
                                      const State& state);
     void traceType(const yactfr::TraceType& traceType);
     const yactfr::DataStreamType *dataStreamType() const;
+    void selectDataStreamType(yactfr::TypeId id);
 
 protected:
     void _drawRow(Index index) override;

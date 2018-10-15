@@ -87,30 +87,6 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     }
 
     switch (key) {
-    case KEY_UP:
-        _ertView->prev();
-        break;
-
-    case KEY_DOWN:
-        _ertView->next();
-        break;
-
-    case KEY_PPAGE:
-        _ertView->pageUp();
-        break;
-
-    case KEY_NPAGE:
-        _ertView->pageDown();
-        break;
-
-    case KEY_END:
-        _ertView->selectLast();
-        break;
-
-    case KEY_HOME:
-        _ertView->selectFirst();
-        break;
-
     case 'c':
         _ertView->centerSelectedRow();
         break;
@@ -138,6 +114,16 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         break;
     }
 #endif
+
+    case '-':
+        this->_state().activeDataStreamFileState().gotoPreviousEventRecord();
+        break;
+
+    case '+':
+    case '=':
+    case ' ':
+        this->_state().activeDataStreamFileState().gotoNextEventRecord();
+        break;
 
     case KEY_F(3):
         this->_state().gotoPreviousDataStreamFile();

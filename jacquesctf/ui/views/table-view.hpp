@@ -393,7 +393,7 @@ public:
     void prev();
     void pageDown();
     void pageUp();
-    void centerSelectedRow();
+    void centerSelectedRow(bool draw = true);
     void selectFirst();
 
     void selectLast()
@@ -416,6 +416,7 @@ protected:
     void _columnDescriptions(std::vector<TableViewColumnDescription>&& columnDescriptions);
     void _redrawRows();
     void _redrawContent() override;
+    void _isSelectionEnabled(bool isEnabled, bool draw = true);
 
     Index _baseIndex() const
     {
@@ -483,6 +484,7 @@ private:
     Index _baseIdx = 0;
     Index _selectionIdx = 0;
     Size _visibleRowCount;
+    bool _isSelectEnabled = true;
 };
 
 } // namespace jacques

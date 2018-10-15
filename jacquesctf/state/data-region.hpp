@@ -84,14 +84,9 @@ public:
         this->_accept(visitor);
     }
 
-    bool hasScope() const noexcept
+    const Scope *scope() const noexcept
     {
-        return static_cast<bool>(_scope);
-    }
-
-    const Scope& scope() const noexcept
-    {
-        return *_scope;
+        return _scope.get();
     }
 
     Scope::SP scopePtr() const

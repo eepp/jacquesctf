@@ -167,21 +167,30 @@ void EventRecordTableView::_selectLast()
 
 void EventRecordTableView::_stateChanged(const Message& msg)
 {
-    if (dynamic_cast<const ActiveDataStreamFileChangedMessage *>(&msg)) {
+    if (dynamic_cast<const ActiveDataStreamFileChangedMessage *>(&msg) ||
+            dynamic_cast<const ActivePacketChangedMessage *>(&msg)) {
         /*
          * Go back to 0 without drawing first in case there's less event
          * records than our current selection index.
          */
         this->_selectionIndex(0, false);
-        this->_redrawRows();
-    } else if (dynamic_cast<const ActivePacketChangedMessage *>(&msg)) {
-        /*
-         * Go back to 0 without drawing first in case there's less event
-         * records than our current selection index.
-         */
-        this->_selectionIndex(0, false);
-        this->_redrawRows();
+        this->_isSelectionEnabled(false, false);
     }
+
+    if (_state->activeDataStreamFileState().hasActivePacket()) {
+        auto curEventRecord = _state->activeDataStreamFileState().currentEventRecord();
+
+        if (curEventRecord) {
+            this->_isSelectionEnabled(true, false);
+            this->_selectionIndex(curEventRecord->indexInPacket(), false);
+        } else {
+            this->_isSelectionEnabled(false, false);
+        }
+
+        this->centerSelectedRow(false);
+    }
+
+    this->_redrawRows();
 }
 
 } // namespace jacques

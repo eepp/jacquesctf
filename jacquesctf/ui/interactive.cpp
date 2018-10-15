@@ -505,6 +505,15 @@ static bool tryStartInteractive(const Config& cfg)
 
             theLogger->info("Going to \"Data stream types\" screen.");
             curScreen->isVisible(false);
+
+            if (curScreen == inspectScreen.get()) {
+                const auto curEventRecord = state->activeDataStreamFileState().currentEventRecord();
+
+                if (curEventRecord) {
+                    dataTypesScreen->selectEventRecordType(curEventRecord->type());
+                }
+            }
+
             curScreen = dataTypesScreen.get();
             curScreen->isVisible(true);
             break;

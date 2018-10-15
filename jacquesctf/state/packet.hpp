@@ -26,9 +26,13 @@
 #include "metadata.hpp"
 #include "memory-mapped-file.hpp"
 #include "lru-cache.hpp"
+#include "cur-offset-in-packet-changed-message.hpp"
 #include "logging.hpp"
 
 namespace jacques {
+
+class State;
+class DataStreamFileState;
 
 /*
  * This object's purpose is to provide data regions and event records to
@@ -130,7 +134,8 @@ public:
     using SP = std::shared_ptr<Packet>;
 
 public:
-    explicit Packet(const PacketIndexEntry& indexEntry,
+    explicit Packet(DataStreamFileState& dsfState,
+                    const PacketIndexEntry& indexEntry,
                     yactfr::PacketSequence& seq,
                     const Metadata& metadata,
                     yactfr::DataSource::UP dataSrc,
@@ -140,6 +145,7 @@ public:
                                                Index offsetInPacketBits,
                                                Index endOffsetInPacketBits);
     const DataRegion& dataRegionAtOffsetInPacketBits(Index offsetInPacketBits);
+    void curOffsetInPacketBits(Index offsetInPacketBits);
 
     const PacketIndexEntry& indexEntry() const noexcept
     {
@@ -161,6 +167,23 @@ public:
         assert(reqIndexInPacket < _checkpoints.eventRecordCount());
         this->_ensureEventRecordIsCached(reqIndexInPacket);
         return **_eventRecordCacheItFromIndexInPacket(reqIndexInPacket);
+    }
+
+    const EventRecord *currentEventRecord()
+    {
+        const auto& dataRegion = this->dataRegionAtOffsetInPacketBits(_curOffsetInPacketBits);
+        const auto scope = dataRegion.scope();
+
+        if (!scope) {
+            return nullptr;
+        }
+
+        return scope->eventRecord();
+    }
+
+    Index curOffsetInPacketBits() const noexcept
+    {
+        return _curOffsetInPacketBits;
     }
 
 private:
@@ -373,8 +396,9 @@ private:
     }
 
 private:
-    const PacketIndexEntry *_indexEntry;
-    const Metadata *_metadata;
+    State * const _state;
+    const PacketIndexEntry * const _indexEntry;
+    const Metadata * const _metadata;
     yactfr::DataSource::UP _dataSrc;
     std::unique_ptr<MemoryMappedFile> _mmapFile;
     yactfr::PacketSequenceIterator _it;
@@ -383,7 +407,8 @@ private:
     DataRegionCache _dataRegionCache;
     EventRecordCache _eventRecordCache;
     LruCache<Index, DataRegion::SP> _lruDataRegionCache;
-    Size _eventRecordCacheMaxSize = 500;
+    const Size _eventRecordCacheMaxSize = 500;
+    Index _curOffsetInPacketBits = 0;
 };
 
 } // namespace jacques

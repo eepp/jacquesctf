@@ -14,6 +14,8 @@
 
 namespace jacques {
 
+static constexpr Size keyWidth = 14;
+
 HelpView::HelpView(const Rectangle& rect,
                    std::shared_ptr<const Stylist> stylist) :
     ScrollView {rect, "Help", DecorationStyle::BORDERS, stylist}
@@ -67,7 +69,7 @@ void HelpView::_buildRows()
         _KeyRow {"F5", "Go to previous packet"},
         _KeyRow {"F6", "Go to next packet"},
         _KeyRow {"-", "Go to previous event record"},
-        _KeyRow {"+, Space", "Go to next event record"},
+        _KeyRow {"+, =, Space", "Go to next event record"},
         _KeyRow {"F7", "Skip a few event records backward"},
         _KeyRow {"F8", "Skip a few event records forward"},
         _EmptyRow {},
@@ -194,7 +196,7 @@ void HelpView::_buildRows()
                                         static_cast<Size>(sectRow->title.size()));
         } else if (auto keyRow = boost::get<_KeyRow>(&row)) {
             _longestRowWidth = std::max(_longestRowWidth,
-                                        static_cast<Size>(_KEY_WIDTH + keyRow->descr.size() + 2));
+                                        static_cast<Size>(keyWidth + keyRow->descr.size() + 2));
         } else if (auto textRow = boost::get<_TextRow>(&row)) {
             _longestRowWidth = std::max(_longestRowWidth,
                                         static_cast<Size>(textRow->line.size()));
@@ -239,7 +241,7 @@ void HelpView::_drawRows()
             }
 
             this->_stylist().std(*this);
-            this->_moveAndPrint({startX + _KEY_WIDTH, y}, "%s",
+            this->_moveAndPrint({startX + keyWidth, y}, "%s",
                                 keyRow->descr.c_str());
         } else if (auto textRow = boost::get<_TextRow>(&row)) {
             this->_stylist().std(*this);

@@ -56,11 +56,6 @@ private:
     };
 
 private:
-    enum {
-        _KEY_WIDTH = 13,
-    };
-
-private:
     std::vector<boost::variant<_SectionRow, _EmptyRow, _TextRow,
                                _KeyRow, _SearchSyntaxRow>> _rows;
     Size _longestRowWidth;

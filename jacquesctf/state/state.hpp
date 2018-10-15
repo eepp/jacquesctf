@@ -41,6 +41,7 @@ class Message;
 class State
 {
     friend class DataStreamFileState;
+    friend class Packet;
 
 public:
     using Observer = std::function<void (const Message&)>;

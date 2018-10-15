@@ -85,6 +85,24 @@ void DataTypesScreen::_resized()
     _searchController.parentScreenResized(*this);
 }
 
+void DataTypesScreen::selectEventRecordType(const yactfr::EventRecordType& ert)
+{
+    const auto& dst = *ert.dataStreamType();
+
+    _dstTableView->selectDataStreamType(dst.id());
+    _ertTableView->dataStreamType(dst);
+    _ertTableView->selectEventRecordType(ert.id());
+    _dstTableView->centerSelectedRow(true);
+    _ertTableView->centerSelectedRow(true);
+
+    auto oldFocusedView = _focusedView;
+
+    _focusedView = _ertTableView.get();
+    this->_updateViews();
+    oldFocusedView->blur();
+    _focusedView->focus();
+}
+
 KeyHandlingReaction DataTypesScreen::_handleKey(const int key)
 {
     switch (key) {

@@ -100,6 +100,47 @@ void DataStreamFileState::gotoNextPacket()
     this->gotoPacket(_activePacketIndex + 1);
 }
 
+void DataStreamFileState::gotoPreviousEventRecord()
+{
+    if (_activePacket->eventRecordCount() == 0) {
+        return;
+    }
+
+    const auto curEventRecord = this->currentEventRecord();
+
+    if (!curEventRecord) {
+        return;
+    }
+
+    if (curEventRecord->indexInPacket() == 0) {
+        return;
+    }
+
+    const auto& prevEventRecord = _activePacket->eventRecordAtIndexInPacket(curEventRecord->indexInPacket() - 1);
+    _activePacket->curOffsetInPacketBits(prevEventRecord.segment().offsetInPacketBits());
+}
+
+void DataStreamFileState::gotoNextEventRecord()
+{
+    if (_activePacket->eventRecordCount() == 0) {
+        return;
+    }
+
+    const auto curEventRecord = this->currentEventRecord();
+    Index newIndex = 0;
+
+    if (curEventRecord) {
+        newIndex = curEventRecord->indexInPacket() + 1;
+    }
+
+    if (newIndex >= _activePacket->eventRecordCount()) {
+        return;
+    }
+
+    const auto& nextEventRecord = _activePacket->eventRecordAtIndexInPacket(newIndex);
+    _activePacket->curOffsetInPacketBits(nextEventRecord.segment().offsetInPacketBits());
+}
+
 bool DataStreamFileState::search(const SearchQuery& query)
 {
     return false;
@@ -122,7 +163,7 @@ Packet::SP DataStreamFileState::_packet(const Index index,
                                                            _fd);
 
         buildListener.startBuild(packetIndexEntry);
-        packet = std::make_shared<Packet>(packetIndexEntry, _seq,
+        packet = std::make_shared<Packet>(*this, packetIndexEntry, _seq,
                                           *_metadata,
                                           _factory->createDataSource(),
                                           std::move(mmapFile),

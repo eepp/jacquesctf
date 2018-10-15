@@ -12,16 +12,20 @@
 #include "content-data-region.hpp"
 #include "padding-data-region.hpp"
 #include "error-data-region.hpp"
+#include "data-stream-file-state.hpp"
+#include "state.hpp"
 #include "logging.hpp"
 
 namespace jacques {
 
-Packet::Packet(const PacketIndexEntry& indexEntry,
+Packet::Packet(DataStreamFileState& dsfState,
+               const PacketIndexEntry& indexEntry,
                yactfr::PacketSequence& seq,
                const Metadata& metadata,
                yactfr::DataSource::UP dataSrc,
                std::unique_ptr<MemoryMappedFile> mmapFile,
                PacketCheckpointsBuildListener& packetCheckpointsBuildListener) :
+    _state {&dsfState.state()},
     _indexEntry {&indexEntry},
     _metadata {&metadata},
     _dataSrc {std::move(dataSrc)},
@@ -350,6 +354,10 @@ void Packet::_cachePacketPreambleDataRegions()
             }
         }
     } catch (const yactfr::DecodingError&) {
+        theLogger->debug("Got a decoding error at offset {} b: "
+                         "appending an error data region.",
+                         _it.offset());
+
         Index offsetStartBits = 0;
         boost::optional<ByteOrder> byteOrder;
 
@@ -690,6 +698,21 @@ const DataRegion& Packet::dataRegionAtOffsetInPacketBits(const Index offsetInPac
     theLogger->debug("Adding to LRU cache (offset {} b).", offsetInPacketBits);
     _lruDataRegionCache.insert(offsetInPacketBits, *it);
     return dataRegion;
+}
+
+void Packet::curOffsetInPacketBits(const Index offsetInPacketBits)
+{
+    if (offsetInPacketBits == _curOffsetInPacketBits) {
+        return;
+    }
+
+    assert(offsetInPacketBits < _indexEntry->effectiveTotalSize().bits());
+
+    const auto oldOffsetInPacketBits = _curOffsetInPacketBits;
+
+    _curOffsetInPacketBits = offsetInPacketBits;
+    _state->_notify(CurOffsetInPacketChangedMessage {oldOffsetInPacketBits,
+                                                     _curOffsetInPacketBits});
 }
 
 } // namespace jacques

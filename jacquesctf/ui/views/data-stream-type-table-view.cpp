@@ -121,4 +121,20 @@ void DataStreamTypeTableView::_selectLast()
     this->_selectionIndex(_dataStreamTypes->size() - 1);
 }
 
+void DataStreamTypeTableView::selectDataStreamType(const yactfr::TypeId id)
+{
+    if (!_dataStreamTypes) {
+        return;
+    }
+
+    for (Index index = 0; index < _dataStreamTypes->size(); ++index) {
+        auto& dst = (*_dataStreamTypes)[index];
+
+        if (dst->id() == id) {
+            this->_selectionIndex(index);
+            return;
+        }
+    }
+}
+
 } // namespace jacques
