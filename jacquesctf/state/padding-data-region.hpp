@@ -18,8 +18,8 @@ class PaddingDataRegion :
     public DataRegion
 {
 public:
-    explicit PaddingDataRegion(const DataSegment& segment, Data&& data,
-                               Scope::SP scope,
+    explicit PaddingDataRegion(const DataSegment& segment,
+                               const DataRange& dataRange, Scope::SP scope,
                                const boost::optional<ByteOrder>& byteOrder);
 };
 

@@ -297,26 +297,22 @@ private:
     }
 
     /*
-     * For a given data segment, fills `data` with the corresponding
-     * packet data bytes.
+     * For a given data segment, returns the corresponding data range.
      */
-    void _fillDataBytesForSegment(DataRegion::Data& data,
-                                  const DataSegment& segment) const
+    DataRegion::DataRange _dataRangeForSegment(const DataSegment& segment) const
     {
         const auto bufAt = _mmapFile->addr() +
                            segment.offsetInPacketBits() / 8;
         const auto bytesToCopy = (segment.offsetInPacketExtraBits() +
                                   segment.size().bits() + 7) / 8;
 
-        std::copy(bufAt, bufAt + bytesToCopy, std::back_inserter(data));
+        return DataRegion::DataRange {bufAt, bufAt + bytesToCopy};
     }
 
-    void _fillDataBytesForBitArrayRegionAtCurIt(DataRegion::Data& data,
-                                                const Size sizeBits) const
+    DataRegion::DataRange _dataRangeAtCurIt(const Size sizeBits) const
     {
-        this->_fillDataBytesForSegment(data,
-                                       DataSegment {this->_itOffsetInPacketBytes(),
-                                                    sizeBits});
+        return this->_dataRangeForSegment(DataSegment {this->_itOffsetInPacketBytes(),
+                                                       sizeBits});
     }
 
     /*
@@ -332,13 +328,11 @@ private:
         auto& elem = static_cast<const ElemT&>(*_it);
         const DataSegment segment {this->_itOffsetInPacketBits(),
                                    elem.type().size()};
-        DataRegion::Data data;
-
-        this->_fillDataBytesForBitArrayRegionAtCurIt(data, elem.type().size());
+        const auto dataRange = this->_dataRangeAtCurIt(elem.type().size());
 
         // okay to move the scope here, it's never used afterwards
         return std::make_shared<ContentDataRegion>(segment,
-                                                   std::move(data),
+                                                   dataRange,
                                                    std::move(scope),
                                                    elem.type(),
                                                    ContentDataRegion::Value {elem.value()});

@@ -24,13 +24,14 @@ static boost::optional<ByteOrder> byteOrderFromDataType(const yactfr::DataType& 
     return boost::none;
 }
 
-ContentDataRegion::ContentDataRegion(const DataSegment& segment, Data&& data,
+ContentDataRegion::ContentDataRegion(const DataSegment& segment,
+                                     const DataRange& dataRange,
                                      Scope::SP scope,
                                      const yactfr::DataType& dataType,
                                      const boost::optional<Value>& value) :
     DataRegion {
         segment,
-        std::move(data),
+        dataRange,
         std::move(scope),
         byteOrderFromDataType(dataType)
     },

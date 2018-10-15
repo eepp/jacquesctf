@@ -30,16 +30,49 @@ public:
     using SP = std::shared_ptr<DataRegion>;
 
     /*
-     * Bytes of this region. It can contain more bytes than the actual
-     * region described by the region's segment. The exact bit where the
-     * data starts within the first byte is given by
+     * Bytes of this region (`begin` to `end`, excluded). The exact bit
+     * where the data starts within the first byte is given by
      * segment().offsetInPacketExtraBits().
+     *
+     * The actual data is located within the memory mapped file owned by
+     * the `Packet` object from which this data region was created. Thus
+     * the packet object must exist for this range to be valid.
      */
-    using Data = std::vector<std::uint8_t>;
+    class DataRange
+    {
+    public:
+        explicit DataRange(const std::uint8_t * const begin,
+                           const std::uint8_t * const end) :
+            _begin {begin},
+            _end {end},
+            _size {DataSize::fromBytes(end - begin)}
+        {
+        }
+
+        const std::uint8_t *begin() const noexcept
+        {
+            return _begin;
+        }
+
+        const std::uint8_t *end() const noexcept
+        {
+            return _end;
+        }
+
+        const DataSize& size() const noexcept
+        {
+            return _size;
+        }
+
+    private:
+        const std::uint8_t * const _begin;
+        const std::uint8_t * const _end;
+        const DataSize _size;
+    };
 
 protected:
     explicit DataRegion(const DataSegment& segment,
-                        Data&& data, Scope::SP scope,
+                        const DataRange& dataRange, Scope::SP scope,
                         const boost::optional<ByteOrder>& byteOrder = boost::none);
 
 public:
@@ -65,9 +98,9 @@ public:
         return _segment;
     }
 
-    const Data& data() const noexcept
+    const DataRange& dataRange() const noexcept
     {
-        return _data;
+        return _dataRange;
     }
 
     const boost::optional<ByteOrder>& byteOrder() const noexcept
@@ -87,7 +120,7 @@ public:
 
 private:
     DataSegment _segment;
-    Data _data;
+    DataRange _dataRange;
     Scope::SP _scope;
     const boost::optional<ByteOrder> _byteOrder;
 };

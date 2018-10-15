@@ -200,13 +200,10 @@ void Packet::_cacheContentDataRegionAtCurIt(Scope::SP scope)
             ++_it;
         }
 
-        // copy data in buffer to region's data vector
-        DataRegion::Data data;
-
-        std::transform(bufStart, bufEnd, std::back_inserter(data),
-                       [](const auto ch) {
-            return static_cast<std::uint8_t>(ch);
-        });
+        const DataRegion::DataRange dataRange {
+            reinterpret_cast<const std::uint8_t *>(bufStart),
+            reinterpret_cast<const std::uint8_t *>(bufEnd)
+        };
 
         /*
          * Find end of string in buffer. std::find() returns either
@@ -215,18 +212,16 @@ void Packet::_cacheContentDataRegionAtCurIt(Scope::SP scope)
         const auto bufStrEnd = std::find(bufStart, bufEnd, 0);
 
         // create string value
-        std::string str;
+        std::string str {
+            reinterpret_cast<const char *>(bufStart),
+            static_cast<std::string::size_type>(bufStrEnd - bufStart)
+        };
 
-        std::transform(bufStart, bufStrEnd, std::back_inserter(str),
-                       [](const auto byte) {
-            return static_cast<char>(byte);
-        });
-
-        const DataSegment segment {offsetStartBits, data.size() * 8};
+        const DataSegment segment {offsetStartBits, (bufEnd - bufStart) * 8};
 
         // okay to move the scope here, it's never used afterwards
         region = std::make_shared<ContentDataRegion>(segment,
-                                                     std::move(data),
+                                                     dataRange,
                                                      std::move(scope),
                                                      *type,
                                                      ContentDataRegion::Value {str});
@@ -250,16 +245,13 @@ void Packet::_tryCachePaddingDataRegionBeforeCurIt(Scope::SP scope)
         const auto& lastDataRegion = _dataRegionCache.back();
 
         if (lastDataRegion->segment().endOffsetInPacketBits() != this->_itOffsetInPacketBits()) {
-            DataRegion::Data data;
             DataSegment segment {
                 lastDataRegion->segment().endOffsetInPacketBits(),
                 this->_itOffsetInPacketBits() - lastDataRegion->segment().endOffsetInPacketBits()
             };
-
-            this->_fillDataBytesForSegment(data, segment);
-
+            const auto dataRange = this->_dataRangeForSegment(segment);
             auto dataRegion = std::make_shared<PaddingDataRegion>(segment,
-                                                                  std::move(data),
+                                                                  dataRange,
                                                                   std::move(scope),
                                                                   lastDataRegion->byteOrder());
 

@@ -29,8 +29,8 @@ public:
                                  std::string>;
 
 public:
-    explicit ContentDataRegion(const DataSegment& segment, Data&& data,
-                               Scope::SP scope,
+    explicit ContentDataRegion(const DataSegment& segment,
+                               const DataRange& dataRange, Scope::SP scope,
                                const yactfr::DataType& dataType,
                                const boost::optional<Value>& value);
 
