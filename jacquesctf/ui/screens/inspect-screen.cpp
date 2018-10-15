@@ -88,10 +88,6 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     }
 
     switch (key) {
-    case 'c':
-        _ertView->centerSelectedRow();
-        break;
-
     case 't':
         _tsFormatModeWheel.next();
         _ertView->timestampFormatMode(_tsFormatModeWheel.currentValue());
