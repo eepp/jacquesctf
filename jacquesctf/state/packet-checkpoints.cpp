@@ -35,27 +35,79 @@ void PacketCheckpoints::_tryCreateCheckpoints(yactfr::PacketSequence& seq,
                                               const Size step,
                                               PacketCheckpointsBuildListener& packetCheckpointsBuildListener)
 {
+    auto it = seq.at(packetIndexEntry.offsetInDataStreamBytes());
+
     // we consider other errors (e.g., I/O) unrecoverable: do not catch them
     try {
-        this->_createCheckpoints(seq, metadata, packetIndexEntry,
+        this->_createCheckpoints(it, metadata, packetIndexEntry,
                                  step, packetCheckpointsBuildListener);
     } catch (const yactfr::DecodingError& ex) {
         _error = PacketDecodingError {ex, packetIndexEntry};
     }
+
+    /*
+     * Try to set a checkpoint for the last event record, even if we got
+     * an error (or get one trying to do so), so as to guarantee as many
+     * event records as possible between the first and last checkpoints.
+     *
+     * The reason we request both the last position and the penultimate
+     * one is because, while trying to create a checkpoint with
+     * _createCheckpoint() using the last position, the iterator could
+     * throw before we have the required information to create a
+     * complete event record object. In that case, we know that at least
+     * the penultimate one is complete, so fall back to it.
+     *
+     * Also _lastEventRecordPositions() does not catch any exception
+     * because we want to do it here.
+     */
+    yactfr::PacketSequenceIteratorPosition lastPos;
+    yactfr::PacketSequenceIteratorPosition penultimatePos;
+    Index lastIndex;
+    Index penultimateIndex;
+
+    try {
+        this->_lastEventRecordPositions(lastPos, penultimatePos, lastIndex,
+                                        penultimateIndex, it);
+    } catch (const yactfr::DecodingError& ex) {
+        _error = PacketDecodingError {ex, packetIndexEntry};
+    }
+
+    if (!lastPos || lastPos == _checkpoints.back().second) {
+        // we got everything possible: do not duplicate
+        return;
+    }
+
+    it.restorePosition(lastPos);
+
+    try {
+        this->_createCheckpoint(it, metadata, packetIndexEntry,
+                                lastIndex, packetCheckpointsBuildListener);
+    } catch (const yactfr::DecodingError& ex) {
+        assert(_error);
+
+        if (!penultimatePos || penultimatePos == _checkpoints.back().second) {
+            // we got everything possible: do not duplicate
+            return;
+        }
+
+        // this won't fail
+        it.restorePosition(penultimatePos);
+        this->_createCheckpoint(it, metadata, packetIndexEntry,
+                                penultimateIndex,
+                                packetCheckpointsBuildListener);
+    }
 }
 
-void PacketCheckpoints::_createCheckpoints(yactfr::PacketSequence& seq,
+void PacketCheckpoints::_createCheckpoints(yactfr::PacketSequenceIterator& it,
                                            const Metadata& metadata,
                                            const PacketIndexEntry& packetIndexEntry,
                                            const Size step,
                                            PacketCheckpointsBuildListener& packetCheckpointsBuildListener)
 {
-    const auto endIt = std::end(seq);
-    auto it = seq.at(packetIndexEntry.offsetInDataStreamBytes());
     Index indexInPacket = 0;
 
     // create all checkpoints except (possibly) the last one
-    while (it->kind() != yactfr::Element::Kind::PACKET_END) {
+    while (it->kind() != yactfr::Element::Kind::PACKET_CONTENT_END) {
         if (it->kind() == yactfr::Element::Kind::EVENT_RECORD_BEGINNING) {
             const auto curIndexInPacket = indexInPacket;
 
@@ -72,40 +124,35 @@ void PacketCheckpoints::_createCheckpoints(yactfr::PacketSequence& seq,
 
         ++it;
     }
+}
 
+void PacketCheckpoints::_lastEventRecordPositions(yactfr::PacketSequenceIteratorPosition& lastPos,
+                                                  yactfr::PacketSequenceIteratorPosition& penultimatePos,
+                                                  Index& lastIndexInPacket,
+                                                  Index& penultimateIndexInPacket,
+                                                  yactfr::PacketSequenceIterator& it)
+{
     // find last event record and create a checkpoint if not already done
     if (_checkpoints.empty()) {
         // no event records in this packet!
         return;
     }
 
-    yactfr::PacketSequenceIteratorPosition lastEventRecordPos;
-    Index lastEventRecordIndex = 0;
-
     it.restorePosition(_checkpoints.back().second);
-    indexInPacket = _checkpoints.back().first->indexInPacket();
 
-    while (it->kind() != yactfr::Element::Kind::PACKET_END) {
+    auto nextIndexInPacket = _checkpoints.back().first->indexInPacket();
+
+    while (it->kind() != yactfr::Element::Kind::PACKET_CONTENT_END) {
         if (it->kind() == yactfr::Element::Kind::EVENT_RECORD_BEGINNING) {
-            it.savePosition(lastEventRecordPos);
-            lastEventRecordIndex = indexInPacket;
-            ++indexInPacket;
+            penultimatePos = std::move(lastPos);
+            it.savePosition(lastPos);
+            lastIndexInPacket = nextIndexInPacket;
+            penultimateIndexInPacket = nextIndexInPacket - 1;
+            ++nextIndexInPacket;
         }
 
         ++it;
     }
-
-    assert(lastEventRecordPos);
-
-    if (lastEventRecordPos == _checkpoints.back().second) {
-        // checkpoint already exists
-        return;
-    }
-
-    it.restorePosition(lastEventRecordPos);
-    this->_createCheckpoint(it, metadata, packetIndexEntry,
-                            lastEventRecordIndex,
-                            packetCheckpointsBuildListener);
 }
 
 void PacketCheckpoints::_createCheckpoint(yactfr::PacketSequenceIterator& it,

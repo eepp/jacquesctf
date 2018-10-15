@@ -269,7 +269,7 @@ private:
                            const PacketIndexEntry& packetIndexEntry,
                            Index indexInPacket,
                            PacketCheckpointsBuildListener& packetCheckpointsBuildListener);
-    void _createCheckpoints(yactfr::PacketSequence& seq,
+    void _createCheckpoints(yactfr::PacketSequenceIterator& it,
                             const Metadata& metadata,
                             const PacketIndexEntry& packetIndexEntry,
                             Size step,
@@ -279,6 +279,11 @@ private:
                                const PacketIndexEntry& packetIndexEntry,
                                Size step,
                                PacketCheckpointsBuildListener& packetCheckpointsBuildListener);
+    void _lastEventRecordPositions(yactfr::PacketSequenceIteratorPosition& lastPos,
+                                   yactfr::PacketSequenceIteratorPosition& penultimatePos,
+                                   Index& lastIndexInPacket,
+                                   Index& penultimateIndexInPacket,
+                                   yactfr::PacketSequenceIterator& it);
 
     template <typename PropT, typename LessThanFuncT>
     const Checkpoint *_nearestCheckpointAfter(const PropT& prop,
