@@ -86,6 +86,26 @@ namespace jacques {
  *     ...*******--******----...**********----***********------------
  *                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
  *
+ * If there's a decoding error, a single error data region is appended.
+ * This region finishes where the packet finishes (effective total
+ * size):
+ *
+ *     preamble                 error data region
+ *     #########################!!!!!!!!!!!!!!!!!!!!!
+ *     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ *
+ *     preamble                           error data region
+ *     #########################----------!!!!!!!!!!!
+ *     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ *
+ *        ER 300   ER 301       ER 487
+ *     ...*******--******----...**********----********!!!!!!!!!!!!!!!
+ *                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ *
+ * If the decoding error occurs between the beginning and the end of a
+ * given event record, no event record object is created for this event
+ * record as we don't know its end. No scopes are created either.
+ *
  * Because elements are naturally sorted in the caches, we can perform a
  * binary search to find a specific element using one of its
  * intrinsically ordered properties (index, offset in packet,
@@ -175,6 +195,12 @@ private:
     void _ensureOffsetInPacketBitsIsCached(Index offsetInPacketBits);
 
     /*
+     * Appends all the remaining data regions starting at the current
+     * iterator until any decoding error and then an error data region.
+     */
+    void _cacheDataRegionsAtCurItUntilError();
+
+    /*
      * After clearing the caches, caches all the data regions from the
      * event records starting at the current iterator, for `erCount`
      * event records.
@@ -187,6 +213,16 @@ private:
      * iterator.
      */
     void _cacheDataRegionsFromOneErAtCurIt(Index indexInPacket);
+
+    /*
+     * Appends data regions to the data region cache (and updates the
+     * event record cache if needed) starting at the current iterator.
+     * Stops appending _after_ the iterator's current element's kind is
+     * `endElemKind`.
+     */
+    void _cacheDataRegionsAtCurIt(yactfr::Element::Kind endElemKind,
+                                  bool setCurScope, bool setCurEventRecord,
+                                  Index erIndexInPacket);
 
     /*
      * Tries to append a padding data region to the current cache, where
@@ -323,8 +359,6 @@ private:
     template <typename ElemT>
     ContentDataRegion::SP _contentDataRegionFromBitArrayElemAtCurIt(Scope::SP scope)
     {
-        assert(scope);
-
         auto& elem = static_cast<const ElemT&>(*_it);
         const DataSegment segment {this->_itOffsetInPacketBits(),
                                    elem.type().size()};
@@ -350,7 +384,6 @@ private:
     EventRecordCache _eventRecordCache;
     LruCache<Index, DataRegion::SP> _lruDataRegionCache;
     Size _eventRecordCacheMaxSize = 500;
-    DataSize _preambleSize;
 };
 
 } // namespace jacques
