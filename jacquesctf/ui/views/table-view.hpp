@@ -416,7 +416,7 @@ protected:
     void _columnDescriptions(std::vector<TableViewColumnDescription>&& columnDescriptions);
     void _redrawRows();
     void _redrawContent() override;
-    void _isSelectionEnabled(bool isEnabled, bool draw = true);
+    void _isSelectionHighlightEnabled(bool isEnabled, bool draw = true);
 
     Index _baseIndex() const
     {
@@ -484,7 +484,7 @@ private:
     Index _baseIdx = 0;
     Index _selectionIdx = 0;
     Size _visibleRowCount;
-    bool _isSelectEnabled = true;
+    bool _isSelectHighlightEnabled = true;
 };
 
 } // namespace jacques

@@ -523,7 +523,8 @@ void TableView::_drawCells(const Index index,
 {
     assert(cells.size() == _columnDescrs.size());
 
-    const auto selected = _isSelectEnabled && this->_indexIsSelected(index);
+    const auto selected = _isSelectHighlightEnabled &&
+                          this->_indexIsSelected(index);
     Index x = 0;
     const auto y = _contentYFromIndex(index);
     const bool error = cells.front()->style() == TableViewCell::Style::ERROR;
@@ -738,13 +739,14 @@ void TableView::_selectLast()
 {
 }
 
-void TableView::_isSelectionEnabled(const bool isEnabled, const bool draw)
+void TableView::_isSelectionHighlightEnabled(const bool isEnabled,
+                                             const bool draw)
 {
-    if (_isSelectEnabled == isEnabled) {
+    if (_isSelectHighlightEnabled == isEnabled) {
         return;
     }
 
-    _isSelectEnabled = isEnabled;
+    _isSelectHighlightEnabled = isEnabled;
 
     if (draw) {
         this->_redrawRows();

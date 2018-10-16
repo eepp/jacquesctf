@@ -6,6 +6,7 @@
  */
 
 #include <cassert>
+#include <algorithm>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -108,7 +109,7 @@ void DataStreamFileState::gotoNextPacket()
     this->gotoPacket(_activePacketIndex + 1);
 }
 
-void DataStreamFileState::gotoPreviousEventRecord()
+void DataStreamFileState::gotoPreviousEventRecord(Size count)
 {
     if (!_activePacket) {
         return;
@@ -121,6 +122,13 @@ void DataStreamFileState::gotoPreviousEventRecord()
     const auto curEventRecord = this->currentEventRecord();
 
     if (!curEventRecord) {
+        if (_activePacket->curOffsetInPacketBits() >=
+                _activePacket->indexEntry().effectiveContentSize().bits()) {
+            auto& lastEr = _activePacket->eventRecordAtIndexInPacket(_state->activePacket().eventRecordCount() - 1);
+
+            _activePacket->curOffsetInPacketBits(lastEr.segment().offsetInPacketBits());
+        }
+
         return;
     }
 
@@ -128,11 +136,12 @@ void DataStreamFileState::gotoPreviousEventRecord()
         return;
     }
 
-    const auto& prevEventRecord = _activePacket->eventRecordAtIndexInPacket(curEventRecord->indexInPacket() - 1);
+    count = std::min(curEventRecord->indexInPacket(), count);
+    const auto& prevEventRecord = _activePacket->eventRecordAtIndexInPacket(curEventRecord->indexInPacket() - count);
     _activePacket->curOffsetInPacketBits(prevEventRecord.segment().offsetInPacketBits());
 }
 
-void DataStreamFileState::gotoNextEventRecord()
+void DataStreamFileState::gotoNextEventRecord(Size count)
 {
     if (!_activePacket) {
         return;
@@ -146,7 +155,9 @@ void DataStreamFileState::gotoNextEventRecord()
     Index newIndex = 0;
 
     if (curEventRecord) {
-        newIndex = curEventRecord->indexInPacket() + 1;
+        count = std::min(_activePacket->eventRecordCount() -
+                         curEventRecord->indexInPacket(), count);
+        newIndex = curEventRecord->indexInPacket() + count;
     }
 
     if (newIndex >= _activePacket->eventRecordCount()) {
@@ -155,6 +166,39 @@ void DataStreamFileState::gotoNextEventRecord()
 
     const auto& nextEventRecord = _activePacket->eventRecordAtIndexInPacket(newIndex);
     _activePacket->curOffsetInPacketBits(nextEventRecord.segment().offsetInPacketBits());
+}
+
+void DataStreamFileState::gotoPacketContext()
+{
+    if (!_activePacket) {
+        return;
+    }
+
+    const auto& offset = _activePacket->indexEntry().packetContextOffsetInPacketBits();
+
+    if (!offset) {
+        return;
+    }
+
+    _activePacket->curOffsetInPacketBits(*offset);
+}
+
+void DataStreamFileState::gotoLastDataRegion()
+{
+    if (!_activePacket) {
+        return;
+    }
+
+    // request the packet's last bit: then we know we have the last data region
+    DataRegions dataRegions;
+    const auto effectiveTotalSize = _activePacket->indexEntry().effectiveTotalSize();
+
+    _activePacket->appendDataRegions(dataRegions,
+                                     effectiveTotalSize.bits() - 1,
+                                     effectiveTotalSize.bits());
+
+    assert(!dataRegions.empty());
+    _activePacket->curOffsetInPacketBits(dataRegions.back()->segment().offsetInPacketBits());
 }
 
 bool DataStreamFileState::search(const SearchQuery& query)

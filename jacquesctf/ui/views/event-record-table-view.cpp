@@ -174,17 +174,30 @@ void EventRecordTableView::_stateChanged(const Message& msg)
          * records than our current selection index.
          */
         this->_selectionIndex(0, false);
-        this->_isSelectionEnabled(false, false);
+        this->_isSelectionHighlightEnabled(false, false);
     }
 
     if (_state->activeDataStreamFileState().hasActivePacket()) {
         auto curEventRecord = _state->activeDataStreamFileState().currentEventRecord();
 
         if (curEventRecord) {
-            this->_isSelectionEnabled(true, false);
+            this->_isSelectionHighlightEnabled(true, false);
             this->_selectionIndex(curEventRecord->indexInPacket(), false);
         } else {
-            this->_isSelectionEnabled(false, false);
+            const auto& indexEntry = _state->activePacket().indexEntry();
+            const auto offsetInPacketBits = _state->activeDataStreamFileState().curOffsetInPacketBits();
+
+            // convenience for regions outside the event record block
+            if (indexEntry.preambleSize() && offsetInPacketBits <
+                                             indexEntry.preambleSize()->bits()) {
+                this->_selectionIndex(0, false);
+            } else if (offsetInPacketBits >= indexEntry.effectiveContentSize().bits() &&
+                    _state->activePacket().eventRecordCount() > 0) {
+                this->_selectionIndex(_state->activePacket().eventRecordCount() - 1,
+                                      false);
+            }
+
+            this->_isSelectionHighlightEnabled(false, false);
         }
 
         this->centerSelectedRow(false);

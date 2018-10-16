@@ -84,7 +84,10 @@ public:
 private:
     struct _IndexBuildingState
     {
+        void reset();
+
         boost::optional<Index> packetContextOffsetInPacketBits;
+        boost::optional<DataSize> preambleSize;
         boost::optional<DataSize> expectedTotalSize;
         boost::optional<DataSize> expectedContentSize;
         boost::optional<Timestamp> tsBegin;
@@ -97,7 +100,6 @@ private:
     };
 
 private:
-    void _resetIndexBuildingState(_IndexBuildingState& state);
     void _buildIndex(const BuildIndexProgressFunc& progressFunc,
                      Size step);
     void _addPacketIndexEntry(Index offsetInDataStreamBytes,

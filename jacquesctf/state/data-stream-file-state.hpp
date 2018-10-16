@@ -40,8 +40,10 @@ public:
     void gotoPacket(Index index);
     void gotoPreviousPacket();
     void gotoNextPacket();
-    void gotoPreviousEventRecord();
-    void gotoNextEventRecord();
+    void gotoPreviousEventRecord(Size count = 1);
+    void gotoNextEventRecord(Size count = 1);
+    void gotoPacketContext();
+    void gotoLastDataRegion();
     bool search(const SearchQuery& query);
     void analyzeAllPackets(PacketCheckpointsBuildListener& buildListener);
 
@@ -77,11 +79,23 @@ public:
 
     Index curOffsetInPacketBits() const noexcept
     {
+        if (!_activePacket) {
+            return 0;
+        }
+
         return _activePacket->curOffsetInPacketBits();
     }
 
     void curOffsetInPacketBits(const Index offsetInPacketBits)
     {
+        if (!_activePacket) {
+            return;
+        }
+
+        if (!_activePacket->hasData()) {
+            return;
+        }
+
         _activePacket->curOffsetInPacketBits(offsetInPacketBits);
     }
 

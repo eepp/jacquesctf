@@ -129,6 +129,8 @@ private:
     const boost::optional<ByteOrder> _byteOrder;
 };
 
+using DataRegions = std::vector<DataRegion::SP>;
+
 } // namespace jacques
 
 #endif // _JACQUES_DATA_REGION_HPP

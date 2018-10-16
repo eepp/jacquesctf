@@ -141,11 +141,16 @@ public:
                     yactfr::DataSource::UP dataSrc,
                     std::unique_ptr<MemoryMappedFile> mmapFile,
                     PacketCheckpointsBuildListener& packetCheckpointsBuildListener);
-    void appendDataRegionsAtOffsetInPacketBits(std::vector<DataRegion::SP>& regions,
-                                               Index offsetInPacketBits,
-                                               Index endOffsetInPacketBits);
+    void appendDataRegions(std::vector<DataRegion::SP>& regions,
+                           Index offsetInPacketBits,
+                           Index endOffsetInPacketBits);
     const DataRegion& dataRegionAtOffsetInPacketBits(Index offsetInPacketBits);
     void curOffsetInPacketBits(Index offsetInPacketBits);
+
+    bool hasData() const noexcept
+    {
+        return _indexEntry->effectiveTotalSize() > 0;
+    }
 
     const PacketIndexEntry& indexEntry() const noexcept
     {
@@ -409,6 +414,7 @@ private:
     LruCache<Index, DataRegion::SP> _lruDataRegionCache;
     const Size _eventRecordCacheMaxSize = 500;
     Index _curOffsetInPacketBits = 0;
+    const DataSize _preambleSize;
 };
 
 } // namespace jacques

@@ -74,11 +74,6 @@ public:
     const Checkpoint *nearestCheckpointBeforeNsFromEpoch(long long nsFromEpoch) const;
     const Checkpoint *nearestCheckpointAfterNsFromEpoch(long long nsFromEpoch) const;
 
-    const DataSize& preambleSize()
-    {
-        return _preambleSize;
-    }
-
     EventRecord::SP nearestEventRecordBeforeOrAtIndex(Index indexInPacket) const
     {
         auto checkpoint = this->nearestCheckpointBeforeOrAtIndex(indexInPacket);
@@ -385,7 +380,7 @@ private:
 private:
     Checkpoints _checkpoints;
     boost::optional<PacketDecodingError> _error;
-    DataSize _preambleSize;
+    boost::optional<Index> _packetContextOffsetInPacketBits;
 };
 
 } // namespace jacques

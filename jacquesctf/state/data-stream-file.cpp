@@ -79,6 +79,7 @@ void DataStreamFile::_addPacketIndexEntry(const Index offsetInDataStreamBytes,
     _index.push_back(PacketIndexEntry {
         _index.size(), offsetInDataStreamBytes,
         state.packetContextOffsetInPacketBits,
+        state.preambleSize,
         *expectedTotalSize, *expectedContentSize,
         effectiveTotalSize, effectiveContentSize,
         state.dst, state.dataStreamId, state.tsBegin, state.tsEnd, state.seqNum,
@@ -86,18 +87,19 @@ void DataStreamFile::_addPacketIndexEntry(const Index offsetInDataStreamBytes,
     });
 }
 
-void DataStreamFile::_resetIndexBuildingState(_IndexBuildingState& state)
+void DataStreamFile::_IndexBuildingState::reset()
 {
-    state.inPacketContextScope = false;
-    state.packetContextOffsetInPacketBits = boost::none;
-    state.expectedTotalSize = boost::none;
-    state.expectedContentSize = boost::none;
-    state.tsBegin = boost::none;
-    state.tsEnd = boost::none;
-    state.seqNum = boost::none;
-    state.dataStreamId = boost::none;
-    state.discardedEventRecordCounter = boost::none;
-    state.dst = nullptr;
+    inPacketContextScope = false;
+    preambleSize = boost::none;
+    packetContextOffsetInPacketBits = boost::none;
+    expectedTotalSize = boost::none;
+    expectedContentSize = boost::none;
+    tsBegin = boost::none;
+    tsEnd = boost::none;
+    seqNum = boost::none;
+    dataStreamId = boost::none;
+    discardedEventRecordCounter = boost::none;
+    dst = nullptr;
 }
 
 void DataStreamFile::_buildIndex(const BuildIndexProgressFunc& progressFunc,
@@ -130,20 +132,10 @@ void DataStreamFile::_buildIndex(const BuildIndexProgressFunc& progressFunc,
                 break;
             }
 
-            case yactfr::Element::Kind::SCOPE_END:
-            {
-                auto& elem = static_cast<const yactfr::ScopeEndElement&>(*it);
-
-                if (elem.scope() != yactfr::Scope::PACKET_CONTEXT) {
-                    break;
-                }
-            }
-
-            // fall through!
-
             case yactfr::Element::Kind::PACKET_CONTENT_END:
             case yactfr::Element::Kind::EVENT_RECORD_BEGINNING:
             {
+                state.preambleSize = it.offset() - offsetBytes * 8;
                 state.inPacketContextScope = false;
                 this->_addPacketIndexEntry(offsetBytes, state, false);
 
@@ -151,7 +143,7 @@ void DataStreamFile::_buildIndex(const BuildIndexProgressFunc& progressFunc,
                     progressFunc(_index.back());
                 }
 
-                this->_resetIndexBuildingState(state);
+                state.reset();
 
                 const auto nextOffsetBytes = offsetBytes +
                                              _index.back().effectiveTotalSize().bytes();

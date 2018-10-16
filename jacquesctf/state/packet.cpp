@@ -35,7 +35,11 @@ Packet::Packet(DataStreamFileState& dsfState,
     _checkpoints {
         seq, metadata, *_indexEntry, 20011, packetCheckpointsBuildListener,
     },
-    _lruDataRegionCache {1000}
+    _lruDataRegionCache {1000},
+    _preambleSize {
+        indexEntry.preambleSize() ? *indexEntry.preambleSize() :
+        indexEntry.effectiveContentSize()
+    }
 {
     _mmapFile->map(_indexEntry->offsetInDataStreamBytes(),
                    _indexEntry->effectiveTotalSize());
@@ -99,8 +103,17 @@ void Packet::_ensureOffsetInPacketBitsIsCached(const Index offsetInPacketBits)
     }
 
     // preamble?
-    if (offsetInPacketBits < _checkpoints.preambleSize().bits()) {
+    if (_checkpoints.eventRecordCount() == 0 ||
+            offsetInPacketBits < _preambleSize.bits()) {
         this->_cachePacketPreambleDataRegions();
+        return;
+    }
+
+    const auto& lastEventRecord = *_checkpoints.lastEventRecord();
+
+    if (offsetInPacketBits >= lastEventRecord.segment().offsetInPacketBits()) {
+        // last event record or after
+        this->_ensureEventRecordIsCached(lastEventRecord.indexInPacket());
         return;
     }
 
@@ -120,7 +133,8 @@ void Packet::_ensureOffsetInPacketBitsIsCached(const Index offsetInPacketBits)
 
     assert(cp);
 
-    auto curIndex = cp->first->indexInPacket();
+    auto nextIndex = cp->first->indexInPacket();
+    Index index;
 
     _it.restorePosition(cp->second);
 
@@ -128,17 +142,18 @@ void Packet::_ensureOffsetInPacketBitsIsCached(const Index offsetInPacketBits)
     while (true) {
         if (_it->kind() == yactfr::Element::Kind::EVENT_RECORD_BEGINNING) {
             if (this->_itOffsetInPacketBits() >= offsetInPacketBits) {
+                index = nextIndex;
                 break;
             }
 
-            ++curIndex;
+            ++nextIndex;
         }
 
         ++_it;
     }
 
     // no we have its index: cache event records around this one
-    this->_ensureEventRecordIsCached(curIndex);
+    this->_ensureEventRecordIsCached(index);
 }
 
 void Packet::_cacheContentDataRegionAtCurIt(Scope::SP scope)
@@ -511,7 +526,7 @@ void Packet::_cacheDataRegionsAtCurItUntilError()
         this->_cacheDataRegionsAtCurIt(yactfr::Element::Kind::PACKET_END,
                                        false, false, 0);
     } catch (const yactfr::DecodingError&) {
-        Index offsetStartBits = _checkpoints.preambleSize().bits();
+        Index offsetStartBits = _preambleSize.bits();
         boost::optional<ByteOrder> byteOrder;
 
         // remaining data until end of packet is an error region
@@ -588,21 +603,21 @@ void Packet::_cacheDataRegionsFromErsAtCurIt(const Index erIndexInPacket,
     }
 }
 
-void Packet::appendDataRegionsAtOffsetInPacketBits(std::vector<DataRegion::SP>& regions,
-                                                   Index offsetInPacketBits,
-                                                   Index endOffsetInPacketBits)
+void Packet::appendDataRegions(std::vector<DataRegion::SP>& regions,
+                               const Index offsetInPacketBits,
+                               const Index endOffsetInPacketBits)
 {
     theLogger->debug("Appending data regions for user in [{} b, {} b[.",
                      offsetInPacketBits, endOffsetInPacketBits);
     assert(offsetInPacketBits < _indexEntry->effectiveTotalSize().bits());
     assert(endOffsetInPacketBits <= _indexEntry->effectiveTotalSize().bits());
     assert(offsetInPacketBits < endOffsetInPacketBits);
-    theLogger->debug("Preamble size: {} b.", _checkpoints.preambleSize().bits());
+    theLogger->debug("Preamble size: {} b.", _preambleSize.bits());
 
     Index curOffsetInPacketBits;
 
     // append preamble regions if needed
-    if (offsetInPacketBits < _checkpoints.preambleSize().bits()) {
+    if (offsetInPacketBits < _preambleSize.bits()) {
         this->_cachePacketPreambleDataRegions();
 
         auto it = this->_dataRegionCacheItBeforeOrAtOffsetInPacketBits(offsetInPacketBits);

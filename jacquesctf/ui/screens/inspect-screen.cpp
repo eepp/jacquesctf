@@ -98,6 +98,18 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         _ertView->dataSizeFormatMode(_dsFormatModeWheel.currentValue());
         break;
 
+    case 'c':
+        this->_state().activeDataStreamFileState().gotoPacketContext();
+        break;
+
+    case KEY_HOME:
+        this->_state().activeDataStreamFileState().curOffsetInPacketBits(0);
+        break;
+
+    case KEY_END:
+        this->_state().activeDataStreamFileState().gotoLastDataRegion();
+        break;
+
 #if 0
     case '/':
     case 'g':
@@ -140,6 +152,14 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     case KEY_F(6):
         this->_state().gotoNextPacket();
         this->_tryShowDecodingError();
+        break;
+
+    case KEY_F(7):
+        this->_state().activeDataStreamFileState().gotoPreviousEventRecord(10);
+        break;
+
+    case KEY_F(8):
+        this->_state().activeDataStreamFileState().gotoNextEventRecord(10);
         break;
 
     default:

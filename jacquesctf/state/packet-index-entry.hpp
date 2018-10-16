@@ -25,6 +25,7 @@ public:
     explicit PacketIndexEntry(Index indexInDataStream,
                               Index offsetInDataStreamBytes,
                               boost::optional<Index> packetContextOffsetInPacketBits,
+                              const boost::optional<DataSize>& preambleSize,
                               const boost::optional<DataSize>& expectedTotalSize,
                               const boost::optional<DataSize>& expectedContentSize,
                               const DataSize& effectiveTotalSize,
@@ -45,6 +46,11 @@ public:
     Index offsetInDataStreamBits() const noexcept
     {
         return _offsetInDataStreamBytes * 8;
+    }
+
+    const boost::optional<DataSize>& preambleSize() const noexcept
+    {
+        return _preambleSize;
     }
 
     const boost::optional<Index>& packetContextOffsetInPacketBits() const noexcept
@@ -147,6 +153,7 @@ private:
     const Index _indexInDataStream;
     const Size _offsetInDataStreamBytes;
     const boost::optional<Index> _packetContextOffsetInPacketBits;
+    const boost::optional<DataSize> _preambleSize;
     const boost::optional<DataSize> _expectedTotalSize;
     const boost::optional<DataSize> _expectedContentSize;
     const DataSize _effectiveTotalSize;
