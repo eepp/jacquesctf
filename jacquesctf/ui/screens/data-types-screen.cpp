@@ -7,6 +7,7 @@
 
 #include "data-types-screen.hpp"
 #include "search-parser.hpp"
+#include "content-data-region.hpp"
 
 namespace jacques {
 
@@ -85,22 +86,60 @@ void DataTypesScreen::_resized()
     _searchController.parentScreenResized(*this);
 }
 
-void DataTypesScreen::selectEventRecordType(const yactfr::EventRecordType& ert)
+void DataTypesScreen::highlightCurrentDataType()
 {
-    const auto& dst = *ert.dataStreamType();
+    if (!this->_state().activeDataStreamFileState().hasActivePacket()) {
+        _dtExplorerView->clearHighlight();
+    }
 
-    _dstTableView->selectDataStreamType(dst.id());
-    _ertTableView->dataStreamType(dst);
-    _ertTableView->selectEventRecordType(ert.id());
-    _dstTableView->centerSelectedRow(true);
-    _ertTableView->centerSelectedRow(true);
+    auto& activePacket = this->_state().activeDataStreamFileState().activePacket();
 
-    auto oldFocusedView = _focusedView;
+    const auto curDst = activePacket.indexEntry().dataStreamType();
+    const auto curEventRecord = this->_state().activeDataStreamFileState().currentEventRecord();
 
-    _focusedView = _ertTableView.get();
-    this->_updateViews();
-    oldFocusedView->blur();
-    _focusedView->focus();
+    if (curEventRecord) {
+        assert(curDst);
+
+        _dstTableView->selectDataStreamType(curDst->id());
+        _ertTableView->dataStreamType(*curDst);
+        _ertTableView->selectEventRecordType(curEventRecord->type().id());
+        _dstTableView->centerSelectedRow(true);
+        _ertTableView->centerSelectedRow(true);
+        _dtExplorerView->eventRecordType(curEventRecord->type());
+        _focusedView->blur();
+        _focusedView = _ertTableView.get();
+        _focusedView->focus();
+    } else if (curDst) {
+        _dstTableView->selectDataStreamType(curDst->id());
+        _ertTableView->dataStreamType(*curDst);
+        _ertTableView->selectFirst();
+        _dstTableView->centerSelectedRow(true);
+        _ertTableView->centerSelectedRow(true);
+        _dtExplorerView->dataStreamType(*curDst);
+        _focusedView->blur();
+        _focusedView = _dstTableView.get();
+        _focusedView->focus();
+    }
+
+    _dtExplorerView->clearHighlight();
+
+    const auto curDataRegion = this->_state().activeDataStreamFileState().currentDataRegion();
+
+    if (curDataRegion) {
+        const auto cDataRegion = dynamic_cast<const ContentDataRegion *>(curDataRegion);
+
+        if (cDataRegion) {
+            _dtExplorerView->highlightDataType(cDataRegion->dataType());
+            _focusedView->blur();
+            _focusedView = _dtExplorerView.get();
+            _focusedView->focus();
+        }
+    }
+}
+
+void DataTypesScreen::clearHighlight()
+{
+    _dtExplorerView->clearHighlight();
 }
 
 KeyHandlingReaction DataTypesScreen::_handleKey(const int key)

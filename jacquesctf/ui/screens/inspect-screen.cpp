@@ -22,7 +22,6 @@ InspectScreen::InspectScreen(const Rectangle& rect, const Config& cfg,
                              std::shared_ptr<const Stylist> stylist,
                              std::shared_ptr<State> state) :
     Screen {rect, cfg, stylist, state},
-    _ertView {std::make_unique<EventRecordTableView>(rect, stylist, state)},
     _decErrorView {
         std::make_unique<PacketDecodingErrorDetailsView>(rect, stylist, state)
     },
@@ -37,19 +36,41 @@ InspectScreen::InspectScreen(const Rectangle& rect, const Config& cfg,
         utils::SizeFormatMode::BITS,
     }
 {
+    Rectangle ertViewRect;
+    Rectangle dtPathViewRect;
+
+    std::tie(ertViewRect, dtPathViewRect) = this->_viewRects();
+    _ertView = std::make_unique<EventRecordTableView>(ertViewRect, stylist,
+                                                      state);
+    _dtPathView = std::make_unique<DataTypePathView>(dtPathViewRect,
+                                                     stylist, state);
     _decErrorView->isVisible(false);
     _ertView->focus();
+}
+
+std::tuple<Rectangle, Rectangle> InspectScreen::_viewRects() const
+{
+    return {
+        {this->rect().pos, this->rect().w, this->rect().h - 1},
+        {{this->rect().pos.x, this->rect().h - 1}, this->rect().w, 1}
+    };
 }
 
 void InspectScreen::_redraw()
 {
     _ertView->redraw();
+    _dtPathView->redraw();
     _decErrorView->redraw();
 }
 
 void InspectScreen::_resized()
 {
-    _ertView->moveAndResize(this->rect());
+    Rectangle ertViewRect;
+    Rectangle dtPathViewRect;
+
+    std::tie(ertViewRect, dtPathViewRect) = this->_viewRects();
+    _ertView->moveAndResize(ertViewRect);
+    _dtPathView->moveAndResize(dtPathViewRect);
     _decErrorView->moveAndResize(Rectangle {{this->rect().pos.x + 4,
                                              this->rect().h - 14},
                                             this->rect().w - 8, 12});
@@ -59,9 +80,11 @@ void InspectScreen::_resized()
 void InspectScreen::_visibilityChanged()
 {
     _ertView->isVisible(this->isVisible());
+    _dtPathView->isVisible(this->isVisible());
 
     if (this->isVisible()) {
         _ertView->redraw();
+        _dtPathView->redraw();
         this->_tryShowDecodingError();
         _decErrorView->refresh(true);
     }
@@ -108,6 +131,14 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 
     case KEY_END:
         this->_state().activeDataStreamFileState().gotoLastDataRegion();
+        break;
+
+    case KEY_LEFT:
+        this->_state().activeDataStreamFileState().gotoPreviousDataRegion();
+        break;
+
+    case KEY_RIGHT:
+        this->_state().activeDataStreamFileState().gotoNextDataRegion();
         break;
 
 #if 0
@@ -167,6 +198,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     }
 
     _ertView->refresh();
+    _dtPathView->refresh();
 
     /*
      * Touch because the content could be unchanged from the last

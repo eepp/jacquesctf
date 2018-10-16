@@ -42,6 +42,8 @@ public:
     void gotoNextPacket();
     void gotoPreviousEventRecord(Size count = 1);
     void gotoNextEventRecord(Size count = 1);
+    void gotoPreviousDataRegion();
+    void gotoNextDataRegion();
     void gotoPacketContext();
     void gotoLastDataRegion();
     bool search(const SearchQuery& query);
@@ -101,7 +103,24 @@ public:
 
     const EventRecord *currentEventRecord()
     {
+        if (!_activePacket) {
+            return nullptr;
+        }
+
         return _activePacket->currentEventRecord();
+    }
+
+    const DataRegion *currentDataRegion()
+    {
+        if (!_activePacket) {
+            return nullptr;
+        }
+
+        if (_activePacket->indexEntry().effectiveTotalSize() == 0){
+            return nullptr;
+        }
+
+        return &_activePacket->dataRegionAtOffsetInPacketBits(_activePacket->curOffsetInPacketBits());
     }
 
     const Metadata& metadata() const noexcept

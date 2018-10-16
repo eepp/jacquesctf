@@ -8,9 +8,12 @@
 #ifndef _JACQUES_INSPECT_SCREEN_HPP
 #define _JACQUES_INSPECT_SCREEN_HPP
 
+#include <tuple>
+
 #include "aliases.hpp"
 #include "stylist.hpp"
 #include "state.hpp"
+#include "data-type-path-view.hpp"
 #include "event-record-table-view.hpp"
 #include "packet-decoding-error-details-view.hpp"
 #include "inspect-screen.hpp"
@@ -35,9 +38,11 @@ protected:
 
 private:
     void _tryShowDecodingError();
+    std::tuple<Rectangle, Rectangle> _viewRects() const;
 
 private:
     std::unique_ptr<EventRecordTableView> _ertView;
+    std::unique_ptr<DataTypePathView> _dtPathView;
     std::unique_ptr<PacketDecodingErrorDetailsView> _decErrorView;
     CycleWheel<TimestampFormatMode> _tsFormatModeWheel;
     CycleWheel<utils::SizeFormatMode> _dsFormatModeWheel;

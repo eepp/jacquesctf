@@ -507,11 +507,9 @@ static bool tryStartInteractive(const Config& cfg)
             curScreen->isVisible(false);
 
             if (curScreen == inspectScreen.get()) {
-                const auto curEventRecord = state->activeDataStreamFileState().currentEventRecord();
-
-                if (curEventRecord) {
-                    dataTypesScreen->selectEventRecordType(curEventRecord->type());
-                }
+                dataTypesScreen->highlightCurrentDataType();
+            } else {
+                dataTypesScreen->clearHighlight();
             }
 
             curScreen = dataTypesScreen.get();

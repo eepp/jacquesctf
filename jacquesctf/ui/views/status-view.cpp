@@ -12,9 +12,6 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "config.hpp"
-#include "help-screen.hpp"
-#include "help-view.hpp"
 #include "stylist.hpp"
 #include "status-view.hpp"
 #include "utils.hpp"

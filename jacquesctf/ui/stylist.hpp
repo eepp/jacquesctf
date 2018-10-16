@@ -53,6 +53,7 @@ public:
     void helpViewKey(const View& view) const;
     void statusViewStd(const View& view, bool emphasized = false) const;
     void statusViewFilename(const View& view) const;
+    void dataTypePathViewStd(const View& view, bool emphasized = false) const;
     void simpleInputViewBorder(const View& view) const;
     void packetIndexBuildProgressViewPath(const View& view, bool filename) const;
     void packetIndexBuildProgressViewBar(const View& view, bool on) const;
@@ -130,6 +131,7 @@ private:
         _COLOR_ID_HELP_VIEW_SECTION,
         _COLOR_ID_HELP_VIEW_KEY,
         _COLOR_ID_STATUS_VIEW_STD,
+        _COLOR_ID_DATA_TYPE_PATH_VIEW_STD,
         _COLOR_ID_SIMPLE_INPUT_VIEW_BORDER,
         _COLOR_ID_PACKET_INDEX_BUILD_PROGRESS_VIEW_PATH,
         _COLOR_ID_DETAILS_VIEW_SUBTITLE,

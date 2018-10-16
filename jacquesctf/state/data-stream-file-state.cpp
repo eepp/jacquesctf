@@ -168,6 +168,55 @@ void DataStreamFileState::gotoNextEventRecord(Size count)
     _activePacket->curOffsetInPacketBits(nextEventRecord.segment().offsetInPacketBits());
 }
 
+void DataStreamFileState::gotoPreviousDataRegion()
+{
+    if (!_activePacket) {
+        return;
+    }
+
+    if (_activePacket->curOffsetInPacketBits() == 0) {
+        return;
+    }
+
+    DataRegions dataRegions;
+
+    _activePacket->appendDataRegions(dataRegions,
+                                     _activePacket->curOffsetInPacketBits() - 1,
+                                     _activePacket->curOffsetInPacketBits());
+
+    if (dataRegions.empty()) {
+        return;
+    }
+
+    _activePacket->curOffsetInPacketBits(dataRegions.front()->segment().offsetInPacketBits());
+}
+
+void DataStreamFileState::gotoNextDataRegion()
+{
+    const auto currentDataRegion = this->currentDataRegion();
+
+    if (!currentDataRegion) {
+        return;
+    }
+
+    if (currentDataRegion->segment().endOffsetInPacketBits() ==
+            _activePacket->indexEntry().effectiveTotalSize().bits()) {
+        return;
+    }
+
+    DataRegions dataRegions;
+
+    _activePacket->appendDataRegions(dataRegions,
+                                     currentDataRegion->segment().endOffsetInPacketBits(),
+                                     currentDataRegion->segment().endOffsetInPacketBits() + 1);
+
+    if (dataRegions.empty()) {
+        return;
+    }
+
+    _activePacket->curOffsetInPacketBits(dataRegions.front()->segment().offsetInPacketBits());
+}
+
 void DataStreamFileState::gotoPacketContext()
 {
     if (!_activePacket) {

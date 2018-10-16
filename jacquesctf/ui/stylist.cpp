@@ -36,6 +36,7 @@ Stylist::Stylist()
     this->_initColor(_COLOR_ID_HELP_VIEW_SECTION, COLOR_GREEN, -1);
     this->_initColor(_COLOR_ID_HELP_VIEW_KEY, COLOR_CYAN, -1);
     this->_initColor(_COLOR_ID_STATUS_VIEW_STD, COLOR_WHITE, COLOR_BLUE);
+    this->_initColor(_COLOR_ID_DATA_TYPE_PATH_VIEW_STD, COLOR_WHITE, COLOR_GREEN);
     this->_initColor(_COLOR_ID_TABLE_VIEW_WARNING_CELL, COLOR_WHITE, COLOR_YELLOW);
     this->_initColor(_COLOR_ID_TABLE_VIEW_ERROR_CELL, COLOR_RED, -1);
     this->_initColor(_COLOR_ID_SIMPLE_INPUT_VIEW_BORDER, COLOR_BLACK, COLOR_GREEN);
@@ -263,6 +264,16 @@ void Stylist::statusViewFilename(const View& view) const
 {
     this->statusViewStd(view);
     this->_attrs(view, A_BOLD);
+}
+
+void Stylist::dataTypePathViewStd(const View& view, const bool emphasized) const
+{
+    this->_attrsReset(view);
+    this->_color(view, _COLOR_ID_DATA_TYPE_PATH_VIEW_STD);
+
+    if (emphasized) {
+        this->_attrs(view, A_BOLD);
+    }
 }
 
 void Stylist::simpleInputViewBorder(const View& view) const

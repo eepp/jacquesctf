@@ -30,7 +30,8 @@ public:
     explicit DataTypesScreen(const Rectangle& rect, const Config& cfg,
                              std::shared_ptr<const Stylist> stylist,
                              std::shared_ptr<State> state);
-    void selectEventRecordType(const yactfr::EventRecordType& eventRecordType);
+    void highlightCurrentDataType();
+    void clearHighlight();
 
 protected:
     void _redraw() override;

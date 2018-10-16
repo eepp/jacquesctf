@@ -93,52 +93,66 @@ void Metadata::_setIsCorrelatable()
     _isCorrelatable = true;
 }
 
-class SetDataTypeParentsVisitor :
+class SetDataTypeParentsPathsVisitor :
     public yactfr::DataTypeVisitor
 {
 public:
-    explicit SetDataTypeParentsVisitor(Metadata::DataTypeParentMap& map) :
-        _map {&map}
+    explicit SetDataTypeParentsPathsVisitor(Metadata::DataTypeParentMap& dtParentMap,
+                                            Metadata::DataTypePathMap& dtPathMap) :
+        _dtParentMap {&dtParentMap},
+        _dtPathMap {&dtPathMap}
     {
+    }
+
+    void scope(const yactfr::Scope scope) noexcept
+    {
+        _scope = scope;
+    }
+
+    yactfr::Scope scope() const noexcept
+    {
+        return _scope;
     }
 
     void visit(const yactfr::SignedIntType& type) override
     {
-        this->_setParent(type);
+        this->_setParentAndPath(type);
     }
 
     void visit(const yactfr::UnsignedIntType& type) override
     {
-        this->_setParent(type);
+        this->_setParentAndPath(type);
     }
 
     void visit(const yactfr::FloatType& type) override
     {
-        this->_setParent(type);
+        this->_setParentAndPath(type);
     }
 
     void visit(const yactfr::SignedEnumType& type) override
     {
-        this->_setParent(type);
+        this->_setParentAndPath(type);
     }
 
     void visit(const yactfr::UnsignedEnumType& type) override
     {
-        this->_setParent(type);
+        this->_setParentAndPath(type);
     }
 
     void visit(const yactfr::StringType& type) override
     {
-        this->_setParent(type);
+        this->_setParentAndPath(type);
     }
 
     void visit(const yactfr::StructType& type) override
     {
-        this->_setParent(type);
-        _stack.push_back(&type);
+        this->_setParentAndPath(type);
+        _stack.push_back({&type, _curDtName});
 
         for (auto& field : type) {
+            _curDtName = &field->displayName();
             field->type().accept(*this);
+            _curDtName = nullptr;
         }
 
         _stack.pop_back();
@@ -146,8 +160,8 @@ public:
 
     void visit(const yactfr::StaticArrayType& type) override
     {
-        this->_setParent(type);
-        _stack.push_back(&type);
+        this->_setParentAndPath(type);
+        _stack.push_back({&type, &_arrayElemStr});
         type.elemType().accept(*this);
         _stack.pop_back();
     }
@@ -159,8 +173,8 @@ public:
 
     void visit(const yactfr::DynamicArrayType& type) override
     {
-        this->_setParent(type);
-        _stack.push_back(&type);
+        this->_setParentAndPath(type);
+        _stack.push_back({&type, &_arrayElemStr});
         type.elemType().accept(*this);
         _stack.pop_back();
     }
@@ -172,72 +186,121 @@ public:
 
     void visit(const yactfr::VariantType& type) override
     {
-        this->_setParent(type);
-        _stack.push_back(&type);
+        this->_setParentAndPath(type);
+        _stack.push_back({&type, _curDtName});
 
-        for (auto& choice : type) {
-            choice->type().accept(*this);
+        for (auto& opt : type) {
+            _curDtName = &opt->displayName();
+            opt->type().accept(*this);
+            _curDtName = nullptr;
         }
 
         _stack.pop_back();
     }
 
 private:
+    static const std::string _arrayElemStr;
+
+private:
+    void _setParentAndPath(const yactfr::DataType& dataType)
+    {
+        this->_setParent(dataType);
+        this->_setPath(dataType);
+    }
+
     void _setParent(const yactfr::DataType& dataType)
     {
         if (_stack.empty()) {
             return;
         }
 
-        (*_map)[&dataType] = _stack.back();
+        (*_dtParentMap)[&dataType] = _stack.back().parent;
+    }
+
+    void _setPath(const yactfr::DataType& dataType)
+    {
+        if (_stack.empty()) {
+            return;
+        }
+
+        auto& mapEntry = (*_dtPathMap)[&dataType];
+
+        mapEntry.scope = _scope;
+
+        for (const auto& entry : _stack) {
+            if (entry.parentName) {
+                mapEntry.path.push_back(*entry.parentName);
+            }
+        }
+
+        if (_curDtName) {
+            mapEntry.path.push_back(*_curDtName);
+        }
     }
 
 private:
-    Metadata::DataTypeParentMap *_map;
-    std::vector<const yactfr::DataType *> _stack;
+    struct _StackEntry
+    {
+        const yactfr::DataType *parent;
+        const std::string *parentName;
+    };
+
+private:
+    yactfr::Scope _scope;
+    Metadata::DataTypeParentMap * const _dtParentMap;
+    Metadata::DataTypePathMap * const _dtPathMap;
+    std::vector<_StackEntry> _stack;
+    const std::string *_curDtName = nullptr;
 };
 
-static void setScopeDataTypeParents(SetDataTypeParentsVisitor& visitor,
+const std::string SetDataTypeParentsPathsVisitor::_arrayElemStr = "%";
+
+static void setScopeDataTypeParents(SetDataTypeParentsPathsVisitor& visitor,
                                     Metadata::DataTypeScopeMap& dataTypeScopes,
-                                    const yactfr::DataType *dataType,
-                                    const yactfr::Scope scope)
+                                    const yactfr::DataType *dataType)
 {
     if (!dataType) {
         return;
     }
 
-    dataTypeScopes[dataType] = scope;
+    dataTypeScopes[dataType] = visitor.scope();
     dataType->accept(visitor);
 }
 
 void Metadata::_setDataTypeParents()
 {
-    SetDataTypeParentsVisitor visitor {_dataTypeParents};
+    SetDataTypeParentsPathsVisitor visitor {_dataTypeParents,
+                                            _dataTypePaths};
 
+    visitor.scope(yactfr::Scope::PACKET_HEADER);
     setScopeDataTypeParents(visitor, _dataTypeScopes,
-                            _traceType->packetHeaderType(),
-                            yactfr::Scope::PACKET_HEADER);
+                            _traceType->packetHeaderType());
 
     for (auto& dst : _traceType->dataStreamTypes()) {
+        visitor.scope(yactfr::Scope::PACKET_CONTEXT);
         setScopeDataTypeParents(visitor, _dataTypeScopes,
-                                dst->packetContextType(),
-                                yactfr::Scope::PACKET_CONTEXT);
+                                dst->packetContextType());
+        visitor.scope(yactfr::Scope::EVENT_RECORD_HEADER);
         setScopeDataTypeParents(visitor, _dataTypeScopes,
-                                dst->eventRecordHeaderType(),
-                                yactfr::Scope::EVENT_RECORD_HEADER);
+                                dst->eventRecordHeaderType());
+        visitor.scope(yactfr::Scope::EVENT_RECORD_FIRST_CONTEXT);
         setScopeDataTypeParents(visitor, _dataTypeScopes,
-                                dst->eventRecordFirstContextType(),
-                                yactfr::Scope::EVENT_RECORD_FIRST_CONTEXT);
+                                dst->eventRecordFirstContextType());
 
         for (auto& ert : dst->eventRecordTypes()) {
+            visitor.scope(yactfr::Scope::EVENT_RECORD_SECOND_CONTEXT);
             setScopeDataTypeParents(visitor, _dataTypeScopes,
-                                    ert->secondContextType(),
-                                    yactfr::Scope::EVENT_RECORD_SECOND_CONTEXT);
+                                    ert->secondContextType());
+            visitor.scope(yactfr::Scope::EVENT_RECORD_PAYLOAD);
             setScopeDataTypeParents(visitor, _dataTypeScopes,
-                                    ert->payloadType(),
-                                    yactfr::Scope::EVENT_RECORD_PAYLOAD);
+                                    ert->payloadType());
         }
     }
+}
+
+const Metadata::DataTypePath& Metadata::dataTypePath(const yactfr::DataType& dataType) const
+{
+    return _dataTypePaths.find(&dataType)->second;
 }
 
 const yactfr::DataType *Metadata::dataTypeParent(const yactfr::DataType& dataType) const

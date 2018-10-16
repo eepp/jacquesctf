@@ -80,6 +80,7 @@ add_executable (
     ui/views/data-stream-type-table-view.cpp
     ui/views/data-type-details.cpp
     ui/views/data-type-explorer-view.cpp
+    ui/views/data-type-path-view.cpp
     ui/views/event-record-table-view.cpp
     ui/views/event-record-type-table-view.cpp
     ui/views/help-view.cpp
