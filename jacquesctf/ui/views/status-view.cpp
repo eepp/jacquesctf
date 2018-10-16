@@ -41,11 +41,11 @@ void StatusView::_stateChanged(const Message& msg)
 
 void StatusView::_drawOffset()
 {
-    if (!_state->activeDataStreamFileState().hasActivePacket()) {
+    if (!_state->hasActivePacket()) {
         return;
     }
 
-    const auto& activePacket = _state->activeDataStreamFileState().activePacket();
+    const auto& activePacket = _state->activePacket();
 
     this->_stylist().statusViewStd(*this);
 
@@ -71,8 +71,8 @@ void StatusView::_redrawContent()
     std::array<char, 32> packetCount;
     std::array<char, 32> curPacket;
 
-    if (_state->activeDataStreamFileState().hasActivePacket()) {
-        const auto index = _state->activeDataStreamFileState().activePacket().indexEntry().natIndexInDataStream();
+    if (_state->hasActivePacket()) {
+        const auto index = _state->activePacket().indexEntry().natIndexInDataStream();
 
         std::snprintf(curPacket.data(), curPacket.size(), "%s",
                       utils::sepNumber(static_cast<long long>(index), ',').c_str());
@@ -99,8 +99,8 @@ void StatusView::_redrawContent()
     this->_moveAndPrint(pktInfoPos, "%s", packetCount.data());
 
     // packet sequence number
-    if (_state->activeDataStreamFileState().hasActivePacket()) {
-        const auto& activePacket = _state->activeDataStreamFileState().activePacket();
+    if (_state->hasActivePacket()) {
+        const auto& activePacket = _state->activePacket();
         const auto& seqNum = activePacket.indexEntry().seqNum();
 
         if (seqNum) {

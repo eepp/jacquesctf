@@ -36,7 +36,7 @@ TraceInfoView::TraceInfoView(const Rectangle& rect,
     _stateObserverGuard {*state, *this}
 {
     this->_buildRows();
-    _rows = &_traceInfo[state->activeDataStreamFileState().metadata().traceType().get()];
+    _rows = &_traceInfo[state->metadata().traceType().get()];
     this->_rowCount(_rows->size());
     this->_drawRows();
 }
@@ -454,7 +454,7 @@ void TraceInfoView::_drawRows()
 void TraceInfoView::_stateChanged(const Message& msg)
 {
     if (dynamic_cast<const ActiveDataStreamFileChangedMessage *>(&msg)) {
-        _rows = &_traceInfo[_state->activeDataStreamFileState().metadata().traceType().get()];
+        _rows = &_traceInfo[_state->metadata().traceType().get()];
         this->_index(0);
         this->_rowCount(_rows->size());
         this->_redrawContent();

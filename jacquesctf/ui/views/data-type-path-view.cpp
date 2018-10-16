@@ -41,7 +41,7 @@ void DataTypePathView::_redrawContent()
     this->_stylist().dataTypePathViewStd(*this);
     this->_clearRect();
 
-    const auto dataRegion = _state->activeDataStreamFileState().currentDataRegion();
+    const auto dataRegion = _state->currentDataRegion();
 
     if (!dataRegion) {
         return;
@@ -53,7 +53,7 @@ void DataTypePathView::_redrawContent()
         return;
     }
 
-    const auto& path = _state->activeDataStreamFileState().metadata().dataTypePath(cDataRegion->dataType());
+    const auto& path = _state->metadata().dataTypePath(cDataRegion->dataType());
 
     this->_moveCursor({0, 0});
 
@@ -83,7 +83,7 @@ void DataTypePathView::_redrawContent()
         break;
 
     case yactfr::Scope::EVENT_RECORD_PAYLOAD:
-        this->_print("EP");
+        this->_print("ERP");
         break;
     }
 

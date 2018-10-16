@@ -95,21 +95,6 @@ void State::gotoNextDataStreamFile()
     this->gotoDataStreamFile(_activeDataStreamFileStateIndex + 1);
 }
 
-void State::gotoPacket(const Index index)
-{
-    _activeDataStreamFileState->gotoPacket(index);
-}
-
-void State::gotoPreviousPacket()
-{
-    _activeDataStreamFileState->gotoPreviousPacket();
-}
-
-void State::gotoNextPacket()
-{
-    _activeDataStreamFileState->gotoNextPacket();
-}
-
 void State::_notify(const Message& msg)
 {
     for (const auto& observer : _observers) {

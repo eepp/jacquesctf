@@ -191,6 +191,24 @@ public:
         return _curOffsetInPacketBits;
     }
 
+    const EventRecord *firstEventRecord() const noexcept
+    {
+        if (_checkpoints.eventRecordCount() == 0) {
+            return nullptr;
+        }
+
+        return _checkpoints.firstEventRecord().get();
+    }
+
+    const EventRecord *lastEventRecord() const noexcept
+    {
+        if (_checkpoints.eventRecordCount() == 0) {
+            return nullptr;
+        }
+
+        return _checkpoints.lastEventRecord().get();
+    }
+
 private:
     using DataRegionCache = std::vector<DataRegion::SP>;
     using EventRecordCache = std::vector<EventRecord::SP>;

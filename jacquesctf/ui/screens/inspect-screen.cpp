@@ -108,9 +108,15 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     if (_decErrorView->isVisible()) {
         _decErrorView->isVisible(false);
         _ertView->redraw();
+        _dtPathView->redraw();
     }
 
     switch (key) {
+    case '#':
+    case '`':
+        _decErrorView->isVisible(true);
+        break;
+
     case 't':
         _tsFormatModeWheel.next();
         _ertView->timestampFormatMode(_tsFormatModeWheel.currentValue());
@@ -122,23 +128,23 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         break;
 
     case 'c':
-        this->_state().activeDataStreamFileState().gotoPacketContext();
+        this->_state().gotoPacketContext();
         break;
 
     case KEY_HOME:
-        this->_state().activeDataStreamFileState().curOffsetInPacketBits(0);
+        this->_state().curOffsetInPacketBits(0);
         break;
 
     case KEY_END:
-        this->_state().activeDataStreamFileState().gotoLastDataRegion();
+        this->_state().gotoLastDataRegion();
         break;
 
     case KEY_LEFT:
-        this->_state().activeDataStreamFileState().gotoPreviousDataRegion();
+        this->_state().gotoPreviousDataRegion();
         break;
 
     case KEY_RIGHT:
-        this->_state().activeDataStreamFileState().gotoNextDataRegion();
+        this->_state().gotoNextDataRegion();
         break;
 
 #if 0
@@ -156,13 +162,13 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 #endif
 
     case '-':
-        this->_state().activeDataStreamFileState().gotoPreviousEventRecord();
+        this->_state().gotoPreviousEventRecord();
         break;
 
     case '+':
     case '=':
     case ' ':
-        this->_state().activeDataStreamFileState().gotoNextEventRecord();
+        this->_state().gotoNextEventRecord();
         break;
 
     case KEY_F(3):
@@ -186,11 +192,11 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         break;
 
     case KEY_F(7):
-        this->_state().activeDataStreamFileState().gotoPreviousEventRecord(10);
+        this->_state().gotoPreviousEventRecord(10);
         break;
 
     case KEY_F(8):
-        this->_state().activeDataStreamFileState().gotoNextEventRecord(10);
+        this->_state().gotoNextEventRecord(10);
         break;
 
     default:

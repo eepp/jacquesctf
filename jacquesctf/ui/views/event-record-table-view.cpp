@@ -177,23 +177,27 @@ void EventRecordTableView::_stateChanged(const Message& msg)
         this->_isSelectionHighlightEnabled(false, false);
     }
 
-    if (_state->activeDataStreamFileState().hasActivePacket()) {
-        auto curEventRecord = _state->activeDataStreamFileState().currentEventRecord();
+    if (_state->hasActivePacket() &&
+            _state->activePacket().eventRecordCount() > 0) {
+        assert(_state->activePacket().firstEventRecord());
+        assert(_state->activePacket().lastEventRecord());
+
+        auto curEventRecord = _state->currentEventRecord();
 
         if (curEventRecord) {
             this->_isSelectionHighlightEnabled(true, false);
             this->_selectionIndex(curEventRecord->indexInPacket(), false);
         } else {
             const auto& indexEntry = _state->activePacket().indexEntry();
-            const auto offsetInPacketBits = _state->activeDataStreamFileState().curOffsetInPacketBits();
+            const auto offsetInPacketBits = _state->curOffsetInPacketBits();
 
             // convenience for regions outside the event record block
             if (indexEntry.preambleSize() && offsetInPacketBits <
                                              indexEntry.preambleSize()->bits()) {
                 this->_selectionIndex(0, false);
-            } else if (offsetInPacketBits >= indexEntry.effectiveContentSize().bits() &&
-                    _state->activePacket().eventRecordCount() > 0) {
-                this->_selectionIndex(_state->activePacket().eventRecordCount() - 1,
+            } else if (offsetInPacketBits >=
+                       _state->activePacket().lastEventRecord()->segment().endOffsetInPacketBits()) {
+                this->_selectionIndex(_state->activePacket().lastEventRecord()->indexInPacket(),
                                       false);
             }
 

@@ -54,9 +54,6 @@ public:
     void gotoDataStreamFile(Index index);
     void gotoPreviousDataStreamFile();
     void gotoNextDataStreamFile();
-    void gotoPacket(Index index);
-    void gotoPreviousPacket();
-    void gotoNextPacket();
     bool search(const SearchQuery& query);
     bool search(const std::string& query);
 
@@ -75,6 +72,56 @@ public:
         return _dataStreamFileStates.size();
     }
 
+    const Metadata& metadata() const noexcept
+    {
+        return _activeDataStreamFileState->metadata();
+    }
+
+    void gotoPacket(const Index index)
+    {
+        _activeDataStreamFileState->gotoPacket(index);
+    }
+
+    void gotoPreviousPacket()
+    {
+        _activeDataStreamFileState->gotoPreviousPacket();
+    }
+
+    void gotoNextPacket()
+    {
+        _activeDataStreamFileState->gotoNextPacket();
+    }
+
+    void gotoPreviousEventRecord(const Size count = 1)
+    {
+        _activeDataStreamFileState->gotoPreviousEventRecord(count);
+    }
+
+    void gotoNextEventRecord(Size count = 1)
+    {
+        _activeDataStreamFileState->gotoNextEventRecord(count);
+    }
+
+    void gotoPreviousDataRegion()
+    {
+        _activeDataStreamFileState->gotoPreviousDataRegion();
+    }
+
+    void gotoNextDataRegion()
+    {
+        _activeDataStreamFileState->gotoNextDataRegion();
+    }
+
+    void gotoPacketContext()
+    {
+        _activeDataStreamFileState->gotoPacketContext();
+    }
+
+    void gotoLastDataRegion()
+    {
+        _activeDataStreamFileState->gotoLastDataRegion();
+    }
+
     bool hasActivePacket() const noexcept
     {
         return _activeDataStreamFileState->hasActivePacket();
@@ -83,6 +130,26 @@ public:
     Packet& activePacket()
     {
         return _activeDataStreamFileState->activePacket();
+    }
+
+    Index curOffsetInPacketBits() const noexcept
+    {
+        return _activeDataStreamFileState->curOffsetInPacketBits();
+    }
+
+    void curOffsetInPacketBits(const Index offsetInPacketBits)
+    {
+        _activeDataStreamFileState->curOffsetInPacketBits(offsetInPacketBits);
+    }
+
+    const EventRecord *currentEventRecord()
+    {
+        return _activeDataStreamFileState->currentEventRecord();
+    }
+
+    const DataRegion *currentDataRegion()
+    {
+        return _activeDataStreamFileState->currentDataRegion();
     }
 
     const DataStreamFileState& dataStreamFileState(const Index index)

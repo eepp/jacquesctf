@@ -66,7 +66,7 @@ std::tuple<Rectangle, Rectangle, Rectangle> DataTypesScreen::_viewRects() const
 
 void DataTypesScreen::_updateViews()
 {
-    _dstTableView->traceType(*this->_state().activeDataStreamFileState().metadata().traceType());
+    _dstTableView->traceType(*this->_state().metadata().traceType());
     _ertTableView->dataStreamType(*_dstTableView->dataStreamType());
 
     if (_focusedView == _dstTableView.get()) {
@@ -88,14 +88,14 @@ void DataTypesScreen::_resized()
 
 void DataTypesScreen::highlightCurrentDataType()
 {
-    if (!this->_state().activeDataStreamFileState().hasActivePacket()) {
+    if (!this->_state().hasActivePacket()) {
         _dtExplorerView->clearHighlight();
     }
 
-    auto& activePacket = this->_state().activeDataStreamFileState().activePacket();
+    auto& activePacket = this->_state().activePacket();
 
     const auto curDst = activePacket.indexEntry().dataStreamType();
-    const auto curEventRecord = this->_state().activeDataStreamFileState().currentEventRecord();
+    const auto curEventRecord = this->_state().currentEventRecord();
 
     if (curEventRecord) {
         assert(curDst);
@@ -123,7 +123,7 @@ void DataTypesScreen::highlightCurrentDataType()
 
     _dtExplorerView->clearHighlight();
 
-    const auto curDataRegion = this->_state().activeDataStreamFileState().currentDataRegion();
+    const auto curDataRegion = this->_state().currentDataRegion();
 
     if (curDataRegion) {
         const auto cDataRegion = dynamic_cast<const ContentDataRegion *>(curDataRegion);
