@@ -129,7 +129,7 @@ void InspectScreen::_snapshotState()
             return;
         }
 
-        const auto nextSnapshot = _currentStateSnapshot + 1;
+        const auto nextSnapshot = std::next(_currentStateSnapshot);
 
         if (nextSnapshot != std::end(_stateSnapshots)) {
             _stateSnapshots.erase(nextSnapshot, std::end(_stateSnapshots));
@@ -137,7 +137,12 @@ void InspectScreen::_snapshotState()
     }
 
     _stateSnapshots.push_back(snapshot);
-    _currentStateSnapshot = std::end(_stateSnapshots) - 1;
+    _currentStateSnapshot = std::prev(std::end(_stateSnapshots));
+
+    if (_stateSnapshots.size() > _maxStateSnapshots) {
+        _stateSnapshots.pop_front();
+        assert(_stateSnapshots.size() == _maxStateSnapshots);
+    }
 }
 
 void InspectScreen::_goBack()
@@ -161,7 +166,7 @@ void InspectScreen::_goForward()
         return;
     }
 
-    if (_currentStateSnapshot + 1 == std::end(_stateSnapshots)) {
+    if (std::next(_currentStateSnapshot) == std::end(_stateSnapshots)) {
         // can't go forward
         return;
     }

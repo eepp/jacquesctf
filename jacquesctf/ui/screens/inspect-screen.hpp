@@ -9,6 +9,7 @@
 #define _JACQUES_INSPECT_SCREEN_HPP
 
 #include <tuple>
+#include <list>
 
 #include "aliases.hpp"
 #include "stylist.hpp"
@@ -63,7 +64,8 @@ private:
     std::unique_ptr<PacketDecodingErrorDetailsView> _decErrorView;
     CycleWheel<TimestampFormatMode> _tsFormatModeWheel;
     CycleWheel<utils::SizeFormatMode> _dsFormatModeWheel;
-    std::vector<_StateSnapshot> _stateSnapshots;
+    const Size _maxStateSnapshots = 500;
+    std::list<_StateSnapshot> _stateSnapshots;
     decltype(_stateSnapshots)::iterator _currentStateSnapshot;
 };
 
