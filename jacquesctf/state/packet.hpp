@@ -120,13 +120,13 @@ class DataStreamFileState;
  * distant offsets often, we could create an LRU cache of data region
  * caches.
  *
- * There's also an LRU cache for frequently accessed data regions by
- * offset (with dataRegionAtOffsetInPacketBits()): when there's a cache
- * miss, the method calls _ensureOffsetInPacketBitsIsCached() to update
- * the data region and event record caches and then adds the data region
- * entry to the LRU cache. The LRU cache avoids performing a binary
- * search by _dataRegionCacheItBeforeOrAtOffsetInPacketBits() every
- * time.
+ * There's also an LRU cache (offset in packet to data region) for
+ * frequently accessed data regions by offset (with
+ * dataRegionAtOffsetInPacketBits()): when there's a cache miss, the
+ * method calls _ensureOffsetInPacketBitsIsCached() to update the data
+ * region and event record caches and then adds the data region entry to
+ * the LRU cache. The LRU cache avoids performing a binary search by
+ * _dataRegionCacheItBeforeOrAtOffsetInPacketBits() every time.
  */
 class Packet
 {
@@ -307,8 +307,7 @@ private:
         }
 
         return offsetInPacketBits >= _dataRegionCache.front()->segment().offsetInPacketBits() &&
-               offsetInPacketBits < (_dataRegionCache.back()->segment().offsetInPacketBits() +
-                                     _dataRegionCache.back()->segment().size().bits());
+               offsetInPacketBits < _dataRegionCache.back()->segment().endOffsetInPacketBits();
     }
 
     /*
@@ -424,6 +423,15 @@ private:
                                                    std::move(scope),
                                                    elem.type(),
                                                    ContentDataRegion::Value {elem.value()});
+    }
+
+    void _trySetPreviousDataRegionOffsetInPacketBits(DataRegion& dataRegion) const
+    {
+        if (_dataRegionCache.empty()) {
+            return;
+        }
+
+        dataRegion.previousDataRegionOffsetInPacketBits(_dataRegionCache.back()->segment().offsetInPacketBits());
     }
 
 private:

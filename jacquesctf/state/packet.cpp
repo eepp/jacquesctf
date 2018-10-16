@@ -35,7 +35,7 @@ Packet::Packet(DataStreamFileState& dsfState,
     _checkpoints {
         seq, metadata, *_indexEntry, 20011, packetCheckpointsBuildListener,
     },
-    _lruDataRegionCache {1000},
+    _lruDataRegionCache {2000},
     _preambleSize {
         indexEntry.preambleSize() ? *indexEntry.preambleSize() :
         indexEntry.effectiveContentSize()
@@ -261,28 +261,49 @@ void Packet::_cacheContentDataRegionAtCurIt(Scope::SP scope)
     ++_it;
 
     assert(region);
+    this->_trySetPreviousDataRegionOffsetInPacketBits(*region);
     _dataRegionCache.push_back(std::move(region));
 }
 
 void Packet::_tryCachePaddingDataRegionBeforeCurIt(Scope::SP scope)
 {
-    if (!_dataRegionCache.empty()) {
-        const auto& lastDataRegion = _dataRegionCache.back();
+    DataSegment segment;
+    boost::optional<ByteOrder> byteOrder;
 
-        if (lastDataRegion->segment().endOffsetInPacketBits() != this->_itOffsetInPacketBits()) {
-            DataSegment segment {
-                lastDataRegion->segment().endOffsetInPacketBits(),
-                this->_itOffsetInPacketBits() - lastDataRegion->segment().endOffsetInPacketBits()
-            };
-            const auto dataRange = this->_dataRangeForSegment(segment);
-            auto dataRegion = std::make_shared<PaddingDataRegion>(segment,
-                                                                  dataRange,
-                                                                  std::move(scope),
-                                                                  lastDataRegion->byteOrder());
-
-            _dataRegionCache.push_back(std::move(dataRegion));
+    if (_dataRegionCache.empty()) {
+        if (this->_itOffsetInPacketBits() == 0 ||
+                this->_itOffsetInPacketBits() >= _preambleSize.bits()) {
+            return;
         }
+
+        segment = DataSegment {0, this->_itOffsetInPacketBits()};
+    } else {
+        const auto& prevDataRegion = _dataRegionCache.back();
+
+        if (prevDataRegion->segment().endOffsetInPacketBits() ==
+                this->_itOffsetInPacketBits()) {
+            return;
+        }
+
+        assert(prevDataRegion->segment().endOffsetInPacketBits() <
+               this->_itOffsetInPacketBits());
+
+        segment = DataSegment {
+            prevDataRegion->segment().endOffsetInPacketBits(),
+            this->_itOffsetInPacketBits() -
+            prevDataRegion->segment().endOffsetInPacketBits()
+        };
+        byteOrder = prevDataRegion->byteOrder();
     }
+
+    const auto dataRange = this->_dataRangeForSegment(segment);
+    auto dataRegion = std::make_shared<PaddingDataRegion>(segment,
+                                                          dataRange,
+                                                          std::move(scope),
+                                                          byteOrder);
+
+    this->_trySetPreviousDataRegionOffsetInPacketBits(*dataRegion);
+    _dataRegionCache.push_back(std::move(dataRegion));
 }
 
 void Packet::_cachePacketPreambleDataRegions()
@@ -397,6 +418,7 @@ void Packet::_cachePacketPreambleDataRegions()
                                                                 dataRange,
                                                                 byteOrder);
 
+            this->_trySetPreviousDataRegionOffsetInPacketBits(*dataRegion);
             _dataRegionCache.push_back(std::move(dataRegion));
         }
     }
@@ -550,6 +572,7 @@ void Packet::_cacheDataRegionsAtCurItUntilError()
                                                                 dataRange,
                                                                 byteOrder);
 
+            this->_trySetPreviousDataRegionOffsetInPacketBits(*dataRegion);
             _dataRegionCache.push_back(std::move(dataRegion));
         }
     }
@@ -710,7 +733,7 @@ const DataRegion& Packet::dataRegionAtOffsetInPacketBits(const Index offsetInPac
                      _lruDataRegionCache.size());
     this->_ensureOffsetInPacketBitsIsCached(offsetInPacketBits);
 
-    const auto it = _dataRegionCacheItBeforeOrAtOffsetInPacketBits(offsetInPacketBits);
+    const auto it = this->_dataRegionCacheItBeforeOrAtOffsetInPacketBits(offsetInPacketBits);
     const auto& dataRegion = **it;
 
     /*

@@ -190,6 +190,15 @@ void DataStreamFileState::gotoPreviousDataRegion()
         return;
     }
 
+    const auto currentDataRegion = this->currentDataRegion();
+
+    assert(currentDataRegion);
+
+    if (currentDataRegion->previousDataRegionOffsetInPacketBits()) {
+        _activePacket->curOffsetInPacketBits(*currentDataRegion->previousDataRegionOffsetInPacketBits());
+        return;
+    }
+
     const auto& prevDataRegion = _activePacket->dataRegionAtOffsetInPacketBits(_activePacket->curOffsetInPacketBits() - 1);
 
     _activePacket->curOffsetInPacketBits(prevDataRegion.segment().offsetInPacketBits());

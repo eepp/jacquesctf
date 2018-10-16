@@ -109,6 +109,16 @@ public:
         return _byteOrder;
     }
 
+    const boost::optional<Index>& previousDataRegionOffsetInPacketBits() const noexcept
+    {
+        return _prevDataRegionOffsetInPacketBits;
+    }
+
+    void previousDataRegionOffsetInPacketBits(const Index offsetInPacketBits)
+    {
+        _prevDataRegionOffsetInPacketBits = offsetInPacketBits;
+    }
+
     bool operator<(const DataRegion& other)
     {
         return _segment < other._segment;
@@ -123,6 +133,7 @@ private:
     virtual void _accept(DataRegionVisitor& visitor) = 0;
 
 private:
+    boost::optional<Index> _prevDataRegionOffsetInPacketBits;
     DataSegment _segment;
     DataRange _dataRange;
     Scope::SP _scope;
