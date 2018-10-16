@@ -30,15 +30,32 @@ public:
                            std::shared_ptr<const Stylist> stylist,
                            std::shared_ptr<State> state);
 
-protected:
+private:
+    struct _StateSnapshot
+    {
+        Index dsfStateIndex;
+        boost::optional<Index> packetIndexInDataStreamFile;
+        Index offsetInPacketBits;
+
+        bool operator==(const _StateSnapshot& other)
+        {
+            return dsfStateIndex == other.dsfStateIndex &&
+                   packetIndexInDataStreamFile == other.packetIndexInDataStreamFile &&
+                   offsetInPacketBits == other.offsetInPacketBits;
+        }
+    };
+
+private:
     void _redraw() override;
     void _resized() override;
     KeyHandlingReaction _handleKey(int key) override;
     void _visibilityChanged() override;
-
-private:
     void _tryShowDecodingError();
     std::tuple<Rectangle, Rectangle> _viewRects() const;
+    void _snapshotState();
+    void _goBack();
+    void _goForward();
+    void _restoreStateSnapshot(const _StateSnapshot& snapshot);
 
 private:
     std::unique_ptr<EventRecordTableView> _ertView;
@@ -46,6 +63,8 @@ private:
     std::unique_ptr<PacketDecodingErrorDetailsView> _decErrorView;
     CycleWheel<TimestampFormatMode> _tsFormatModeWheel;
     CycleWheel<utils::SizeFormatMode> _dsFormatModeWheel;
+    std::vector<_StateSnapshot> _stateSnapshots;
+    decltype(_stateSnapshots)::iterator _currentStateSnapshot;
 };
 
 } // namespace jacques

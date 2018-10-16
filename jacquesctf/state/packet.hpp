@@ -146,6 +146,8 @@ public:
                            Index endOffsetInPacketBits);
     const DataRegion& dataRegionAtOffsetInPacketBits(Index offsetInPacketBits);
     void curOffsetInPacketBits(Index offsetInPacketBits);
+    const DataRegion& firstDataRegion();
+    const DataRegion& lastDataRegion();
 
     bool hasData() const noexcept
     {
@@ -183,7 +185,13 @@ public:
             return nullptr;
         }
 
+        // can return `nullptr`
         return scope->eventRecord();
+    }
+
+    const DataRegion *currentDataRegion()
+    {
+        return &this->dataRegionAtOffsetInPacketBits(_curOffsetInPacketBits);
     }
 
     Index curOffsetInPacketBits() const noexcept

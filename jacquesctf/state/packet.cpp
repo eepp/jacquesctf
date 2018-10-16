@@ -111,6 +111,8 @@ void Packet::_ensureOffsetInPacketBitsIsCached(const Index offsetInPacketBits)
 
     const auto& lastEventRecord = *_checkpoints.lastEventRecord();
 
+    assert(_checkpoints.eventRecordCount() > 0);
+
     if (offsetInPacketBits >= lastEventRecord.segment().offsetInPacketBits()) {
         // last event record or after
         this->_ensureEventRecordIsCached(lastEventRecord.indexInPacket());
@@ -124,9 +126,11 @@ void Packet::_ensureOffsetInPacketBitsIsCached(const Index offsetInPacketBits)
         /*
          * There's not even a single checkpoint. The only way this can
          * happen is if the first event record is not decodable (there's
-         * a decoding error).
+         * a decoding error). Let's just cache the whole packet in this
+         * case (preamble + partial first event record + error).
          */
         assert(_checkpoints.error());
+        _it.seekPacket(_indexEntry->offsetInDataStreamBytes());
         this->_cacheDataRegionsAtCurItUntilError();
         return;
     }
@@ -709,9 +713,25 @@ const DataRegion& Packet::dataRegionAtOffsetInPacketBits(const Index offsetInPac
     const auto it = _dataRegionCacheItBeforeOrAtOffsetInPacketBits(offsetInPacketBits);
     const auto& dataRegion = **it;
 
-    assert(dataRegion.segment().offsetInPacketBits() == offsetInPacketBits);
-    theLogger->debug("Adding to LRU cache (offset {} b).", offsetInPacketBits);
-    _lruDataRegionCache.insert(offsetInPacketBits, *it);
+    /*
+     * Add both the requested offset and the actual data region's offset
+     * to the cache so that future requests using this exact offset hit
+     * the cache.
+     */
+    if (!_lruDataRegionCache.contains(offsetInPacketBits)) {
+        theLogger->debug("Adding to LRU cache (offset {} b).",
+                         offsetInPacketBits);
+        _lruDataRegionCache.insert(offsetInPacketBits, *it);
+    }
+
+    const auto drOffsetInPacketBits = dataRegion.segment().offsetInPacketBits();
+
+    if (!_lruDataRegionCache.contains(drOffsetInPacketBits)) {
+        theLogger->debug("Adding to LRU cache (offset {} b).",
+                         drOffsetInPacketBits);
+        _lruDataRegionCache.insert(drOffsetInPacketBits, *it);
+    }
+
     return dataRegion;
 }
 
@@ -728,6 +748,18 @@ void Packet::curOffsetInPacketBits(const Index offsetInPacketBits)
     _curOffsetInPacketBits = offsetInPacketBits;
     _state->_notify(CurOffsetInPacketChangedMessage {oldOffsetInPacketBits,
                                                      _curOffsetInPacketBits});
+}
+
+const DataRegion& Packet::lastDataRegion()
+{
+    // request the packet's last bit: then we know we have the last data region
+    return this->dataRegionAtOffsetInPacketBits(_indexEntry->effectiveTotalSize().bits() - 1);
+}
+
+const DataRegion& Packet::firstDataRegion()
+{
+    // request the packet's last bit: then we know we have the last data region
+    return this->dataRegionAtOffsetInPacketBits(0);
 }
 
 } // namespace jacques

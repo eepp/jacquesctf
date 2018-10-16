@@ -52,10 +52,22 @@ DataStreamFileState::~DataStreamFileState()
 
 void DataStreamFileState::gotoOffsetBits(const Index offsetBits)
 {
-}
+    if (!_dataStreamFile.hasOffsetBits(offsetBits)) {
+        return;
+    }
 
-void DataStreamFileState::gotoOffsetBytes(const Index offsetBytes)
-{
+    const auto& packetIndexEntry = _dataStreamFile.packetIndexEntryContainingOffsetBits(offsetBits);
+
+    this->gotoPacket(packetIndexEntry.indexInDataStream());
+
+    DataRegions dataRegions;
+    const auto offsetInPacketBits = offsetBits -
+                                    packetIndexEntry.offsetInDataStreamBits();
+
+    _activePacket->appendDataRegions(dataRegions, offsetInPacketBits,
+                                     offsetInPacketBits + 1);
+    assert(dataRegions.size() == 1);
+    _activePacket->curOffsetInPacketBits(dataRegions.front()->segment().offsetInPacketBits());
 }
 
 void DataStreamFileState::_gotoPacket(const Index index)
@@ -178,17 +190,9 @@ void DataStreamFileState::gotoPreviousDataRegion()
         return;
     }
 
-    DataRegions dataRegions;
+    const auto& prevDataRegion = _activePacket->dataRegionAtOffsetInPacketBits(_activePacket->curOffsetInPacketBits() - 1);
 
-    _activePacket->appendDataRegions(dataRegions,
-                                     _activePacket->curOffsetInPacketBits() - 1,
-                                     _activePacket->curOffsetInPacketBits());
-
-    if (dataRegions.empty()) {
-        return;
-    }
-
-    _activePacket->curOffsetInPacketBits(dataRegions.front()->segment().offsetInPacketBits());
+    _activePacket->curOffsetInPacketBits(prevDataRegion.segment().offsetInPacketBits());
 }
 
 void DataStreamFileState::gotoNextDataRegion()
@@ -204,17 +208,7 @@ void DataStreamFileState::gotoNextDataRegion()
         return;
     }
 
-    DataRegions dataRegions;
-
-    _activePacket->appendDataRegions(dataRegions,
-                                     currentDataRegion->segment().endOffsetInPacketBits(),
-                                     currentDataRegion->segment().endOffsetInPacketBits() + 1);
-
-    if (dataRegions.empty()) {
-        return;
-    }
-
-    _activePacket->curOffsetInPacketBits(dataRegions.front()->segment().offsetInPacketBits());
+    _activePacket->curOffsetInPacketBits(currentDataRegion->segment().endOffsetInPacketBits());
 }
 
 void DataStreamFileState::gotoPacketContext()
@@ -238,16 +232,7 @@ void DataStreamFileState::gotoLastDataRegion()
         return;
     }
 
-    // request the packet's last bit: then we know we have the last data region
-    DataRegions dataRegions;
-    const auto effectiveTotalSize = _activePacket->indexEntry().effectiveTotalSize();
-
-    _activePacket->appendDataRegions(dataRegions,
-                                     effectiveTotalSize.bits() - 1,
-                                     effectiveTotalSize.bits());
-
-    assert(!dataRegions.empty());
-    _activePacket->curOffsetInPacketBits(dataRegions.back()->segment().offsetInPacketBits());
+    _activePacket->curOffsetInPacketBits(_activePacket->lastDataRegion().segment().offsetInPacketBits());
 }
 
 bool DataStreamFileState::search(const SearchQuery& query)

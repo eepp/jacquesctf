@@ -68,6 +68,8 @@ void HelpView::_buildRows()
         _KeyRow {"+, =, Space", "Go to next event record"},
         _KeyRow {"F7", "Go to the previous 10th event record"},
         _KeyRow {"F8", "Go to the next 10th event record"},
+        _KeyRow {"Bksp, 9", "Go back in history"},
+        _KeyRow {"0", "Go forward in history"},
         _KeyRow {"/, g", "Search/go to (see syntax below)"},
         _KeyRow {"n", "Repeat previous search"},
         _KeyRow {"N", "Repeat previous search in reverse direction"},

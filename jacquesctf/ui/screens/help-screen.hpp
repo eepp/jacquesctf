@@ -25,7 +25,7 @@ public:
                         std::shared_ptr<const Stylist> stylist,
                         std::shared_ptr<State> state);
 
-protected:
+private:
     void _redraw() override;
     void _resized() override;
     KeyHandlingReaction _handleKey(int key) override;

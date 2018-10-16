@@ -6,6 +6,7 @@
  */
 
 #include <cassert>
+#include <algorithm>
 #include <unistd.h>
 
 #include "data-stream-file.hpp"
@@ -145,6 +146,12 @@ void DataStreamFile::_buildIndex(const BuildIndexProgressFunc& progressFunc,
 
                 state.reset();
 
+                /*
+                 * If the effective total size is not the expected total
+                 * size, then it covers the whole file anyway, so
+                 * `nextOffsetBytes` below will be equal to
+                 * _fileSize.bytes().
+                 */
                 const auto nextOffsetBytes = offsetBytes +
                                              _index.back().effectiveTotalSize().bytes();
 
@@ -253,6 +260,31 @@ void DataStreamFile::_buildIndex(const BuildIndexProgressFunc& progressFunc,
             this->_addPacketIndexEntry(offsetBytes, state, true);
         }
     }
+}
+
+bool DataStreamFile::hasOffsetBits(const Index offsetBits)
+{
+    if (_fileSize == 0) {
+        return false;
+    }
+
+    assert(!_index.empty());
+
+    return offsetBits < _index.back().endOffsetInDataStreamBits();
+}
+
+const PacketIndexEntry& DataStreamFile::packetIndexEntryContainingOffsetBits(const Index offsetBits)
+{
+    assert(this->hasOffsetBits(offsetBits));
+
+    const auto it = std::lower_bound(std::begin(_index), std::end(_index),
+                                     offsetBits, [](const auto& entry,
+                                                    const auto offsetBits) {
+        return entry.offsetInDataStreamBits() < offsetBits;
+    });
+
+    assert(it != std::end(_index));
+    return *it;
 }
 
 } // namespace jacques

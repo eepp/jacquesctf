@@ -48,6 +48,16 @@ public:
         return _offsetInDataStreamBytes * 8;
     }
 
+    Index endOffsetInDataStreamBytes() const noexcept
+    {
+        return _offsetInDataStreamBytes + _effectiveTotalSize.bytes();
+    }
+
+    Index endOffsetInDataStreamBits() const noexcept
+    {
+        return this->endOffsetInDataStreamBytes() * 8;
+    }
+
     const boost::optional<DataSize>& preambleSize() const noexcept
     {
         return _preambleSize;

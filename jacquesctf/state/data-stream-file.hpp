@@ -35,6 +35,8 @@ public:
                             yactfr::MemoryMappedFileViewFactory& factory);
     void buildIndex(const BuildIndexProgressFunc& progressFunc,
                     Size step = 1);
+    bool hasOffsetBits(Index offsetBits);
+    const PacketIndexEntry& packetIndexEntryContainingOffsetBits(Index offsetBits);
 
     Size packetCount() const
     {

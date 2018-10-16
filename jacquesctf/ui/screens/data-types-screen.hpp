@@ -33,13 +33,11 @@ public:
     void highlightCurrentDataType();
     void clearHighlight();
 
-protected:
+private:
     void _redraw() override;
     void _resized() override;
     KeyHandlingReaction _handleKey(int key) override;
     void _visibilityChanged() override;
-
-private:
     std::tuple<Rectangle, Rectangle, Rectangle> _viewRects() const;
     void _updateViews();
 

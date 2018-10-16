@@ -36,7 +36,6 @@ public:
                                  std::shared_ptr<PacketCheckpointsBuildListener> packetCheckpointsBuildListener);
     ~DataStreamFileState();
     void gotoOffsetBits(Index offsetBits);
-    void gotoOffsetBytes(Index offsetBytes);
     void gotoPacket(Index index);
     void gotoPreviousPacket();
     void gotoNextPacket();
@@ -57,6 +56,11 @@ public:
     const DataStreamFile& dataStreamFile() const noexcept
     {
         return _dataStreamFile;
+    }
+
+    void gotoOffsetBytes(Index offsetBytes)
+    {
+        return this->gotoOffsetBits(offsetBytes * 8);
     }
 
     bool hasActivePacket() const noexcept
@@ -120,7 +124,7 @@ public:
             return nullptr;
         }
 
-        return &_activePacket->dataRegionAtOffsetInPacketBits(_activePacket->curOffsetInPacketBits());
+        return _activePacket->currentDataRegion();
     }
 
     const Metadata& metadata() const noexcept
