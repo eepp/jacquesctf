@@ -109,17 +109,6 @@ bool State::search(const SearchQuery& query)
     return this->activeDataStreamFileState().search(query);
 }
 
-bool State::search(const std::string& queryStr)
-{
-    const auto query = SearchParser {}.parse(queryStr);
-
-    if (!query) {
-        return false;
-    }
-
-    return this->search(*query);
-}
-
 StateObserverGuard::StateObserverGuard(State& state,
                                        const State::Observer& observer) :
     _state {&state}

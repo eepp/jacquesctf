@@ -26,6 +26,7 @@ InspectScreen::InspectScreen(const Rectangle& rect, const Config& cfg,
     _decErrorView {
         std::make_unique<PacketDecodingErrorDetailsView>(rect, stylist, state)
     },
+    _searchController {*this, stylist},
     _tsFormatModeWheel {
         TimestampFormatMode::LONG,
         TimestampFormatMode::NS_FROM_ORIGIN,
@@ -207,7 +208,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 
     case '#':
     case '`':
-        _decErrorView->isVisible(true);
+        this->_tryShowDecodingError();
         break;
 
     case 't':
@@ -245,19 +246,40 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         this->_snapshotState();
         break;
 
-#if 0
     case '/':
     case 'g':
     {
-        _searchView->isVisible(true);
+        auto query = _searchController.start();
 
-        auto input = _searchView->input();
+        if (!query) {
+            // canceled or invalid
+            _ertView->redraw();
+            break;
+        }
 
-        _searchView->isVisible(false);
+        this->_state().search(*query);
+
+        /*
+         * If we didn't move, the state snapshot will be identical and
+         * will be not be pushed to the state snapshot list.
+         */
+        this->_snapshotState();
+
+        _lastQuery = std::move(query);
         _ertView->redraw();
         break;
     }
-#endif
+
+    case 'n':
+    case '\r':
+        if (!_lastQuery) {
+            break;
+        }
+
+        this->_state().search(*_lastQuery);
+        this->_snapshotState();
+        _ertView->redraw();
+        break;
 
     case '-':
         this->_state().gotoPreviousEventRecord();

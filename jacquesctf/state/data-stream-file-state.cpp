@@ -13,6 +13,7 @@
 
 #include "data-stream-file-state.hpp"
 #include "active-packet-changed-message.hpp"
+#include "search-parser.hpp"
 #include "state.hpp"
 #include "io-error.hpp"
 
@@ -64,10 +65,14 @@ void DataStreamFileState::gotoOffsetBits(const Index offsetBits)
     const auto offsetInPacketBits = offsetBits -
                                     packetIndexEntry.offsetInDataStreamBits();
 
-    _activePacket->appendDataRegions(dataRegions, offsetInPacketBits,
-                                     offsetInPacketBits + 1);
-    assert(dataRegions.size() == 1);
-    _activePacket->curOffsetInPacketBits(dataRegions.front()->segment().offsetInPacketBits());
+    if (offsetInPacketBits > packetIndexEntry.effectiveTotalSize()) {
+        // uh oh, that's outside the data we have for this invalid packet
+        this->gotoLastDataRegion();
+        return;
+    }
+
+    const auto& region = _activePacket->dataRegionAtOffsetInPacketBits(offsetInPacketBits);
+    _activePacket->curOffsetInPacketBits(region.segment().offsetInPacketBits());
 }
 
 void DataStreamFileState::_gotoPacket(const Index index)
@@ -246,6 +251,31 @@ void DataStreamFileState::gotoLastDataRegion()
 
 bool DataStreamFileState::search(const SearchQuery& query)
 {
+    if (const auto sQuery = dynamic_cast<const PacketIndexSearchQuery *>(&query)) {
+        long long reqIndex;
+
+        if (sQuery->isDiff()) {
+            reqIndex = static_cast<long long>(_activePacketIndex) +
+                       sQuery->value();
+        } else {
+            // entry is natural (1-based)
+            reqIndex = sQuery->value() - 1;
+        }
+
+        if (reqIndex < 0) {
+            return false;
+        }
+
+        const auto index = static_cast<Index>(reqIndex);
+
+        if (index >= _dataStreamFile.packetCount()) {
+            return false;
+        }
+
+        this->gotoPacket(index);
+        return true;
+    }
+
     return false;
 }
 

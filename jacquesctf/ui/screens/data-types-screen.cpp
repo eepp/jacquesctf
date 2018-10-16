@@ -318,16 +318,14 @@ KeyHandlingReaction DataTypesScreen::_handleKey(const int key)
             break;
         }
 
-        if (query) {
-            _lastQuery = nullptr;
+        _lastQuery = nullptr;
 
-            if (const auto sQuery = dynamic_cast<const EventRecordTypeNameSearchQuery *>(query.get())) {
-                _ertTableView->selectEventRecordType(sQuery->pattern());
-                _lastQuery.reset(sQuery);
-                query.release();
-            } else if (const auto sQuery = dynamic_cast<const EventRecordTypeIdSearchQuery *>(query.get())) {
-                _ertTableView->selectEventRecordType(static_cast<yactfr::TypeId>(sQuery->value()));
-            }
+        if (const auto sQuery = dynamic_cast<const EventRecordTypeNameSearchQuery *>(query.get())) {
+            _ertTableView->selectEventRecordType(sQuery->pattern());
+            _lastQuery.reset(sQuery);
+            query.release();
+        } else if (const auto sQuery = dynamic_cast<const EventRecordTypeIdSearchQuery *>(query.get())) {
+            _ertTableView->selectEventRecordType(static_cast<yactfr::TypeId>(sQuery->value()));
         }
 
         this->_updateViews();

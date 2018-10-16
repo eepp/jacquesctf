@@ -36,9 +36,10 @@ private:
 class SimpleValueSearchQuery :
     public SearchQuery
 {
-public:
-    SimpleValueSearchQuery(bool isDiff, long long value);
+protected:
+    explicit SimpleValueSearchQuery(bool isDiff, long long value);
 
+public:
     long long value() const
     {
         return _value;
@@ -52,21 +53,21 @@ class PacketIndexSearchQuery :
     public SimpleValueSearchQuery
 {
 public:
-    PacketIndexSearchQuery(bool isDiff, long long value);
+    explicit PacketIndexSearchQuery(bool isDiff, long long value);
 };
 
 class EventRecordIndexSearchQuery :
     public SimpleValueSearchQuery
 {
 public:
-    EventRecordIndexSearchQuery(bool isDiff, long long value);
+    explicit EventRecordIndexSearchQuery(bool isDiff, long long value);
 };
 
 class PacketSeqNumSearchQuery :
     public SimpleValueSearchQuery
 {
 public:
-    PacketSeqNumSearchQuery(bool isDiff, long long value);
+    explicit PacketSeqNumSearchQuery(bool isDiff, long long value);
 };
 
 class OffsetSearchQuery :
@@ -86,8 +87,8 @@ public:
     };
 
 public:
-    OffsetSearchQuery(bool isDiff, long long value, Unit unit,
-                       Target target);
+    explicit OffsetSearchQuery(bool isDiff, long long value, Unit unit,
+                               Target target);
 
     Unit unit() const
     {
@@ -115,7 +116,7 @@ public:
     };
 
 public:
-    TimestampSearchQuery(bool isDiff, long long value, Unit unit);
+    explicit TimestampSearchQuery(bool isDiff, long long value, Unit unit);
 
     Unit unit() const
     {
@@ -130,7 +131,7 @@ class EventRecordTypeNameSearchQuery :
     public SearchQuery
 {
 public:
-    EventRecordTypeNameSearchQuery(std::string&& pattern);
+    explicit EventRecordTypeNameSearchQuery(std::string&& pattern);
 
     const std::string& pattern() const
     {
@@ -150,7 +151,7 @@ class EventRecordTypeIdSearchQuery :
     public SimpleValueSearchQuery
 {
 public:
-    EventRecordTypeIdSearchQuery(long long value);
+    explicit EventRecordTypeIdSearchQuery(long long value);
 };
 
 class SearchParser

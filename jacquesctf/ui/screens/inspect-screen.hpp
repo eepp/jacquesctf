@@ -20,6 +20,7 @@
 #include "inspect-screen.hpp"
 #include "screen.hpp"
 #include "cycle-wheel.hpp"
+#include "search-controller.hpp"
 
 namespace jacques {
 
@@ -62,6 +63,8 @@ private:
     std::unique_ptr<EventRecordTableView> _ertView;
     std::unique_ptr<DataTypePathView> _dtPathView;
     std::unique_ptr<PacketDecodingErrorDetailsView> _decErrorView;
+    SearchController _searchController;
+    std::unique_ptr<const SearchQuery> _lastQuery;
     CycleWheel<TimestampFormatMode> _tsFormatModeWheel;
     CycleWheel<utils::SizeFormatMode> _dsFormatModeWheel;
     const Size _maxStateSnapshots = 500;

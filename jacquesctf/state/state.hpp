@@ -55,7 +55,6 @@ public:
     void gotoPreviousDataStreamFile();
     void gotoNextDataStreamFile();
     bool search(const SearchQuery& query);
-    bool search(const std::string& query);
 
     DataStreamFileState& activeDataStreamFileState() const
     {
