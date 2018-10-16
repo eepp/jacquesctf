@@ -31,9 +31,11 @@
 #include "packet-checkpoints-build-listener.hpp"
 #include "data-size.hpp"
 #include "logging.hpp"
+
 #include "data-region.hpp"
 #include "padding-data-region.hpp"
 #include "content-data-region.hpp"
+#include "error-data-region.hpp"
 
 namespace jacques {
 
@@ -350,12 +352,12 @@ static bool tryStartInteractive(const Config& cfg)
                          ", " << region.segment().offsetInPacketBits() + region.segment().size().bits() <<
                          "[ (" << region.segment().size().bits() << ")";
 
-            if (region.hasScope()) {
+            if (region.scope()) {
                 std::cout << " {scope " <<
-                             static_cast<int>(region.scope().scope()) <<
-                             " [" << region.scope().segment().offsetInPacketBits() <<
-                             ", " << region.scope().segment().offsetInPacketBits() + region.scope().segment().size().bits() <<
-                             "[ (" << region.scope().segment().size().bits() << ")}";
+                             static_cast<int>(region.scope()->scope()) <<
+                             " [" << region.scope()->segment().offsetInPacketBits() <<
+                             ", " << region.scope()->segment().offsetInPacketBits() + region.scope()->segment().size().bits() <<
+                             "[ (" << region.scope()->segment().size().bits() << ")}";
             }
 
             if (region.byteOrder()) {
@@ -367,23 +369,25 @@ static bool tryStartInteractive(const Config& cfg)
             }
 
             if (auto sRegion = dynamic_cast<const ContentDataRegion *>(&region)) {
-                std::cout << " CR ";
+                std::cout << " content ";
 
                 if (sRegion->value()) {
                     boost::apply_visitor(PrintVisitor {}, *sRegion->value());
                 }
             } else if (auto sRegion = dynamic_cast<const PaddingDataRegion *>(&region)) {
-                std::cout << " PR";
+                std::cout << " padding";
+            } else if (auto sRegion = dynamic_cast<const ErrorDataRegion *>(&region)) {
+                std::cout << " error";
             }
 
             std::cout << std::endl;
         };
         finiScreen();
-        std::vector<DataRegion::SP> regions;
+        DataRegions regions;
 
         auto& packet = state->activeDataStreamFileState().activePacket();
 
-        //packet.appendDataRegionsAtOffsetInPacketBits(regions, 0, 7);
+        packet.appendDataRegions(regions, 0, 672);
 
         for (const auto& region : regions) {
             printRegion(*region);
