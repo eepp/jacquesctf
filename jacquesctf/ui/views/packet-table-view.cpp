@@ -137,9 +137,9 @@ void PacketTableView::_drawRow(const Index index)
     Index at = 4;
 
     if (_row.size() >= at + 1) {
-        if (entry.tsBegin()) {
+        if (entry.beginningTimestamp()) {
             _row[4]->na(false);
-            static_cast<TimestampTableViewCell&>(*_row[4]).ts(*entry.tsBegin());
+            static_cast<TimestampTableViewCell&>(*_row[4]).ts(*entry.beginningTimestamp());
         } else {
             _row[4]->na(true);
         }
@@ -148,9 +148,9 @@ void PacketTableView::_drawRow(const Index index)
     }
 
     if (_row.size() >= at + 1) {
-        if (entry.tsEnd()) {
+        if (entry.endTimestamp()) {
             _row[at]->na(false);
-            static_cast<TimestampTableViewCell&>(*_row[at]).ts(*entry.tsEnd());
+            static_cast<TimestampTableViewCell&>(*_row[at]).ts(*entry.endTimestamp());
         } else {
             _row[at]->na(true);
         }
@@ -159,13 +159,13 @@ void PacketTableView::_drawRow(const Index index)
     }
 
     if (_row.size() >= at + 1) {
-        if (entry.tsBegin() && entry.tsEnd()) {
+        if (entry.beginningTimestamp() && entry.endTimestamp()) {
             _row[at]->na(false);
 
             auto& cell = static_cast<DurationTableViewCell&>(*_row[at]);
 
-            cell.tsBegin(*entry.tsBegin());
-            cell.tsEnd(*entry.tsEnd());
+            cell.beginningTimestamp(*entry.beginningTimestamp());
+            cell.endTimestamp(*entry.endTimestamp());
         } else {
             _row[at]->na(true);
         }

@@ -32,8 +32,8 @@ public:
                               const DataSize& effectiveContentSize,
                               const yactfr::DataStreamType *dst,
                               boost::optional<Index> dataStreamId,
-                              boost::optional<Timestamp> tsBegin,
-                              boost::optional<Timestamp> tsEnd,
+                              boost::optional<Timestamp> beginningTimestamp,
+                              boost::optional<Timestamp> endTimestamp,
                               boost::optional<Index> seqNum,
                               boost::optional<Size> discardedEventRecordCounter,
                               bool isInvalid);
@@ -88,14 +88,14 @@ public:
         return _effectiveContentSize;
     }
 
-    const boost::optional<Timestamp>& tsBegin() const noexcept
+    const boost::optional<Timestamp>& beginningTimestamp() const noexcept
     {
-        return _tsBegin;
+        return _beginningTimestamp;
     }
 
-    const boost::optional<Timestamp>& tsEnd() const noexcept
+    const boost::optional<Timestamp>& endTimestamp() const noexcept
     {
-        return _tsEnd;
+        return _endTimestamp;
     }
 
     const boost::optional<Index>& seqNum() const noexcept
@@ -170,8 +170,8 @@ private:
     const DataSize _effectiveContentSize;
     const yactfr::DataStreamType *_dst;
     const boost::optional<Index> _dataStreamId;
-    const boost::optional<Timestamp> _tsBegin;
-    const boost::optional<Timestamp> _tsEnd;
+    const boost::optional<Timestamp> _beginningTimestamp;
+    const boost::optional<Timestamp> _endTimestamp;
     const boost::optional<Index> _seqNum;
     const boost::optional<Size> _discardedEventRecordCounter;
     bool _isInvalid;

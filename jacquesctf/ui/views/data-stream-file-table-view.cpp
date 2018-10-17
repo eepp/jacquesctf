@@ -124,9 +124,9 @@ void DataStreamFileTableView::_drawRow(const Index index)
         lastEntry = &dsf.packetIndexEntry(dsf.packetCount() - 1);
     }
 
-    if (hasOnePacket && firstEntry->tsBegin()) {
+    if (hasOnePacket && firstEntry->beginningTimestamp()) {
         _row[3]->na(false);
-        static_cast<TimestampTableViewCell&>(*_row[3]).ts(*firstEntry->tsBegin());
+        static_cast<TimestampTableViewCell&>(*_row[3]).ts(*firstEntry->beginningTimestamp());
     } else {
         _row[3]->na(true);
     }
@@ -134,9 +134,9 @@ void DataStreamFileTableView::_drawRow(const Index index)
     Index at = 4;
 
     if (_row.size() >= at + 1) {
-        if (hasOnePacket && lastEntry->tsEnd()) {
+        if (hasOnePacket && lastEntry->endTimestamp()) {
             _row[at]->na(false);
-            static_cast<TimestampTableViewCell&>(*_row[at]).ts(*lastEntry->tsEnd());
+            static_cast<TimestampTableViewCell&>(*_row[at]).ts(*lastEntry->endTimestamp());
         } else {
             _row[at]->na(true);
         }
@@ -145,12 +145,13 @@ void DataStreamFileTableView::_drawRow(const Index index)
     }
 
     if (_row.size() >= at + 1) {
-        if (hasOnePacket && firstEntry->tsBegin() && lastEntry->tsEnd()) {
+        if (hasOnePacket && firstEntry->beginningTimestamp() &&
+                lastEntry->endTimestamp()) {
             _row[at]->na(false);
 
             auto& cell = static_cast<DurationTableViewCell&>(*_row[at]);
-            cell.tsBegin(*firstEntry->tsBegin());
-            cell.tsEnd(*lastEntry->tsEnd());
+            cell.beginningTimestamp(*firstEntry->beginningTimestamp());
+            cell.endTimestamp(*lastEntry->endTimestamp());
         } else {
             _row[at]->na(true);
         }

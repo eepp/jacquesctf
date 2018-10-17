@@ -145,6 +145,7 @@ public:
 private:
     Packet::SP _packet(Index index, PacketCheckpointsBuildListener& buildListener);
     void _gotoPacket(Index index);
+    bool _gotoNextEventRecordWithProperty(const std::function<bool (const EventRecord&)>& compareFunc);
 
 private:
     State *_state;

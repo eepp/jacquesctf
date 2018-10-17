@@ -273,6 +273,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 
     case 'n':
     case '\r':
+    case '\n':
         if (!_lastQuery) {
             break;
         }

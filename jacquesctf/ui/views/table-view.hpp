@@ -328,34 +328,34 @@ class DurationTableViewCell :
 public:
     explicit DurationTableViewCell(TimestampFormatMode tsFormatMode);
 
-    const Timestamp& tsBegin() const noexcept
+    const Timestamp& beginningTimestamp() const noexcept
     {
-        return _tsBegin;
+        return _beginningTimestamp;
     }
 
-    void tsBegin(const Timestamp& tsBegin)
+    void beginningTimestamp(const Timestamp& beginningTimestamp)
     {
-        _tsBegin = tsBegin;
+        _beginningTimestamp = beginningTimestamp;
     }
 
-    const Timestamp& tsEnd() const noexcept
+    const Timestamp& endTimestamp() const noexcept
     {
-        return _tsEnd;
+        return _endTimestamp;
     }
 
-    void tsEnd(const Timestamp& tsEnd)
+    void endTimestamp(const Timestamp& endTimestamp)
     {
-        _tsEnd = tsEnd;
+        _endTimestamp = endTimestamp;
     }
 
     Duration duration() const noexcept
     {
-        return _tsEnd - _tsBegin;
+        return _endTimestamp - _beginningTimestamp;
     }
 
     bool cycleDiffAvailable() const noexcept
     {
-        return _tsBegin.frequency() == _tsEnd.frequency();
+        return _beginningTimestamp.frequency() == _endTimestamp.frequency();
     }
 
     long long cycleDiff() const noexcept
@@ -366,7 +366,7 @@ public:
         const auto nsDiff = static_cast<double>(this->duration().ns());
         const auto sDiff = nsDiff / 1'000'000'000.;
 
-        return static_cast<long long>(sDiff * _tsBegin.frequency());
+        return static_cast<long long>(sDiff * _beginningTimestamp.frequency());
     }
 
     TimestampFormatMode formatMode() const
@@ -380,8 +380,8 @@ public:
     }
 
 private:
-    Timestamp _tsBegin,
-              _tsEnd;
+    Timestamp _beginningTimestamp,
+              _endTimestamp;
     TimestampFormatMode _formatMode;
 };
 

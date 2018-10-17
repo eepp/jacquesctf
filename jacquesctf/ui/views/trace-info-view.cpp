@@ -114,8 +114,8 @@ void TraceInfoView::_buildTraceInfoRows(const Metadata &metadata)
 
             const auto& firstPacketIndexEntry = dsFile.packetIndexEntries().front();
             const auto& lastPacketIndexEntry = dsFile.packetIndexEntries().back();
-            const auto& dsfFirstTs = firstPacketIndexEntry.tsBegin();
-            const auto& dsfLastTs = lastPacketIndexEntry.tsEnd();
+            const auto& dsfFirstTs = firstPacketIndexEntry.beginningTimestamp();
+            const auto& dsfLastTs = lastPacketIndexEntry.endTimestamp();
 
             if (dsfFirstTs) {
                 if (!firstTs || *dsfFirstTs < *firstTs) {

@@ -57,8 +57,8 @@ void PacketsScreen::_visibilityChanged()
 
 void PacketsScreen::_resized()
 {
-    _searchController.parentScreenResized(*this);
     _ptView->moveAndResize(this->rect());
+    _searchController.parentScreenResized(*this);
 }
 
 class AnalyzeAllPacketsProgressUpdater :
@@ -162,11 +162,29 @@ KeyHandlingReaction PacketsScreen::_handleKey(const int key)
     case '/':
     case 'g':
     {
-        const auto result = _searchController.start();
+        auto query = _searchController.start();
 
+        if (!query) {
+            // canceled or invalid
+            _ptView->redraw();
+            break;
+        }
+
+        this->_state().search(*query);
+
+        _lastQuery = std::move(query);
         _ptView->redraw();
         break;
     }
+
+    case 'n':
+        if (!_lastQuery) {
+            break;
+        }
+
+        this->_state().search(*_lastQuery);
+        _ptView->redraw();
+        break;
 
     case '\n':
     case '\r':

@@ -249,6 +249,65 @@ void DataStreamFileState::gotoLastDataRegion()
     _activePacket->curOffsetInPacketBits(_activePacket->lastDataRegion().segment().offsetInPacketBits());
 }
 
+bool DataStreamFileState::_gotoNextEventRecordWithProperty(const std::function<bool (const EventRecord&)>& compareFunc)
+{
+    if (!_activePacket) {
+        return false;
+    }
+
+    Index startPacketIndex = _activePacketIndex + 1;
+    boost::optional<Index> startErIndex = 0;
+
+    if (_activePacket->eventRecordCount() > 0) {
+        const auto currentEventRecord = _activePacket->currentEventRecord();
+        boost::optional<Index> erIndex;
+
+        if (currentEventRecord) {
+            if (currentEventRecord->indexInPacket() <
+                    _activePacket->eventRecordCount() - 1) {
+                // skip current event record
+                startPacketIndex = _activePacketIndex;
+                startErIndex = currentEventRecord->indexInPacket() + 1;
+            }
+        } else {
+            const auto& firstEr = _activePacket->eventRecordAtIndexInPacket(0);
+
+            if (_activePacket->curOffsetInPacketBits() <
+                    firstEr.segment().offsetInPacketBits()) {
+                // search active packet from beginning
+                startPacketIndex = _activePacketIndex;
+            }
+        }
+    }
+
+    for (auto packetIndex = startPacketIndex;
+            packetIndex < _dataStreamFile.packetCount(); ++packetIndex) {
+        auto packet = this->_packet(packetIndex,
+                                    *_packetCheckpointsBuildListener);
+
+        assert(packet);
+
+        const auto iterStartErIndex = startErIndex ? *startErIndex : 0;
+
+        startErIndex = boost::none;
+        assert(iterStartErIndex < packet->eventRecordCount());
+
+        for (Index erIndex = iterStartErIndex; erIndex < packet->eventRecordCount(); ++erIndex) {
+            const auto& eventRecord = packet->eventRecordAtIndexInPacket(erIndex);
+
+            if (compareFunc(eventRecord)) {
+                const auto offsetInPacketBits = eventRecord.segment().offsetInPacketBits();
+
+                this->gotoPacket(packetIndex);
+                _activePacket->curOffsetInPacketBits(offsetInPacketBits);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 bool DataStreamFileState::search(const SearchQuery& query)
 {
     if (const auto sQuery = dynamic_cast<const PacketIndexSearchQuery *>(&query)) {
@@ -393,6 +452,26 @@ bool DataStreamFileState::search(const SearchQuery& query)
         }
 
         return true;
+    } else if (const auto sQuery = dynamic_cast<const EventRecordTypeIdSearchQuery *>(&query)) {
+        if (sQuery->value() < 0) {
+            return false;
+        }
+
+        const auto compareFunc = [sQuery](const EventRecord& eventRecord) {
+            return eventRecord.type().id() == static_cast<Index>(sQuery->value());
+        };
+
+        return this->_gotoNextEventRecordWithProperty(compareFunc);
+    } else if (const auto sQuery = dynamic_cast<const EventRecordTypeNameSearchQuery *>(&query)) {
+        const auto compareFunc = [sQuery](const EventRecord& eventRecord) {
+            if (!eventRecord.type().name()) {
+                return false;
+            }
+
+            return sQuery->matches(*eventRecord.type().name());
+        };
+
+        return this->_gotoNextEventRecordWithProperty(compareFunc);
     }
 
     return false;

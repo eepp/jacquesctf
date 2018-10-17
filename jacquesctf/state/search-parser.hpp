@@ -24,7 +24,7 @@ protected:
 public:
     virtual ~SearchQuery();
 
-    bool isDiff() const
+    bool isDiff() const noexcept
     {
         return _isDiff;
     }
@@ -40,7 +40,7 @@ protected:
     explicit SimpleValueSearchQuery(bool isDiff, long long value);
 
 public:
-    long long value() const
+    long long value() const noexcept
     {
         return _value;
     }
@@ -83,7 +83,7 @@ public:
 public:
     explicit OffsetSearchQuery(bool isDiff, long long value, Target target);
 
-    Target target() const
+    Target target() const noexcept
     {
         return _target;
     }
@@ -105,7 +105,7 @@ public:
 public:
     explicit TimestampSearchQuery(bool isDiff, long long value, Unit unit);
 
-    Unit unit() const
+    Unit unit() const noexcept
     {
         return _unit;
     }
@@ -120,12 +120,12 @@ class EventRecordTypeNameSearchQuery :
 public:
     explicit EventRecordTypeNameSearchQuery(std::string&& pattern);
 
-    const std::string& pattern() const
+    const std::string& pattern() const noexcept
     {
         return _pattern;
     }
 
-    bool matches(const std::string& candidate)
+    bool matches(const std::string& candidate) const noexcept
     {
         return utils::globMatch(_pattern, candidate);
     }

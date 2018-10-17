@@ -172,8 +172,8 @@ TimestampTableViewCell::TimestampTableViewCell(const TimestampFormatMode formatM
 
 DurationTableViewCell::DurationTableViewCell(const TimestampFormatMode formatMode) :
     TableViewCell {TextAlignment::RIGHT},
-    _tsBegin {0, 1'000'000'000ULL, 0, 0},
-    _tsEnd {0, 1'000'000'000ULL, 0, 0},
+    _beginningTimestamp {0, 1'000'000'000ULL, 0, 0},
+    _endTimestamp {0, 1'000'000'000ULL, 0, 0},
     _formatMode {formatMode}
 {
 }

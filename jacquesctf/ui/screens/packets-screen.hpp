@@ -37,6 +37,7 @@ protected:
 private:
     std::unique_ptr<PacketTableView> _ptView;
     SearchController _searchController;
+    std::unique_ptr<const SearchQuery> _lastQuery;
     CycleWheel<TimestampFormatMode> _tsFormatModeWheel;
     CycleWheel<utils::SizeFormatMode> _dsFormatModeWheel;
 };
