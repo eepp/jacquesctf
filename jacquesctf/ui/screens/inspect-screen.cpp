@@ -40,13 +40,13 @@ InspectScreen::InspectScreen(const Rectangle& rect, const Config& cfg,
     _currentStateSnapshot {std::end(_stateSnapshots)}
 {
     Rectangle ertViewRect;
-    Rectangle dtPathViewRect;
+    Rectangle drInfoViewRect;
 
-    std::tie(ertViewRect, dtPathViewRect) = this->_viewRects();
+    std::tie(ertViewRect, drInfoViewRect) = this->_viewRects();
     _ertView = std::make_unique<EventRecordTableView>(ertViewRect, stylist,
                                                       state);
-    _dtPathView = std::make_unique<DataTypePathView>(dtPathViewRect,
-                                                     stylist, state);
+    _drInfoView = std::make_unique<DataRegionInfoView>(drInfoViewRect,
+                                                       stylist, state);
     _decErrorView->isVisible(false);
     _ertView->focus();
 }
@@ -62,18 +62,18 @@ std::tuple<Rectangle, Rectangle> InspectScreen::_viewRects() const
 void InspectScreen::_redraw()
 {
     _ertView->redraw();
-    _dtPathView->redraw();
+    _drInfoView->redraw();
     _decErrorView->redraw();
 }
 
 void InspectScreen::_resized()
 {
     Rectangle ertViewRect;
-    Rectangle dtPathViewRect;
+    Rectangle drInfoViewRect;
 
-    std::tie(ertViewRect, dtPathViewRect) = this->_viewRects();
+    std::tie(ertViewRect, drInfoViewRect) = this->_viewRects();
     _ertView->moveAndResize(ertViewRect);
-    _dtPathView->moveAndResize(dtPathViewRect);
+    _drInfoView->moveAndResize(drInfoViewRect);
     _decErrorView->moveAndResize(Rectangle {{this->rect().pos.x + 4,
                                              this->rect().h - 14},
                                             this->rect().w - 8, 12});
@@ -84,7 +84,7 @@ void InspectScreen::_resized()
 void InspectScreen::_visibilityChanged()
 {
     _ertView->isVisible(this->isVisible());
-    _dtPathView->isVisible(this->isVisible());
+    _drInfoView->isVisible(this->isVisible());
 
     if (this->isVisible()) {
         if (_stateSnapshots.empty()) {
@@ -93,7 +93,7 @@ void InspectScreen::_visibilityChanged()
         }
 
         _ertView->redraw();
-        _dtPathView->redraw();
+        _drInfoView->redraw();
         this->_tryShowDecodingError();
         _decErrorView->refresh(true);
     }
@@ -193,7 +193,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     if (_decErrorView->isVisible()) {
         _decErrorView->isVisible(false);
         _ertView->redraw();
-        _dtPathView->redraw();
+        _drInfoView->redraw();
     }
 
     switch (key) {
@@ -334,7 +334,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     }
 
     _ertView->refresh();
-    _dtPathView->refresh();
+    _drInfoView->refresh();
 
     /*
      * Touch because the content could be unchanged from the last

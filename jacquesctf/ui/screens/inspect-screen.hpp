@@ -14,7 +14,7 @@
 #include "aliases.hpp"
 #include "stylist.hpp"
 #include "state.hpp"
-#include "data-type-path-view.hpp"
+#include "data-region-info-view.hpp"
 #include "event-record-table-view.hpp"
 #include "packet-decoding-error-details-view.hpp"
 #include "inspect-screen.hpp"
@@ -61,7 +61,7 @@ private:
 
 private:
     std::unique_ptr<EventRecordTableView> _ertView;
-    std::unique_ptr<DataTypePathView> _dtPathView;
+    std::unique_ptr<DataRegionInfoView> _drInfoView;
     std::unique_ptr<PacketDecodingErrorDetailsView> _decErrorView;
     SearchController _searchController;
     std::unique_ptr<const SearchQuery> _lastQuery;

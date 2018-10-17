@@ -5,24 +5,25 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_DATA_TYPE_PATH_VIEW_HPP
-#define _JACQUES_DATA_TYPE_PATH_VIEW_HPP
+#ifndef _JACQUES_DATA_REGION_INFO_VIEW_HPP
+#define _JACQUES_DATA_REGION_INFO_VIEW_HPP
 
 #include "view.hpp"
 
 namespace jacques {
 
-class DataTypePathView :
+class DataRegionInfoView :
     public View
 {
 public:
-    explicit DataTypePathView(const Rectangle& rect,
-                              std::shared_ptr<const Stylist> stylist,
-                              std::shared_ptr<State> state);
+    explicit DataRegionInfoView(const Rectangle& rect,
+                                std::shared_ptr<const Stylist> stylist,
+                                std::shared_ptr<State> state);
 
 private:
     void _stateChanged(const Message& msg) override;
     void _redrawContent() override;
+    void _safePrintScope(yactfr::Scope scope);
 
 private:
     std::shared_ptr<State> _state;
@@ -31,4 +32,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_DATA_TYPE_PATH_VIEW_HPP
+#endif // _JACQUES_DATA_REGION_INFO_VIEW_HPP

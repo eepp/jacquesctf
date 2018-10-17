@@ -383,6 +383,11 @@ private:
 
         getyx(_curWindow, y, x);
         JACQUES_UNUSED(y);
+        assert(x >= 0);
+
+        if (static_cast<Index>(x) >= _contentRectangle.w) {
+            return 0;
+        }
 
         const auto availWidth = _contentRectangle.pos.x + _contentRectangle.w - x;
 
