@@ -38,34 +38,34 @@ endif ()
 add_executable (
     jacquesctf
     config.cpp
+    data/content-data-region.cpp
+    data/data-region-visitor.cpp
+    data/data-region.cpp
+    data/data-segment.cpp
+    data/data-size.cpp
+    data/data-stream-file.cpp
+    data/duration.cpp
+    data/error-data-region.cpp
+    data/event-record.cpp
+    data/memory-mapped-file.cpp
+    data/metadata-store.cpp
+    data/metadata.cpp
+    data/packet-checkpoints-build-listener.cpp
+    data/packet-checkpoints.cpp
+    data/packet-index-entry.cpp
+    data/packet.cpp
+    data/padding-data-region.cpp
+    data/scope.cpp
+    data/timestamp.cpp
     jacques.cpp
     state/active-data-stream-file-changed-message.cpp
     state/active-packet-changed-message.cpp
-    state/content-data-region.cpp
     state/cur-offset-in-packet-changed-message.cpp
-    state/data-region.cpp
-    state/data-region-visitor.cpp
-    state/data-segment.cpp
-    state/data-size.cpp
     state/data-stream-file-state.cpp
-    state/data-stream-file.cpp
-    state/duration.cpp
-    state/error-data-region.cpp
-    state/event-record.cpp
-    state/memory-mapped-file.cpp
     state/message-visitor.cpp
-    state/metadata-store.cpp
-    state/metadata.cpp
-    state/packet-checkpoints-build-listener.cpp
-    state/packet-checkpoints.cpp
-    state/packet-index-entry.cpp
     state/packet-state.cpp
-    state/packet.cpp
-    state/padding-data-region.cpp
-    state/scope.cpp
     state/search-parser.cpp
     state/state.cpp
-    state/timestamp.cpp
     ui/interactive.cpp
     ui/screens/data-stream-files-screen.cpp
     ui/screens/data-types-screen.cpp
@@ -107,6 +107,7 @@ target_include_directories (
     ${CMAKE_CURRENT_SOURCE_DIR}/ui/views
     ${CMAKE_CURRENT_SOURCE_DIR}/ui/screens
     ${CMAKE_CURRENT_SOURCE_DIR}/state
+    ${CMAKE_CURRENT_SOURCE_DIR}/data
     ${CMAKE_SOURCE_DIR}/logging
     ${CURSES_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
