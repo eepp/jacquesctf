@@ -277,14 +277,49 @@ const PacketIndexEntry& DataStreamFile::packetIndexEntryContainingOffsetBits(con
 {
     assert(this->hasOffsetBits(offsetBits));
 
-    const auto it = std::lower_bound(std::begin(_index), std::end(_index),
-                                     offsetBits, [](const auto& entry,
-                                                    const auto offsetBits) {
+    auto it = std::lower_bound(std::begin(_index), std::end(_index),
+                               offsetBits, [](const auto& entry,
+                                              const auto offsetBits) {
         return entry.offsetInDataStreamBits() < offsetBits;
     });
 
     assert(it != std::end(_index));
+
+    if (it->offsetInDataStreamBits() > offsetBits) {
+        assert(it != std::begin(_index));
+        --it;
+    }
+
     return *it;
+}
+
+const PacketIndexEntry *DataStreamFile::packetIndexEntryWithSeqNum(const Index seqNum)
+{
+    if (_index.empty()) {
+        return nullptr;
+    }
+
+    auto it = std::upper_bound(std::begin(_index), std::end(_index),
+                               seqNum, [](const auto seqNum,
+                                          const auto& entry) {
+        if (entry.seqNum()) {
+            return seqNum < *entry.seqNum();
+        }
+
+        return true;
+    });
+
+    --it;
+
+    if (!it->seqNum()) {
+        return nullptr;
+    }
+
+    if (*it->seqNum() != seqNum) {
+        return nullptr;
+    }
+
+    return &(*it);
 }
 
 } // namespace jacques

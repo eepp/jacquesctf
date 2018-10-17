@@ -37,6 +37,7 @@ public:
                     Size step = 1);
     bool hasOffsetBits(Index offsetBits);
     const PacketIndexEntry& packetIndexEntryContainingOffsetBits(Index offsetBits);
+    const PacketIndexEntry *packetIndexEntryWithSeqNum(Index seqNum);
 
     Size packetCount() const
     {

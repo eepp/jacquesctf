@@ -78,6 +78,7 @@ void InspectScreen::_resized()
                                              this->rect().h - 14},
                                             this->rect().w - 8, 12});
     _ertView->centerSelectedRow(false);
+    _searchController.parentScreenResized(*this);
 }
 
 void InspectScreen::_visibilityChanged()

@@ -56,13 +56,6 @@ public:
     explicit PacketIndexSearchQuery(bool isDiff, long long value);
 };
 
-class EventRecordIndexSearchQuery :
-    public SimpleValueSearchQuery
-{
-public:
-    explicit EventRecordIndexSearchQuery(bool isDiff, long long value);
-};
-
 class PacketSeqNumSearchQuery :
     public SimpleValueSearchQuery
 {
@@ -70,16 +63,17 @@ public:
     explicit PacketSeqNumSearchQuery(bool isDiff, long long value);
 };
 
+class EventRecordIndexSearchQuery :
+    public SimpleValueSearchQuery
+{
+public:
+    explicit EventRecordIndexSearchQuery(bool isDiff, long long value);
+};
+
 class OffsetSearchQuery :
     public SimpleValueSearchQuery
 {
 public:
-    enum class Unit
-    {
-        BIT,
-        BYTE,
-    };
-
     enum class Target
     {
         PACKET,
@@ -87,13 +81,7 @@ public:
     };
 
 public:
-    explicit OffsetSearchQuery(bool isDiff, long long value, Unit unit,
-                               Target target);
-
-    Unit unit() const
-    {
-        return _unit;
-    }
+    explicit OffsetSearchQuery(bool isDiff, long long value, Target target);
 
     Target target() const
     {
@@ -101,7 +89,6 @@ public:
     }
 
 private:
-    const Unit _unit;
     const Target _target;
 };
 

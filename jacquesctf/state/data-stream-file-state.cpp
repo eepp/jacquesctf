@@ -61,7 +61,6 @@ void DataStreamFileState::gotoOffsetBits(const Index offsetBits)
 
     this->gotoPacket(packetIndexEntry.indexInDataStream());
 
-    DataRegions dataRegions;
     const auto offsetInPacketBits = offsetBits -
                                     packetIndexEntry.offsetInDataStreamBits();
 
@@ -72,6 +71,7 @@ void DataStreamFileState::gotoOffsetBits(const Index offsetBits)
     }
 
     const auto& region = _activePacket->dataRegionAtOffsetInPacketBits(offsetInPacketBits);
+
     _activePacket->curOffsetInPacketBits(region.segment().offsetInPacketBits());
 }
 
@@ -273,6 +273,125 @@ bool DataStreamFileState::search(const SearchQuery& query)
         }
 
         this->gotoPacket(index);
+        return true;
+    } else if (const auto sQuery = dynamic_cast<const PacketSeqNumSearchQuery *>(&query)) {
+        if (!_activePacket) {
+            return false;
+        }
+
+        long long reqSeqNum;
+
+        if (sQuery->isDiff()) {
+            if (!_activePacket->indexEntry().seqNum()) {
+                return false;
+            }
+
+            reqSeqNum = static_cast<long long>(*_activePacket->indexEntry().seqNum()) +
+                        sQuery->value();
+        } else {
+            reqSeqNum = sQuery->value();
+        }
+
+        if (reqSeqNum < 0) {
+            return false;
+        }
+
+        const auto indexEntry = _dataStreamFile.packetIndexEntryWithSeqNum(static_cast<Index>(reqSeqNum));
+
+        if (!indexEntry) {
+            return false;
+        }
+
+        this->gotoPacket(indexEntry->indexInDataStream());
+        return true;
+    } else if (const auto sQuery = dynamic_cast<const EventRecordIndexSearchQuery *>(&query)) {
+        if (!_activePacket) {
+            return false;
+        }
+
+        long long reqIndex;
+
+        if (sQuery->isDiff()) {
+            const auto curEventRecord = _activePacket->currentEventRecord();
+
+            if (!curEventRecord) {
+                return false;
+            }
+
+            reqIndex = static_cast<long long>(curEventRecord->indexInPacket()) +
+                       sQuery->value();
+        } else {
+            // entry is natural (1-based)
+            reqIndex = sQuery->value() - 1;
+        }
+
+        if (reqIndex < 0) {
+            return false;
+        }
+
+        const auto index = static_cast<Index>(reqIndex);
+
+        if (index >= _activePacket->eventRecordCount()) {
+            return false;
+        }
+
+        const auto& eventRecord = _activePacket->eventRecordAtIndexInPacket(index);
+
+        _activePacket->curOffsetInPacketBits(eventRecord.segment().offsetInPacketBits());
+        return true;
+    } else if (const auto sQuery = dynamic_cast<const OffsetSearchQuery *>(&query)) {
+        long long reqOffsetBits;
+
+        if (sQuery->target() == OffsetSearchQuery::Target::PACKET &&
+                !_activePacket) {
+            return false;
+        }
+
+        if (sQuery->isDiff()) {
+            switch (sQuery->target()) {
+            case OffsetSearchQuery::Target::PACKET:
+                reqOffsetBits = static_cast<long long>(_activePacket->curOffsetInPacketBits()) +
+                                sQuery->value();
+                break;
+
+            case OffsetSearchQuery::Target::DATA_STREAM_FILE:
+            {
+                const auto curPacketOffsetBitsInDataStream = _activePacket->indexEntry().offsetInDataStreamBits();
+
+                reqOffsetBits = static_cast<long long>(curPacketOffsetBitsInDataStream +
+                                                       _activePacket->curOffsetInPacketBits()) +
+                                sQuery->value();
+                break;
+            }
+            }
+        } else {
+            reqOffsetBits = sQuery->value();
+        }
+
+        if (reqOffsetBits < 0) {
+            return false;
+        }
+
+        const auto offsetInPacketBits = static_cast<Index>(reqOffsetBits);
+
+        switch (sQuery->target()) {
+        case OffsetSearchQuery::Target::PACKET:
+        {
+            if (offsetInPacketBits >= _activePacket->indexEntry().effectiveTotalSize()) {
+                return false;
+            }
+
+            const auto& region = _activePacket->dataRegionAtOffsetInPacketBits(offsetInPacketBits);
+
+            _activePacket->curOffsetInPacketBits(region.segment().offsetInPacketBits());
+            break;
+        }
+
+        case OffsetSearchQuery::Target::DATA_STREAM_FILE:
+            this->gotoOffsetBits(offsetInPacketBits);
+            break;
+        }
+
         return true;
     }
 

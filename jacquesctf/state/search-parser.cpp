@@ -46,9 +46,8 @@ PacketSeqNumSearchQuery::PacketSeqNumSearchQuery(const bool isDiff,
 }
 
 OffsetSearchQuery::OffsetSearchQuery(const bool isDiff, const long long value,
-                                     const Unit unit, const Target target) :
+                                     const Target target) :
     SimpleValueSearchQuery {isDiff, value},
-    _unit {unit},
     _target {target}
 {
 }
@@ -272,10 +271,10 @@ std::unique_ptr<const SearchQuery> SearchParser::_parseOffset(std::string::const
         }
     }
 
-    OffsetSearchQuery::Unit unit = OffsetSearchQuery::Unit::BIT;
+    bool unitIsBytes = false;
 
     if (*it == '$') {
-        unit = OffsetSearchQuery::Unit::BYTE;
+        unitIsBytes = true;
         ++it;
 
         if (it == end) {
@@ -283,14 +282,18 @@ std::unique_ptr<const SearchQuery> SearchParser::_parseOffset(std::string::const
         }
     }
 
-    const auto value = this->_parseInt(it, end);
+    auto value = this->_parseInt(it, end);
 
     if (!value) {
         return nullptr;
     }
 
+    if (unitIsBytes) {
+        *value *= 8;
+    }
+
     return std::make_unique<const OffsetSearchQuery>(isDiff, mul * *value,
-                                                      unit, target);
+                                                     target);
 }
 
 std::unique_ptr<const SearchQuery> SearchParser::_parseTimestamp(std::string::const_iterator& it,
