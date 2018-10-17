@@ -293,6 +293,33 @@ const PacketIndexEntry& DataStreamFile::packetIndexEntryContainingOffsetBits(con
     return *it;
 }
 
+const PacketIndexEntry *DataStreamFile::packetIndexEntryContainingTimestamp(const Timestamp& ts)
+{
+    auto it = std::lower_bound(std::begin(_index), std::end(_index),
+                               ts, [](const auto& entry,
+                                      const auto ts) {
+        if (!entry.beginningTimestamp()) {
+            return true;
+        }
+
+        return *entry.beginningTimestamp() < ts;
+    });
+
+    if (it == std::end(_index)) {
+        return nullptr;
+    }
+
+    if (!it->beginningTimestamp() || !it->endTimestamp()) {
+        return nullptr;
+    }
+
+    if (ts < it->beginningTimestamp() || ts > it->endTimestamp()) {
+        return nullptr;
+    }
+
+    return &(*it);
+}
+
 const PacketIndexEntry *DataStreamFile::packetIndexEntryWithSeqNum(const Index seqNum)
 {
     if (_index.empty()) {

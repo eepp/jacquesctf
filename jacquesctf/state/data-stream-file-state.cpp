@@ -249,7 +249,9 @@ void DataStreamFileState::gotoLastDataRegion()
     _activePacket->curOffsetInPacketBits(_activePacket->lastDataRegion().segment().offsetInPacketBits());
 }
 
-bool DataStreamFileState::_gotoNextEventRecordWithProperty(const std::function<bool (const EventRecord&)>& compareFunc)
+bool DataStreamFileState::_gotoNextEventRecordWithProperty(const std::function<bool (const EventRecord&)>& compareFunc,
+                                                           const boost::optional<Index>& initPacketIndex,
+                                                           const boost::optional<Index>& initErIndex)
 {
     if (!_activePacket) {
         return false;
@@ -258,7 +260,15 @@ bool DataStreamFileState::_gotoNextEventRecordWithProperty(const std::function<b
     Index startPacketIndex = _activePacketIndex + 1;
     boost::optional<Index> startErIndex = 0;
 
-    if (_activePacket->eventRecordCount() > 0) {
+    if (initPacketIndex) {
+        startPacketIndex = *initPacketIndex;
+    }
+
+    if (initErIndex) {
+        startErIndex = *initErIndex;
+    }
+
+    if (_activePacket->eventRecordCount() > 0 && !initPacketIndex && !initErIndex) {
         const auto currentEventRecord = _activePacket->currentEventRecord();
         boost::optional<Index> erIndex;
 

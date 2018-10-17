@@ -38,6 +38,7 @@ public:
     bool hasOffsetBits(Index offsetBits);
     const PacketIndexEntry& packetIndexEntryContainingOffsetBits(Index offsetBits);
     const PacketIndexEntry *packetIndexEntryWithSeqNum(Index seqNum);
+    const PacketIndexEntry *packetIndexEntryContainingTimestamp(const Timestamp& ts);
 
     Size packetCount() const
     {
