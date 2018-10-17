@@ -126,19 +126,6 @@ void Packet::_ensureOffsetInPacketBitsIsCached(const Index offsetInPacketBits)
     // find nearest event record checkpoint by offset
     auto cp = _checkpoints.nearestCheckpointBeforeOrAtOffsetInPacketBits(offsetInPacketBits);
 
-    if (!cp) {
-        /*
-         * There's not even a single checkpoint. The only way this can
-         * happen is if the first event record is not decodable (there's
-         * a decoding error). Let's just cache the whole packet in this
-         * case (preamble + partial first event record + error).
-         */
-        assert(_checkpoints.error());
-        _it.seekPacket(_indexEntry->offsetInDataStreamBytes());
-        this->_cacheDataRegionsAtCurItUntilError();
-        return;
-    }
-
     assert(cp);
 
     auto nextIndex = cp->first->indexInPacket();
