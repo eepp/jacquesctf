@@ -79,7 +79,7 @@ void DataStreamFileState::_gotoPacket(const Index index)
 {
     _activePacketIndex = index;
     _activePacket = this->_packet(index, *_packetCheckpointsBuildListener);
-    _state->_notify(ActivePacketChangedMessage {*this, index});
+    _state->_notify(ActivePacketChangedMessage {});
 }
 
 void DataStreamFileState::gotoPacket(const Index index)

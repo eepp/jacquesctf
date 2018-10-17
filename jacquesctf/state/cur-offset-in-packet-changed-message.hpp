@@ -18,26 +18,8 @@ class MessageVisitor;
 class CurOffsetInPacketChangedMessage :
     public Message
 {
-public:
-    explicit CurOffsetInPacketChangedMessage(Index oldOffsetBits,
-                                             Index newOffsetBits);
-
-    Index oldOffsetBits() const
-    {
-        return _oldOffsetBits;
-    }
-
-    Index newOffsetBits() const
-    {
-        return _newOffsetBits;
-    }
-
 protected:
     void _acceptVisitor(MessageVisitor& visitor) override;
-
-private:
-    const Index _oldOffsetBits;
-    const Index _newOffsetBits;
 };
 
 } // namespace jacques

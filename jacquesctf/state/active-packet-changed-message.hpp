@@ -19,26 +19,8 @@ class DataStreamFileState;
 class ActivePacketChangedMessage :
     public Message
 {
-public:
-    explicit ActivePacketChangedMessage(DataStreamFileState& dataStreamFileState,
-                                        Index newActivePacketIndex);
-
-    DataStreamFileState& dataStreamFileState() const
-    {
-        return *_dataStreamFileState;
-    }
-
-    Index newActivePacketIndex() const
-    {
-        return _newActivePacketIndex;
-    }
-
 protected:
     void _acceptVisitor(MessageVisitor& visitor) override;
-
-private:
-    DataStreamFileState * const _dataStreamFileState;
-    const Index _newActivePacketIndex;
 };
 
 } // namespace jacques

@@ -11,13 +11,6 @@
 
 namespace jacques {
 
-ActivePacketChangedMessage::ActivePacketChangedMessage(DataStreamFileState& dataStreamFileState,
-                                                       const Index newActivePacketIndex) :
-    _dataStreamFileState {&dataStreamFileState},
-    _newActivePacketIndex {newActivePacketIndex}
-{
-}
-
 void ActivePacketChangedMessage::_acceptVisitor(MessageVisitor& visitor)
 {
     visitor.visit(*this);

@@ -11,11 +11,6 @@
 
 namespace jacques {
 
-ActiveDataStreamFileChangedMessage::ActiveDataStreamFileChangedMessage(const Index newDataStreamFileIndex) :
-    _newDataStreamFileIndex {newDataStreamFileIndex}
-{
-}
-
 void ActiveDataStreamFileChangedMessage::_acceptVisitor(MessageVisitor& visitor)
 {
     visitor.visit(*this);

@@ -44,43 +44,53 @@ class DataStreamFileState;
  * region cache (for a faster access by index).
  *
  * Caching is valuable here because of how a typical packet inspection
- * session induces a locality of reference: you're either going backward
- * or forward from the offset you're inspecting once you find a location
- * of interest, so there will typically be a lot of cache hits.
+ * session induces a locality of reference: you're typically going
+ * backward or forward from the offset you're inspecting once you find a
+ * location of interest, so there will typically be a lot of cache hits.
  *
- * The data region cache is a sorted vector of shared data regions. The
- * caching operation performed by _ensureEventRecordIsCached() makes
- * sure that all the data regions of at most `_eventRecordCacheMaxSize`
- * event records starting at the requested index minus
- * `_eventRecordCacheMaxSize / 2` are in cache. Substracting
- * `_eventRecordCacheMaxSize / 2` makes data regions and event records
- * available "around" the requested index, which makes sense for a
- * packet inspection activity because the user is typically inspecting
- * around a given offset.
+ * The data region cache is a sorted vector of contiguous shared data
+ * regions. The caching operation performed by
+ * _ensureEventRecordIsCached() makes sure that all the data regions of
+ * at most `_eventRecordCacheMaxSize` event records starting at the
+ * requested index minus `_eventRecordCacheMaxSize / 2` are in cache.
+ * Substracting `_eventRecordCacheMaxSize / 2` makes data regions and
+ * event records available "around" the requested index, which makes
+ * sense for a packet inspection activity because the user is typically
+ * inspecting around a given offset.
  *
- * The data region cache can also be filled with everything contained in
- * the packet's preamble (packet header and context structures) with
- * _cachePacketPreambleDataRegions(). When this method is called, the
- * event record cache is cleared because there's no event record in
- * preamble.
- *
- * If _cachePacketPreambleDataRegions() adds anything to the data region
- * cache, it also adds any padding data region before the first event
- * record or before the end of the packet (whole packet's data) if
- * there's no event record:
+ * When a packet object is constructed, it caches everything known to be
+ * in the preamble segment, that is, everything before the first event
+ * record (if any), or all the packet's data regions otherwise
+ * (including any padding or error data region before the end of the
+ * packet). This preamble data region cache is kept as a separate cache
+ * and copied back to the working cache when we make request an offset
+ * located within it. When the working cache is the preamble cache, the
+ * event record cache is empty.
  *
  *     preamble             ER 0          ER 1            ER 2
  *     #################----**********----***********-----********----
  *     ^^^^^^^^^^^^^^^^^^^^^
+ *     preamble data region cache
  *
  *     preamble
  *     #########################------------
  *     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ *     preamble data region cache
+ *
+ *     preamble                 error data region
+ *     #########################!!!!!!!!!!!!!!!!!!!!!
+ *     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ *     preamble data region cache
+ *
+ *     preamble                           error data region
+ *     #########################----------!!!!!!!!!!!
+ *     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ *     preamble data region cache
  *
  * If _cacheDataRegionsFromErsAtCurIt() adds anything to the data
  * region cache, if the last event record to be part of the cache is the
- * packet's last event record, it also adds any padding data region
- * before the end of the packet:
+ * packet's last event record, it also adds any padding or error data
+ * region before the end of the packet:
  *
  *        ER 176   ER 177       ER 294      ER 295         ER 296
  *     ...*******--******----...********----**********-----*******---...
@@ -90,25 +100,9 @@ class DataStreamFileState;
  *     ...*******--******----...**********----***********------------
  *                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
  *
- * If there's a decoding error, a single error data region is appended.
- * This region finishes where the packet finishes (effective total
- * size):
- *
- *     preamble                 error data region
- *     #########################!!!!!!!!!!!!!!!!!!!!!
- *     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
- *
- *     preamble                           error data region
- *     #########################----------!!!!!!!!!!!
- *     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
- *
  *        ER 300   ER 301       ER 487
  *     ...*******--******----...**********----********!!!!!!!!!!!!!!!
  *                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
- *
- * If the decoding error occurs between the beginning and the end of a
- * given event record, no event record object is created for this event
- * record as we don't know its end. No scopes are created either.
  *
  * Because elements are naturally sorted in the caches, we can perform a
  * binary search to find a specific element using one of its
@@ -223,9 +217,9 @@ private:
 
 private:
     /*
-     * Caches the whole packet preamble: packet header, packet context,
-     * and any padding until the first event record (if any) or until
-     * the end of the packet.
+     * Caches the whole packet preamble (single time): packet header,
+     * packet context, and any padding until the first event record (if
+     * any) or any padding/error until the end of the packet.
      *
      * Clears the event record cache.
      */
@@ -259,7 +253,8 @@ private:
      * event records starting at the current iterator, for `erCount`
      * event records.
      */
-    void _cacheDataRegionsFromErsAtCurIt(Index erIndexInPacket, Size erCount);
+    void _cacheDataRegionsFromErsAtCurIt(Index erIndexInPacket,
+                                         Size erCount);
 
     /*
      * Appends a single event record (having index `indexInPacket`)
@@ -297,17 +292,18 @@ private:
     void _cacheContentDataRegionAtCurIt(Scope::SP scope);
 
     /*
-     * Returns whether or not the data region cache contains the bit
-     * `offsetInPacketBits`.
+     * Returns whether or not the data region cache `cache` contains the
+     * bit `offsetInPacketBits`.
      */
-    bool _dataRegionCacheContainsOffsetInPacketBits(const Index offsetInPacketBits) const
+    bool _dataRegionCacheContainsOffsetInPacketBits(const DataRegionCache& cache,
+                                                    const Index offsetInPacketBits) const
     {
-        if (_dataRegionCache.empty()) {
+        if (cache.empty()) {
             return false;
         }
 
-        return offsetInPacketBits >= _dataRegionCache.front()->segment().offsetInPacketBits() &&
-               offsetInPacketBits < _dataRegionCache.back()->segment().endOffsetInPacketBits();
+        return offsetInPacketBits >= cache.front()->segment().offsetInPacketBits() &&
+               offsetInPacketBits < cache.back()->segment().endOffsetInPacketBits();
     }
 
     /*
@@ -317,7 +313,8 @@ private:
     DataRegionCache::iterator _dataRegionCacheItBeforeOrAtOffsetInPacketBits(const Index offsetInPacketBits)
     {
         assert(!_dataRegionCache.empty());
-        assert(this->_dataRegionCacheContainsOffsetInPacketBits(offsetInPacketBits));
+        assert(this->_dataRegionCacheContainsOffsetInPacketBits(_dataRegionCache,
+                                                                offsetInPacketBits));
 
         const auto lessThanFunc = [](const auto& offsetInPacketBits,
                                      const auto dataRegion) {
@@ -444,6 +441,7 @@ private:
     yactfr::PacketSequenceIterator _endIt;
     PacketCheckpoints _checkpoints;
     DataRegionCache _dataRegionCache;
+    DataRegionCache _preambleDataRegionCache;
     EventRecordCache _eventRecordCache;
     LruCache<Index, DataRegion::SP> _lruDataRegionCache;
     const Size _eventRecordCacheMaxSize = 500;

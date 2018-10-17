@@ -11,13 +11,6 @@
 
 namespace jacques {
 
-CurOffsetInPacketChangedMessage::CurOffsetInPacketChangedMessage(const Index oldOffsetBits,
-                                                                 const Index newOffsetBits) :
-    _oldOffsetBits {oldOffsetBits},
-    _newOffsetBits {newOffsetBits}
-{
-}
-
 void CurOffsetInPacketChangedMessage::_acceptVisitor(MessageVisitor& visitor)
 {
     visitor.visit(*this);

@@ -68,7 +68,7 @@ void State::gotoDataStreamFile(const Index index)
 
     _activeDataStreamFileStateIndex = index;
     _activeDataStreamFileState = _dataStreamFileStates[index].get();
-    this->_notify(ActiveDataStreamFileChangedMessage {index});
+    this->_notify(ActiveDataStreamFileChangedMessage {});
 
     if (_activeDataStreamFileState->dataStreamFile().packetCount() > 0) {
         if (!_activeDataStreamFileState->hasActivePacket()) {

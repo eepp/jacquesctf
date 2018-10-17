@@ -302,6 +302,8 @@ void PacketTableView::selectedPacketIndex(Index index)
 
 void PacketTableView::_stateChanged(const Message& msg)
 {
+    bool updateSelection = false;
+
     if (dynamic_cast<const ActiveDataStreamFileChangedMessage *>(&msg)) {
         /*
          * Go back to 0 without drawing first in case there's less
@@ -309,11 +311,14 @@ void PacketTableView::_stateChanged(const Message& msg)
          */
         this->_selectionIndex(0, false);
         this->redraw();
+        updateSelection = true;
+    } else if (auto sMsg = dynamic_cast<const ActivePacketChangedMessage *>(&msg)) {
+        updateSelection = true;
+    }
 
+    if (updateSelection) {
         // reset selection from state
         this->_selectionIndex(_state->activeDataStreamFileState().activePacketIndex());
-    } else if (auto sMsg = dynamic_cast<const ActivePacketChangedMessage *>(&msg)) {
-        this->_selectionIndex(sMsg->newActivePacketIndex());
     }
 }
 

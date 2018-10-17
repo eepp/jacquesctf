@@ -49,6 +49,7 @@ Packet::Packet(DataStreamFileState& dsfState,
                      reinterpret_cast<std::uintptr_t>(_mmapFile->addr()),
                      _mmapFile->offsetBytes(), _mmapFile->size().bytes(),
                      _mmapFile->fileSize().bytes());
+    this->_cachePacketPreambleDataRegions();
 }
 
 void Packet::_ensureEventRecordIsCached(const Index indexInPacket)
@@ -98,20 +99,23 @@ void Packet::_ensureEventRecordIsCached(const Index indexInPacket)
 
 void Packet::_ensureOffsetInPacketBitsIsCached(const Index offsetInPacketBits)
 {
-    if (this->_dataRegionCacheContainsOffsetInPacketBits(offsetInPacketBits)) {
+    if (this->_dataRegionCacheContainsOffsetInPacketBits(_dataRegionCache,
+                                                         offsetInPacketBits)) {
         return;
     }
 
     // preamble?
-    if (_checkpoints.eventRecordCount() == 0 ||
-            offsetInPacketBits < _preambleSize.bits()) {
-        this->_cachePacketPreambleDataRegions();
+    if (this->_dataRegionCacheContainsOffsetInPacketBits(_preambleDataRegionCache,
+                                                         offsetInPacketBits)) {
+        // this is the current cache now
+        _dataRegionCache = _preambleDataRegionCache;
+        _eventRecordCache.clear();
         return;
     }
 
-    const auto& lastEventRecord = *_checkpoints.lastEventRecord();
-
     assert(_checkpoints.eventRecordCount() > 0);
+
+    const auto& lastEventRecord = *_checkpoints.lastEventRecord();
 
     if (offsetInPacketBits >= lastEventRecord.segment().offsetInPacketBits()) {
         // last event record or after
@@ -312,24 +316,20 @@ void Packet::_cachePacketPreambleDataRegions()
 
     using ElemKind = yactfr::Element::Kind;
 
-    // already cached?
-    if (!_dataRegionCache.empty()) {
-        const auto& firstDataRegion = *_dataRegionCache.front();
-
-        if (firstDataRegion.segment().offsetInPacketBits() == 0) {
-            theLogger->debug("Preamble data regions are already cached.");
-            return;
-        }
-    }
-
-    // clear current cache
-    _dataRegionCache.clear();
-    _eventRecordCache.clear();
+    assert(_preambleDataRegionCache.empty());
+    assert(_dataRegionCache.empty());
 
     // go to beginning of packet
     theLogger->debug("Seeking packet at offset {} B.",
                      _indexEntry->offsetInDataStreamBytes());
     _it.seekPacket(_indexEntry->offsetInDataStreamBytes());
+
+    // special case: no event records and an error: cache everything now
+    if (_checkpoints.error() && _checkpoints.eventRecordCount() == 0) {
+        this->_cacheDataRegionsAtCurItUntilError();
+        _preambleDataRegionCache = _dataRegionCache;
+        return;
+    }
 
     Scope::SP curScope;
     bool isDone = false;
@@ -395,7 +395,7 @@ void Packet::_cachePacketPreambleDataRegions()
         }
     } catch (const yactfr::DecodingError&) {
         theLogger->debug("Got a decoding error at offset {} b: "
-                         "appending an error data region.",
+                         "appending a preamble data region.",
                          _it.offset());
 
         Index offsetStartBits = 0;
@@ -424,11 +424,13 @@ void Packet::_cachePacketPreambleDataRegions()
     }
 
     if (!_dataRegionCache.empty()) {
-        theLogger->debug("Data region cache now spans [{} b, {} b[.",
+        theLogger->debug("Preamble data region cache now spans [{} b, {} b[.",
                          _dataRegionCache.front()->segment().offsetInPacketBits(),
                          _dataRegionCache.back()->segment().offsetInPacketBits() +
                          _dataRegionCache.back()->segment().size().bits());
     }
+
+    _preambleDataRegionCache = _dataRegionCache;
 }
 
 void Packet::_cacheDataRegionsAtCurIt(const yactfr::Element::Kind endElemKind,
@@ -765,12 +767,8 @@ void Packet::curOffsetInPacketBits(const Index offsetInPacketBits)
     }
 
     assert(offsetInPacketBits < _indexEntry->effectiveTotalSize().bits());
-
-    const auto oldOffsetInPacketBits = _curOffsetInPacketBits;
-
     _curOffsetInPacketBits = offsetInPacketBits;
-    _state->_notify(CurOffsetInPacketChangedMessage {oldOffsetInPacketBits,
-                                                     _curOffsetInPacketBits});
+    _state->_notify(CurOffsetInPacketChangedMessage {});
 }
 
 const DataRegion& Packet::lastDataRegion()

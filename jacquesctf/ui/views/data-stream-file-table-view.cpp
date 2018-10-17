@@ -27,7 +27,7 @@ DataStreamFileTableView::DataStreamFileTableView(const Rectangle& rect,
 void DataStreamFileTableView::_stateChanged(const Message& msg)
 {
     if (auto sMsg = dynamic_cast<const ActiveDataStreamFileChangedMessage *>(&msg)) {
-        this->_selectionIndex(sMsg->newDataStreamFileStateIndex());
+        this->_selectionIndex(_state->activeDataStreamFileStateIndex());
     }
 }
 
