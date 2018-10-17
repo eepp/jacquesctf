@@ -83,17 +83,17 @@ void DataStreamFileTableView::_resetRow(const std::vector<TableViewColumnDescrip
     _row.clear();
     _row.push_back(std::make_unique<PathTableViewCell>());
     _row[0]->emphasized(true);
-    _row.push_back(std::make_unique<DataSizeTableViewCell>(utils::SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS));
+    _row.push_back(std::make_unique<DataSizeTableViewCell>(_sizeFormatMode));
     _row.push_back(std::make_unique<UnsignedIntTableViewCell>(TableViewCell::TextAlignment::RIGHT));
     static_cast<UnsignedIntTableViewCell&>(*_row.back()).sep(true);
-    _row.push_back(std::make_unique<TimestampTableViewCell>(TimestampFormatMode::LONG));
+    _row.push_back(std::make_unique<TimestampTableViewCell>(_tsFormatMode));
 
     if (descrs.size() >= 5) {
-        _row.push_back(std::make_unique<TimestampTableViewCell>(TimestampFormatMode::LONG));
+        _row.push_back(std::make_unique<TimestampTableViewCell>(_tsFormatMode));
     }
 
     if (descrs.size() >= 6) {
-        _row.push_back(std::make_unique<DurationTableViewCell>(TimestampFormatMode::LONG));
+        _row.push_back(std::make_unique<DurationTableViewCell>(_tsFormatMode));
     }
 
     if (descrs.size() >= 7) {
@@ -209,12 +209,14 @@ void DataStreamFileTableView::timestampFormatMode(const TimestampFormatMode tsFo
         static_cast<DurationTableViewCell&>(*_row[5]).formatMode(tsFormatMode);
     }
 
+    _tsFormatMode = tsFormatMode;
     this->_redrawRows();
 }
 
 void DataStreamFileTableView::dataSizeFormatMode(const utils::SizeFormatMode dataSizeFormatMode)
 {
     static_cast<DataSizeTableViewCell&>(*_row[1]).formatMode(dataSizeFormatMode);
+    _sizeFormatMode = dataSizeFormatMode;
     this->_redrawRows();
 }
 

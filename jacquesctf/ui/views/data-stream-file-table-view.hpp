@@ -40,6 +40,8 @@ private:
     std::vector<std::unique_ptr<TableViewCell>> _row;
     std::shared_ptr<State> _state;
     const ViewStateObserverGuard _stateObserverGuard;
+    TimestampFormatMode _tsFormatMode = TimestampFormatMode::LONG;
+    utils::SizeFormatMode _sizeFormatMode = utils::SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS;
 };
 
 } // namespace jacques

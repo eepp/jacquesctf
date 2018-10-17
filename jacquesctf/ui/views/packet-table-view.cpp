@@ -78,24 +78,24 @@ void PacketTableView::_resetRow(const std::vector<TableViewColumnDescription>& d
     _row.push_back(std::make_unique<UnsignedIntTableViewCell>(TableViewCell::TextAlignment::RIGHT));
     _row.back()->emphasized(true);
     static_cast<UnsignedIntTableViewCell&>(*_row.back()).sep(true);
-    _row.push_back(std::make_unique<DataSizeTableViewCell>(utils::SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS));
+    _row.push_back(std::make_unique<DataSizeTableViewCell>(_sizeFormatMode));
     static_cast<UnsignedIntTableViewCell&>(*_row.back()).sep(true);
-    _row.push_back(std::make_unique<DataSizeTableViewCell>(utils::SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS));
+    _row.push_back(std::make_unique<DataSizeTableViewCell>(_sizeFormatMode));
 
     if (descrs.size() >= 4) {
-        _row.push_back(std::make_unique<DataSizeTableViewCell>(utils::SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS));
+        _row.push_back(std::make_unique<DataSizeTableViewCell>(_sizeFormatMode));
     }
 
     if (descrs.size() >= 5) {
-        _row.push_back(std::make_unique<TimestampTableViewCell>(TimestampFormatMode::LONG));
+        _row.push_back(std::make_unique<TimestampTableViewCell>(_tsFormatMode));
     }
 
     if (descrs.size() >= 6) {
-        _row.push_back(std::make_unique<TimestampTableViewCell>(TimestampFormatMode::LONG));
+        _row.push_back(std::make_unique<TimestampTableViewCell>(_tsFormatMode));
     }
 
     if (descrs.size() >= 7) {
-        _row.push_back(std::make_unique<DurationTableViewCell>(TimestampFormatMode::LONG));
+        _row.push_back(std::make_unique<DurationTableViewCell>(_tsFormatMode));
     }
 
     if (descrs.size() >= 8) {
@@ -277,6 +277,7 @@ void PacketTableView::timestampFormatMode(const TimestampFormatMode tsFormatMode
         static_cast<DurationTableViewCell&>(*_row[6]).formatMode(tsFormatMode);
     }
 
+    _tsFormatMode = tsFormatMode;
     this->_redrawRows();
 }
 
@@ -285,6 +286,7 @@ void PacketTableView::dataSizeFormatMode(const utils::SizeFormatMode dataSizeFor
     static_cast<DataSizeTableViewCell&>(*_row[1]).formatMode(dataSizeFormatMode);
     static_cast<DataSizeTableViewCell&>(*_row[2]).formatMode(dataSizeFormatMode);
     static_cast<DataSizeTableViewCell&>(*_row[3]).formatMode(dataSizeFormatMode);
+    _sizeFormatMode = dataSizeFormatMode;
     this->_redrawRows();
 }
 

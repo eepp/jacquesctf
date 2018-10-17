@@ -36,9 +36,9 @@ void EventRecordTableView::_resetRow(const std::vector<TableViewColumnDescriptio
     _row.clear();
     _row.push_back(std::make_unique<UnsignedIntTableViewCell>(TableViewCell::TextAlignment::RIGHT));
     static_cast<UnsignedIntTableViewCell&>(*_row.back()).sep(true);
-    _row.push_back(std::make_unique<DataSizeTableViewCell>(utils::SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS));
+    _row.push_back(std::make_unique<DataSizeTableViewCell>(_sizeFormatMode));
     static_cast<UnsignedIntTableViewCell&>(*_row.back()).sep(true);
-    _row.push_back(std::make_unique<DataSizeTableViewCell>(utils::SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS));
+    _row.push_back(std::make_unique<DataSizeTableViewCell>(_sizeFormatMode));
 
     if (descrs.size() >= 4) {
         _row.push_back(std::make_unique<TextTableViewCell>(TableViewCell::TextAlignment::LEFT));
@@ -50,7 +50,7 @@ void EventRecordTableView::_resetRow(const std::vector<TableViewColumnDescriptio
     }
 
     if (descrs.size() >= 6) {
-        _row.push_back(std::make_unique<TimestampTableViewCell>(TimestampFormatMode::LONG));
+        _row.push_back(std::make_unique<TimestampTableViewCell>(_tsFormatMode));
     }
 }
 
@@ -146,6 +146,7 @@ bool EventRecordTableView::_hasIndex(const Index index)
 void EventRecordTableView::timestampFormatMode(const TimestampFormatMode tsFormatMode)
 {
     static_cast<TimestampTableViewCell&>(*_row[5]).formatMode(tsFormatMode);
+    _tsFormatMode = tsFormatMode;
     this->_redrawRows();
 }
 
@@ -153,6 +154,7 @@ void EventRecordTableView::dataSizeFormatMode(const utils::SizeFormatMode dsForm
 {
     static_cast<DataSizeTableViewCell&>(*_row[1]).formatMode(dsFormatMode);
     static_cast<DataSizeTableViewCell&>(*_row[2]).formatMode(dsFormatMode);
+    _sizeFormatMode = dsFormatMode;
     this->_redrawRows();
 }
 
