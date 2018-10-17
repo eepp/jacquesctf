@@ -18,12 +18,6 @@
 namespace jacques {
 namespace utils {
 
-bool stringEndsWith(const std::string& str, const std::string& suffix)
-{
-    return str.size() >= suffix.size() &&
-           str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
-}
-
 std::pair<std::string, std::string> formatPath(const boost::filesystem::path& path,
                                                const Size maxLen)
 {

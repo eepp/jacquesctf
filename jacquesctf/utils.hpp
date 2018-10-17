@@ -24,12 +24,6 @@ namespace jacques {
 namespace utils {
 
 /*
- * Returns whether or not a given string `str` ends with a given suffix
- * `suffix`.
- */
-bool stringEndsWith(const std::string& str, const std::string& suffix);
-
-/*
  * Formats the path `path`, considering that the output's total length
  * must not exceed `maxLen`. The pair's first element is the directory
  * name (possibly with ellipses if, due to `maxLen`, it's incomplete),
