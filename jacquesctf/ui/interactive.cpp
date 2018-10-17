@@ -172,9 +172,9 @@ class PacketCheckpointsBuildProgressUpdater :
 {
 public:
     explicit PacketCheckpointsBuildProgressUpdater(std::shared_ptr<const Stylist> stylist,
-                                                   Screen * const * const curScreen) :
+                                                   bool& redrawCurScreen) :
         _stylist {stylist},
-        _curScreen {curScreen}
+        _redrawCurScreen {&redrawCurScreen}
     {
     }
 
@@ -221,17 +221,14 @@ private:
         }
 
         // redraw current screen
-        if (*_curScreen) {
-            (*_curScreen)->redraw();
-            doupdate();
-        }
+        *_redrawCurScreen = true;
     }
 
 private:
     Index _count = 0;
     std::unique_ptr<PacketCheckpointsBuildProgressView> _view;
     std::shared_ptr<const Stylist> _stylist;
-    Screen * const * const _curScreen;
+    bool * const _redrawCurScreen;
 };
 
 class PrintVisitor :
@@ -253,8 +250,9 @@ static bool tryStartInteractive(const Config& cfg)
     showFullScreenMessage("Opening data stream files...", stylist);
 
     Screen *curScreen = nullptr;
+    bool redrawCurScreen = false;
     auto packetCheckpointsBuildProgressUpdater = std::make_shared<PacketCheckpointsBuildProgressUpdater>(stylist,
-                                                                                                         &curScreen);
+                                                                                                         redrawCurScreen);
     std::shared_ptr<State> state;
 
     try {
@@ -588,6 +586,11 @@ static bool tryStartInteractive(const Config& cfg)
             case KeyHandlingReaction::CONTINUE:
                 break;
             }
+        }
+
+        if (redrawCurScreen) {
+            curScreen->redraw();
+            redrawCurScreen = false;
         }
 
         if (renderStatus) {
