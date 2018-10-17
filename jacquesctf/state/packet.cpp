@@ -12,20 +12,16 @@
 #include "content-data-region.hpp"
 #include "padding-data-region.hpp"
 #include "error-data-region.hpp"
-#include "data-stream-file-state.hpp"
-#include "state.hpp"
 #include "logging.hpp"
 
 namespace jacques {
 
-Packet::Packet(DataStreamFileState& dsfState,
-               const PacketIndexEntry& indexEntry,
+Packet::Packet(const PacketIndexEntry& indexEntry,
                yactfr::PacketSequence& seq,
                const Metadata& metadata,
                yactfr::DataSource::UP dataSrc,
                std::unique_ptr<MemoryMappedFile> mmapFile,
                PacketCheckpointsBuildListener& packetCheckpointsBuildListener) :
-    _state {&dsfState.state()},
     _indexEntry {&indexEntry},
     _metadata {&metadata},
     _dataSrc {std::move(dataSrc)},
@@ -745,17 +741,6 @@ const DataRegion& Packet::dataRegionAtOffsetInPacketBits(const Index offsetInPac
     }
 
     return dataRegion;
-}
-
-void Packet::curOffsetInPacketBits(const Index offsetInPacketBits)
-{
-    if (offsetInPacketBits == _curOffsetInPacketBits) {
-        return;
-    }
-
-    assert(offsetInPacketBits < _indexEntry->effectiveTotalSize().bits());
-    _curOffsetInPacketBits = offsetInPacketBits;
-    _state->_notify(CurOffsetInPacketChangedMessage {});
 }
 
 const DataRegion& Packet::lastDataRegion()

@@ -20,44 +20,21 @@
 namespace jacques {
 
 DataStreamFileState::DataStreamFileState(State& state,
-                                         const boost::filesystem::path& path,
-                                         std::shared_ptr<const Metadata> metadata,
+                                         std::unique_ptr<DataStreamFile> dataStreamFile,
                                          std::shared_ptr<PacketCheckpointsBuildListener> packetCheckpointsBuildListener) :
     _state {&state},
-    _activePacketIndex {0},
-    _metadata {metadata},
-    _packetCheckpointsBuildListener {packetCheckpointsBuildListener},
-    _factory {
-        std::make_shared<yactfr::MemoryMappedFileViewFactory>(path.string(),
-                                                              8 << 20,
-                                                              yactfr::MemoryMappedFileViewFactory::AccessPattern::SEQUENTIAL)
-    },
-    _seq {_metadata->traceType(), _factory},
-    _dataStreamFile {path, *metadata, _seq, *_factory},
-    _packetCache {16}
+    _packetCheckpointsBuildListener {std::move(packetCheckpointsBuildListener)},
+    _dataStreamFile {std::move(dataStreamFile)}
 {
-    _factory->expectedAccessPattern(yactfr::MemoryMappedFileViewFactory::AccessPattern::SEQUENTIAL);
-    _fd = open(path.string().c_str(), O_RDONLY);
-
-    if (_fd < 0) {
-        throw IOError {path, "Cannot open file."};
-    }
-}
-
-DataStreamFileState::~DataStreamFileState()
-{
-    if (_fd >= 0) {
-        (void) close(_fd);
-    }
 }
 
 void DataStreamFileState::gotoOffsetBits(const Index offsetBits)
 {
-    if (!_dataStreamFile.hasOffsetBits(offsetBits)) {
+    if (!_dataStreamFile->hasOffsetBits(offsetBits)) {
         return;
     }
 
-    const auto& packetIndexEntry = _dataStreamFile.packetIndexEntryContainingOffsetBits(offsetBits);
+    const auto& packetIndexEntry = _dataStreamFile->packetIndexEntryContainingOffsetBits(offsetBits);
 
     this->gotoPacket(packetIndexEntry.indexInDataStream());
 
@@ -70,30 +47,47 @@ void DataStreamFileState::gotoOffsetBits(const Index offsetBits)
         return;
     }
 
-    const auto& region = _activePacket->dataRegionAtOffsetInPacketBits(offsetInPacketBits);
+    const auto& region = _activePacketState->packet().dataRegionAtOffsetInPacketBits(offsetInPacketBits);
 
-    _activePacket->curOffsetInPacketBits(region.segment().offsetInPacketBits());
+    _activePacketState->gotoDataRegionAtOffsetInPacketBits(region);
+}
+
+PacketState& DataStreamFileState::_packetState(const Index index)
+{
+    if (_packetStates.size() < index + 1) {
+        _packetStates.resize(index + 1);
+    }
+
+    if (!_packetStates[index]) {
+        auto& packet = _dataStreamFile->packetAtIndex(index,
+                                                      *_packetCheckpointsBuildListener);
+
+        _packetStates[index] = std::make_unique<PacketState>(*_state, packet);
+    }
+
+    return *_packetStates[index];
 }
 
 void DataStreamFileState::_gotoPacket(const Index index)
 {
-    _activePacketIndex = index;
-    _activePacket = this->_packet(index, *_packetCheckpointsBuildListener);
+    assert(index < _dataStreamFile->packetCount());
+    _activePacketStateIndex = index;
+    _activePacketState = &this->_packetState(index);
     _state->_notify(ActivePacketChangedMessage {});
 }
 
 void DataStreamFileState::gotoPacket(const Index index)
 {
-    assert(index < _dataStreamFile.packetCount());
+    assert(index < _dataStreamFile->packetCount());
 
-    if (!_activePacket) {
+    if (!_activePacketState) {
         // special case for the very first one, no notification required
         assert(index == 0);
         this->_gotoPacket(index);
         return;
     }
 
-    if (_activePacketIndex == index) {
+    if (_activePacketStateIndex == index) {
         return;
     }
 
@@ -102,162 +96,93 @@ void DataStreamFileState::gotoPacket(const Index index)
 
 void DataStreamFileState::gotoPreviousPacket()
 {
-    if (_dataStreamFile.packetCount() == 0) {
+    if (_dataStreamFile->packetCount() == 0) {
         return;
     }
 
-    if (_activePacketIndex == 0) {
+    if (_activePacketStateIndex == 0) {
         return;
     }
 
-    this->gotoPacket(_activePacketIndex - 1);
+    this->gotoPacket(_activePacketStateIndex - 1);
 }
 
 void DataStreamFileState::gotoNextPacket()
 {
-    if (_dataStreamFile.packetCount() == 0) {
+    if (_dataStreamFile->packetCount() == 0) {
         return;
     }
 
-    if (_activePacketIndex == _dataStreamFile.packetCount() - 1) {
+    if (_activePacketStateIndex == _dataStreamFile->packetCount() - 1) {
         return;
     }
 
-    this->gotoPacket(_activePacketIndex + 1);
+    this->gotoPacket(_activePacketStateIndex + 1);
 }
 
 void DataStreamFileState::gotoPreviousEventRecord(Size count)
 {
-    if (!_activePacket) {
+    if (!_activePacketState) {
         return;
     }
 
-    if (_activePacket->eventRecordCount() == 0) {
-        return;
-    }
-
-    const auto curEventRecord = this->currentEventRecord();
-
-    if (!curEventRecord) {
-        if (_activePacket->curOffsetInPacketBits() >=
-                _activePacket->indexEntry().effectiveContentSize().bits()) {
-            auto& lastEr = _activePacket->eventRecordAtIndexInPacket(_state->activePacket().eventRecordCount() - 1);
-
-            _activePacket->curOffsetInPacketBits(lastEr.segment().offsetInPacketBits());
-        }
-
-        return;
-    }
-
-    if (curEventRecord->indexInPacket() == 0) {
-        return;
-    }
-
-    count = std::min(curEventRecord->indexInPacket(), count);
-    const auto& prevEventRecord = _activePacket->eventRecordAtIndexInPacket(curEventRecord->indexInPacket() - count);
-    _activePacket->curOffsetInPacketBits(prevEventRecord.segment().offsetInPacketBits());
+    _activePacketState->gotoPreviousEventRecord(count);
 }
 
 void DataStreamFileState::gotoNextEventRecord(Size count)
 {
-    if (!_activePacket) {
+    if (!_activePacketState) {
         return;
     }
 
-    if (_activePacket->eventRecordCount() == 0) {
-        return;
-    }
-
-    const auto curEventRecord = this->currentEventRecord();
-    Index newIndex = 0;
-
-    if (curEventRecord) {
-        count = std::min(_activePacket->eventRecordCount() -
-                         curEventRecord->indexInPacket(), count);
-        newIndex = curEventRecord->indexInPacket() + count;
-    }
-
-    if (newIndex >= _activePacket->eventRecordCount()) {
-        return;
-    }
-
-    const auto& nextEventRecord = _activePacket->eventRecordAtIndexInPacket(newIndex);
-    _activePacket->curOffsetInPacketBits(nextEventRecord.segment().offsetInPacketBits());
+    _activePacketState->gotoNextEventRecord(count);
 }
 
 void DataStreamFileState::gotoPreviousDataRegion()
 {
-    if (!_activePacket) {
+    if (!_activePacketState) {
         return;
     }
 
-    if (_activePacket->curOffsetInPacketBits() == 0) {
-        return;
-    }
-
-    const auto currentDataRegion = this->currentDataRegion();
-
-    assert(currentDataRegion);
-
-    if (currentDataRegion->previousDataRegionOffsetInPacketBits()) {
-        _activePacket->curOffsetInPacketBits(*currentDataRegion->previousDataRegionOffsetInPacketBits());
-        return;
-    }
-
-    const auto& prevDataRegion = _activePacket->dataRegionAtOffsetInPacketBits(_activePacket->curOffsetInPacketBits() - 1);
-
-    _activePacket->curOffsetInPacketBits(prevDataRegion.segment().offsetInPacketBits());
+    _activePacketState->gotoPreviousDataRegion();
 }
 
 void DataStreamFileState::gotoNextDataRegion()
 {
-    const auto currentDataRegion = this->currentDataRegion();
-
-    if (!currentDataRegion) {
+    if (!_activePacketState) {
         return;
     }
 
-    if (currentDataRegion->segment().endOffsetInPacketBits() ==
-            _activePacket->indexEntry().effectiveTotalSize().bits()) {
-        return;
-    }
-
-    _activePacket->curOffsetInPacketBits(currentDataRegion->segment().endOffsetInPacketBits());
+    _activePacketState->gotoNextDataRegion();
 }
 
 void DataStreamFileState::gotoPacketContext()
 {
-    if (!_activePacket) {
+    if (!_activePacketState) {
         return;
     }
 
-    const auto& offset = _activePacket->indexEntry().packetContextOffsetInPacketBits();
-
-    if (!offset) {
-        return;
-    }
-
-    _activePacket->curOffsetInPacketBits(*offset);
+    _activePacketState->gotoPacketContext();
 }
 
 void DataStreamFileState::gotoLastDataRegion()
 {
-    if (!_activePacket) {
+    if (!_activePacketState) {
         return;
     }
 
-    _activePacket->curOffsetInPacketBits(_activePacket->lastDataRegion().segment().offsetInPacketBits());
+    _activePacketState->gotoLastDataRegion();
 }
 
 bool DataStreamFileState::_gotoNextEventRecordWithProperty(const std::function<bool (const EventRecord&)>& compareFunc,
                                                            const boost::optional<Index>& initPacketIndex,
                                                            const boost::optional<Index>& initErIndex)
 {
-    if (!_activePacket) {
+    if (!_activePacketState) {
         return false;
     }
 
-    Index startPacketIndex = _activePacketIndex + 1;
+    Index startPacketIndex = _activePacketStateIndex + 1;
     boost::optional<Index> startErIndex = 0;
 
     if (initPacketIndex) {
@@ -268,48 +193,46 @@ bool DataStreamFileState::_gotoNextEventRecordWithProperty(const std::function<b
         startErIndex = *initErIndex;
     }
 
-    if (_activePacket->eventRecordCount() > 0 && !initPacketIndex && !initErIndex) {
-        const auto currentEventRecord = _activePacket->currentEventRecord();
+    if (_activePacketState->packet().eventRecordCount() > 0 && !initPacketIndex && !initErIndex) {
+        const auto currentEventRecord = _activePacketState->currentEventRecord();
         boost::optional<Index> erIndex;
 
         if (currentEventRecord) {
             if (currentEventRecord->indexInPacket() <
-                    _activePacket->eventRecordCount() - 1) {
+                    _activePacketState->packet().eventRecordCount() - 1) {
                 // skip current event record
-                startPacketIndex = _activePacketIndex;
+                startPacketIndex = _activePacketStateIndex;
                 startErIndex = currentEventRecord->indexInPacket() + 1;
             }
         } else {
-            const auto& firstEr = _activePacket->eventRecordAtIndexInPacket(0);
+            const auto& firstEr = _activePacketState->packet().eventRecordAtIndexInPacket(0);
 
-            if (_activePacket->curOffsetInPacketBits() <
+            if (_activePacketState->curOffsetInPacketBits() <
                     firstEr.segment().offsetInPacketBits()) {
                 // search active packet from beginning
-                startPacketIndex = _activePacketIndex;
+                startPacketIndex = _activePacketStateIndex;
             }
         }
     }
 
     for (auto packetIndex = startPacketIndex;
-            packetIndex < _dataStreamFile.packetCount(); ++packetIndex) {
-        auto packet = this->_packet(packetIndex,
-                                    *_packetCheckpointsBuildListener);
-
-        assert(packet);
+            packetIndex < _dataStreamFile->packetCount(); ++packetIndex) {
+        auto& packetState = this->_packetState(packetIndex);
+        auto& packet = packetState.packet();
 
         const auto iterStartErIndex = startErIndex ? *startErIndex : 0;
 
         startErIndex = boost::none;
-        assert(iterStartErIndex < packet->eventRecordCount());
+        assert(iterStartErIndex < packet.eventRecordCount());
 
-        for (Index erIndex = iterStartErIndex; erIndex < packet->eventRecordCount(); ++erIndex) {
-            const auto& eventRecord = packet->eventRecordAtIndexInPacket(erIndex);
+        for (Index erIndex = iterStartErIndex; erIndex < packet.eventRecordCount(); ++erIndex) {
+            const auto& eventRecord = packet.eventRecordAtIndexInPacket(erIndex);
 
             if (compareFunc(eventRecord)) {
                 const auto offsetInPacketBits = eventRecord.segment().offsetInPacketBits();
 
                 this->gotoPacket(packetIndex);
-                _activePacket->curOffsetInPacketBits(offsetInPacketBits);
+                _activePacketState->gotoDataRegionAtOffsetInPacketBits(offsetInPacketBits);
                 return true;
             }
         }
@@ -324,7 +247,7 @@ bool DataStreamFileState::search(const SearchQuery& query)
         long long reqIndex;
 
         if (sQuery->isDiff()) {
-            reqIndex = static_cast<long long>(_activePacketIndex) +
+            reqIndex = static_cast<long long>(_activePacketStateIndex) +
                        sQuery->value();
         } else {
             // entry is natural (1-based)
@@ -337,25 +260,27 @@ bool DataStreamFileState::search(const SearchQuery& query)
 
         const auto index = static_cast<Index>(reqIndex);
 
-        if (index >= _dataStreamFile.packetCount()) {
+        if (index >= _dataStreamFile->packetCount()) {
             return false;
         }
 
         this->gotoPacket(index);
         return true;
     } else if (const auto sQuery = dynamic_cast<const PacketSeqNumSearchQuery *>(&query)) {
-        if (!_activePacket) {
+        if (!_activePacketState) {
             return false;
         }
 
         long long reqSeqNum;
 
         if (sQuery->isDiff()) {
-            if (!_activePacket->indexEntry().seqNum()) {
+            const auto& indexEntry = _activePacketState->packetIndexEntry();
+
+            if (!indexEntry.seqNum()) {
                 return false;
             }
 
-            reqSeqNum = static_cast<long long>(*_activePacket->indexEntry().seqNum()) +
+            reqSeqNum = static_cast<long long>(*indexEntry.seqNum()) +
                         sQuery->value();
         } else {
             reqSeqNum = sQuery->value();
@@ -365,7 +290,7 @@ bool DataStreamFileState::search(const SearchQuery& query)
             return false;
         }
 
-        const auto indexEntry = _dataStreamFile.packetIndexEntryWithSeqNum(static_cast<Index>(reqSeqNum));
+        const auto indexEntry = _dataStreamFile->packetIndexEntryWithSeqNum(static_cast<Index>(reqSeqNum));
 
         if (!indexEntry) {
             return false;
@@ -374,14 +299,14 @@ bool DataStreamFileState::search(const SearchQuery& query)
         this->gotoPacket(indexEntry->indexInDataStream());
         return true;
     } else if (const auto sQuery = dynamic_cast<const EventRecordIndexSearchQuery *>(&query)) {
-        if (!_activePacket) {
+        if (!_activePacketState) {
             return false;
         }
 
         long long reqIndex;
 
         if (sQuery->isDiff()) {
-            const auto curEventRecord = _activePacket->currentEventRecord();
+            const auto curEventRecord = _activePacketState->currentEventRecord();
 
             if (!curEventRecord) {
                 return false;
@@ -400,35 +325,35 @@ bool DataStreamFileState::search(const SearchQuery& query)
 
         const auto index = static_cast<Index>(reqIndex);
 
-        if (index >= _activePacket->eventRecordCount()) {
+        if (index >= _activePacketState->packet().eventRecordCount()) {
             return false;
         }
 
-        const auto& eventRecord = _activePacket->eventRecordAtIndexInPacket(index);
+        const auto& eventRecord = _activePacketState->packet().eventRecordAtIndexInPacket(index);
 
-        _activePacket->curOffsetInPacketBits(eventRecord.segment().offsetInPacketBits());
+        this->gotoDataRegionAtOffsetInPacketBits(eventRecord.segment().offsetInPacketBits());
         return true;
     } else if (const auto sQuery = dynamic_cast<const OffsetSearchQuery *>(&query)) {
         long long reqOffsetBits;
 
         if (sQuery->target() == OffsetSearchQuery::Target::PACKET &&
-                !_activePacket) {
+                !_activePacketState) {
             return false;
         }
 
         if (sQuery->isDiff()) {
             switch (sQuery->target()) {
             case OffsetSearchQuery::Target::PACKET:
-                reqOffsetBits = static_cast<long long>(_activePacket->curOffsetInPacketBits()) +
+                reqOffsetBits = static_cast<long long>(_activePacketState->curOffsetInPacketBits()) +
                                 sQuery->value();
                 break;
 
             case OffsetSearchQuery::Target::DATA_STREAM_FILE:
             {
-                const auto curPacketOffsetBitsInDataStream = _activePacket->indexEntry().offsetInDataStreamBits();
+                const auto curPacketOffsetBitsInDataStream = _activePacketState->packetIndexEntry().offsetInDataStreamBits();
 
                 reqOffsetBits = static_cast<long long>(curPacketOffsetBitsInDataStream +
-                                                       _activePacket->curOffsetInPacketBits()) +
+                                                       _activePacketState->curOffsetInPacketBits()) +
                                 sQuery->value();
                 break;
             }
@@ -446,13 +371,13 @@ bool DataStreamFileState::search(const SearchQuery& query)
         switch (sQuery->target()) {
         case OffsetSearchQuery::Target::PACKET:
         {
-            if (offsetInPacketBits >= _activePacket->indexEntry().effectiveTotalSize()) {
+            if (offsetInPacketBits >= _activePacketState->packetIndexEntry().effectiveTotalSize()) {
                 return false;
             }
 
-            const auto& region = _activePacket->dataRegionAtOffsetInPacketBits(offsetInPacketBits);
+            const auto& region = _activePacketState->packet().dataRegionAtOffsetInPacketBits(offsetInPacketBits);
 
-            _activePacket->curOffsetInPacketBits(region.segment().offsetInPacketBits());
+            _activePacketState->gotoDataRegionAtOffsetInPacketBits(region);
             break;
         }
 
@@ -487,50 +412,16 @@ bool DataStreamFileState::search(const SearchQuery& query)
     return false;
 }
 
-Packet::SP DataStreamFileState::_packet(const Index index,
-                                        PacketCheckpointsBuildListener& buildListener)
-{
-    assert(index < _dataStreamFile.packetCount());
-
-    Packet::SP packet;
-
-    auto packetPtr = _packetCache.get(index);
-
-    if (packetPtr) {
-        packet = *packetPtr;
-    } else {
-        auto& packetIndexEntry = _dataStreamFile.packetIndexEntry(index);
-        auto mmapFile = std::make_unique<MemoryMappedFile>(_dataStreamFile.path(),
-                                                           _fd);
-
-        buildListener.startBuild(packetIndexEntry);
-        packet = std::make_shared<Packet>(*this, packetIndexEntry, _seq,
-                                          *_metadata,
-                                          _factory->createDataSource(),
-                                          std::move(mmapFile),
-                                          buildListener);
-        buildListener.endBuild();
-
-        if (packet->error()) {
-            packetIndexEntry.isInvalid(true);
-        }
-
-        packetIndexEntry.eventRecordCount(packet->eventRecordCount());
-        _packetCache.insert(index, packet);
-    }
-
-    return packet;
-}
-
 void DataStreamFileState::analyzeAllPackets(PacketCheckpointsBuildListener& buildListener)
 {
-    for (auto& pktIndexEntry : _dataStreamFile.packetIndexEntries()) {
+    for (auto& pktIndexEntry : _dataStreamFile->packetIndexEntries()) {
         if (pktIndexEntry.eventRecordCount()) {
             continue;
         }
 
         // this creates checkpoints and shows progress
-        this->_packet(pktIndexEntry.indexInDataStream(), buildListener);
+        _dataStreamFile->packetAtIndex(pktIndexEntry.indexInDataStream(),
+                                       buildListener);
     }
 }
 

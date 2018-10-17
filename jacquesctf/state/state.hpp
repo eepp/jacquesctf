@@ -41,7 +41,7 @@ class Message;
 class State
 {
     friend class DataStreamFileState;
-    friend class Packet;
+    friend class PacketState;
 
 public:
     using Observer = std::function<void (const Message&)>;
@@ -121,14 +121,14 @@ public:
         _activeDataStreamFileState->gotoLastDataRegion();
     }
 
-    bool hasActivePacket() const noexcept
+    bool hasActivePacketState() const noexcept
     {
-        return _activeDataStreamFileState->hasActivePacket();
+        return _activeDataStreamFileState->hasActivePacketState();
     }
 
-    Packet& activePacket()
+    PacketState& activePacketState()
     {
-        return _activeDataStreamFileState->activePacket();
+        return _activeDataStreamFileState->activePacketState();
     }
 
     Index curOffsetInPacketBits() const noexcept
@@ -136,9 +136,9 @@ public:
         return _activeDataStreamFileState->curOffsetInPacketBits();
     }
 
-    void curOffsetInPacketBits(const Index offsetInPacketBits)
+    void gotoDataRegionAtOffsetInPacketBits(const Index offsetInPacketBits)
     {
-        _activeDataStreamFileState->curOffsetInPacketBits(offsetInPacketBits);
+        _activeDataStreamFileState->gotoDataRegionAtOffsetInPacketBits(offsetInPacketBits);
     }
 
     const EventRecord *currentEventRecord()

@@ -88,13 +88,13 @@ void DataTypesScreen::_resized()
 
 void DataTypesScreen::highlightCurrentDataType()
 {
-    if (!this->_state().hasActivePacket()) {
+    if (!this->_state().hasActivePacketState()) {
         _dtExplorerView->clearHighlight();
     }
 
-    auto& activePacket = this->_state().activePacket();
+    auto& activePacketState = this->_state().activePacketState();
 
-    const auto curDst = activePacket.indexEntry().dataStreamType();
+    const auto curDst = activePacketState.packetIndexEntry().dataStreamType();
     const auto curEventRecord = this->_state().currentEventRecord();
 
     if (curEventRecord) {

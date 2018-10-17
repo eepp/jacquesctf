@@ -20,8 +20,7 @@
 #include "packet.hpp"
 #include "event-record.hpp"
 #include "metadata.hpp"
-#include "lru-cache.hpp"
-#include "packet-checkpoints-build-listener.hpp"
+#include "packet-state.hpp"
 
 namespace jacques {
 
@@ -31,10 +30,8 @@ class DataStreamFileState
 {
 public:
     explicit DataStreamFileState(State& state,
-                                 const boost::filesystem::path& path,
-                                 std::shared_ptr<const Metadata> metadata,
+                                 std::unique_ptr<DataStreamFile> dataStreamFile,
                                  std::shared_ptr<PacketCheckpointsBuildListener> packetCheckpointsBuildListener);
-    ~DataStreamFileState();
     void gotoOffsetBits(Index offsetBits);
     void gotoPacket(Index index);
     void gotoPreviousPacket();
@@ -50,12 +47,12 @@ public:
 
     DataStreamFile& dataStreamFile() noexcept
     {
-        return _dataStreamFile;
+        return *_dataStreamFile;
     }
 
     const DataStreamFile& dataStreamFile() const noexcept
     {
-        return _dataStreamFile;
+        return *_dataStreamFile;
     }
 
     void gotoOffsetBytes(Index offsetBytes)
@@ -63,73 +60,64 @@ public:
         return this->gotoOffsetBits(offsetBytes * 8);
     }
 
-    bool hasActivePacket() const noexcept
+    bool hasActivePacketState() const noexcept
     {
-        return _activePacket != nullptr;
+        return _activePacketState != nullptr;
     }
 
-    Packet& activePacket()
+    PacketState& activePacketState()
     {
-        if (!_activePacket) {
-            _activePacket = this->_packet(_activePacketIndex,
-                                          *_packetCheckpointsBuildListener);
-        }
-
-        return *_activePacket;
+        return this->_packetState(_activePacketStateIndex);
     }
 
-    Index activePacketIndex() const
+    Index activePacketStateIndex() const noexcept
     {
-        return _activePacketIndex;
+        return _activePacketStateIndex;
     }
 
     Index curOffsetInPacketBits() const noexcept
     {
-        if (!_activePacket) {
+        if (!_activePacketState) {
             return 0;
         }
 
-        return _activePacket->curOffsetInPacketBits();
+        return _activePacketState->curOffsetInPacketBits();
     }
 
-    void curOffsetInPacketBits(const Index offsetInPacketBits)
+    void gotoDataRegionAtOffsetInPacketBits(const Index offsetInPacketBits)
     {
-        if (!_activePacket) {
+        if (!_activePacketState) {
             return;
         }
 
-        if (!_activePacket->hasData()) {
-            return;
-        }
-
-        _activePacket->curOffsetInPacketBits(offsetInPacketBits);
+        _activePacketState->gotoDataRegionAtOffsetInPacketBits(offsetInPacketBits);
     }
 
     const EventRecord *currentEventRecord()
     {
-        if (!_activePacket) {
+        if (!_activePacketState) {
             return nullptr;
         }
 
-        return _activePacket->currentEventRecord();
+        return _activePacketState->currentEventRecord();
     }
 
     const DataRegion *currentDataRegion()
     {
-        if (!_activePacket) {
+        if (!_activePacketState) {
             return nullptr;
         }
 
-        if (_activePacket->indexEntry().effectiveTotalSize() == 0){
+        if (_activePacketState->packetIndexEntry().effectiveTotalSize() == 0) {
             return nullptr;
         }
 
-        return _activePacket->currentDataRegion();
+        return &_activePacketState->currentDataRegion();
     }
 
     const Metadata& metadata() const noexcept
     {
-        return *_metadata;
+        return _dataStreamFile->metadata();
     }
 
     State& state() noexcept
@@ -143,23 +131,19 @@ public:
     }
 
 private:
-    Packet::SP _packet(Index index, PacketCheckpointsBuildListener& buildListener);
+    PacketState& _packetState(Index index);
     void _gotoPacket(Index index);
     bool _gotoNextEventRecordWithProperty(const std::function<bool (const EventRecord&)>& compareFunc,
                                           const boost::optional<Index>& initPacketIndex = boost::none,
                                           const boost::optional<Index>& initErIndex = boost::none);
 
 private:
-    State *_state;
-    Packet::SP _activePacket;
-    Index _activePacketIndex;
-    std::shared_ptr<const Metadata> _metadata;
+    State * const _state;
+    PacketState *_activePacketState = nullptr;
+    Index _activePacketStateIndex = 0;
+    std::vector<std::unique_ptr<PacketState>> _packetStates;
     std::shared_ptr<PacketCheckpointsBuildListener> _packetCheckpointsBuildListener;
-    std::shared_ptr<yactfr::MemoryMappedFileViewFactory> _factory;
-    yactfr::PacketSequence _seq;
-    DataStreamFile _dataStreamFile;
-    LruCache<Index, Packet::SP> _packetCache;
-    int _fd;
+    std::unique_ptr<DataStreamFile> _dataStreamFile;
 };
 
 } // namespace jacques

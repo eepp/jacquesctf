@@ -24,11 +24,11 @@ PacketDecodingErrorDetailsView::PacketDecodingErrorDetailsView(const Rectangle& 
 
 void PacketDecodingErrorDetailsView::_redrawContent()
 {
-    if (!_state->hasActivePacket() || !_state->activePacket().error()) {
+    if (!_state->hasActivePacketState() || !_state->activePacketState().packet().error()) {
         return;
     }
 
-    const auto& error = *_state->activePacket().error();
+    const auto& error = *_state->activePacketState().packet().error();
 
     this->_stylist().packetDecodingErrorDetailsView(*this);
     this->_clearRect();

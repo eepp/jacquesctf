@@ -10,25 +10,42 @@
 #include <unistd.h>
 
 #include "data-stream-file.hpp"
+#include "io-error.hpp"
 
 namespace jacques {
 
 DataStreamFile::DataStreamFile(const boost::filesystem::path& path,
-                               const Metadata& metadata,
-                               yactfr::PacketSequence& seq,
-                               yactfr::MemoryMappedFileViewFactory& factory) :
-    _path {&path},
-    _metadata {&metadata},
-    _seq {&seq},
-    _factory {&factory}
+                               std::shared_ptr<const Metadata> metadata) :
+    _path {path},
+    _metadata {metadata},
+    _factory {
+        std::make_shared<yactfr::MemoryMappedFileViewFactory>(path.string(),
+                                                              8 << 20,
+                                                              yactfr::MemoryMappedFileViewFactory::AccessPattern::SEQUENTIAL)
+    },
+    _seq {_metadata->traceType(), _factory}
 {
     _fileSize = DataSize::fromBytes(boost::filesystem::file_size(path));
+    _fd = open(path.string().c_str(), O_RDONLY);
+
+    if (_fd < 0) {
+        throw IOError {path, "Cannot open file."};
+    }
+}
+
+DataStreamFile::~DataStreamFile()
+{
+    if (_fd >= 0) {
+        (void) close(_fd);
+    }
 }
 
 void DataStreamFile::buildIndex(const BuildIndexProgressFunc& progressFunc,
                                 const Size step)
 {
-    assert(!_isIndexBuilt);
+    if (_isIndexBuilt) {
+        return;
+    }
 
     if (_fileSize == 0) {
         _isIndexBuilt = true;
@@ -41,6 +58,7 @@ void DataStreamFile::buildIndex(const BuildIndexProgressFunc& progressFunc,
     this->_buildIndex(progressFunc, step);
     _factory->expectedAccessPattern(oldExpectedAccessPattern);
     _isIndexBuilt = true;
+    _packets.resize(_index.size());
 }
 
 void DataStreamFile::_addPacketIndexEntry(const Index offsetInDataStreamBytes,
@@ -106,8 +124,8 @@ void DataStreamFile::_IndexBuildingState::reset()
 void DataStreamFile::_buildIndex(const BuildIndexProgressFunc& progressFunc,
                                  const Size step)
 {
-    auto it = std::begin(*_seq);
-    const auto endIt = std::end(*_seq);
+    auto it = std::begin(_seq);
+    const auto endIt = std::end(_seq);
     Index offsetBytes = 0;
     _IndexBuildingState state;
     bool packetStarted = false;
@@ -264,6 +282,8 @@ void DataStreamFile::_buildIndex(const BuildIndexProgressFunc& progressFunc,
 
 bool DataStreamFile::hasOffsetBits(const Index offsetBits)
 {
+    assert(_isIndexBuilt);
+
     if (_fileSize == 0) {
         return false;
     }
@@ -295,6 +315,8 @@ const PacketIndexEntry& DataStreamFile::packetIndexEntryContainingOffsetBits(con
 
 const PacketIndexEntry *DataStreamFile::packetIndexEntryContainingTimestamp(const Timestamp& ts)
 {
+    assert(_isIndexBuilt);
+
     auto it = std::lower_bound(std::begin(_index), std::end(_index),
                                ts, [](const auto& entry,
                                       const auto ts) {
@@ -322,6 +344,8 @@ const PacketIndexEntry *DataStreamFile::packetIndexEntryContainingTimestamp(cons
 
 const PacketIndexEntry *DataStreamFile::packetIndexEntryWithSeqNum(const Index seqNum)
 {
+    assert(_isIndexBuilt);
+
     if (_index.empty()) {
         return nullptr;
     }
@@ -347,6 +371,37 @@ const PacketIndexEntry *DataStreamFile::packetIndexEntryWithSeqNum(const Index s
     }
 
     return &(*it);
+}
+
+Packet& DataStreamFile::packetAtIndex(const Index index,
+                                      PacketCheckpointsBuildListener& buildListener)
+{
+    assert(_isIndexBuilt);
+    assert(index < _index.size());
+
+    if (!_packets[index]) {
+        auto& packetIndexEntry = _index[index];
+        auto mmapFile = std::make_unique<MemoryMappedFile>(_path, _fd);
+
+        buildListener.startBuild(packetIndexEntry);
+
+        auto packet = std::make_unique<Packet>(packetIndexEntry, _seq,
+                                               *_metadata,
+                                               _factory->createDataSource(),
+                                               std::move(mmapFile),
+                                               buildListener);
+
+        buildListener.endBuild();
+
+        if (packet->error()) {
+            packetIndexEntry.isInvalid(true);
+        }
+
+        packetIndexEntry.eventRecordCount(packet->eventRecordCount());
+        _packets[index] = std::move(packet);
+    }
+
+    return *_packets[index];
 }
 
 } // namespace jacques

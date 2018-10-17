@@ -20,6 +20,7 @@
 #include "packet-index-entry.hpp"
 #include "metadata.hpp"
 #include "data-size.hpp"
+#include "packet-checkpoints-build-listener.hpp"
 
 namespace jacques {
 
@@ -30,12 +31,12 @@ public:
 
 public:
     explicit DataStreamFile(const boost::filesystem::path& path,
-                            const Metadata& metadata,
-                            yactfr::PacketSequence& seq,
-                            yactfr::MemoryMappedFileViewFactory& factory);
+                            std::shared_ptr<const Metadata> metadata);
+    ~DataStreamFile();
     void buildIndex(const BuildIndexProgressFunc& progressFunc,
                     Size step = 1);
     bool hasOffsetBits(Index offsetBits);
+    Packet& packetAtIndex(Index index, PacketCheckpointsBuildListener& buildListener);
     const PacketIndexEntry& packetIndexEntryContainingOffsetBits(Index offsetBits);
     const PacketIndexEntry *packetIndexEntryWithSeqNum(Index seqNum);
     const PacketIndexEntry *packetIndexEntryContainingTimestamp(const Timestamp& ts);
@@ -72,7 +73,7 @@ public:
 
     const boost::filesystem::path& path() const noexcept
     {
-        return *_path;
+        return _path;
     }
 
     const DataSize& fileSize() const noexcept
@@ -83,6 +84,11 @@ public:
     bool isComplete() const noexcept
     {
         return _isComplete;
+    }
+
+    const Metadata& metadata() const noexcept
+    {
+        return *_metadata;
     }
 
 private:
@@ -111,12 +117,14 @@ private:
                               bool isInvalid);
 
 private:
-    const boost::filesystem::path *_path;
-    const Metadata *_metadata;
-    yactfr::PacketSequence *_seq;
-    yactfr::MemoryMappedFileViewFactory *_factory;
+    const boost::filesystem::path _path;
+    std::shared_ptr<const Metadata> _metadata;
+    std::shared_ptr<yactfr::MemoryMappedFileViewFactory> _factory;
+    yactfr::PacketSequence _seq;
     DataSize _fileSize;
     std::vector<PacketIndexEntry> _index;
+    std::vector<std::unique_ptr<Packet>> _packets;
+    int _fd;
     bool _isIndexBuilt = false;
     bool _isComplete = true;
 };

@@ -101,8 +101,8 @@ void InspectScreen::_visibilityChanged()
 
 void InspectScreen::_tryShowDecodingError()
 {
-    if (this->_state().hasActivePacket() &&
-            this->_state().activePacket().error()) {
+    if (this->_state().hasActivePacketState() &&
+            this->_state().activePacketState().packet().error()) {
         _decErrorView->moveAndResize(Rectangle {{this->rect().pos.x + 4,
                                                  this->rect().h - 14},
                                                 this->rect().w - 8, 12});
@@ -118,10 +118,10 @@ void InspectScreen::_snapshotState()
 
     snapshot.dsfStateIndex = this->_state().activeDataStreamFileStateIndex();
 
-    if (this->_state().hasActivePacket()) {
+    if (this->_state().hasActivePacketState()) {
         const auto& activeDsfState = this->_state().activeDataStreamFileState();
 
-        snapshot.packetIndexInDataStreamFile = activeDsfState.activePacketIndex();
+        snapshot.packetIndexInDataStreamFile = activeDsfState.activePacketStateIndex();
         snapshot.offsetInPacketBits = activeDsfState.curOffsetInPacketBits();
     }
 
@@ -183,8 +183,8 @@ void InspectScreen::_restoreStateSnapshot(const _StateSnapshot& snapshot)
 
     if (snapshot.packetIndexInDataStreamFile) {
         this->_state().gotoPacket(*snapshot.packetIndexInDataStreamFile);
-        assert(this->_state().hasActivePacket());
-        this->_state().curOffsetInPacketBits(snapshot.offsetInPacketBits);
+        assert(this->_state().hasActivePacketState());
+        this->_state().gotoDataRegionAtOffsetInPacketBits(snapshot.offsetInPacketBits);
     }
 }
 
@@ -228,7 +228,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         break;
 
     case KEY_HOME:
-        this->_state().curOffsetInPacketBits(0);
+        this->_state().gotoDataRegionAtOffsetInPacketBits(0);
         this->_snapshotState();
         break;
 

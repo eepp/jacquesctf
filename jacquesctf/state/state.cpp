@@ -33,8 +33,9 @@ State::State(const std::list<boost::filesystem::path>& paths,
             throw MetadataError {metadataSp};
         }
 
-        auto dsfState = std::make_unique<DataStreamFileState>(*this, path,
-                                                              metadataSp,
+        auto dsf = std::make_unique<DataStreamFile>(path, metadataSp);
+        auto dsfState = std::make_unique<DataStreamFileState>(*this,
+                                                              std::move(dsf),
                                                               packetCheckpointsBuildListener);
 
         _dataStreamFileStates.push_back(std::move(dsfState));
@@ -71,7 +72,7 @@ void State::gotoDataStreamFile(const Index index)
     this->_notify(ActiveDataStreamFileChangedMessage {});
 
     if (_activeDataStreamFileState->dataStreamFile().packetCount() > 0) {
-        if (!_activeDataStreamFileState->hasActivePacket()) {
+        if (!_activeDataStreamFileState->hasActivePacketState()) {
             _activeDataStreamFileState->gotoPacket(0);
         }
     }

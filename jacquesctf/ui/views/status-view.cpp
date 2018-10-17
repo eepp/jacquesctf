@@ -17,6 +17,7 @@
 #include "utils.hpp"
 #include "active-data-stream-file-changed-message.hpp"
 #include "active-packet-changed-message.hpp"
+#include "cur-offset-in-packet-changed-message.hpp"
 
 namespace jacques {
 
@@ -41,11 +42,9 @@ void StatusView::_stateChanged(const Message& msg)
 
 void StatusView::_drawOffset()
 {
-    if (!_state->hasActivePacket()) {
+    if (!_state->hasActivePacketState()) {
         return;
     }
-
-    const auto& activePacket = _state->activePacket();
 
     this->_stylist().statusViewStd(*this);
 
@@ -56,7 +55,8 @@ void StatusView::_drawOffset()
     this->_moveAndPrint({this->contentRect().w - 47, 0}, "{");
     this->_stylist().statusViewStd(*this, true);
     this->_moveAndPrint({this->contentRect().w - 46, 0}, "%s",
-                        utils::sepNumber(activePacket.curOffsetInPacketBits(), ',').c_str());
+                        utils::sepNumber(_state->activePacketState().curOffsetInPacketBits(),
+                                         ',').c_str());
     this->_stylist().statusViewStd(*this);
     this->_print("}");
 }
@@ -71,8 +71,8 @@ void StatusView::_redrawContent()
     std::array<char, 32> packetCount;
     std::array<char, 32> curPacket;
 
-    if (_state->hasActivePacket()) {
-        const auto index = _state->activePacket().indexEntry().natIndexInDataStream();
+    if (_state->hasActivePacketState()) {
+        const auto index = _state->activePacketState().packetIndexEntry().natIndexInDataStream();
 
         std::snprintf(curPacket.data(), curPacket.size(), "%s",
                       utils::sepNumber(static_cast<long long>(index), ',').c_str());
@@ -99,9 +99,9 @@ void StatusView::_redrawContent()
     this->_moveAndPrint(pktInfoPos, "%s", packetCount.data());
 
     // packet sequence number
-    if (_state->hasActivePacket()) {
-        const auto& activePacket = _state->activePacket();
-        const auto& seqNum = activePacket.indexEntry().seqNum();
+    if (_state->hasActivePacketState()) {
+        const auto& activePacketState = _state->activePacketState();
+        const auto& seqNum = activePacketState.packetIndexEntry().seqNum();
 
         if (seqNum) {
             this->_moveAndPrint({this->contentRect().w - 25, 0}, "##");

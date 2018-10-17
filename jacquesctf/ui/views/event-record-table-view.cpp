@@ -101,9 +101,9 @@ void EventRecordTableView::_setColumnDescriptions()
 
 void EventRecordTableView::_drawRow(const Index index)
 {
-    assert(_state->hasActivePacket());
+    assert(_state->hasActivePacketState());
 
-    auto& eventRecord = _state->activePacket().eventRecordAtIndexInPacket(index);
+    auto& eventRecord = _state->activePacketState().packet().eventRecordAtIndexInPacket(index);
 
     static_cast<UnsignedIntTableViewCell&>(*_row[0]).value(eventRecord.natIndexInPacket());
     static_cast<DataSizeTableViewCell&>(*_row[1]).size(eventRecord.segment().offsetInPacketBits());
@@ -136,11 +136,11 @@ void EventRecordTableView::_drawRow(const Index index)
 
 bool EventRecordTableView::_hasIndex(const Index index)
 {
-    if (!_state->hasActivePacket()) {
+    if (!_state->hasActivePacketState()) {
         return false;
     }
 
-    return index < _state->activePacket().eventRecordCount();
+    return index < _state->activePacketState().packet().eventRecordCount();
 }
 
 void EventRecordTableView::timestampFormatMode(const TimestampFormatMode tsFormatMode)
@@ -160,11 +160,11 @@ void EventRecordTableView::dataSizeFormatMode(const utils::SizeFormatMode dsForm
 
 void EventRecordTableView::_selectLast()
 {
-    if (!_state->hasActivePacket()) {
+    if (!_state->hasActivePacketState()) {
         return;
     }
 
-    this->_selectionIndex(_state->activePacket().eventRecordCount() - 1);
+    this->_selectionIndex(_state->activePacketState().packet().eventRecordCount() - 1);
 }
 
 void EventRecordTableView::_stateChanged(const Message& msg)
@@ -179,10 +179,10 @@ void EventRecordTableView::_stateChanged(const Message& msg)
         this->_isSelectionHighlightEnabled(false, false);
     }
 
-    if (_state->hasActivePacket() &&
-            _state->activePacket().eventRecordCount() > 0) {
-        assert(_state->activePacket().firstEventRecord());
-        assert(_state->activePacket().lastEventRecord());
+    if (_state->hasActivePacketState() &&
+            _state->activePacketState().packet().eventRecordCount() > 0) {
+        assert(_state->activePacketState().packet().firstEventRecord());
+        assert(_state->activePacketState().packet().lastEventRecord());
 
         auto curEventRecord = _state->currentEventRecord();
 
@@ -190,7 +190,7 @@ void EventRecordTableView::_stateChanged(const Message& msg)
             this->_isSelectionHighlightEnabled(true, false);
             this->_selectionIndex(curEventRecord->indexInPacket(), false);
         } else {
-            const auto& indexEntry = _state->activePacket().indexEntry();
+            const auto& indexEntry = _state->activePacketState().packetIndexEntry();
             const auto offsetInPacketBits = _state->curOffsetInPacketBits();
 
             // convenience for regions outside the event record block
@@ -198,8 +198,8 @@ void EventRecordTableView::_stateChanged(const Message& msg)
                                              indexEntry.preambleSize()->bits()) {
                 this->_selectionIndex(0, false);
             } else if (offsetInPacketBits >=
-                       _state->activePacket().lastEventRecord()->segment().endOffsetInPacketBits()) {
-                this->_selectionIndex(_state->activePacket().lastEventRecord()->indexInPacket(),
+                    _state->activePacketState().packet().lastEventRecord()->segment().endOffsetInPacketBits()) {
+                this->_selectionIndex(_state->activePacketState().packet().lastEventRecord()->indexInPacket(),
                                       false);
             }
 

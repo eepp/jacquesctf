@@ -59,6 +59,7 @@ add_executable (
     state/packet-checkpoints-build-listener.cpp
     state/packet-checkpoints.cpp
     state/packet-index-entry.cpp
+    state/packet-state.cpp
     state/packet.cpp
     state/padding-data-region.cpp
     state/scope.cpp

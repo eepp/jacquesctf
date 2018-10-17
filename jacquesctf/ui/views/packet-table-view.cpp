@@ -318,7 +318,7 @@ void PacketTableView::_stateChanged(const Message& msg)
 
     if (updateSelection) {
         // reset selection from state
-        this->_selectionIndex(_state->activeDataStreamFileState().activePacketIndex());
+        this->_selectionIndex(_state->activeDataStreamFileState().activePacketStateIndex());
     }
 }
 
