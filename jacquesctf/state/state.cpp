@@ -7,8 +7,10 @@
 
 #include <cassert>
 #include <algorithm>
+#include <map>
 
 #include "state.hpp"
+#include "trace.hpp"
 #include "search-parser.hpp"
 #include "message.hpp"
 #include "metadata-error.hpp"
@@ -16,33 +18,36 @@
 
 namespace jacques {
 
-State::State(const std::list<boost::filesystem::path>& paths,
+namespace bfs = boost::filesystem;
+
+State::State(const std::list<bfs::path>& paths,
              std::shared_ptr<PacketCheckpointsBuildListener> packetCheckpointsBuildListener)
 {
     assert(!paths.empty());
 
-    MetadataStore metadataStore;
+    std::map<bfs::path, std::vector<bfs::path>> tracePaths;
 
+    // group by trace
     for (const auto& path : paths) {
-        const auto metadataPath = path.parent_path() / "metadata";
-        auto metadataSp = metadataStore.metadata(metadataPath);
+        tracePaths[path.parent_path()].push_back(path);
+    }
 
-        if (metadataSp->invalidStreamError() ||
-                metadataSp->invalidMetadataError() ||
-                metadataSp->parseError()) {
-            throw MetadataError {metadataSp};
+    // create traces
+    for (const auto& tracePathPathsPair : tracePaths) {
+        auto trace = std::make_unique<Trace>(tracePathPathsPair.second);
+
+        for (auto& dataStreamFile : trace->dataStreamFiles()) {
+            auto dsfState = std::make_unique<DataStreamFileState>(*this,
+                                                                  *dataStreamFile,
+                                                                  packetCheckpointsBuildListener);
+            _dataStreamFileStates.push_back(std::move(dsfState));
         }
 
-        auto dsf = std::make_unique<DataStreamFile>(path, metadataSp);
-        auto dsfState = std::make_unique<DataStreamFileState>(*this,
-                                                              std::move(dsf),
-                                                              packetCheckpointsBuildListener);
-
-        _dataStreamFileStates.push_back(std::move(dsfState));
+        _traces.push_back(std::move(trace));
     }
 
     _activeDataStreamFileStateIndex = 0;
-    _activeDataStreamFileState = _dataStreamFileStates[0].get();
+    _activeDataStreamFileState = _dataStreamFileStates.front().get();
 }
 
 Index State::addObserver(const Observer& observer)

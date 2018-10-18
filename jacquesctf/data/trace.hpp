@@ -1,0 +1,50 @@
+/*
+ * Copyright (C) 2018 Philippe Proulx <eepp.ca> - All Rights Reserved
+ *
+ * Unauthorized copying of this file, via any medium, is strictly
+ * prohibited. Proprietary and confidential.
+ */
+
+#ifndef _JACQUES_TRACE_HPP
+#define _JACQUES_TRACE_HPP
+
+#include <memory>
+#include <vector>
+#include <boost/core/noncopyable.hpp>
+#include <boost/filesystem.hpp>
+
+#include "aliases.hpp"
+#include "utils.hpp"
+#include "data-stream-file.hpp"
+#include "metadata.hpp"
+
+namespace jacques {
+
+class Trace :
+    boost::noncopyable
+{
+public:
+    explicit Trace(const std::vector<boost::filesystem::path>& dataStreamFilePaths);
+
+public:
+    const Metadata& metadata() const noexcept
+    {
+        return *_metadata;
+    }
+
+    const std::vector<std::unique_ptr<DataStreamFile>>& dataStreamFiles() const noexcept
+    {
+        return _dataStreamFiles;
+    }
+
+private:
+    void _createMetadata(const boost::filesystem::path& path);
+
+private:
+    std::vector<std::unique_ptr<DataStreamFile>> _dataStreamFiles;
+    std::unique_ptr<Metadata> _metadata;
+};
+
+} // namespace jacques
+
+#endif // _JACQUES_TRACE_HPP

@@ -32,8 +32,10 @@ public:
     };
 
 public:
-    Duration();
+    Duration() = default;
     explicit Duration(unsigned long long ns);
+    Duration(const Duration&) = default;
+    Duration& operator=(const Duration&) = default;
     Parts parts() const;
     void format(char *buf, Size bufSize) const;
     std::string format() const;

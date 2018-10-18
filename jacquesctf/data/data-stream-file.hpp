@@ -11,6 +11,7 @@
 #include <vector>
 #include <functional>
 #include <boost/filesystem.hpp>
+#include <boost/core/noncopyable.hpp>
 #include <yactfr/packet-sequence.hpp>
 #include <yactfr/metadata/fwd.hpp>
 #include <yactfr/memory-mapped-file-view-factory.hpp>
@@ -24,14 +25,15 @@
 
 namespace jacques {
 
-class DataStreamFile
+class DataStreamFile :
+    boost::noncopyable
 {
 public:
     using BuildIndexProgressFunc = std::function<void (const PacketIndexEntry&)>;
 
 public:
     explicit DataStreamFile(const boost::filesystem::path& path,
-                            std::shared_ptr<const Metadata> metadata);
+                            const Metadata& metadata);
     ~DataStreamFile();
     void buildIndex(const BuildIndexProgressFunc& progressFunc,
                     Size step = 1);
@@ -118,7 +120,7 @@ private:
 
 private:
     const boost::filesystem::path _path;
-    std::shared_ptr<const Metadata> _metadata;
+    const Metadata * const _metadata;
     std::shared_ptr<yactfr::MemoryMappedFileViewFactory> _factory;
     yactfr::PacketSequence _seq;
     DataSize _fileSize;

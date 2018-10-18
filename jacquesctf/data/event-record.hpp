@@ -11,6 +11,7 @@
 #include <memory>
 #include <boost/optional.hpp>
 #include <boost/operators.hpp>
+#include <boost/core/noncopyable.hpp>
 #include <yactfr/metadata/fwd.hpp>
 #include <yactfr/packet-sequence-iterator.hpp>
 
@@ -22,7 +23,8 @@
 namespace jacques {
 
 class EventRecord :
-    public boost::totally_ordered<EventRecord>
+    public boost::totally_ordered<EventRecord>,
+    boost::noncopyable
 {
 public:
     using SP = std::shared_ptr<EventRecord>;

@@ -10,10 +10,6 @@
 
 namespace jacques {
 
-Duration::Duration()
-{
-}
-
 Duration::Duration(const unsigned long long ns) :
     _ns {ns}
 {

@@ -10,13 +10,15 @@
 
 #include <memory>
 #include <yactfr/metadata/fwd.hpp>
+#include <boost/core/noncopyable.hpp>
 
 #include "event-record.hpp"
 #include "data-segment.hpp"
 
 namespace jacques {
 
-class Scope
+class Scope :
+    boost::noncopyable
 {
 public:
     using SP = std::shared_ptr<Scope>;

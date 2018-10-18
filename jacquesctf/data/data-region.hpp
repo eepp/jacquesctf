@@ -12,6 +12,7 @@
 #include <vector>
 #include <boost/operators.hpp>
 #include <boost/optional.hpp>
+#include <boost/core/noncopyable.hpp>
 
 #include "data-region-visitor.hpp"
 #include "data-segment.hpp"
@@ -25,7 +26,8 @@ enum class ByteOrder
     LITTLE,
 };
 
-class DataRegion
+class DataRegion :
+    boost::noncopyable
 {
 public:
     using SP = std::shared_ptr<DataRegion>;

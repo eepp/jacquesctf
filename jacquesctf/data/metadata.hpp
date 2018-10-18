@@ -18,13 +18,15 @@
 #include <yactfr/metadata/metadata-parse-error.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
+#include <boost/core/noncopyable.hpp>
 
 #include "aliases.hpp"
 #include "data-size.hpp"
 
 namespace jacques {
 
-class Metadata
+class Metadata :
+    boost::noncopyable
 {
 public:
     struct DataTypePath

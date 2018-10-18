@@ -16,6 +16,7 @@
 #include <yactfr/data-source.hpp>
 #include <yactfr/metadata/float-type.hpp>
 #include <yactfr/metadata/int-type.hpp>
+#include <boost/core/noncopyable.hpp>
 
 #include "packet-index-entry.hpp"
 #include "packet-checkpoints.hpp"
@@ -118,7 +119,8 @@ namespace jacques {
  * the LRU cache. The LRU cache avoids performing a binary search by
  * _dataRegionCacheItBeforeOrAtOffsetInPacketBits() every time.
  */
-class Packet
+class Packet :
+    boost::noncopyable
 {
 public:
     using SP = std::shared_ptr<Packet>;

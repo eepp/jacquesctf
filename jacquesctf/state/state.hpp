@@ -15,8 +15,8 @@
 #include "message.hpp"
 #include "data-stream-file-state.hpp"
 #include "search-parser.hpp"
-#include "metadata-store.hpp"
 #include "packet-checkpoints-build-listener.hpp"
+#include "trace.hpp"
 
 namespace jacques {
 
@@ -174,7 +174,7 @@ private:
     std::vector<std::unique_ptr<DataStreamFileState>> _dataStreamFileStates;
     DataStreamFileState *_activeDataStreamFileState;
     Index _activeDataStreamFileStateIndex = 0;
-    MetadataStore _metadataStore;
+    std::vector<std::unique_ptr<Trace>> _traces;
 };
 
 class StateObserverGuard

@@ -15,10 +15,6 @@ DataSize DataSize::fromBytes(Size sizeBytes)
     return {sizeBytes * 8};
 }
 
-DataSize::DataSize()
-{
-}
-
 DataSize::DataSize(const Size sizeBits) :
     _sizeBits {sizeBits}
 {

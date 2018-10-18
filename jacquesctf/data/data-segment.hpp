@@ -26,7 +26,9 @@ struct DataSegment :
     public boost::totally_ordered<DataSegment>
 {
     DataSegment() = default;
+    DataSegment(const DataSegment&) = default;
     explicit DataSegment(Index offsetInPacketBits, const DataSize& size);
+    DataSegment& operator=(const DataSegment&) = default;
 
     Index offsetInPacketBits() const noexcept
     {

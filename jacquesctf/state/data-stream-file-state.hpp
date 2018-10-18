@@ -30,7 +30,7 @@ class DataStreamFileState
 {
 public:
     explicit DataStreamFileState(State& state,
-                                 std::unique_ptr<DataStreamFile> dataStreamFile,
+                                 DataStreamFile& dataStreamFile,
                                  std::shared_ptr<PacketCheckpointsBuildListener> packetCheckpointsBuildListener);
     void gotoOffsetBits(Index offsetBits);
     void gotoPacket(Index index);
@@ -143,7 +143,7 @@ private:
     Index _activePacketStateIndex = 0;
     std::vector<std::unique_ptr<PacketState>> _packetStates;
     std::shared_ptr<PacketCheckpointsBuildListener> _packetCheckpointsBuildListener;
-    std::unique_ptr<DataStreamFile> _dataStreamFile;
+    DataStreamFile * const _dataStreamFile;
 };
 
 } // namespace jacques

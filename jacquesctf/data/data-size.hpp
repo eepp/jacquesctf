@@ -27,16 +27,13 @@ public:
     static DataSize fromBytes(Size sizeBytes);
 
 public:
-    DataSize();
+    DataSize() = default;
+    DataSize(const DataSize&) = default;
+
+    // non explicit makes this easier to use
     DataSize(Size sizeBits);
 
-public:
-    DataSize& operator=(const Size sizeBits) noexcept
-    {
-        _sizeBits = sizeBits;
-        return *this;
-    }
-
+    DataSize& operator=(const DataSize&) = default;
     std::pair<std::string, std::string> format(utils::SizeFormatMode formatMode = utils::SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS,
                                                const boost::optional<char>& sep = boost::none) const;
 

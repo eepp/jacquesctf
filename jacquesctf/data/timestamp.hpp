@@ -43,6 +43,8 @@ class Timestamp :
     public boost::totally_ordered<Timestamp>
 {
 public:
+    Timestamp() = default;
+    Timestamp(const Timestamp&) = default;
     explicit Timestamp(unsigned long long cycles, unsigned long long frequency,
                        long long offsetSeconds,
                        unsigned long long offsetCycles);
@@ -50,6 +52,7 @@ public:
                        const yactfr::ClockType& clockType);
     explicit Timestamp(const yactfr::ClockValueElement& elem);
     explicit Timestamp(const yactfr::PacketEndClockValueElement& elem);
+    Timestamp& operator=(const Timestamp&) = default;
 
     unsigned long long cycles() const noexcept
     {

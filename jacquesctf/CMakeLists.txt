@@ -48,7 +48,6 @@ add_executable (
     data/error-data-region.cpp
     data/event-record.cpp
     data/memory-mapped-file.cpp
-    data/metadata-store.cpp
     data/metadata.cpp
     data/packet-checkpoints-build-listener.cpp
     data/packet-checkpoints.cpp
@@ -57,6 +56,7 @@ add_executable (
     data/padding-data-region.cpp
     data/scope.cpp
     data/timestamp.cpp
+    data/trace.cpp
     jacques.cpp
     state/active-data-stream-file-changed-message.cpp
     state/active-packet-changed-message.cpp

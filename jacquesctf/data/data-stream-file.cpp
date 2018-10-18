@@ -15,9 +15,9 @@
 namespace jacques {
 
 DataStreamFile::DataStreamFile(const boost::filesystem::path& path,
-                               std::shared_ptr<const Metadata> metadata) :
+                               const Metadata& metadata) :
     _path {path},
-    _metadata {metadata},
+    _metadata {&metadata},
     _factory {
         std::make_shared<yactfr::MemoryMappedFileViewFactory>(path.string(),
                                                               8 << 20,

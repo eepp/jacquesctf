@@ -9,6 +9,7 @@
 #define _JACQUES_METADATE_ERROR_HPP
 
 #include <stdexcept>
+#include <memory>
 
 #include "metadata.hpp"
 
@@ -18,9 +19,9 @@ class MetadataError :
     public std::runtime_error
 {
 public:
-    explicit MetadataError(std::shared_ptr<const Metadata> metadata) :
+    explicit MetadataError(std::unique_ptr<Metadata> metadata) :
         std::runtime_error {"Metadata error"},
-        _metadata {metadata}
+        _metadata {std::move(metadata)}
     {
     }
 
@@ -30,7 +31,7 @@ public:
     }
 
 private:
-    std::shared_ptr<const Metadata> _metadata;
+    std::unique_ptr<const Metadata> _metadata;
 };
 
 } // namespace jacques

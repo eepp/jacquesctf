@@ -20,11 +20,11 @@
 namespace jacques {
 
 DataStreamFileState::DataStreamFileState(State& state,
-                                         std::unique_ptr<DataStreamFile> dataStreamFile,
+                                         DataStreamFile& dataStreamFile,
                                          std::shared_ptr<PacketCheckpointsBuildListener> packetCheckpointsBuildListener) :
     _state {&state},
     _packetCheckpointsBuildListener {std::move(packetCheckpointsBuildListener)},
-    _dataStreamFile {std::move(dataStreamFile)}
+    _dataStreamFile {&dataStreamFile}
 {
 }
 
