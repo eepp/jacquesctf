@@ -58,7 +58,7 @@ void StatusView::_drawOffset()
                         utils::sepNumber(_state->activePacketState().curOffsetInPacketBits(),
                                          ',').c_str());
     this->_stylist().statusViewStd(*this);
-    this->_print("}");
+    this->_print(" b}");
 }
 
 void StatusView::_redrawContent()
