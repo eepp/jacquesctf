@@ -14,11 +14,11 @@
 namespace jacques {
 
 PacketDecodingErrorDetailsView::PacketDecodingErrorDetailsView(const Rectangle& rect,
-                                                               std::shared_ptr<const Stylist> stylist,
-                                                               std::shared_ptr<State> state) :
+                                                               const Stylist& stylist,
+                                                               State& state) :
     View {rect, "", DecorationStyle::BORDERLESS, stylist},
-    _state {state},
-    _stateObserverGuard {*_state, *this}
+    _state {&state},
+    _stateObserverGuard {state, *this}
 {
 }
 

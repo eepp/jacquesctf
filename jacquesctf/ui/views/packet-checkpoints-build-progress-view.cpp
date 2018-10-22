@@ -14,7 +14,7 @@
 namespace jacques {
 
 PacketCheckpointsBuildProgressView::PacketCheckpointsBuildProgressView(const Rectangle& rect,
-                                                                       std::shared_ptr<const Stylist> stylist) :
+                                                                       const Stylist& stylist) :
     View {
         rect,
         "Creating packet checkpoints...",

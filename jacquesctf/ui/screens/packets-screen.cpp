@@ -22,8 +22,7 @@
 namespace jacques {
 
 PacketsScreen::PacketsScreen(const Rectangle& rect, const Config& cfg,
-                             std::shared_ptr<const Stylist> stylist,
-                             std::shared_ptr<State> state) :
+                             const Stylist& stylist, State& state) :
     Screen {rect, cfg, stylist, state},
     _ptView {std::make_unique<PacketTableView>(rect, stylist, state)},
     _searchController {*this, stylist},
@@ -65,7 +64,7 @@ class AnalyzeAllPacketsProgressUpdater :
     public PacketCheckpointsBuildListener
 {
 public:
-    explicit AnalyzeAllPacketsProgressUpdater(std::shared_ptr<const Stylist> stylist) :
+    explicit AnalyzeAllPacketsProgressUpdater(const Stylist& stylist) :
         _view {
             std::make_unique<PacketCheckpointsBuildProgressView>(
                 Rectangle {{4, 4}, static_cast<Size>(COLS) - 8, 12},
@@ -213,7 +212,7 @@ KeyHandlingReaction PacketsScreen::_handleKey(const int key)
 
     case 'a':
     {
-        auto updater = AnalyzeAllPacketsProgressUpdater {this->_stylistPtr()};
+        auto updater = AnalyzeAllPacketsProgressUpdater {this->_stylist()};
 
         this->_state().activeDataStreamFileState().analyzeAllPackets(updater);
         _ptView->redraw();

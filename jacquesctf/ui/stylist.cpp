@@ -27,7 +27,7 @@ Stylist::Stylist()
     this->_initColor(_COLOR_ID_TABLE_VIEW_HEADER, COLOR_BLACK, COLOR_GREEN);
     this->_initColor(_COLOR_ID_BOOL_YES, COLOR_GREEN, -1);
     this->_initColor(_COLOR_ID_BOOL_NO, COLOR_MAGENTA, -1);
-    this->_initColor(_COLOR_ID_TABLE_VIEW_SELECTION, COLOR_WHITE, COLOR_CYAN);
+    this->_initColor(_COLOR_ID_TABLE_VIEW_SELECTION, COLOR_BLACK, COLOR_CYAN);
     this->_initColor(_COLOR_ID_TABLE_VIEW_SELECTION_ERROR, COLOR_WHITE, COLOR_RED);
     this->_initColor(_COLOR_ID_TABLE_VIEW_TEXT_CELL_EMPHASIZED, COLOR_YELLOW, -1);
     this->_initColor(_COLOR_ID_TABLE_VIEW_TS_CELL_NS_PART, COLOR_CYAN, -1);
@@ -36,8 +36,8 @@ Stylist::Stylist()
     this->_initColor(_COLOR_ID_HELP_VIEW_SECTION, COLOR_GREEN, -1);
     this->_initColor(_COLOR_ID_HELP_VIEW_KEY, COLOR_CYAN, -1);
     this->_initColor(_COLOR_ID_STATUS_VIEW_STD, COLOR_WHITE, COLOR_BLUE);
-    this->_initColor(_COLOR_ID_DATA_REGION_INFO_VIEW_STD, COLOR_WHITE, COLOR_MAGENTA);
-    this->_initColor(_COLOR_ID_DATA_REGION_INFO_VIEW_VALUE, COLOR_YELLOW, COLOR_MAGENTA);
+    this->_initColor(_COLOR_ID_PACKET_REGION_INFO_VIEW_STD, COLOR_WHITE, COLOR_MAGENTA);
+    this->_initColor(_COLOR_ID_PACKET_REGION_INFO_VIEW_VALUE, COLOR_YELLOW, COLOR_MAGENTA);
     this->_initColor(_COLOR_ID_TABLE_VIEW_WARNING_CELL, COLOR_WHITE, COLOR_YELLOW);
     this->_initColor(_COLOR_ID_TABLE_VIEW_ERROR_CELL, COLOR_RED, -1);
     this->_initColor(_COLOR_ID_SIMPLE_INPUT_VIEW_BORDER, COLOR_BLACK, COLOR_GREEN);
@@ -57,11 +57,15 @@ Stylist::Stylist()
     this->_initColor(_COLOR_ID_SEARCH_INPUT_VIEW_ESCAPE, -1, -1);
     this->_initColor(_COLOR_ID_SEARCH_INPUT_VIEW_NUMBER, COLOR_BLUE, -1);
     this->_initColor(_COLOR_ID_SEARCH_INPUT_VIEW_ERROR, COLOR_WHITE, COLOR_RED);
+    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_SELECTION_PREVIOUS, COLOR_MAGENTA, -1);
+    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_SELECTION_NEXT, COLOR_GREEN, -1);
+    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_OFFSET, COLOR_YELLOW, -1);
+    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_PADDING, COLOR_BLUE, -1);
 }
 
 void Stylist::_initColor(const int id, const int fg, const int bg) const
 {
-    auto ret = init_pair(id, fg, bg);
+    const auto ret = init_pair(id, fg, bg);
 
     assert(ret == OK);
     JACQUES_UNUSED(ret);
@@ -174,7 +178,6 @@ void Stylist::tableViewHeader(const View& view) const
 void Stylist::tableViewSelection(const View& view, const bool error) const
 {
     this->tableViewSelectionSep(view, error);
-    this->_attrs(view, A_BOLD);
 }
 
 void Stylist::tableViewSelectionSep(const View& view, const bool error) const
@@ -267,21 +270,21 @@ void Stylist::statusViewFilename(const View& view) const
     this->_attrs(view, A_BOLD);
 }
 
-void Stylist::dataRegionInfoViewStd(const View& view, const bool emphasized) const
+void Stylist::packetRegionInfoViewStd(const View& view, const bool emphasized) const
 {
     this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_DATA_REGION_INFO_VIEW_STD);
+    this->_color(view, _COLOR_ID_PACKET_REGION_INFO_VIEW_STD);
 
     if (emphasized) {
         this->_attrs(view, A_BOLD);
     }
 }
 
-void Stylist::dataRegionInfoViewValue(const View& view) const
+void Stylist::packetRegionInfoViewValue(const View& view) const
 {
     this->_attrsReset(view);
     this->_attrs(view, A_BOLD);
-    this->_color(view, _COLOR_ID_DATA_REGION_INFO_VIEW_VALUE);
+    this->_color(view, _COLOR_ID_PACKET_REGION_INFO_VIEW_VALUE);
 }
 
 void Stylist::simpleInputViewBorder(const View& view) const
@@ -439,6 +442,46 @@ void Stylist::searchInputViewError(const View& view) const
     this->_attrsReset(view);
     this->_color(view, _COLOR_ID_SEARCH_INPUT_VIEW_ERROR);
     this->_attrs(view, A_BOLD);
+}
+
+void Stylist::packetDataViewSelection(const View& view,
+                                      const PacketDataViewSelectionType& selectionType) const
+{
+    this->_attrsReset(view);
+
+    int colorPair;
+
+    switch (selectionType) {
+    case PacketDataViewSelectionType::PREVIOUS:
+        colorPair = _COLOR_ID_PACKET_DATA_VIEW_SELECTION_PREVIOUS;
+        break;
+
+    case PacketDataViewSelectionType::CURRENT:
+        colorPair = _COLOR_ID_TABLE_VIEW_SELECTION;
+        break;
+
+    case PacketDataViewSelectionType::NEXT:
+        colorPair = _COLOR_ID_PACKET_DATA_VIEW_SELECTION_NEXT;
+        break;
+    }
+
+    this->_color(view, colorPair);
+}
+
+void Stylist::packetDataViewOffset(const View& view, const bool selected) const
+{
+    this->_attrsReset(view);
+    this->_color(view, _COLOR_ID_PACKET_DATA_VIEW_OFFSET);
+
+    if (selected) {
+        this->_attrs(view, A_BOLD);
+    }
+}
+
+void Stylist::packetDataViewPadding(const View& view) const
+{
+    this->_attrsReset(view);
+    this->_color(view, _COLOR_ID_PACKET_DATA_VIEW_PADDING);
 }
 
 } // namespace jacques

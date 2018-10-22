@@ -29,14 +29,13 @@ TraceInfoView::_Row::~_Row()
 }
 
 TraceInfoView::TraceInfoView(const Rectangle& rect,
-                             std::shared_ptr<const Stylist> stylist,
-                             std::shared_ptr<State> state) :
+                             const Stylist& stylist, State& state) :
     ScrollView {rect, "Trace info", DecorationStyle::BORDERS, stylist},
-    _state {state},
-    _stateObserverGuard {*state, *this}
+    _state {&state},
+    _stateObserverGuard {state, *this}
 {
     this->_buildRows();
-    _rows = &_traceInfo[state->metadata().traceType().get()];
+    _rows = &_traceInfo[state.metadata().traceType().get()];
     this->_rowCount(_rows->size());
     this->_drawRows();
 }
@@ -100,14 +99,7 @@ void TraceInfoView::_buildTraceInfoRows(const Metadata &metadata)
             const auto dst = dsFile.packetIndexEntry(0).dataStreamType();
 
             if (dataStreamId && dst) {
-                dataStreamIds.insert({
-                    dsFile.packetIndexEntry(0).dataStreamType()->id(),
-                    *dataStreamId
-                });
-            } else if (dst) {
-                dataStreamIds.insert({
-                    dsFile.packetIndexEntry(0).dataStreamType()->id(), 0
-                });
+                dataStreamIds.insert({dst->id(), *dataStreamId});
             } else {
                 ++dsfWithoutDsIdCount;
             }

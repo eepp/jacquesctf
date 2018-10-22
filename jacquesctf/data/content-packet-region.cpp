@@ -5,11 +5,11 @@
  * prohibited. Proprietary and confidential.
  */
 
-#include "content-data-region.hpp"
+#include "content-packet-region.hpp"
 
 namespace jacques {
 
-static boost::optional<ByteOrder> byteOrderFromDataType(const yactfr::DataType& dataType)
+static OptByteOrder byteOrderFromDataType(const yactfr::DataType& dataType)
 {
     if (dataType.isBitArrayType()) {
         switch (dataType.asBitArrayType()->byteOrder()) {
@@ -24,23 +24,21 @@ static boost::optional<ByteOrder> byteOrderFromDataType(const yactfr::DataType& 
     return boost::none;
 }
 
-ContentDataRegion::ContentDataRegion(const DataSegment& segment,
-                                     const DataRange& dataRange,
-                                     Scope::SP scope,
-                                     const yactfr::DataType& dataType,
-                                     const boost::optional<Value>& value) :
-    DataRegion {
+ContentPacketRegion::ContentPacketRegion(const PacketSegment& segment,
+                                         Scope::SP scope,
+                                         const yactfr::DataType& dataType,
+                                         const boost::optional<Value>& value) :
+    PacketRegion {
         segment,
-        dataRange,
-        std::move(scope),
-        byteOrderFromDataType(dataType)
+        std::move(scope)
     },
     _dataType {&dataType},
     _value {value}
 {
+    this->_segment().byteOrder(byteOrderFromDataType(dataType));
 }
 
-void ContentDataRegion::_accept(DataRegionVisitor& visitor)
+void ContentPacketRegion::_accept(PacketRegionVisitor& visitor)
 {
     visitor.visit(*this);
 }

@@ -21,7 +21,7 @@ class SearchInputView :
 {
 public:
     explicit SearchInputView(const Rectangle& rect,
-                             std::shared_ptr<const Stylist> stylist);
+                             const Stylist& stylist);
 
 private:
     void _drawFormatText(const std::string& text);

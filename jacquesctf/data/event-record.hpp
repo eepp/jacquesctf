@@ -16,7 +16,7 @@
 #include <yactfr/packet-sequence-iterator.hpp>
 
 #include "aliases.hpp"
-#include "data-segment.hpp"
+#include "packet-segment.hpp"
 #include "timestamp.hpp"
 #include "metadata.hpp"
 
@@ -40,7 +40,7 @@ public:
     explicit EventRecord(const yactfr::EventRecordType& type,
                          const Index indexInPacket,
                          const boost::optional<Timestamp>& firstTs,
-                         const DataSegment& segment);
+                         const PacketSegment& segment);
 
     const yactfr::EventRecordType& type() const noexcept
     {
@@ -62,17 +62,17 @@ public:
         return _indexInPacket + 1;
     }
 
-    const DataSegment& segment() const noexcept
+    const PacketSegment& segment() const noexcept
     {
         return _segment;
     }
 
-    DataSegment& segment() noexcept
+    PacketSegment& segment() noexcept
     {
         return _segment;
     }
 
-    void segment(const DataSegment& segment) noexcept
+    void segment(const PacketSegment& segment) noexcept
     {
         _segment = segment;
     }
@@ -101,7 +101,7 @@ private:
     const yactfr::EventRecordType *_type = nullptr;
     Index _indexInPacket;
     boost::optional<Timestamp> _firstTs;
-    DataSegment _segment;
+    PacketSegment _segment;
 };
 
 } // namespace jacques

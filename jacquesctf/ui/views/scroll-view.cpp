@@ -13,7 +13,7 @@ namespace jacques {
 
 ScrollView::ScrollView(const Rectangle& rect, const std::string& title,
                        const DecorationStyle decoStyle,
-                       std::shared_ptr<const Stylist> stylist) :
+                       const Stylist& stylist) :
     View {rect, title, decoStyle, stylist}
 {
 }

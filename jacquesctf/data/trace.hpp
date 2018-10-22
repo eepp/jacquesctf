@@ -24,6 +24,9 @@ class Trace :
     boost::noncopyable
 {
 public:
+    using DataStreamFiles = std::vector<std::unique_ptr<DataStreamFile>>;
+
+public:
     explicit Trace(const std::vector<boost::filesystem::path>& dataStreamFilePaths);
 
 public:
@@ -32,7 +35,7 @@ public:
         return *_metadata;
     }
 
-    const std::vector<std::unique_ptr<DataStreamFile>>& dataStreamFiles() const noexcept
+    const DataStreamFiles& dataStreamFiles() const noexcept
     {
         return _dataStreamFiles;
     }
@@ -41,7 +44,7 @@ private:
     void _createMetadata(const boost::filesystem::path& path);
 
 private:
-    std::vector<std::unique_ptr<DataStreamFile>> _dataStreamFiles;
+    DataStreamFiles _dataStreamFiles;
     std::unique_ptr<Metadata> _metadata;
 };
 

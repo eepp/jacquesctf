@@ -24,14 +24,20 @@ class DataSize :
     public boost::totally_ordered<DataSize>
 {
 public:
-    static DataSize fromBytes(Size sizeBytes);
+    static DataSize fromBytes(Size sizeBytes)
+    {
+        return {sizeBytes * 8};
+    }
 
 public:
     DataSize() = default;
     DataSize(const DataSize&) = default;
 
     // non explicit makes this easier to use
-    DataSize(Size sizeBits);
+    DataSize(const Size sizeBits) :
+        _sizeBits {sizeBits}
+    {
+    }
 
     DataSize& operator=(const DataSize&) = default;
     std::pair<std::string, std::string> format(utils::SizeFormatMode formatMode = utils::SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS,
@@ -127,19 +133,19 @@ std::ostream& operator<<(std::ostream& stream, const DataSize& dataSize)
 }
 
 static inline
-DataSize operator""_kiB(const Size kib)
+DataSize operator""_kiB(const Size kib) noexcept
 {
     return DataSize::fromBytes(kib * 1024);
 }
 
 static inline
-DataSize operator""_MiB(const Size mib)
+DataSize operator""_MiB(const Size mib) noexcept
 {
     return DataSize::fromBytes(mib * 1024 * 1024);
 }
 
 static inline
-DataSize operator""_GiB(const Size gib)
+DataSize operator""_GiB(const Size gib) noexcept
 {
     return DataSize::fromBytes(gib * 1024 * 1024 * 1024);
 }

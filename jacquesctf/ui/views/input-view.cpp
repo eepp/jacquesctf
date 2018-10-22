@@ -15,8 +15,7 @@
 
 namespace jacques {
 
-InputView::InputView(const Rectangle& rect,
-                     std::shared_ptr<const Stylist> stylist) :
+InputView::InputView(const Rectangle& rect, const Stylist& stylist) :
     View {rect, "Input", DecorationStyle::BORDERLESS, stylist}
 {
     assert(rect.h == 3);

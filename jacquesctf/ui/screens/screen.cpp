@@ -10,12 +10,11 @@
 namespace jacques {
 
 Screen::Screen(const Rectangle& rect, const Config& cfg,
-               std::shared_ptr<const Stylist> stylist,
-               std::shared_ptr<State> state) :
+               const Stylist& stylist, State& state) :
     _curRect {rect},
     _curCfg {&cfg},
-    _curStylist {stylist},
-    _curState {state}
+    _curStylist {&stylist},
+    _curState {&state}
 {
 }
 

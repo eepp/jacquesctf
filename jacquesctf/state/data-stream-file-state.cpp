@@ -43,13 +43,13 @@ void DataStreamFileState::gotoOffsetBits(const Index offsetBits)
 
     if (offsetInPacketBits > packetIndexEntry.effectiveTotalSize()) {
         // uh oh, that's outside the data we have for this invalid packet
-        this->gotoLastDataRegion();
+        this->gotoLastPacketRegion();
         return;
     }
 
-    const auto& region = _activePacketState->packet().dataRegionAtOffsetInPacketBits(offsetInPacketBits);
+    const auto& region = _activePacketState->packet().packetRegionAtOffsetInPacketBits(offsetInPacketBits);
 
-    _activePacketState->gotoDataRegionAtOffsetInPacketBits(region);
+    _activePacketState->gotoPacketRegionAtOffsetInPacketBits(region);
 }
 
 PacketState& DataStreamFileState::_packetState(const Index index)
@@ -138,22 +138,22 @@ void DataStreamFileState::gotoNextEventRecord(Size count)
     _activePacketState->gotoNextEventRecord(count);
 }
 
-void DataStreamFileState::gotoPreviousDataRegion()
+void DataStreamFileState::gotoPreviousPacketRegion()
 {
     if (!_activePacketState) {
         return;
     }
 
-    _activePacketState->gotoPreviousDataRegion();
+    _activePacketState->gotoPreviousPacketRegion();
 }
 
-void DataStreamFileState::gotoNextDataRegion()
+void DataStreamFileState::gotoNextPacketRegion()
 {
     if (!_activePacketState) {
         return;
     }
 
-    _activePacketState->gotoNextDataRegion();
+    _activePacketState->gotoNextPacketRegion();
 }
 
 void DataStreamFileState::gotoPacketContext()
@@ -165,13 +165,13 @@ void DataStreamFileState::gotoPacketContext()
     _activePacketState->gotoPacketContext();
 }
 
-void DataStreamFileState::gotoLastDataRegion()
+void DataStreamFileState::gotoLastPacketRegion()
 {
     if (!_activePacketState) {
         return;
     }
 
-    _activePacketState->gotoLastDataRegion();
+    _activePacketState->gotoLastPacketRegion();
 }
 
 bool DataStreamFileState::_gotoNextEventRecordWithProperty(const std::function<bool (const EventRecord&)>& compareFunc,
@@ -232,7 +232,7 @@ bool DataStreamFileState::_gotoNextEventRecordWithProperty(const std::function<b
                 const auto offsetInPacketBits = eventRecord.segment().offsetInPacketBits();
 
                 this->gotoPacket(packetIndex);
-                _activePacketState->gotoDataRegionAtOffsetInPacketBits(offsetInPacketBits);
+                _activePacketState->gotoPacketRegionAtOffsetInPacketBits(offsetInPacketBits);
                 return true;
             }
         }
@@ -331,7 +331,7 @@ bool DataStreamFileState::search(const SearchQuery& query)
 
         const auto& eventRecord = _activePacketState->packet().eventRecordAtIndexInPacket(index);
 
-        this->gotoDataRegionAtOffsetInPacketBits(eventRecord.segment().offsetInPacketBits());
+        this->gotoPacketRegionAtOffsetInPacketBits(eventRecord.segment().offsetInPacketBits());
         return true;
     } else if (const auto sQuery = dynamic_cast<const OffsetSearchQuery *>(&query)) {
         long long reqOffsetBits;
@@ -375,9 +375,9 @@ bool DataStreamFileState::search(const SearchQuery& query)
                 return false;
             }
 
-            const auto& region = _activePacketState->packet().dataRegionAtOffsetInPacketBits(offsetInPacketBits);
+            const auto& region = _activePacketState->packet().packetRegionAtOffsetInPacketBits(offsetInPacketBits);
 
-            _activePacketState->gotoDataRegionAtOffsetInPacketBits(region);
+            _activePacketState->gotoPacketRegionAtOffsetInPacketBits(region);
             break;
         }
 

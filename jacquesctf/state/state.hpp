@@ -11,6 +11,7 @@
 #include <vector>
 #include <functional>
 #include <boost/filesystem.hpp>
+#include <boost/core/noncopyable.hpp>
 
 #include "message.hpp"
 #include "data-stream-file-state.hpp"
@@ -38,7 +39,8 @@ class Message;
  * when the data stream file is empty, otherwise there's always at least
  * one available packet, but it could contain a decoding error.
  */
-class State
+class State :
+    boost::noncopyable
 {
     friend class DataStreamFileState;
     friend class PacketState;
@@ -101,14 +103,14 @@ public:
         _activeDataStreamFileState->gotoNextEventRecord(count);
     }
 
-    void gotoPreviousDataRegion()
+    void gotoPreviousPacketRegion()
     {
-        _activeDataStreamFileState->gotoPreviousDataRegion();
+        _activeDataStreamFileState->gotoPreviousPacketRegion();
     }
 
-    void gotoNextDataRegion()
+    void gotoNextPacketRegion()
     {
-        _activeDataStreamFileState->gotoNextDataRegion();
+        _activeDataStreamFileState->gotoNextPacketRegion();
     }
 
     void gotoPacketContext()
@@ -116,9 +118,9 @@ public:
         _activeDataStreamFileState->gotoPacketContext();
     }
 
-    void gotoLastDataRegion()
+    void gotoLastPacketRegion()
     {
-        _activeDataStreamFileState->gotoLastDataRegion();
+        _activeDataStreamFileState->gotoLastPacketRegion();
     }
 
     bool hasActivePacketState() const noexcept
@@ -136,9 +138,9 @@ public:
         return _activeDataStreamFileState->curOffsetInPacketBits();
     }
 
-    void gotoDataRegionAtOffsetInPacketBits(const Index offsetInPacketBits)
+    void gotoPacketRegionAtOffsetInPacketBits(const Index offsetInPacketBits)
     {
-        _activeDataStreamFileState->gotoDataRegionAtOffsetInPacketBits(offsetInPacketBits);
+        _activeDataStreamFileState->gotoPacketRegionAtOffsetInPacketBits(offsetInPacketBits);
     }
 
     const EventRecord *currentEventRecord()
@@ -146,9 +148,9 @@ public:
         return _activeDataStreamFileState->currentEventRecord();
     }
 
-    const DataRegion *currentDataRegion()
+    const PacketRegion *currentPacketRegion()
     {
-        return _activeDataStreamFileState->currentDataRegion();
+        return _activeDataStreamFileState->currentPacketRegion();
     }
 
     const DataStreamFileState& dataStreamFileState(const Index index)

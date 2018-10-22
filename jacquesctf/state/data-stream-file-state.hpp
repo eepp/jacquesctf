@@ -12,6 +12,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 #include <yactfr/memory-mapped-file-view-factory.hpp>
+#include <boost/core/noncopyable.hpp>
 
 #include "aliases.hpp"
 #include "timestamp.hpp"
@@ -26,7 +27,8 @@ namespace jacques {
 
 class State;
 
-class DataStreamFileState
+class DataStreamFileState :
+    boost::noncopyable
 {
 public:
     explicit DataStreamFileState(State& state,
@@ -38,10 +40,10 @@ public:
     void gotoNextPacket();
     void gotoPreviousEventRecord(Size count = 1);
     void gotoNextEventRecord(Size count = 1);
-    void gotoPreviousDataRegion();
-    void gotoNextDataRegion();
+    void gotoPreviousPacketRegion();
+    void gotoNextPacketRegion();
     void gotoPacketContext();
-    void gotoLastDataRegion();
+    void gotoLastPacketRegion();
     bool search(const SearchQuery& query);
     void analyzeAllPackets(PacketCheckpointsBuildListener& buildListener);
 
@@ -84,13 +86,13 @@ public:
         return _activePacketState->curOffsetInPacketBits();
     }
 
-    void gotoDataRegionAtOffsetInPacketBits(const Index offsetInPacketBits)
+    void gotoPacketRegionAtOffsetInPacketBits(const Index offsetInPacketBits)
     {
         if (!_activePacketState) {
             return;
         }
 
-        _activePacketState->gotoDataRegionAtOffsetInPacketBits(offsetInPacketBits);
+        _activePacketState->gotoPacketRegionAtOffsetInPacketBits(offsetInPacketBits);
     }
 
     const EventRecord *currentEventRecord()
@@ -102,7 +104,7 @@ public:
         return _activePacketState->currentEventRecord();
     }
 
-    const DataRegion *currentDataRegion()
+    const PacketRegion *currentPacketRegion()
     {
         if (!_activePacketState) {
             return nullptr;
@@ -112,7 +114,7 @@ public:
             return nullptr;
         }
 
-        return &_activePacketState->currentDataRegion();
+        return &_activePacketState->currentPacketRegion();
     }
 
     const Metadata& metadata() const noexcept

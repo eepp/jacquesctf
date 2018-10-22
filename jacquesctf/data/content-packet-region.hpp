@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_CONTENT_DATA_REGION_HPP
-#define _JACQUES_CONTENT_DATA_REGION_HPP
+#ifndef _JACQUES_CONTENT_PACKET_REGION_HPP
+#define _JACQUES_CONTENT_PACKET_REGION_HPP
 
 #include <memory>
 #include <cstdint>
@@ -14,13 +14,13 @@
 #include <boost/optional.hpp>
 #include <yactfr/metadata/fwd.hpp>
 
-#include "data-region.hpp"
+#include "packet-region.hpp"
 #include "scope.hpp"
 
 namespace jacques {
 
-class ContentDataRegion :
-    public DataRegion
+class ContentPacketRegion :
+    public PacketRegion
 {
 public:
     using Value = boost::variant<std::int64_t,
@@ -29,10 +29,9 @@ public:
                                  std::string>;
 
 public:
-    explicit ContentDataRegion(const DataSegment& segment,
-                               const DataRange& dataRange, Scope::SP scope,
-                               const yactfr::DataType& dataType,
-                               const boost::optional<Value>& value);
+    explicit ContentPacketRegion(const PacketSegment& segment, Scope::SP scope,
+                                 const yactfr::DataType& dataType,
+                                 const boost::optional<Value>& value);
 
     const yactfr::DataType& dataType() const noexcept
     {
@@ -45,7 +44,7 @@ public:
     }
 
 private:
-    void _accept(DataRegionVisitor& visitor) override;
+    void _accept(PacketRegionVisitor& visitor) override;
 
 private:
     const yactfr::DataType *_dataType;
@@ -54,4 +53,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_CONTENT_DATA_REGION_HPP
+#endif // _JACQUES_CONTENT_PACKET_REGION_HPP

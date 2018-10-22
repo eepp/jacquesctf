@@ -14,7 +14,7 @@
 namespace jacques {
 
 SearchController::SearchController(const Screen& parentScreen,
-                                   std::shared_ptr<const Stylist> stylist) :
+                                   const Stylist& stylist) :
     _searchView {
         std::make_unique<SearchInputView>(SearchController::_viewRect(parentScreen),
                                           stylist)

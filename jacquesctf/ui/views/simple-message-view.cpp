@@ -10,7 +10,7 @@
 namespace jacques {
 
 SimpleMessageView::SimpleMessageView(const Rectangle& rect,
-                                     std::shared_ptr<const Stylist> stylist) :
+                                     const Stylist& stylist) :
     View {
         rect, "A message for you",
         DecorationStyle::BORDERS_EMPHASIZED, stylist

@@ -13,31 +13,31 @@
 #include <unistd.h>
 
 #include "stylist.hpp"
-#include "data-region-info-view.hpp"
+#include "packet-region-info-view.hpp"
 #include "utils.hpp"
 #include "active-data-stream-file-changed-message.hpp"
 #include "active-packet-changed-message.hpp"
-#include "content-data-region.hpp"
-#include "padding-data-region.hpp"
-#include "error-data-region.hpp"
+#include "content-packet-region.hpp"
+#include "padding-packet-region.hpp"
+#include "error-packet-region.hpp"
 
 namespace jacques {
 
-DataRegionInfoView::DataRegionInfoView(const Rectangle& rect,
-                                       std::shared_ptr<const Stylist> stylist,
-                                       std::shared_ptr<State> state) :
-    View {rect, "Data region info", DecorationStyle::BORDERLESS, stylist},
-    _state {state},
-    _stateObserverGuard {*state, *this}
+PacketRegionInfoView::PacketRegionInfoView(const Rectangle& rect,
+                                           const Stylist& stylist,
+                                           State& state) :
+    View {rect, "Packet region info", DecorationStyle::BORDERLESS, stylist},
+    _state {&state},
+    _stateObserverGuard {state, *this}
 {
 }
 
-void DataRegionInfoView::_stateChanged(const Message& msg)
+void PacketRegionInfoView::_stateChanged(const Message& msg)
 {
     this->redraw();
 }
 
-void DataRegionInfoView::_safePrintScope(const yactfr::Scope scope)
+void PacketRegionInfoView::_safePrintScope(const yactfr::Scope scope)
 {
     switch (scope) {
     case yactfr::Scope::PACKET_HEADER:
@@ -66,69 +66,69 @@ void DataRegionInfoView::_safePrintScope(const yactfr::Scope scope)
     }
 }
 
-void DataRegionInfoView::_redrawContent()
+void PacketRegionInfoView::_redrawContent()
 {
     // clear
-    this->_stylist().dataRegionInfoViewStd(*this);
+    this->_stylist().packetRegionInfoViewStd(*this);
     this->_clearRect();
 
-    const auto dataRegion = _state->currentDataRegion();
+    const auto packetRegion = _state->currentPacketRegion();
 
-    if (!dataRegion) {
+    if (!packetRegion) {
         return;
     }
 
-    const ContentDataRegion *cDataRegion = nullptr;
+    const ContentPacketRegion *cPacketRegion = nullptr;
 
     this->_moveCursor({0, 0});
 
-    if ((cDataRegion = dynamic_cast<const ContentDataRegion *>(dataRegion))) {
+    if ((cPacketRegion = dynamic_cast<const ContentPacketRegion *>(packetRegion))) {
         // path
-        const auto& path = _state->metadata().dataTypePath(cDataRegion->dataType());
+        const auto& path = _state->metadata().dataTypePath(cPacketRegion->dataType());
 
         if (path.path.empty()) {
-            this->_stylist().dataRegionInfoViewStd(*this, true);
+            this->_stylist().packetRegionInfoViewStd(*this, true);
         }
 
         this->_safePrintScope(path.scope);
 
         if (path.path.empty()) {
-            this->_stylist().dataRegionInfoViewStd(*this);
+            this->_stylist().packetRegionInfoViewStd(*this);
         }
 
         for (auto it = std::begin(path.path); it != std::end(path.path); ++it) {
             this->_safePrint("/");
 
             if (it == std::end(path.path) - 1) {
-                this->_stylist().dataRegionInfoViewStd(*this, true);
+                this->_stylist().packetRegionInfoViewStd(*this, true);
             }
 
             this->_safePrint("%s", it->c_str());
         }
-    } else if (const auto sDataRegion = dynamic_cast<const PaddingDataRegion *>(dataRegion)) {
-        if (dataRegion->scope()) {
-            this->_stylist().dataRegionInfoViewStd(*this);
-            this->_safePrintScope(dataRegion->scope()->scope());
+    } else if (const auto sPacketRegion = dynamic_cast<const PaddingPacketRegion *>(packetRegion)) {
+        if (packetRegion->scope()) {
+            this->_stylist().packetRegionInfoViewStd(*this);
+            this->_safePrintScope(packetRegion->scope()->scope());
             this->_print(" ");
         }
 
-        this->_stylist().dataRegionInfoViewStd(*this, true);
+        this->_stylist().packetRegionInfoViewStd(*this, true);
         this->_print("PADDING");
-    } else if (const auto sDataRegion = dynamic_cast<const ErrorDataRegion *>(dataRegion)) {
-        this->_stylist().dataRegionInfoViewStd(*this, true);
+    } else if (const auto sPacketRegion = dynamic_cast<const ErrorPacketRegion *>(packetRegion)) {
+        this->_stylist().packetRegionInfoViewStd(*this, true);
         this->_print("ERROR");
     }
 
     // size
-    this->_stylist().dataRegionInfoViewStd(*this, false);
+    this->_stylist().packetRegionInfoViewStd(*this, false);
     this->_safePrint("    %s b",
-                     utils::sepNumber(dataRegion->segment().size().bits(), ',').c_str());
+                     utils::sepNumber(packetRegion->segment().size().bits(), ',').c_str());
 
     // byte order
-    if (dataRegion->byteOrder()) {
+    if (packetRegion->segment().byteOrder()) {
         this->_safePrint("    ");
 
-        if (*dataRegion->byteOrder() == ByteOrder::BIG) {
+        if (*packetRegion->segment().byteOrder() == ByteOrder::BIG) {
             this->_safePrint("BE");
         } else {
             this->_safePrint("LE");
@@ -136,12 +136,12 @@ void DataRegionInfoView::_redrawContent()
     }
 
     // value
-    if (cDataRegion && cDataRegion->value()) {
-        const auto& varVal = *cDataRegion->value();
+    if (cPacketRegion && cPacketRegion->value()) {
+        const auto& varVal = *cPacketRegion->value();
         std::string intFmt;
 
-        if (cDataRegion->dataType().isIntType()) {
-            const auto& intType = *cDataRegion->dataType().asIntType();
+        if (cPacketRegion->dataType().isIntType()) {
+            const auto& intType = *cPacketRegion->dataType().asIntType();
 
             if (intType.isUnsignedIntType()) {
                 switch (intType.displayBase()) {
@@ -163,7 +163,7 @@ void DataRegionInfoView::_redrawContent()
         }
 
         this->_safePrint("    ");
-        this->_stylist().dataRegionInfoViewValue(*this);
+        this->_stylist().packetRegionInfoViewValue(*this);
 
         if (const auto val = boost::get<std::int64_t>(&varVal)) {
             assert(!intFmt.empty());

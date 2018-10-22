@@ -43,7 +43,7 @@ public:
     const PacketIndexEntry *packetIndexEntryWithSeqNum(Index seqNum);
     const PacketIndexEntry *packetIndexEntryContainingTimestamp(const Timestamp& ts);
 
-    Size packetCount() const
+    Size packetCount() const noexcept
     {
         assert(_isIndexBuilt);
         return _index.size();

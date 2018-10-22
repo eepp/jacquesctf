@@ -5,20 +5,19 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_DATA_REGION_INFO_VIEW_HPP
-#define _JACQUES_DATA_REGION_INFO_VIEW_HPP
+#ifndef _JACQUES_PACKET_REGION_INFO_VIEW_HPP
+#define _JACQUES_PACKET_REGION_INFO_VIEW_HPP
 
 #include "view.hpp"
 
 namespace jacques {
 
-class DataRegionInfoView :
+class PacketRegionInfoView :
     public View
 {
 public:
-    explicit DataRegionInfoView(const Rectangle& rect,
-                                std::shared_ptr<const Stylist> stylist,
-                                std::shared_ptr<State> state);
+    explicit PacketRegionInfoView(const Rectangle& rect,
+                                const Stylist& stylist, State& state);
 
 private:
     void _stateChanged(const Message& msg) override;
@@ -26,10 +25,10 @@ private:
     void _safePrintScope(yactfr::Scope scope);
 
 private:
-    std::shared_ptr<State> _state;
+    State * const _state;
     const ViewStateObserverGuard _stateObserverGuard;
 };
 
 } // namespace jacques
 
-#endif // _JACQUES_DATA_REGION_INFO_VIEW_HPP
+#endif // _JACQUES_PACKET_REGION_INFO_VIEW_HPP

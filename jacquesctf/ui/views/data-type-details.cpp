@@ -27,7 +27,7 @@ namespace jacques {
 DataTypeDetails::DataTypeDetails(const yactfr::DataType& dataType,
                                  const boost::optional<std::string>& name,
                                  const Size nameWidth, const Size indent,
-                                 std::shared_ptr<const Stylist> stylist) :
+                                 const Stylist& stylist) :
     AbstractDataTypeDetails {indent, stylist},
     _dataType {&dataType},
     _name {name},

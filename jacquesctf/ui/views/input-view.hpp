@@ -20,8 +20,7 @@ class InputView :
     public View
 {
 protected:
-    explicit InputView(const Rectangle& rect,
-                       std::shared_ptr<const Stylist> stylist);
+    explicit InputView(const Rectangle& rect, const Stylist& stylist);
 
 public:
     virtual ~InputView();

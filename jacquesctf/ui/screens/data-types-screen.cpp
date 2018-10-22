@@ -7,21 +7,20 @@
 
 #include "data-types-screen.hpp"
 #include "search-parser.hpp"
-#include "content-data-region.hpp"
+#include "content-packet-region.hpp"
 
 namespace jacques {
 
 DataTypesScreen::DataTypesScreen(const Rectangle& rect, const Config& cfg,
-                                 std::shared_ptr<const Stylist> stylist,
-                                 std::shared_ptr<State> state) :
+                                 const Stylist& stylist, State& state) :
     Screen {rect, cfg, stylist, state},
     _searchController {*this, stylist}
 {
     const auto viewRects = this->_viewRects();
     _dstTableView = std::make_unique<DataStreamTypeTableView>(std::get<0>(viewRects),
-                                                              stylist, *state);
+                                                              stylist, state);
     _ertTableView = std::make_unique<EventRecordTypeTableView>(std::get<1>(viewRects),
-                                                               stylist, *state);
+                                                               stylist, state);
     _dtExplorerView = std::make_unique<DataTypeExplorerView>(std::get<2>(viewRects),
                                                              stylist);
     _focusedView = _dstTableView.get();
@@ -123,13 +122,13 @@ void DataTypesScreen::highlightCurrentDataType()
 
     _dtExplorerView->clearHighlight();
 
-    const auto curDataRegion = this->_state().currentDataRegion();
+    const auto curPacketRegion = this->_state().currentPacketRegion();
 
-    if (curDataRegion) {
-        const auto cDataRegion = dynamic_cast<const ContentDataRegion *>(curDataRegion);
+    if (curPacketRegion) {
+        const auto cPacketRegion = dynamic_cast<const ContentPacketRegion *>(curPacketRegion);
 
-        if (cDataRegion) {
-            _dtExplorerView->highlightDataType(cDataRegion->dataType());
+        if (cPacketRegion) {
+            _dtExplorerView->highlightDataType(cPacketRegion->dataType());
             _focusedView->blur();
             _focusedView = _dtExplorerView.get();
             _focusedView->focus();

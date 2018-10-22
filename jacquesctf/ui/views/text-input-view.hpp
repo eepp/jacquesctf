@@ -21,7 +21,7 @@ class TextInputView :
 {
 public:
     explicit TextInputView(const Rectangle& rect,
-                           std::shared_ptr<const Stylist> stylist);
+                           const Stylist& stylist);
 
 private:
     void _drawCurrentText(const std::string& text) override;

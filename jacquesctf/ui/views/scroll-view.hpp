@@ -19,8 +19,7 @@ class ScrollView :
 {
 protected:
     explicit ScrollView(const Rectangle& rect, const std::string& title,
-                        DecorationStyle decoStyle,
-                        std::shared_ptr<const Stylist> stylist);
+                        DecorationStyle decoStyle, const Stylist& stylist);
 
 public:
     void prev();

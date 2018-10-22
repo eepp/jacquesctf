@@ -19,7 +19,7 @@ class HelpView :
 {
 public:
     explicit HelpView(const Rectangle& rect,
-                      std::shared_ptr<const Stylist> stylist);
+                      const Stylist& stylist);
 
 private:
     void _drawRows() override;

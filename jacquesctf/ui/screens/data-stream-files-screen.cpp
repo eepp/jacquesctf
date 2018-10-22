@@ -19,8 +19,8 @@
 namespace jacques {
 
 DataStreamFilesScreen::DataStreamFilesScreen(const Rectangle& rect, const Config& cfg,
-                                             std::shared_ptr<const Stylist> stylist,
-                                             std::shared_ptr<State> state) :
+                                             const Stylist& stylist,
+                                             State& state) :
     Screen {rect, cfg, stylist, state},
     _view {std::make_unique<DataStreamFileTableView>(rect, stylist, state)},
     _tsFormatModeWheel {

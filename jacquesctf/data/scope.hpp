@@ -13,7 +13,7 @@
 #include <boost/core/noncopyable.hpp>
 
 #include "event-record.hpp"
-#include "data-segment.hpp"
+#include "packet-segment.hpp"
 
 namespace jacques {
 
@@ -27,14 +27,14 @@ public:
     explicit Scope(yactfr::Scope scope);
     explicit Scope(EventRecord::SP eventRecord, yactfr::Scope scope);
     explicit Scope(EventRecord::SP eventRecord, yactfr::Scope scope,
-                   const DataSegment& segment);
+                   const PacketSegment& segment);
 
     const EventRecord *eventRecord() const noexcept
     {
         return _eventRecord.get();
     }
 
-    EventRecord::SP eventRecordPtr() const
+    EventRecord::SP eventRecordPtr() const noexcept
     {
         return _eventRecord;
     }
@@ -44,17 +44,17 @@ public:
         return _scope;
     }
 
-    const DataSegment& segment() const noexcept
+    const PacketSegment& segment() const noexcept
     {
         return _segment;
     }
 
-    DataSegment& segment() noexcept
+    PacketSegment& segment() noexcept
     {
         return _segment;
     }
 
-    void segment(const DataSegment& segment) noexcept
+    void segment(const PacketSegment& segment) noexcept
     {
         _segment = segment;
     }
@@ -62,7 +62,7 @@ public:
 private:
     EventRecord::SP _eventRecord;
     const yactfr::Scope _scope;
-    DataSegment _segment;
+    PacketSegment _segment;
 };
 
 } // namespace jacques

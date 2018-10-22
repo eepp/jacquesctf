@@ -19,8 +19,7 @@ class PacketTableView :
 {
 public:
     explicit PacketTableView(const Rectangle& rect,
-                             std::shared_ptr<const Stylist> stylist,
-                             std::shared_ptr<State> state);
+                             const Stylist& stylist, State& state);
     void timestampFormatMode(TimestampFormatMode tsFormatMode);
     void dataSizeFormatMode(utils::SizeFormatMode dataSizeFormatMode);
     Index selectedPacketIndex() const;
@@ -39,7 +38,7 @@ private:
 
 private:
     std::vector<std::unique_ptr<TableViewCell>> _row;
-    std::shared_ptr<State> _state;
+    State * const _state;
     const ViewStateObserverGuard _stateObserverGuard;
     TimestampFormatMode _tsFormatMode = TimestampFormatMode::LONG;
     utils::SizeFormatMode _sizeFormatMode = utils::SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS;

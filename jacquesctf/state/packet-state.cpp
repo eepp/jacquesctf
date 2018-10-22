@@ -8,7 +8,7 @@
 #include <cassert>
 
 #include "packet-state.hpp"
-#include "data-region.hpp"
+#include "packet-region.hpp"
 #include "state.hpp"
 #include "cur-offset-in-packet-changed-message.hpp"
 
@@ -34,7 +34,7 @@ void PacketState::gotoPreviousEventRecord(Size count)
             auto lastEr = _packet->lastEventRecord();
 
             assert(lastEr);
-            this->gotoDataRegionAtOffsetInPacketBits(lastEr->segment().offsetInPacketBits());
+            this->gotoPacketRegionAtOffsetInPacketBits(lastEr->segment().offsetInPacketBits());
         }
 
         return;
@@ -48,7 +48,7 @@ void PacketState::gotoPreviousEventRecord(Size count)
 
     const auto& prevEventRecord = _packet->eventRecordAtIndexInPacket(curEventRecord->indexInPacket() - count);
 
-    this->gotoDataRegionAtOffsetInPacketBits(prevEventRecord.segment().offsetInPacketBits());
+    this->gotoPacketRegionAtOffsetInPacketBits(prevEventRecord.segment().offsetInPacketBits());
 }
 
 void PacketState::gotoNextEventRecord(Size count)
@@ -72,10 +72,10 @@ void PacketState::gotoNextEventRecord(Size count)
 
     const auto& nextEventRecord = _packet->eventRecordAtIndexInPacket(newIndex);
 
-    this->gotoDataRegionAtOffsetInPacketBits(nextEventRecord.segment().offsetInPacketBits());
+    this->gotoPacketRegionAtOffsetInPacketBits(nextEventRecord.segment().offsetInPacketBits());
 }
 
-void PacketState::gotoPreviousDataRegion()
+void PacketState::gotoPreviousPacketRegion()
 {
     if (!_packet->hasData()) {
         return;
@@ -85,32 +85,32 @@ void PacketState::gotoPreviousDataRegion()
         return;
     }
 
-    const auto& currentDataRegion = this->currentDataRegion();
+    const auto& currentPacketRegion = this->currentPacketRegion();
 
-    if (currentDataRegion.previousDataRegionOffsetInPacketBits()) {
-        this->gotoDataRegionAtOffsetInPacketBits(*currentDataRegion.previousDataRegionOffsetInPacketBits());
+    if (currentPacketRegion.previousPacketRegionOffsetInPacketBits()) {
+        this->gotoPacketRegionAtOffsetInPacketBits(*currentPacketRegion.previousPacketRegionOffsetInPacketBits());
         return;
     }
 
-    const auto& prevDataRegion = _packet->dataRegionAtOffsetInPacketBits(_curOffsetInPacketBits - 1);
+    const auto& prevPacketRegion = _packet->packetRegionAtOffsetInPacketBits(_curOffsetInPacketBits - 1);
 
-    this->gotoDataRegionAtOffsetInPacketBits(prevDataRegion);
+    this->gotoPacketRegionAtOffsetInPacketBits(prevPacketRegion);
 }
 
-void PacketState::gotoNextDataRegion()
+void PacketState::gotoNextPacketRegion()
 {
     if (!_packet->hasData()) {
         return;
     }
 
-    const auto& currentDataRegion = this->currentDataRegion();
+    const auto& currentPacketRegion = this->currentPacketRegion();
 
-    if (currentDataRegion.segment().endOffsetInPacketBits() ==
+    if (currentPacketRegion.segment().endOffsetInPacketBits() ==
             _packet->indexEntry().effectiveTotalSize().bits()) {
         return;
     }
 
-    this->gotoDataRegionAtOffsetInPacketBits(currentDataRegion.segment().endOffsetInPacketBits());
+    this->gotoPacketRegionAtOffsetInPacketBits(currentPacketRegion.segment().endOffsetInPacketBits());
 }
 
 void PacketState::gotoPacketContext()
@@ -121,15 +121,15 @@ void PacketState::gotoPacketContext()
         return;
     }
 
-    this->gotoDataRegionAtOffsetInPacketBits(*offset);
+    this->gotoPacketRegionAtOffsetInPacketBits(*offset);
 }
 
-void PacketState::gotoLastDataRegion()
+void PacketState::gotoLastPacketRegion()
 {
-    this->gotoDataRegionAtOffsetInPacketBits(_packet->lastDataRegion());
+    this->gotoPacketRegionAtOffsetInPacketBits(_packet->lastPacketRegion());
 }
 
-void PacketState::gotoDataRegionAtOffsetInPacketBits(const Index offsetInPacketBits)
+void PacketState::gotoPacketRegionAtOffsetInPacketBits(const Index offsetInPacketBits)
 {
     if (offsetInPacketBits == _curOffsetInPacketBits) {
         return;

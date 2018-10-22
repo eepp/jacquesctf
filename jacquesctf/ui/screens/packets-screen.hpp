@@ -25,8 +25,7 @@ class PacketsScreen :
 {
 public:
     explicit PacketsScreen(const Rectangle& rect, const Config& cfg,
-                           std::shared_ptr<const Stylist> stylist,
-                           std::shared_ptr<State> state);
+                           const Stylist& stylist, State& state);
 
 protected:
     void _redraw() override;

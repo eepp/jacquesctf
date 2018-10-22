@@ -17,8 +17,7 @@ class StatusView :
 {
 public:
     explicit StatusView(const Rectangle& rect,
-                        std::shared_ptr<const Stylist> stylist,
-                        std::shared_ptr<State> state);
+                        const Stylist& stylist, State& state);
 
 private:
     void _drawOffset();
@@ -26,7 +25,7 @@ private:
     void _redrawContent() override;
 
 private:
-    std::shared_ptr<State> _state;
+    State * const _state;
     const ViewStateObserverGuard _stateObserverGuard;
 };
 

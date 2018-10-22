@@ -20,8 +20,7 @@
 namespace jacques {
 
 InspectScreen::InspectScreen(const Rectangle& rect, const Config& cfg,
-                             std::shared_ptr<const Stylist> stylist,
-                             std::shared_ptr<State> state) :
+                             const Stylist& stylist, State& state) :
     Screen {rect, cfg, stylist, state},
     _decErrorView {
         std::make_unique<PacketDecodingErrorDetailsView>(rect, stylist, state)
@@ -39,28 +38,35 @@ InspectScreen::InspectScreen(const Rectangle& rect, const Config& cfg,
     },
     _currentStateSnapshot {std::end(_stateSnapshots)}
 {
+    Rectangle pdViewRect;
     Rectangle ertViewRect;
     Rectangle drInfoViewRect;
 
-    std::tie(ertViewRect, drInfoViewRect) = this->_viewRects();
+    std::tie(pdViewRect, ertViewRect, drInfoViewRect) = this->_viewRects();
+    _pdView = std::make_unique<PacketDataView>(pdViewRect, stylist, state);
     _ertView = std::make_unique<EventRecordTableView>(ertViewRect, stylist,
                                                       state);
-    _drInfoView = std::make_unique<DataRegionInfoView>(drInfoViewRect,
-                                                       stylist, state);
+    _drInfoView = std::make_unique<PacketRegionInfoView>(drInfoViewRect,
+                                                         stylist, state);
     _decErrorView->isVisible(false);
-    _ertView->focus();
+    _pdView->focus();
 }
 
-std::tuple<Rectangle, Rectangle> InspectScreen::_viewRects() const
+std::tuple<Rectangle, Rectangle, Rectangle> InspectScreen::_viewRects() const
 {
+    const auto ertViewHeight = 8;
+
     return {
-        {this->rect().pos, this->rect().w, this->rect().h - 1},
+        {this->rect().pos, this->rect().w, this->rect().h - 1 - ertViewHeight},
+        {{this->rect().pos.x, this->rect().h - 1 - ertViewHeight},
+         this->rect().w, ertViewHeight},
         {{this->rect().pos.x, this->rect().h - 1}, this->rect().w, 1}
     };
 }
 
 void InspectScreen::_redraw()
 {
+    _pdView->redraw();
     _ertView->redraw();
     _drInfoView->redraw();
     _decErrorView->redraw();
@@ -68,10 +74,12 @@ void InspectScreen::_redraw()
 
 void InspectScreen::_resized()
 {
+    Rectangle pdViewRect;
     Rectangle ertViewRect;
     Rectangle drInfoViewRect;
 
-    std::tie(ertViewRect, drInfoViewRect) = this->_viewRects();
+    std::tie(pdViewRect, ertViewRect, drInfoViewRect) = this->_viewRects();
+    _pdView->moveAndResize(pdViewRect);
     _ertView->moveAndResize(ertViewRect);
     _drInfoView->moveAndResize(drInfoViewRect);
     _decErrorView->moveAndResize(Rectangle {{this->rect().pos.x + 4,
@@ -83,6 +91,7 @@ void InspectScreen::_resized()
 
 void InspectScreen::_visibilityChanged()
 {
+    _pdView->isVisible(this->isVisible());
     _ertView->isVisible(this->isVisible());
     _drInfoView->isVisible(this->isVisible());
 
@@ -92,6 +101,7 @@ void InspectScreen::_visibilityChanged()
             this->_snapshotState();
         }
 
+        _pdView->redraw();
         _ertView->redraw();
         _drInfoView->redraw();
         this->_tryShowDecodingError();
@@ -184,7 +194,7 @@ void InspectScreen::_restoreStateSnapshot(const _StateSnapshot& snapshot)
     if (snapshot.packetIndexInDataStreamFile) {
         this->_state().gotoPacket(*snapshot.packetIndexInDataStreamFile);
         assert(this->_state().hasActivePacketState());
-        this->_state().gotoDataRegionAtOffsetInPacketBits(snapshot.offsetInPacketBits);
+        this->_state().gotoPacketRegionAtOffsetInPacketBits(snapshot.offsetInPacketBits);
     }
 }
 
@@ -192,6 +202,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 {
     if (_decErrorView->isVisible()) {
         _decErrorView->isVisible(false);
+        _pdView->redraw();
         _ertView->redraw();
         _drInfoView->redraw();
     }
@@ -228,23 +239,31 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         break;
 
     case KEY_HOME:
-        this->_state().gotoDataRegionAtOffsetInPacketBits(0);
+        this->_state().gotoPacketRegionAtOffsetInPacketBits(0);
         this->_snapshotState();
         break;
 
     case KEY_END:
-        this->_state().gotoLastDataRegion();
+        this->_state().gotoLastPacketRegion();
         this->_snapshotState();
         break;
 
     case KEY_LEFT:
-        this->_state().gotoPreviousDataRegion();
+        this->_state().gotoPreviousPacketRegion();
         this->_snapshotState();
         break;
 
     case KEY_RIGHT:
-        this->_state().gotoNextDataRegion();
+        this->_state().gotoNextPacketRegion();
         this->_snapshotState();
+        break;
+
+    case KEY_PPAGE:
+        _pdView->pageUp();
+        break;
+
+    case KEY_NPAGE:
+        _pdView->pageDown();
         break;
 
     case '/':
@@ -333,6 +352,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         break;
     }
 
+    _pdView->refresh();
     _ertView->refresh();
     _drInfoView->refresh();
 

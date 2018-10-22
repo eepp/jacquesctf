@@ -15,7 +15,7 @@
 namespace jacques {
 
 TextInputView::TextInputView(const Rectangle& rect,
-                             std::shared_ptr<const Stylist> stylist) :
+                             const Stylist& stylist) :
     InputView {rect, stylist}
 {
 }

@@ -15,7 +15,7 @@
 namespace jacques {
 
 PacketIndexBuildProgressView::PacketIndexBuildProgressView(const Rectangle& rect,
-                                                           std::shared_ptr<const Stylist> stylist) :
+                                                           const Stylist& stylist) :
     View {
         rect, "Building packet indexes...",
         DecorationStyle::BORDERS_EMPHASIZED,

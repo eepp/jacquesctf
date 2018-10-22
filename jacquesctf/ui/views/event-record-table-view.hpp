@@ -18,8 +18,7 @@ class EventRecordTableView :
 {
 public:
     explicit EventRecordTableView(const Rectangle& rect,
-                                  std::shared_ptr<const Stylist> stylist,
-                                  std::shared_ptr<State> state);
+                                  const Stylist& stylist, State& state);
     void timestampFormatMode(TimestampFormatMode tsFormatMode);
     void dataSizeFormatMode(utils::SizeFormatMode dsFormatMode);
 
@@ -35,7 +34,7 @@ private:
     void _resetRow(const std::vector<TableViewColumnDescription>& descrs);
 
 private:
-    std::shared_ptr<State> _state;
+    State * const _state;
     std::vector<std::unique_ptr<TableViewCell>> _row;
     const ViewStateObserverGuard _stateObserverGuard;
     TimestampFormatMode _tsFormatMode = TimestampFormatMode::LONG;

@@ -20,7 +20,7 @@ class SearchController
 {
 public:
     explicit SearchController(const Screen& parentScreen,
-                              std::shared_ptr<const Stylist> stylist);
+                              const Stylist& stylist);
     std::unique_ptr<const SearchQuery> start();
     void parentScreenResized(const Screen& parentScreen);
 

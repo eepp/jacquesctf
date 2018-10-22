@@ -17,12 +17,11 @@
 namespace jacques {
 
 View::View(const Rectangle& rect, const std::string& title,
-           const DecorationStyle decoStyle,
-           std::shared_ptr<const Stylist> stylist) :
+           const DecorationStyle decoStyle, const Stylist& stylist) :
     _rect {rect},
     _myTitle {title},
     _decoStyle {decoStyle},
-    _myStylist {stylist},
+    _myStylist {&stylist},
     _lineBuf(2048)
 {
     this->_setContentRect();

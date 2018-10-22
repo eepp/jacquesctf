@@ -14,7 +14,7 @@ namespace jacques {
 EventRecord::EventRecord(const yactfr::EventRecordType& type,
                          const Index indexInPacket,
                          const boost::optional<Timestamp>& firstTs,
-                         const DataSegment& segment) :
+                         const PacketSegment& segment) :
     _type {&type},
     _indexInPacket {indexInPacket},
     _firstTs {firstTs},
@@ -34,7 +34,7 @@ EventRecord::SP EventRecord::createFromPacketSequenceIterator(yactfr::PacketSequ
 {
     const yactfr::EventRecordType *eventRecordType = nullptr;
     boost::optional<Timestamp> firstTs;
-    DataSegment segment;
+    PacketSegment segment;
     const auto packetOffsetInDataStreamBits = packetOffsetInDataStreamBytes * 8;
 
     while (true) {

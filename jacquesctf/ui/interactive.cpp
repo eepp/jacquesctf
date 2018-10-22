@@ -32,10 +32,10 @@
 #include "data-size.hpp"
 #include "logging.hpp"
 
-#include "data-region.hpp"
-#include "padding-data-region.hpp"
-#include "content-data-region.hpp"
-#include "error-data-region.hpp"
+#include "packet-region.hpp"
+#include "padding-packet-region.hpp"
+#include "content-packet-region.hpp"
+#include "error-packet-region.hpp"
 
 namespace jacques {
 
@@ -123,7 +123,7 @@ static bool init()
     return initScreen();
 }
 
-static void buildIndexes(State& state, std::shared_ptr<const Stylist> stylist)
+static void buildIndexes(State& state, const Stylist& stylist)
 {
     theLogger->info("Building indexes.");
 
@@ -154,7 +154,7 @@ static void buildIndexes(State& state, std::shared_ptr<const Stylist> stylist)
 }
 
 static void showFullScreenMessage(const std::string& msg,
-                                  std::shared_ptr<const Stylist> stylist)
+                                  const Stylist& stylist)
 {
     const auto screenRect = Rectangle {{0, 0}, static_cast<Size>(COLS),
                                        static_cast<Size>(LINES)};
@@ -171,9 +171,9 @@ class PacketCheckpointsBuildProgressUpdater :
     public PacketCheckpointsBuildListener
 {
 public:
-    explicit PacketCheckpointsBuildProgressUpdater(std::shared_ptr<const Stylist> stylist,
+    explicit PacketCheckpointsBuildProgressUpdater(const Stylist& stylist,
                                                    bool& redrawCurScreen) :
-        _stylist {stylist},
+        _stylist {&stylist},
         _redrawCurScreen {&redrawCurScreen}
     {
     }
@@ -189,7 +189,7 @@ private:
         const auto rect = Rectangle {{4, 4}, static_cast<Size>(COLS) - 8, 13};
 
         _view = std::make_unique<PacketCheckpointsBuildProgressView>(rect,
-                                                                     _stylist);
+                                                                     *_stylist);
         _view->focus();
         _view->isVisible(true);
         _view->packetIndexEntry(packetIndexEntry);
@@ -227,7 +227,7 @@ private:
 private:
     Index _count = 0;
     std::unique_ptr<PacketCheckpointsBuildProgressView> _view;
-    std::shared_ptr<const Stylist> _stylist;
+    const Stylist * const _stylist;
     bool * const _redrawCurScreen;
 };
 
@@ -244,19 +244,19 @@ public:
 
 static bool tryStartInteractive(const Config& cfg)
 {
-    auto stylist = std::make_shared<const Stylist>();
+    auto stylist = std::make_unique<const Stylist>();
 
     theLogger->info("Opening data stream files.");
-    showFullScreenMessage("Opening data stream files...", stylist);
+    showFullScreenMessage("Opening data stream files...", *stylist);
 
     Screen *curScreen = nullptr;
     bool redrawCurScreen = false;
-    auto packetCheckpointsBuildProgressUpdater = std::make_shared<PacketCheckpointsBuildProgressUpdater>(stylist,
+    auto packetCheckpointsBuildProgressUpdater = std::make_shared<PacketCheckpointsBuildProgressUpdater>(*stylist,
                                                                                                          redrawCurScreen);
-    std::shared_ptr<State> state;
+    std::unique_ptr<State> state;
 
     try {
-        state = std::make_shared<State>(cfg.filePaths(),
+        state = std::make_unique<State>(cfg.filePaths(),
                                         packetCheckpointsBuildProgressUpdater);
     } catch (const MetadataError& error) {
         finiScreen();
@@ -295,37 +295,41 @@ static bool tryStartInteractive(const Config& cfg)
      * because we want to provide feedback to the user because it could
      * be a long process. Build indexes first.
      */
-    buildIndexes(*state, stylist);
+    buildIndexes(*state, *stylist);
 
     /*
      * Show this message because some views created by the screens below
      * can perform some "heavy" caching operations initially.
      */
-    showFullScreenMessage("Building caches...", stylist);
+    showFullScreenMessage("Building caches...", *stylist);
 
     // status
     auto statusView = std::make_unique<StatusView>(Rectangle {{0, screenRect.h},
                                                               screenRect.w, 1},
-                                                   stylist, state);
+                                                   *stylist, *state);
 
     // create screens
     theLogger->info("Creating screens.");
     const auto inspectScreen = std::make_unique<InspectScreen>(screenRect, cfg,
-                                                               stylist, state);
+                                                               *stylist,
+                                                               *state);
     const auto packetsScreen = std::make_unique<PacketsScreen>(screenRect, cfg,
-                                                               stylist, state);
+                                                               *stylist,
+                                                               *state);
     const auto dsfScreen = std::make_unique<DataStreamFilesScreen>(screenRect,
-                                                                   cfg, stylist,
-                                                                   state);
+                                                                   cfg,
+                                                                   *stylist,
+                                                                   *state);
     const auto helpScreen = std::make_unique<HelpScreen>(screenRect, cfg,
-                                                         stylist, state);
+                                                         *stylist, *state);
     const auto dataTypesScreen = std::make_unique<DataTypesScreen>(screenRect,
-                                                                   cfg, stylist,
-                                                                   state);
+                                                                   cfg,
+                                                                   *stylist,
+                                                                   *state);
     const auto traceInfoScreen = std::make_unique<TraceInfoScreen>(screenRect,
                                                                    cfg,
-                                                                   stylist,
-                                                                   state);
+                                                                   *stylist,
+                                                                   *state);
     const std::vector<Screen *> screens {
         inspectScreen.get(),
         packetsScreen.get(),
@@ -336,7 +340,7 @@ static bool tryStartInteractive(const Config& cfg)
     };
 
     // goto first packet if available: this creates it and shows the progress
-    showFullScreenMessage("Selecting initial packet...", stylist);
+    showFullScreenMessage("Selecting initial packet...", *stylist);
 
     if (state->activeDataStreamFileState().dataStreamFile().packetCount() > 0) {
         theLogger->info("Selecting initial packet.");
@@ -366,40 +370,40 @@ static bool tryStartInteractive(const Config& cfg)
                 }
             }
 
-            if (auto sRegion = dynamic_cast<const ContentDataRegion *>(&region)) {
+            if (auto sRegion = dynamic_cast<const ContentPacketRegion *>(&region)) {
                 std::cout << " content ";
 
                 if (sRegion->value()) {
                     boost::apply_visitor(PrintVisitor {}, *sRegion->value());
                 }
-            } else if (auto sRegion = dynamic_cast<const PaddingDataRegion *>(&region)) {
+            } else if (auto sRegion = dynamic_cast<const PaddingPacketRegion *>(&region)) {
                 std::cout << " padding";
-            } else if (auto sRegion = dynamic_cast<const ErrorDataRegion *>(&region)) {
+            } else if (auto sRegion = dynamic_cast<const ErrorPacketRegion *>(&region)) {
                 std::cout << " error";
             }
 
             std::cout << std::endl;
         };
         finiScreen();
-        DataRegions regions;
+        PacketRegions regions;
 
         auto& packet = state->activeDataStreamFileState().activePacket();
 
-        packet.appendDataRegions(regions, 0, 672);
+        packet.appendPacketRegions(regions, 0, 672);
 
         for (const auto& region : regions) {
             printRegion(*region);
         }
 
         /*
-        printRegion(packet.dataRegionAtOffsetInPacketBits(1376));
-        printRegion(packet.dataRegionAtOffsetInPacketBits(439840));
-        printRegion(packet.dataRegionAtOffsetInPacketBits(439845));
-        printRegion(packet.dataRegionAtOffsetInPacketBits(1376));
-        printRegion(packet.dataRegionAtOffsetInPacketBits(67108688));
-        printRegion(packet.dataRegionAtOffsetInPacketBits(1040712));
-        printRegion(packet.dataRegionAtOffsetInPacketBits(0));
-        printRegion(packet.dataRegionAtOffsetInPacketBits(1376));
+        printRegion(packet.packetRegionAtOffsetInPacketBits(1376));
+        printRegion(packet.packetRegionAtOffsetInPacketBits(439840));
+        printRegion(packet.packetRegionAtOffsetInPacketBits(439845));
+        printRegion(packet.packetRegionAtOffsetInPacketBits(1376));
+        printRegion(packet.packetRegionAtOffsetInPacketBits(67108688));
+        printRegion(packet.packetRegionAtOffsetInPacketBits(1040712));
+        printRegion(packet.packetRegionAtOffsetInPacketBits(0));
+        printRegion(packet.packetRegionAtOffsetInPacketBits(1376));
         */
 
         std::exit(0);

@@ -77,8 +77,7 @@ protected:
      * `rect` is the view's rectangle within the terminal screen.
      */
     explicit View(const Rectangle& rect, const std::string& title,
-                  DecorationStyle decoStyle,
-                  std::shared_ptr<const Stylist> stylist);
+                  DecorationStyle decoStyle, const Stylist& stylist);
 
 public:
     virtual ~View();
@@ -230,11 +229,6 @@ protected:
     const Stylist& _stylist() const noexcept
     {
         return *_myStylist;
-    }
-
-    std::shared_ptr<const Stylist> _stylistPtr() const noexcept
-    {
-        return _myStylist;
     }
 
     /*
@@ -406,7 +400,7 @@ private:
     std::string _myTitle;
     const DecorationStyle _decoStyle;
     Rectangle _contentRectangle;
-    std::shared_ptr<const Stylist> _myStylist;
+    const Stylist * const _myStylist;
     bool _focused = false;
     WINDOW* _curWindow;
     bool _visible = false;

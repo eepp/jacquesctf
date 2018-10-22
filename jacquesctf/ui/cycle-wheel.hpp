@@ -49,7 +49,7 @@ public:
     /*
      * Current selected value.
      */
-    const ValueT& currentValue() const
+    const ValueT& currentValue() const noexcept
     {
         return *_curIt;
     }

@@ -20,15 +20,15 @@ class PacketDecodingErrorDetailsView :
 {
 public:
     explicit PacketDecodingErrorDetailsView(const Rectangle& rect,
-                                            std::shared_ptr<const Stylist> stylist,
-                                            std::shared_ptr<State> state);
+                                            const Stylist& stylist,
+                                            State& state);
 
 private:
     void _redrawContent() override;
     void _stateChanged(const Message& msg) override;
 
 private:
-    std::shared_ptr<State> _state;
+    State * const _state;
     const ViewStateObserverGuard _stateObserverGuard;
 
 };

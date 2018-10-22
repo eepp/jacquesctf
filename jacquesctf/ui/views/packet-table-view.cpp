@@ -15,11 +15,10 @@
 namespace jacques {
 
 PacketTableView::PacketTableView(const Rectangle& rect,
-                                 std::shared_ptr<const Stylist> stylist,
-                                 std::shared_ptr<State> state) :
+                                 const Stylist& stylist, State& state) :
     TableView {rect, "Packets", DecorationStyle::BORDERS, stylist},
-    _state {state},
-    _stateObserverGuard {*state, *this}
+    _state {&state},
+    _stateObserverGuard {state, *this}
 {
     this->_setColumnDescriptions();
 }

@@ -9,13 +9,23 @@
 #define _JACQUES_STYLIST_HPP
 
 #include <curses.h>
+#include <boost/core/noncopyable.hpp>
 
 #include "view.hpp"
 
 namespace jacques {
 
-class Stylist
+class Stylist :
+    boost::noncopyable
 {
+public:
+    enum class PacketDataViewSelectionType
+    {
+        PREVIOUS,
+        CURRENT,
+        NEXT,
+    };
+
 public:
     Stylist();
     void viewBorder(const View& view, bool focused, bool emphasized) const;
@@ -53,8 +63,8 @@ public:
     void helpViewKey(const View& view) const;
     void statusViewStd(const View& view, bool emphasized = false) const;
     void statusViewFilename(const View& view) const;
-    void dataRegionInfoViewStd(const View& view, bool emphasized = false) const;
-    void dataRegionInfoViewValue(const View& view) const;
+    void packetRegionInfoViewStd(const View& view, bool emphasized = false) const;
+    void packetRegionInfoViewValue(const View& view) const;
     void simpleInputViewBorder(const View& view) const;
     void packetIndexBuildProgressViewPath(const View& view, bool filename) const;
     void packetIndexBuildProgressViewBar(const View& view, bool on) const;
@@ -84,6 +94,10 @@ public:
     void searchInputViewEscape(const View& view) const;
     void searchInputViewNumber(const View& view) const;
     void searchInputViewError(const View& view) const;
+    void packetDataViewOffset(const View& view, bool selected = false) const;
+    void packetDataViewPadding(const View& view) const;
+    void packetDataViewSelection(const View& view,
+                                 const PacketDataViewSelectionType& selectionType) const;
 
 private:
     void _initColor(int id, int fg, int bg) const;
@@ -132,8 +146,8 @@ private:
         _COLOR_ID_HELP_VIEW_SECTION,
         _COLOR_ID_HELP_VIEW_KEY,
         _COLOR_ID_STATUS_VIEW_STD,
-        _COLOR_ID_DATA_REGION_INFO_VIEW_STD,
-        _COLOR_ID_DATA_REGION_INFO_VIEW_VALUE,
+        _COLOR_ID_PACKET_REGION_INFO_VIEW_STD,
+        _COLOR_ID_PACKET_REGION_INFO_VIEW_VALUE,
         _COLOR_ID_SIMPLE_INPUT_VIEW_BORDER,
         _COLOR_ID_PACKET_INDEX_BUILD_PROGRESS_VIEW_PATH,
         _COLOR_ID_DETAILS_VIEW_SUBTITLE,
@@ -151,6 +165,10 @@ private:
         _COLOR_ID_SEARCH_INPUT_VIEW_ESCAPE,
         _COLOR_ID_SEARCH_INPUT_VIEW_NUMBER,
         _COLOR_ID_SEARCH_INPUT_VIEW_ERROR,
+        _COLOR_ID_PACKET_DATA_VIEW_SELECTION_PREVIOUS,
+        _COLOR_ID_PACKET_DATA_VIEW_SELECTION_NEXT,
+        _COLOR_ID_PACKET_DATA_VIEW_OFFSET,
+        _COLOR_ID_PACKET_DATA_VIEW_PADDING,
     };
 };
 

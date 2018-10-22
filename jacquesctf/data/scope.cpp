@@ -10,7 +10,7 @@
 namespace jacques {
 
 Scope::Scope(EventRecord::SP eventRecord, const yactfr::Scope scope,
-             const DataSegment& segment) :
+             const PacketSegment& segment) :
     _eventRecord {std::move(eventRecord)},
     _scope {scope},
     _segment {segment}

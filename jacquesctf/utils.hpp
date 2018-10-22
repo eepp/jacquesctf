@@ -35,8 +35,8 @@ std::pair<std::string, std::string> formatPath(const boost::filesystem::path& pa
                                                Size maxLen);
 
 /*
- * Normalizes a globbing pattern, that is, removes consecutive
- * `*` characters.
+ * Normalizes a globbing pattern, that is, removes consecutive `*`
+ * characters.
  */
 std::string normalizeGlobPattern(const std::string& pattern);
 

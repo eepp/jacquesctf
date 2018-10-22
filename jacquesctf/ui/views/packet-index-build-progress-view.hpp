@@ -20,7 +20,7 @@ class PacketIndexBuildProgressView :
 {
 public:
     explicit PacketIndexBuildProgressView(const Rectangle& rect,
-                                          std::shared_ptr<const Stylist> stylist);
+                                          const Stylist& stylist);
     void dataStreamFile(const DataStreamFile& dsf);
     void packetIndexEntry(const PacketIndexEntry& entry);
 

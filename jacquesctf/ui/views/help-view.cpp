@@ -17,7 +17,7 @@ namespace jacques {
 static constexpr Size keyWidth = 15;
 
 HelpView::HelpView(const Rectangle& rect,
-                   std::shared_ptr<const Stylist> stylist) :
+                   const Stylist& stylist) :
     ScrollView {rect, "Help", DecorationStyle::BORDERS, stylist}
 {
     this->_buildRows();
@@ -49,14 +49,14 @@ void HelpView::_buildRows()
         _EmptyRow {},
         _SectionRow {"`Packet inspection` screen"},
         _KeyRow {"e", "Show/hide `Event records` frame"},
-        _KeyRow {"i", "Show/hide `Info` frame"},
-        _KeyRow {"#", "Show decoding error"},
+        _KeyRow {"Enter", "Show/hide `Data type` frame"},
+        _KeyRow {"#", "Show decoding error, if any"},
         _KeyRow {"Left", "Go to previous datum"},
         _KeyRow {"Right", "Go to next datum"},
-        _KeyRow {"Up", "Go to datum on previous row"},
-        _KeyRow {"Down", "Go to datum on next row"},
-        _KeyRow {"Pg up", "Go to previous content page"},
-        _KeyRow {"Pg down", "Go to next content page"},
+        _KeyRow {"Up", "Go to datum on a preceding row"},
+        _KeyRow {"Down", "Go to datum on a following row"},
+        _KeyRow {"Pg up", "Packet data: move half a page up"},
+        _KeyRow {"Pg down", "Packet data: move half a page down"},
         _KeyRow {"Home", "Go to first packet datum"},
         _KeyRow {"c", "Go to packet context's first datum"},
         _KeyRow {"End", "Go to last packet datum"},
@@ -176,8 +176,8 @@ void HelpView::_buildRows()
         _SearchSyntaxRow {"Timestamp X (cycles)", "**X"},
         _SearchSyntaxRow {"Relative timestamp X (cycles)", "+**X  -**X"},
         _EmptyRow {},
-        _SearchSyntaxRow {"Event record with event record type name NAME", "/NAME"},
-        _SearchSyntaxRow {"Event record with event record type ID X", "%X"},
+        _SearchSyntaxRow {"Next event record with type name NAME", "/NAME"},
+        _SearchSyntaxRow {"Next event record with type ID X", "%X"},
     };
 
     _ssRowFmtPos = 0;

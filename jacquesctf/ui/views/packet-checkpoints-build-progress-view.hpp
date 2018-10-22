@@ -19,7 +19,7 @@ class PacketCheckpointsBuildProgressView :
 {
 public:
     explicit PacketCheckpointsBuildProgressView(const Rectangle& rect,
-                                                std::shared_ptr<const Stylist> stylist);
+                                                const Stylist& stylist);
     void packetIndexEntry(const PacketIndexEntry& entry);
     void eventRecord(const EventRecord& eventRecord);
 

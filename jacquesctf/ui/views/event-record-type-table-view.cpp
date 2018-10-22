@@ -16,7 +16,7 @@
 namespace jacques {
 
 EventRecordTypeTableView::EventRecordTypeTableView(const Rectangle& rect,
-                                                   std::shared_ptr<const Stylist> stylist,
+                                                   const Stylist& stylist,
                                                    const State& state) :
     TableView {rect, "Event record types", DecorationStyle::BORDERS, stylist}
 {

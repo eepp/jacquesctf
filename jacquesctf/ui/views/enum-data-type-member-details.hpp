@@ -33,7 +33,7 @@ public:
 public:
     explicit EnumDataTypeMemberDetails(const std::string& name,
                                        const Member& member, const Size indent,
-                                       std::shared_ptr<const Stylist> stylist) :
+                                       const Stylist& stylist) :
         AbstractDataTypeDetails {indent, stylist},
         _name {name},
         _member {&member}

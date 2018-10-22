@@ -20,7 +20,7 @@ namespace jacques {
 
 TableView::TableView(const Rectangle& rect, const std::string& title,
                      const DecorationStyle decoStyle,
-                     std::shared_ptr<const Stylist> stylist) :
+                     const Stylist& stylist) :
     View {rect, title, decoStyle, stylist},
     _visibleRowCount {this->contentRect().h - 1}
 {

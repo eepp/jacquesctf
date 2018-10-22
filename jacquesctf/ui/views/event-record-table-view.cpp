@@ -16,11 +16,11 @@
 namespace jacques {
 
 EventRecordTableView::EventRecordTableView(const Rectangle& rect,
-                                           std::shared_ptr<const Stylist> stylist,
-                                           std::shared_ptr<State> state) :
+                                           const Stylist& stylist,
+                                           State& state) :
     TableView {rect, "Event records", DecorationStyle::BORDERS, stylist},
-    _state {state},
-    _stateObserverGuard {*state, *this}
+    _state {&state},
+    _stateObserverGuard {state, *this}
 {
     this->_setColumnDescriptions();
 }

@@ -22,7 +22,7 @@ class DataStreamTypeTableView :
 {
 public:
     explicit DataStreamTypeTableView(const Rectangle& rect,
-                                     std::shared_ptr<const Stylist> stylist,
+                                     const Stylist& stylist,
                                      const State& state);
     void traceType(const yactfr::TraceType& traceType);
     const yactfr::DataStreamType *dataStreamType() const;

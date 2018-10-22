@@ -26,7 +26,7 @@ class EventRecordTypeTableView :
 {
 public:
     explicit EventRecordTypeTableView(const Rectangle& rect,
-                                      std::shared_ptr<const Stylist> stylist,
+                                      const Stylist& stylist,
                                       const State& state);
     void dataStreamType(const yactfr::DataStreamType& dst);
     const yactfr::EventRecordType *eventRecordType() const;

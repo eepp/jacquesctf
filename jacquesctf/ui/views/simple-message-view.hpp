@@ -16,8 +16,7 @@ class SimpleMessageView :
     public View
 {
 public:
-    explicit SimpleMessageView(const Rectangle& rect,
-                               std::shared_ptr<const Stylist> stylist);
+    explicit SimpleMessageView(const Rectangle& rect, const Stylist& stylist);
     void message(const std::string& msg);
 
 protected:

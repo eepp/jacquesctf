@@ -40,7 +40,7 @@ public:
     void format(char *buf, Size bufSize) const;
     std::string format() const;
 
-    unsigned long long ns() const
+    unsigned long long ns() const noexcept
     {
         return _ns;
     }

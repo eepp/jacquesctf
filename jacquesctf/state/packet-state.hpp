@@ -25,15 +25,15 @@ public:
     explicit PacketState(State& state, Packet& packet);
     void gotoPreviousEventRecord(Size count = 1);
     void gotoNextEventRecord(Size count = 1);
-    void gotoPreviousDataRegion();
-    void gotoNextDataRegion();
+    void gotoPreviousPacketRegion();
+    void gotoNextPacketRegion();
     void gotoPacketContext();
-    void gotoLastDataRegion();
-    void gotoDataRegionAtOffsetInPacketBits(Index offsetBits);
+    void gotoLastPacketRegion();
+    void gotoPacketRegionAtOffsetInPacketBits(Index offsetBits);
 
-    void gotoDataRegionAtOffsetInPacketBits(const DataRegion& region)
+    void gotoPacketRegionAtOffsetInPacketBits(const PacketRegion& region)
     {
-        this->gotoDataRegionAtOffsetInPacketBits(region.segment().offsetInPacketBits());
+        this->gotoPacketRegionAtOffsetInPacketBits(region.segment().offsetInPacketBits());
     }
 
     Packet& packet() noexcept
@@ -53,8 +53,8 @@ public:
 
     const EventRecord *currentEventRecord()
     {
-        const auto& dataRegion = _packet->dataRegionAtOffsetInPacketBits(_curOffsetInPacketBits);
-        const auto& scope = dataRegion.scope();
+        const auto& packetRegion = _packet->packetRegionAtOffsetInPacketBits(_curOffsetInPacketBits);
+        const auto& scope = packetRegion.scope();
 
         if (!scope) {
             return nullptr;
@@ -64,9 +64,9 @@ public:
         return scope->eventRecord();
     }
 
-    const DataRegion& currentDataRegion()
+    const PacketRegion& currentPacketRegion()
     {
-        return _packet->dataRegionAtOffsetInPacketBits(_curOffsetInPacketBits);
+        return _packet->packetRegionAtOffsetInPacketBits(_curOffsetInPacketBits);
     }
 
     State& state() noexcept

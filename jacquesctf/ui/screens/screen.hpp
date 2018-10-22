@@ -40,8 +40,7 @@ protected:
      * `rect` is the screen's rectangle within the terminal screen.
      */
     explicit Screen(const Rectangle& rect, const Config& cfg,
-                    std::shared_ptr<const Stylist> stylist,
-                    std::shared_ptr<State> state);
+                    const Stylist& stylist, State& state);
 
 public:
     virtual ~Screen();
@@ -144,11 +143,6 @@ protected:
         return *_curStylist;
     }
 
-    std::shared_ptr<const Stylist> _stylistPtr() const noexcept
-    {
-        return _curStylist;
-    }
-
     State& _state() noexcept
     {
         return *_curState;
@@ -161,9 +155,9 @@ protected:
 
 private:
     Rectangle _curRect;
-    const Config *_curCfg;
-    std::shared_ptr<const Stylist> _curStylist;
-    std::shared_ptr<State> _curState;
+    const Config * const _curCfg;
+    const Stylist * const _curStylist;
+    State * const _curState;
     bool _visible = false;
 };
 

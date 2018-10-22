@@ -22,11 +22,10 @@
 namespace jacques {
 
 StatusView::StatusView(const Rectangle& rect,
-                       std::shared_ptr<const Stylist> stylist,
-                       std::shared_ptr<State> state) :
+                       const Stylist& stylist, State& state) :
     View {rect, "Status", DecorationStyle::BORDERLESS, stylist},
-    _state {state},
-    _stateObserverGuard {*state, *this}
+    _state {&state},
+    _stateObserverGuard {state, *this}
 {
 }
 

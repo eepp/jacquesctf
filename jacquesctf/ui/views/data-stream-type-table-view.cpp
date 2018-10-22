@@ -13,7 +13,7 @@
 namespace jacques {
 
 DataStreamTypeTableView::DataStreamTypeTableView(const Rectangle& rect,
-                                                 std::shared_ptr<const Stylist> stylist,
+                                                 const Stylist& stylist,
                                                  const State& state) :
     TableView {rect, "Data stream types", DecorationStyle::BORDERS, stylist}
 {

@@ -14,8 +14,9 @@
 #include "aliases.hpp"
 #include "stylist.hpp"
 #include "state.hpp"
-#include "data-region-info-view.hpp"
+#include "packet-region-info-view.hpp"
 #include "event-record-table-view.hpp"
+#include "packet-data-view.hpp"
 #include "packet-decoding-error-details-view.hpp"
 #include "inspect-screen.hpp"
 #include "screen.hpp"
@@ -29,8 +30,7 @@ class InspectScreen :
 {
 public:
     explicit InspectScreen(const Rectangle& rect, const Config& cfg,
-                           std::shared_ptr<const Stylist> stylist,
-                           std::shared_ptr<State> state);
+                           const Stylist& stylist, State& state);
 
 private:
     struct _StateSnapshot
@@ -53,7 +53,7 @@ private:
     KeyHandlingReaction _handleKey(int key) override;
     void _visibilityChanged() override;
     void _tryShowDecodingError();
-    std::tuple<Rectangle, Rectangle> _viewRects() const;
+    std::tuple<Rectangle, Rectangle, Rectangle> _viewRects() const;
     void _snapshotState();
     void _goBack();
     void _goForward();
@@ -61,7 +61,8 @@ private:
 
 private:
     std::unique_ptr<EventRecordTableView> _ertView;
-    std::unique_ptr<DataRegionInfoView> _drInfoView;
+    std::unique_ptr<PacketDataView> _pdView;
+    std::unique_ptr<PacketRegionInfoView> _drInfoView;
     std::unique_ptr<PacketDecodingErrorDetailsView> _decErrorView;
     SearchController _searchController;
     std::unique_ptr<const SearchQuery> _lastQuery;

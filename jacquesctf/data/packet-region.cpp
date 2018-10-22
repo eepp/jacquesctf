@@ -5,13 +5,17 @@
  * prohibited. Proprietary and confidential.
  */
 
-#include "data-segment.hpp"
+#include "packet-region.hpp"
 
 namespace jacques {
 
-DataSegment::DataSegment(const Index offsetInPacketBits, const DataSize& size) :
-    _offsetInPacketBits {offsetInPacketBits},
-    _size {size}
+PacketRegion::PacketRegion(const PacketSegment& segment, Scope::SP scope) :
+    _seg {segment},
+    _scope {std::move(scope)}
+{
+}
+
+PacketRegion::~PacketRegion()
 {
 }
 

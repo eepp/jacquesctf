@@ -22,7 +22,7 @@ class DataTypeExplorerView :
 {
 public:
     explicit DataTypeExplorerView(const Rectangle& rect,
-                                  std::shared_ptr<const Stylist> stylist);
+                                  const Stylist& stylist);
     void dataStreamType(const yactfr::DataStreamType& dataStreamType);
     void eventRecordType(const yactfr::EventRecordType& eventRecordType);
     void singleDataType(const yactfr::DataType& dataType, yactfr::Scope scope);

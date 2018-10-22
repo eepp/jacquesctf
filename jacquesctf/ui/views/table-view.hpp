@@ -404,7 +404,7 @@ public:
 protected:
     explicit TableView(const Rectangle& rect, const std::string& title,
                        DecorationStyle decoStyle,
-                       std::shared_ptr<const Stylist> stylist);
+                       const Stylist& stylist);
     virtual void _drawRow(Index index) = 0;
     virtual bool _hasIndex(Index index) = 0;
     virtual void _selectLast();

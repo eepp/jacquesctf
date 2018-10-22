@@ -18,7 +18,7 @@
 namespace jacques {
 
 DataTypeExplorerView::DataTypeExplorerView(const Rectangle& rect,
-                                           std::shared_ptr<const Stylist> stylist) :
+                                           const Stylist& stylist) :
     ScrollView {rect, "", DecorationStyle::BORDERS, stylist}
 {
 }
@@ -335,7 +335,7 @@ void DataTypeExplorerView::_drawRows()
 void DataTypeExplorerView::_appendDetailsRow(const yactfr::DataType& dataType,
                                              _Details& details)
 {
-    dataTypeDetailsFromDataType(dataType, this->_stylistPtr(), details);
+    dataTypeDetailsFromDataType(dataType, this->_stylist(), details);
 
     for (auto& detailsUp : details) {
         _rows.push_back(detailsUp.get());

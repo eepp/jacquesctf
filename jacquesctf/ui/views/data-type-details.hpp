@@ -23,7 +23,7 @@ public:
     explicit DataTypeDetails(const yactfr::DataType& dataType,
                              const boost::optional<std::string>& name,
                              Size nameWidth, Size indent,
-                             std::shared_ptr<const Stylist> stylist);
+                             const Stylist& stylist);
 
     const yactfr::DataType& dataType() const noexcept
     {

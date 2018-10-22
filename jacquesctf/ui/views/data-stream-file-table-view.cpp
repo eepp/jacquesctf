@@ -15,11 +15,11 @@
 namespace jacques {
 
 DataStreamFileTableView::DataStreamFileTableView(const Rectangle& rect,
-                                                 std::shared_ptr<const Stylist> stylist,
-                                                 std::shared_ptr<State> state) :
+                                                 const Stylist& stylist,
+                                                 State& state) :
     TableView {rect, "Data stream files", DecorationStyle::BORDERS, stylist},
-    _state {state},
-    _stateObserverGuard {*state, *this}
+    _state {&state},
+    _stateObserverGuard {state, *this}
 {
     this->_setColumnDescriptions();
 }

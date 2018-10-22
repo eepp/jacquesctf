@@ -21,9 +21,9 @@
 namespace jacques {
 
 AbstractDataTypeDetails::AbstractDataTypeDetails(const Size indent,
-                                                 std::shared_ptr<const Stylist> stylist) :
+                                                 const Stylist& stylist) :
     _indentWidth {indent},
-    _myStylist {stylist}
+    _myStylist {&stylist}
 {
 }
 
@@ -72,7 +72,7 @@ void AbstractDataTypeDetails::_renderString(WINDOW *window, Size& remWidth,
 template <typename EnumT>
 static void _enumDataTypeMemberDetailsFromDataType(const EnumT& dataType,
                                                    const Size indent,
-                                                   std::shared_ptr<const Stylist> stylist,
+                                                   const Stylist& stylist,
                                                    std::vector<std::unique_ptr<const AbstractDataTypeDetails>>& vec)
 {
     using Details = EnumDataTypeMemberDetails<EnumT>;
@@ -88,7 +88,7 @@ static void _enumDataTypeMemberDetailsFromDataType(const EnumT& dataType,
 
 static void _dataTypeDetailsFromDataType(const yactfr::DataType& dataType,
                                          const Size indent,
-                                         std::shared_ptr<const Stylist> stylist,
+                                         const Stylist& stylist,
                                          const boost::optional<std::string>& name,
                                          const Size nameWidth,
                                          std::vector<std::unique_ptr<const AbstractDataTypeDetails>>& vec)
@@ -147,7 +147,7 @@ static void _dataTypeDetailsFromDataType(const yactfr::DataType& dataType,
 }
 
 void dataTypeDetailsFromDataType(const yactfr::DataType& dataType,
-                                 std::shared_ptr<const Stylist> stylist,
+                                 const Stylist& stylist,
                                  std::vector<std::unique_ptr<const AbstractDataTypeDetails>>& vec)
 {
     _dataTypeDetailsFromDataType(dataType, 0, stylist, boost::none, 0, vec);

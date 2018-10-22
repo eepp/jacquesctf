@@ -27,7 +27,7 @@ public:
 
 protected:
     explicit AbstractDataTypeDetails(Size indent,
-                                     std::shared_ptr<const Stylist> stylist);
+                                     const Stylist& stylist);
 
 public:
     virtual ~AbstractDataTypeDetails() = 0;
@@ -56,11 +56,11 @@ protected:
 
 private:
     const Size _indentWidth;
-    std::shared_ptr<const Stylist> _myStylist;
+    const Stylist * const _myStylist;
 };
 
 void dataTypeDetailsFromDataType(const yactfr::DataType& dataType,
-                                 std::shared_ptr<const Stylist> stylist,
+                                 const Stylist& stylist,
                                  std::vector<AbstractDataTypeDetails::UP>& vec);
 
 } // namespace jacques

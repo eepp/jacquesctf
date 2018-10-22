@@ -25,8 +25,7 @@ class TraceInfoView :
 {
 public:
     explicit TraceInfoView(const Rectangle& rect,
-                           std::shared_ptr<const Stylist> stylist,
-                           std::shared_ptr<State> state);
+                           const Stylist& stylist, State& state);
 
 private:
     void _drawRows() override;
@@ -147,7 +146,7 @@ private:
     using Rows = std::vector<std::unique_ptr<_Row>>;
 
 private:
-    std::shared_ptr<State> _state;
+    State * const _state;
     const ViewStateObserverGuard _stateObserverGuard;
     std::unordered_map<const yactfr::TraceType *, Rows> _traceInfo;
     const Rows *_rows = nullptr;

@@ -43,27 +43,27 @@ public:
 public:
 	explicit Config(int argc, const char *argv[]);
 
-    Command command() const
+    Command command() const noexcept
     {
         return _cmd;
     }
 
-    const std::list<boost::filesystem::path>& filePaths() const
+    const std::list<boost::filesystem::path>& filePaths() const noexcept
     {
         return _filePaths;
     }
 
-    unsigned int bytesPerRowBin() const
+    unsigned int bytesPerRowBin() const noexcept
     {
         return _bytesPerRowBin;
     }
 
-    unsigned int bytesPerRowHex() const
+    unsigned int bytesPerRowHex() const noexcept
     {
         return _bytesPerRowHex;
     }
 
-    bool enableLogging() const
+    bool enableLogging() const noexcept
     {
         return _enableLogging;
     }

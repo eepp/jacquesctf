@@ -38,22 +38,22 @@ endif ()
 add_executable (
     jacquesctf
     config.cpp
-    data/content-data-region.cpp
-    data/data-region-visitor.cpp
-    data/data-region.cpp
-    data/data-segment.cpp
+    data/content-packet-region.cpp
     data/data-size.cpp
     data/data-stream-file.cpp
     data/duration.cpp
-    data/error-data-region.cpp
+    data/error-packet-region.cpp
     data/event-record.cpp
     data/memory-mapped-file.cpp
     data/metadata.cpp
     data/packet-checkpoints-build-listener.cpp
     data/packet-checkpoints.cpp
     data/packet-index-entry.cpp
+    data/packet-region-visitor.cpp
+    data/packet-region.cpp
+    data/packet-segment.cpp
     data/packet.cpp
-    data/padding-data-region.cpp
+    data/padding-packet-region.cpp
     data/scope.cpp
     data/timestamp.cpp
     data/trace.cpp
@@ -77,7 +77,6 @@ add_executable (
     ui/search-controller.cpp
     ui/stylist.cpp
     ui/views/abstract-data-type-details.cpp
-    ui/views/data-region-info-view.cpp
     ui/views/data-stream-file-table-view.cpp
     ui/views/data-stream-type-table-view.cpp
     ui/views/data-type-details.cpp
@@ -87,8 +86,10 @@ add_executable (
     ui/views/help-view.cpp
     ui/views/input-view.cpp
     ui/views/packet-checkpoints-build-progress-view.cpp
+    ui/views/packet-data-view.cpp
     ui/views/packet-decoding-error-details-view.cpp
     ui/views/packet-index-build-progress-view.cpp
+    ui/views/packet-region-info-view.cpp
     ui/views/packet-table-view.cpp
     ui/views/scroll-view.cpp
     ui/views/search-input-view.cpp
