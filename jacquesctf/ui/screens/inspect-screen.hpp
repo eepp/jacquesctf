@@ -48,21 +48,41 @@ private:
     };
 
 private:
+    struct _ViewRects
+    {
+        Rectangle ert;
+        Rectangle prInfo;
+        Rectangle pd;
+    };
+
+    enum class _ErtViewDisplayMode {
+        HIDDEN,
+        SHORT,
+        LONG,
+    };
+
+    enum class _ {
+        HIDDEN,
+        SHORT,
+        LONG,
+    };
+
+private:
     void _redraw() override;
     void _resized() override;
     KeyHandlingReaction _handleKey(int key) override;
     void _visibilityChanged() override;
     void _tryShowDecodingError();
-    std::tuple<Rectangle, Rectangle, Rectangle> _viewRects() const;
     void _snapshotState();
     void _goBack();
     void _goForward();
     void _restoreStateSnapshot(const _StateSnapshot& snapshot);
+    void _updateViews();
 
 private:
     std::unique_ptr<EventRecordTableView> _ertView;
     std::unique_ptr<PacketDataView> _pdView;
-    std::unique_ptr<PacketRegionInfoView> _drInfoView;
+    std::unique_ptr<PacketRegionInfoView> _prInfoView;
     std::unique_ptr<PacketDecodingErrorDetailsView> _decErrorView;
     SearchController _searchController;
     std::unique_ptr<const SearchQuery> _lastQuery;
@@ -71,6 +91,7 @@ private:
     const Size _maxStateSnapshots = 500;
     std::list<_StateSnapshot> _stateSnapshots;
     decltype(_stateSnapshots)::iterator _currentStateSnapshot;
+    CycleWheel<_ErtViewDisplayMode> _ertViewDisplayModeWheel;
 };
 
 } // namespace jacques

@@ -36,56 +36,71 @@ InspectScreen::InspectScreen(const Rectangle& rect, const Config& cfg,
         utils::SizeFormatMode::BYTES_FLOOR_WITH_EXTRA_BITS,
         utils::SizeFormatMode::BITS,
     },
-    _currentStateSnapshot {std::end(_stateSnapshots)}
+    _currentStateSnapshot {std::end(_stateSnapshots)},
+    _ertViewDisplayModeWheel {
+        _ErtViewDisplayMode::SHORT,
+        _ErtViewDisplayMode::LONG,
+        _ErtViewDisplayMode::HIDDEN,
+    }
 {
-    Rectangle pdViewRect;
-    Rectangle ertViewRect;
-    Rectangle drInfoViewRect;
-
-    std::tie(pdViewRect, ertViewRect, drInfoViewRect) = this->_viewRects();
-    _pdView = std::make_unique<PacketDataView>(pdViewRect, stylist, state);
-    _ertView = std::make_unique<EventRecordTableView>(ertViewRect, stylist,
+    _pdView = std::make_unique<PacketDataView>(this->rect(), stylist, state);
+    _ertView = std::make_unique<EventRecordTableView>(this->rect(), stylist,
                                                       state);
-    _drInfoView = std::make_unique<PacketRegionInfoView>(drInfoViewRect,
+    _prInfoView = std::make_unique<PacketRegionInfoView>(Rectangle {{0, 0},
+                                                                    this->rect().w, 1},
                                                          stylist, state);
     _decErrorView->isVisible(false);
     _pdView->focus();
+    this->_updateViews();
 }
 
-std::tuple<Rectangle, Rectangle, Rectangle> InspectScreen::_viewRects() const
+void InspectScreen::_updateViews()
 {
-    const auto ertViewHeight = 8;
+    Size ertViewHeight = 0;
 
-    return {
-        {this->rect().pos, this->rect().w, this->rect().h - 1 - ertViewHeight},
-        {{this->rect().pos.x, this->rect().h - 1 - ertViewHeight},
-         this->rect().w, ertViewHeight},
-        {{this->rect().pos.x, this->rect().h - 1}, this->rect().w, 1}
-    };
+    switch (_ertViewDisplayModeWheel.currentValue()) {
+    case _ErtViewDisplayMode::SHORT:
+        ertViewHeight = 8;
+        break;
+
+    case _ErtViewDisplayMode::LONG:
+        ertViewHeight = this->rect().h / 2;
+        break;
+
+    default:
+        break;
+    }
+
+    const auto pdViewHeight = this->rect().h - ertViewHeight - 1;
+
+    if (_ertViewDisplayModeWheel.currentValue() == _ErtViewDisplayMode::HIDDEN) {
+        _ertView->moveAndResize({{0, 0}, this->rect().w, 8});
+        _ertView->isVisible(false);
+    } else {
+        _ertView->moveAndResize({{0, pdViewHeight + 1}, this->rect().w,
+                                ertViewHeight});
+        _ertView->isVisible(true);
+    }
+
+    _pdView->moveAndResize({{0, 0}, this->rect().w, pdViewHeight});
+    _prInfoView->moveAndResize({{0, pdViewHeight}, this->rect().w, 1});
+    _decErrorView->moveAndResize({{this->rect().pos.x + 4,
+                                   this->rect().h - 14},
+                                  this->rect().w - 8, 12});
+    _ertView->centerSelectedRow(false);
 }
 
 void InspectScreen::_redraw()
 {
     _pdView->redraw();
     _ertView->redraw();
-    _drInfoView->redraw();
+    _prInfoView->redraw();
     _decErrorView->redraw();
 }
 
 void InspectScreen::_resized()
 {
-    Rectangle pdViewRect;
-    Rectangle ertViewRect;
-    Rectangle drInfoViewRect;
-
-    std::tie(pdViewRect, ertViewRect, drInfoViewRect) = this->_viewRects();
-    _pdView->moveAndResize(pdViewRect);
-    _ertView->moveAndResize(ertViewRect);
-    _drInfoView->moveAndResize(drInfoViewRect);
-    _decErrorView->moveAndResize(Rectangle {{this->rect().pos.x + 4,
-                                             this->rect().h - 14},
-                                            this->rect().w - 8, 12});
-    _ertView->centerSelectedRow(false);
+    this->_updateViews();
     _searchController.parentScreenResized(*this);
 }
 
@@ -93,7 +108,7 @@ void InspectScreen::_visibilityChanged()
 {
     _pdView->isVisible(this->isVisible());
     _ertView->isVisible(this->isVisible());
-    _drInfoView->isVisible(this->isVisible());
+    _prInfoView->isVisible(this->isVisible());
 
     if (this->isVisible()) {
         if (_stateSnapshots.empty()) {
@@ -103,7 +118,7 @@ void InspectScreen::_visibilityChanged()
 
         _pdView->redraw();
         _ertView->redraw();
-        _drInfoView->redraw();
+        _prInfoView->redraw();
         this->_tryShowDecodingError();
         _decErrorView->refresh(true);
     }
@@ -204,7 +219,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         _decErrorView->isVisible(false);
         _pdView->redraw();
         _ertView->redraw();
-        _drInfoView->redraw();
+        _prInfoView->redraw();
     }
 
     switch (key) {
@@ -231,6 +246,12 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     case 's':
         _dsFormatModeWheel.next();
         _ertView->dataSizeFormatMode(_dsFormatModeWheel.currentValue());
+        break;
+
+    case 'e':
+        _ertViewDisplayModeWheel.next();
+        this->_updateViews();
+        this->_redraw();
         break;
 
     case 'c':
@@ -407,7 +428,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 
     _pdView->refresh();
     _ertView->refresh();
-    _drInfoView->refresh();
+    _prInfoView->refresh();
 
     /*
      * Touch because the content could be unchanged from the last
