@@ -47,9 +47,12 @@ void PacketDataView::_stateChanged(const Message& msg)
 {
     if (dynamic_cast<const ActiveDataStreamFileChangedMessage *>(&msg) ||
             dynamic_cast<const ActivePacketChangedMessage *>(&msg)) {
-        this->_setDataXAndRowSize();
-        this->_setPrevCurNextOffsetInPacketBits();
-        this->_setBaseAndEndOffsetInPacketBitsFromOffset(_curOffsetInPacketBits);
+        if (_state->hasActivePacketState()) {
+            this->_setDataXAndRowSize();
+            this->_setPrevCurNextOffsetInPacketBits();
+            this->_setBaseAndEndOffsetInPacketBitsFromOffset(_curOffsetInPacketBits);
+        }
+
         this->_redrawContent();
     } else if (dynamic_cast<const CurOffsetInPacketChangedMessage *>(&msg)) {
         this->_updateSelection();
@@ -297,6 +300,11 @@ void PacketDataView::_redrawContent()
     _zones.clear();
     this->_appendZones(_zones, _baseOffsetInPacketBits, _endOffsetInPacketBits);
     this->_drawAllZones();
+    this->_hasMoreTop(_baseOffsetInPacketBits != 0);
+
+    const auto effectiveTotalSizeBits = _state->activePacketState().packet().indexEntry().effectiveTotalSize().bits();
+
+    this->_hasMoreBottom(_endOffsetInPacketBits < effectiveTotalSizeBits);
 }
 
 void PacketDataView::_appendZones(_Zones& zones,
@@ -364,6 +372,10 @@ void PacketDataView::_appendZones(_Zones& zones,
 
 void PacketDataView::pageDown()
 {
+    if (!_state->hasActivePacketState()) {
+        return;
+    }
+
     const auto effectiveTotalSizeBits = _state->activePacketState().packet().indexEntry().effectiveTotalSize().bits();
 
     _baseOffsetInPacketBits += this->_halfPageSize().bits();
@@ -385,6 +397,10 @@ void PacketDataView::pageDown()
 
 void PacketDataView::pageUp()
 {
+    if (!_state->hasActivePacketState()) {
+        return;
+    }
+
     const auto halfPageSize = this->_halfPageSize();
 
     if (_baseOffsetInPacketBits < halfPageSize.bits()) {
