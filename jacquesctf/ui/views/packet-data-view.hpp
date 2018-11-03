@@ -66,6 +66,11 @@ public:
     void pageDown();
     void pageUp();
 
+    const DataSize& rowSize() const noexcept
+    {
+        return _rowSize;
+    }
+
 private:
     struct _Zone
     {

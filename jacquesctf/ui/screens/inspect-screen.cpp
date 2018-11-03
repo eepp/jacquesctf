@@ -258,6 +258,59 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         this->_snapshotState();
         break;
 
+    case KEY_UP:
+    {
+        if (!this->_state().hasActivePacketState()) {
+            break;
+        }
+
+        auto& packet = this->_state().activePacketState().packet();
+
+        if (!this->_state().activePacketState().packet().hasData()) {
+            break;
+        }
+
+        Index reqOffsetInPacketBits;
+
+        if (this->_state().curOffsetInPacketBits() < _pdView->rowSize().bits()) {
+            reqOffsetInPacketBits = 0;
+        } else {
+            reqOffsetInPacketBits = this->_state().curOffsetInPacketBits() -
+                                    _pdView->rowSize().bits();
+        }
+
+        const auto& reqPacketRegion = packet.packetRegionAtOffsetInPacketBits(reqOffsetInPacketBits);
+
+        this->_state().gotoPacketRegionAtOffsetInPacketBits(reqPacketRegion.segment().offsetInPacketBits());
+        break;
+    }
+
+    case KEY_DOWN:
+    {
+        if (!this->_state().hasActivePacketState()) {
+            break;
+        }
+
+        auto& packet = this->_state().activePacketState().packet();
+
+        if (!packet.hasData()) {
+            break;
+        }
+
+        const auto& curPacketRegion = *this->_state().currentPacketRegion();
+        auto reqOffsetInPacketBits = std::max(this->_state().curOffsetInPacketBits() +
+                                              _pdView->rowSize().bits(),
+                                              curPacketRegion.segment().endOffsetInPacketBits());
+
+        reqOffsetInPacketBits = std::min(reqOffsetInPacketBits,
+                                         packet.lastPacketRegion().segment().offsetInPacketBits());
+
+        const auto& reqPacketRegion = packet.packetRegionAtOffsetInPacketBits(reqOffsetInPacketBits);
+
+        this->_state().gotoPacketRegionAtOffsetInPacketBits(reqPacketRegion.segment().offsetInPacketBits());
+        break;
+    }
+
     case KEY_PPAGE:
         _pdView->pageUp();
         break;
