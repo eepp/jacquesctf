@@ -27,6 +27,7 @@ public:
     void eventRecordType(const yactfr::EventRecordType& eventRecordType);
     void singleDataType(const yactfr::DataType& dataType, yactfr::Scope scope);
     void highlightDataType(const yactfr::DataType& dataType);
+    void reset();
     void clearHighlight();
     void centerHighlight();
 
@@ -52,6 +53,7 @@ private:
                            _Details& details);
 
 private:
+    const yactfr::DataType *_singleDataType = nullptr;
     const yactfr::DataType *_highlight = nullptr;
 
     struct {

@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <yactfr/metadata/string-type.hpp>
+#include <yactfr/metadata/struct-type.hpp>
 
 #include "packet.hpp"
 #include "content-packet-region.hpp"
@@ -17,8 +18,7 @@
 namespace jacques {
 
 Packet::Packet(const PacketIndexEntry& indexEntry,
-               yactfr::PacketSequence& seq,
-               const Metadata& metadata,
+               yactfr::PacketSequence& seq, const Metadata& metadata,
                yactfr::DataSource::UP dataSrc,
                std::unique_ptr<MemoryMappedFile> mmapFile,
                PacketCheckpointsBuildListener& packetCheckpointsBuildListener) :
@@ -338,6 +338,18 @@ void Packet::_cachePacketPreamblePacketRegions()
                 break;
             }
 
+            case ElemKind::STRUCT_BEGINNING:
+            {
+                if (curScope && !curScope->dataType()) {
+                    auto& elem = static_cast<const yactfr::StructBeginningElement&>(*_it);
+
+                    curScope->dataType(elem.type());
+                }
+
+                ++_it;
+                break;
+            }
+
             case ElemKind::SCOPE_END:
             {
                 assert(curScope);
@@ -451,6 +463,18 @@ void Packet::_cachePacketRegionsAtCurIt(const yactfr::Element::Kind endElemKind,
             ++_it;
             break;
 
+        case ElemKind::STRUCT_BEGINNING:
+        {
+            if (curScope && !curScope->dataType()) {
+                auto& elem = static_cast<const yactfr::StructBeginningElement&>(*_it);
+
+                curScope->dataType(elem.type());
+            }
+
+            ++_it;
+            break;
+        }
+
         case ElemKind::SCOPE_END:
             if (setCurScope && curScope) {
                 curScope->segment().size(this->_itOffsetInPacketBits() -
@@ -517,14 +541,14 @@ void Packet::_cachePacketRegionsFromOneErAtCurIt(const Index indexInPacket)
 
     assert(_it->kind() == ElemKind::EVENT_RECORD_BEGINNING);
     this->_cachePacketRegionsAtCurIt(yactfr::Element::Kind::EVENT_RECORD_END,
-                                   true, true, indexInPacket);
+                                     true, true, indexInPacket);
 }
 
 void Packet::_cachePacketRegionsAtCurItUntilError()
 {
     try {
         this->_cachePacketRegionsAtCurIt(yactfr::Element::Kind::PACKET_END,
-                                       false, false, 0);
+                                         false, false, 0);
     } catch (const yactfr::DecodingError&) {
         Index offsetStartBits = _preambleSize.bits();
         OptByteOrder byteOrder;

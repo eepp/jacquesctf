@@ -17,6 +17,7 @@
 #include "packet-region-info-view.hpp"
 #include "event-record-table-view.hpp"
 #include "packet-data-view.hpp"
+#include "sub-data-type-explorer-view.hpp"
 #include "packet-decoding-error-details-view.hpp"
 #include "inspect-screen.hpp"
 #include "screen.hpp"
@@ -51,17 +52,11 @@ private:
     struct _ViewRects
     {
         Rectangle ert;
-        Rectangle prInfo;
+        Rectangle pri;
         Rectangle pd;
     };
 
     enum class _ErtViewDisplayMode {
-        HIDDEN,
-        SHORT,
-        LONG,
-    };
-
-    enum class _ {
         HIDDEN,
         SHORT,
         LONG,
@@ -82,7 +77,8 @@ private:
 private:
     std::unique_ptr<EventRecordTableView> _ertView;
     std::unique_ptr<PacketDataView> _pdView;
-    std::unique_ptr<PacketRegionInfoView> _prInfoView;
+    std::unique_ptr<PacketRegionInfoView> _priView;
+    std::unique_ptr<SubDataTypeExplorerView> _sdteView;
     std::unique_ptr<PacketDecodingErrorDetailsView> _decErrorView;
     SearchController _searchController;
     std::unique_ptr<const SearchQuery> _lastQuery;
@@ -92,6 +88,7 @@ private:
     std::list<_StateSnapshot> _stateSnapshots;
     decltype(_stateSnapshots)::iterator _currentStateSnapshot;
     CycleWheel<_ErtViewDisplayMode> _ertViewDisplayModeWheel;
+    bool _sdteViewIsVisible = false;
 };
 
 } // namespace jacques

@@ -30,6 +30,7 @@ void DataTypeExplorerView::dataStreamType(const yactfr::DataStreamType& dataStre
     _details.ertHeader.clear();
     _details.ertFirstCtx.clear();
     _rows.clear();
+    _singleDataType = nullptr;
 
     const auto traceType = dataStreamType.traceType();
 
@@ -83,6 +84,7 @@ void DataTypeExplorerView::eventRecordType(const yactfr::EventRecordType& eventR
     _details.ertFirstCtx.clear();
     _details.ertSecondCtx.clear();
     _details.ertPayload.clear();
+    _singleDataType = nullptr;
 
     auto& dst = *eventRecordType.dataStreamType();
 
@@ -141,6 +143,11 @@ void DataTypeExplorerView::eventRecordType(const yactfr::EventRecordType& eventR
 void DataTypeExplorerView::singleDataType(const yactfr::DataType& dataType,
                                           const yactfr::Scope scope)
 {
+    if (&dataType == _singleDataType) {
+        return;
+    }
+
+    _singleDataType = &dataType;
     _singleDataTypeDetails.clear();
     _rows.clear();
     _rows.push_back(_ScopeSubtitleRow {scope});
@@ -178,6 +185,15 @@ void DataTypeExplorerView::singleDataType(const yactfr::DataType& dataType,
     }
 
     this->_title(title);
+    this->redraw();
+}
+
+void DataTypeExplorerView::reset()
+{
+    this->_title("Data type");
+    _singleDataType = nullptr;
+    _rows.clear();
+    this->clearHighlight();
     this->redraw();
 }
 

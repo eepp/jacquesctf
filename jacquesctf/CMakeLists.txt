@@ -95,6 +95,7 @@ add_executable (
     ui/views/search-input-view.cpp
     ui/views/simple-message-view.cpp
     ui/views/status-view.cpp
+    ui/views/sub-data-type-explorer-view.cpp
     ui/views/table-view.cpp
     ui/views/text-input-view.cpp
     ui/views/trace-info-view.cpp

@@ -44,6 +44,16 @@ public:
         return _scope;
     }
 
+    const yactfr::DataType *dataType() const noexcept
+    {
+        return _dataType;
+    }
+
+    void dataType(const yactfr::DataType& dataType) noexcept
+    {
+        _dataType = &dataType;
+    }
+
     const PacketSegment& segment() const noexcept
     {
         return _segment;
@@ -62,6 +72,7 @@ public:
 private:
     EventRecord::SP _eventRecord;
     const yactfr::Scope _scope;
+    const yactfr::DataType *_dataType = nullptr;
     PacketSegment _segment;
 };
 

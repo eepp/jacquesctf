@@ -46,9 +46,11 @@ InspectScreen::InspectScreen(const Rectangle& rect, const Config& cfg,
     _pdView = std::make_unique<PacketDataView>(this->rect(), stylist, state);
     _ertView = std::make_unique<EventRecordTableView>(this->rect(), stylist,
                                                       state);
-    _prInfoView = std::make_unique<PacketRegionInfoView>(Rectangle {{0, 0},
-                                                                    this->rect().w, 1},
-                                                         stylist, state);
+    _priView = std::make_unique<PacketRegionInfoView>(Rectangle {{0, 0},
+                                                                 this->rect().w, 1},
+                                                      stylist, state);
+    _sdteView = std::make_unique<SubDataTypeExplorerView>(this->rect(), stylist,
+                                                          state);
     _decErrorView->isVisible(false);
     _pdView->focus();
     this->_updateViews();
@@ -72,18 +74,37 @@ void InspectScreen::_updateViews()
     }
 
     const auto pdViewHeight = this->rect().h - ertViewHeight - 1;
+    Size pdViewWidth;
+
+    if (_sdteViewIsVisible) {
+        pdViewWidth = this->rect().w / 2;
+    } else {
+        pdViewWidth = this->rect().w;
+    }
+
+    _sdteView->isVisible();
 
     if (_ertViewDisplayModeWheel.currentValue() == _ErtViewDisplayMode::HIDDEN) {
         _ertView->moveAndResize({{0, 0}, this->rect().w, 8});
         _ertView->isVisible(false);
     } else {
         _ertView->moveAndResize({{0, pdViewHeight + 1}, this->rect().w,
-                                ertViewHeight});
+                                 ertViewHeight});
         _ertView->isVisible(true);
     }
 
-    _pdView->moveAndResize({{0, 0}, this->rect().w, pdViewHeight});
-    _prInfoView->moveAndResize({{0, pdViewHeight}, this->rect().w, 1});
+    _pdView->moveAndResize({{0, 0}, pdViewWidth, pdViewHeight});
+    _priView->moveAndResize({{0, pdViewHeight}, this->rect().w, 1});
+
+    if (_sdteViewIsVisible) {
+        _sdteView->moveAndResize({{pdViewWidth, 0},
+                                  this->rect().w - pdViewWidth,
+                                  pdViewHeight});
+    } else {
+        _sdteView->moveAndResize({{0, 0}, this->rect().w, pdViewHeight});
+    }
+
+    _sdteView->isVisible(_sdteViewIsVisible);
     _decErrorView->moveAndResize({{this->rect().pos.x + 4,
                                    this->rect().h - 14},
                                   this->rect().w - 8, 12});
@@ -94,7 +115,8 @@ void InspectScreen::_redraw()
 {
     _pdView->redraw();
     _ertView->redraw();
-    _prInfoView->redraw();
+    _priView->redraw();
+    _sdteView->redraw();
     _decErrorView->redraw();
 }
 
@@ -108,7 +130,7 @@ void InspectScreen::_visibilityChanged()
 {
     _pdView->isVisible(this->isVisible());
     _ertView->isVisible(this->isVisible());
-    _prInfoView->isVisible(this->isVisible());
+    _priView->isVisible(this->isVisible());
 
     if (this->isVisible()) {
         if (_stateSnapshots.empty()) {
@@ -118,7 +140,7 @@ void InspectScreen::_visibilityChanged()
 
         _pdView->redraw();
         _ertView->redraw();
-        _prInfoView->redraw();
+        _priView->redraw();
         this->_tryShowDecodingError();
         _decErrorView->refresh(true);
     }
@@ -219,7 +241,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         _decErrorView->isVisible(false);
         _pdView->redraw();
         _ertView->redraw();
-        _prInfoView->redraw();
+        _priView->redraw();
     }
 
     switch (key) {
@@ -250,6 +272,13 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 
     case 'e':
         _ertViewDisplayModeWheel.next();
+        this->_updateViews();
+        this->_redraw();
+        break;
+
+    case '\n':
+    case '\r':
+        _sdteViewIsVisible = !_sdteViewIsVisible;
         this->_updateViews();
         this->_redraw();
         break;
@@ -365,8 +394,6 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     }
 
     case 'n':
-    case '\r':
-    case '\n':
         if (!_lastQuery) {
             break;
         }
@@ -428,7 +455,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 
     _pdView->refresh();
     _ertView->refresh();
-    _prInfoView->refresh();
+    _priView->refresh();
 
     /*
      * Touch because the content could be unchanged from the last
