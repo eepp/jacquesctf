@@ -96,6 +96,7 @@ public:
     void searchInputViewError(const View& view) const;
     void packetDataViewOffset(const View& view, bool selected = false) const;
     void packetDataViewPadding(const View& view) const;
+    void packetDataViewBookmark(const View& view, unsigned int id) const;
     void packetDataViewSelection(const View& view,
                                  const PacketDataViewSelectionType& selectionType) const;
 
@@ -169,6 +170,10 @@ private:
         _COLOR_ID_PACKET_DATA_VIEW_SELECTION_NEXT,
         _COLOR_ID_PACKET_DATA_VIEW_OFFSET,
         _COLOR_ID_PACKET_DATA_VIEW_PADDING,
+        _COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_1,
+        _COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_2,
+        _COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_3,
+        _COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_4,
     };
 };
 

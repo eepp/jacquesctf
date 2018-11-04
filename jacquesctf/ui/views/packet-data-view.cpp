@@ -20,14 +20,17 @@
 #include "content-packet-region.hpp"
 #include "padding-packet-region.hpp"
 #include "error-packet-region.hpp"
+#include "inspect-screen.hpp"
 
 namespace jacques {
 
 PacketDataView::PacketDataView(const Rectangle& rect,
-                               const Stylist& stylist, State& state) :
+                               const Stylist& stylist, State& state,
+                               const InspectScreen::Bookmarks& bookmarks) :
     View {rect, "Packet data", DecorationStyle::BORDERS, stylist},
     _state {&state},
-    _stateObserverGuard {state, *this}
+    _stateObserverGuard {state, *this},
+    _bookmarks {&bookmarks}
 {
 }
 
@@ -245,14 +248,41 @@ void PacketDataView::_drawZoneBits(const _Zone& zone) const
 
 void PacketDataView::_drawUnselectedZone(const _Zone& zone) const
 {
-    if (const auto region = dynamic_cast<const ContentPacketRegion *>(zone.packetRegion.get())) {
-        this->_stylist().std(*this);
-    } else if (const auto region = dynamic_cast<const PaddingPacketRegion *>(zone.packetRegion.get())) {
-        this->_stylist().packetDataViewPadding(*this);
-    } else if (const auto region = dynamic_cast<const ErrorPacketRegion *>(zone.packetRegion.get())) {
-        this->_stylist().error(*this);
-    } else {
-        std::abort();
+    const auto it = _bookmarks->find(_state->activeDataStreamFileStateIndex());
+    const InspectScreen::PacketBookmarks *bookmarks = nullptr;
+
+    if (it != std::end(*_bookmarks)) {
+        const auto& dataStreamFileBookmarks = it->second;
+        const auto pIt = dataStreamFileBookmarks.find(_state->activeDataStreamFileState().activePacketStateIndex());
+
+        if (pIt != std::end(dataStreamFileBookmarks)) {
+            bookmarks = &pIt->second;
+        }
+    }
+
+    bool bookmark = false;
+
+    if (bookmarks) {
+        for (Index id = 0; id < bookmarks->size(); ++id) {
+            if (bookmarks->at(id) && *(bookmarks->at(id)) ==
+                                     zone.packetRegion->segment().offsetInPacketBits()) {
+                this->_stylist().packetDataViewBookmark(*this, id);
+                bookmark = true;
+                break;
+            }
+        }
+    }
+
+    if (!bookmark) {
+        if (const auto region = dynamic_cast<const ContentPacketRegion *>(zone.packetRegion.get())) {
+            this->_stylist().std(*this);
+        } else if (const auto region = dynamic_cast<const PaddingPacketRegion *>(zone.packetRegion.get())) {
+            this->_stylist().packetDataViewPadding(*this);
+        } else if (const auto region = dynamic_cast<const ErrorPacketRegion *>(zone.packetRegion.get())) {
+            this->_stylist().error(*this);
+        } else {
+            std::abort();
+        }
     }
 
     this->_drawZoneBits(zone);

@@ -11,9 +11,11 @@
 #include <vector>
 #include <list>
 #include <algorithm>
+#include <unordered_set>
 
 #include "view.hpp"
 #include "packet-region.hpp"
+#include "inspect-screen.hpp"
 
 namespace jacques {
 
@@ -62,7 +64,8 @@ class PacketDataView :
 {
 public:
     explicit PacketDataView(const Rectangle& rect,
-                            const Stylist& stylist, State& state);
+                            const Stylist& stylist, State& state,
+                            const InspectScreen::Bookmarks& bookmarks);
     void pageDown();
     void pageUp();
 
@@ -135,6 +138,7 @@ private:
 private:
     State * const _state;
     const ViewStateObserverGuard _stateObserverGuard;
+    const InspectScreen::Bookmarks * const _bookmarks;
 
     // X position of a row's first bit
     Index _dataX = 0;

@@ -61,6 +61,10 @@ Stylist::Stylist()
     this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_SELECTION_NEXT, COLOR_GREEN, -1);
     this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_OFFSET, COLOR_YELLOW, -1);
     this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_PADDING, COLOR_BLUE, -1);
+    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_1, COLOR_BLACK, COLOR_YELLOW);
+    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_2, COLOR_BLACK, COLOR_GREEN);
+    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_3, COLOR_BLACK, COLOR_BLUE);
+    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_4, COLOR_BLACK, COLOR_MAGENTA);
 }
 
 void Stylist::_initColor(const int id, const int fg, const int bg) const
@@ -482,6 +486,37 @@ void Stylist::packetDataViewPadding(const View& view) const
 {
     this->_attrsReset(view);
     this->_color(view, _COLOR_ID_PACKET_DATA_VIEW_PADDING);
+}
+
+void Stylist::packetDataViewBookmark(const View& view, const unsigned int id) const
+{
+    assert(id <= 3);
+
+    int colorPair;
+
+    switch (id) {
+    case 0:
+        colorPair = _COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_1;
+        break;
+
+    case 1:
+        colorPair = _COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_2;
+        break;
+
+    case 2:
+        colorPair = _COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_3;
+        break;
+
+    case 3:
+        colorPair = _COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_4;
+        break;
+
+    default:
+        std::abort();
+    }
+
+    this->_attrsReset(view);
+    this->_color(view, colorPair);
 }
 
 } // namespace jacques

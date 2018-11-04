@@ -16,7 +16,6 @@
 #include "state.hpp"
 #include "packet-region-info-view.hpp"
 #include "event-record-table-view.hpp"
-#include "packet-data-view.hpp"
 #include "sub-data-type-explorer-view.hpp"
 #include "packet-decoding-error-details-view.hpp"
 #include "inspect-screen.hpp"
@@ -26,12 +25,20 @@
 
 namespace jacques {
 
+class PacketDataView;
+
 class InspectScreen :
     public Screen
 {
 public:
+    using PacketBookmarks = std::array<boost::optional<Index>, 4>;
+    using DataStreamFileBookmarks = std::unordered_map<Index, PacketBookmarks>;
+    using Bookmarks = std::unordered_map<Index, DataStreamFileBookmarks>;
+
+public:
     explicit InspectScreen(const Rectangle& rect, const Config& cfg,
                            const Stylist& stylist, State& state);
+    ~InspectScreen();
 
 private:
     struct _StateSnapshot
@@ -73,6 +80,7 @@ private:
     void _goForward();
     void _restoreStateSnapshot(const _StateSnapshot& snapshot);
     void _updateViews();
+    void _toggleBookmark(unsigned int id);
 
 private:
     std::unique_ptr<EventRecordTableView> _ertView;
@@ -89,6 +97,7 @@ private:
     decltype(_stateSnapshots)::iterator _currentStateSnapshot;
     CycleWheel<_ErtViewDisplayMode> _ertViewDisplayModeWheel;
     bool _sdteViewIsVisible = false;
+    Bookmarks _bookmarks;
 };
 
 } // namespace jacques

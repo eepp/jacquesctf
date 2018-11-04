@@ -16,6 +16,7 @@
 #include "inspect-screen.hpp"
 #include "stylist.hpp"
 #include "state.hpp"
+#include "packet-data-view.hpp"
 
 namespace jacques {
 
@@ -43,7 +44,8 @@ InspectScreen::InspectScreen(const Rectangle& rect, const Config& cfg,
         _ErtViewDisplayMode::HIDDEN,
     }
 {
-    _pdView = std::make_unique<PacketDataView>(this->rect(), stylist, state);
+    _pdView = std::make_unique<PacketDataView>(this->rect(), stylist, state,
+                                               _bookmarks);
     _ertView = std::make_unique<EventRecordTableView>(this->rect(), stylist,
                                                       state);
     _priView = std::make_unique<PacketRegionInfoView>(Rectangle {{0, 0},
@@ -54,6 +56,36 @@ InspectScreen::InspectScreen(const Rectangle& rect, const Config& cfg,
     _decErrorView->isVisible(false);
     _pdView->focus();
     this->_updateViews();
+}
+
+InspectScreen::~InspectScreen()
+{
+}
+
+void InspectScreen::_toggleBookmark(const unsigned int id)
+{
+    if (!this->_state().hasActivePacketState()) {
+        return;
+    }
+
+    auto& bookmarks = _bookmarks[this->_state().activeDataStreamFileStateIndex()]
+                                [this->_state().activeDataStreamFileState().activePacketStateIndex()];
+
+    assert(id < bookmarks.size());
+
+    auto& bookmarkedOffsetInPacketBit = bookmarks[id];
+
+    if (bookmarkedOffsetInPacketBit) {
+        if (bookmarkedOffsetInPacketBit == this->_state().curOffsetInPacketBits()) {
+            bookmarkedOffsetInPacketBit = boost::none;
+        } else {
+            bookmarkedOffsetInPacketBit = this->_state().curOffsetInPacketBits();
+        }
+    } else {
+        bookmarkedOffsetInPacketBit = this->_state().curOffsetInPacketBits();
+    }
+
+    _pdView->redraw();
 }
 
 void InspectScreen::_updateViews()
@@ -286,6 +318,14 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     case 'c':
         this->_state().gotoPacketContext();
         this->_snapshotState();
+        break;
+
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+        this->_toggleBookmark(key - '1');
+        _pdView->redraw();
         break;
 
     case KEY_HOME:
