@@ -81,6 +81,7 @@ private:
     void _restoreStateSnapshot(const _StateSnapshot& snapshot);
     void _updateViews();
     void _toggleBookmark(unsigned int id);
+    void _gotoBookmark(unsigned int id);
 
 private:
     std::unique_ptr<EventRecordTableView> _ertView;
@@ -98,6 +99,7 @@ private:
     CycleWheel<_ErtViewDisplayMode> _ertViewDisplayModeWheel;
     bool _sdteViewIsVisible = false;
     Bookmarks _bookmarks;
+    bool _goingToBookmark = false;
 };
 
 } // namespace jacques

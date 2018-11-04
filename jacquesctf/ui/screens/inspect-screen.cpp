@@ -88,6 +88,21 @@ void InspectScreen::_toggleBookmark(const unsigned int id)
     _pdView->redraw();
 }
 
+void InspectScreen::_gotoBookmark(const unsigned int id)
+{
+    if (!this->_state().hasActivePacketState()) {
+        return;
+    }
+
+    const auto& bookmark = _bookmarks[this->_state().activeDataStreamFileStateIndex()]
+                                     [this->_state().activeDataStreamFileState().activePacketStateIndex()]
+                                     [id];
+
+    if (bookmark) {
+        this->_state().gotoPacketRegionAtOffsetInPacketBits(*bookmark);
+    }
+}
+
 void InspectScreen::_updateViews()
 {
     Size ertViewHeight = 0;
@@ -269,6 +284,10 @@ void InspectScreen::_restoreStateSnapshot(const _StateSnapshot& snapshot)
 
 KeyHandlingReaction InspectScreen::_handleKey(const int key)
 {
+    const auto goingToBookmark = _goingToBookmark;
+
+    _goingToBookmark = false;
+
     if (_decErrorView->isVisible()) {
         _decErrorView->isVisible(false);
         _pdView->redraw();
@@ -324,8 +343,18 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     case '2':
     case '3':
     case '4':
-        this->_toggleBookmark(key - '1');
-        _pdView->redraw();
+        if (goingToBookmark) {
+            this->_gotoBookmark(key - '1');
+            _pdView->redraw();
+        } else {
+            this->_toggleBookmark(key - '1');
+            _pdView->redraw();
+        }
+
+        break;
+
+    case 'b':
+        _goingToBookmark = true;
         break;
 
     case KEY_HOME:
