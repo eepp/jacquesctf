@@ -99,6 +99,8 @@ public:
     void packetDataViewBookmark(const View& view, unsigned int id) const;
     void packetDataViewSelection(const View& view,
                                  const PacketDataViewSelectionType& selectionType) const;
+    void packetDataViewAuxSelection(const View& view,
+                                    const PacketDataViewSelectionType& selectionType) const;
 
 private:
     void _initColor(int id, int fg, int bg) const;

@@ -472,6 +472,13 @@ void Stylist::packetDataViewSelection(const View& view,
     this->_color(view, colorPair);
 }
 
+void Stylist::packetDataViewAuxSelection(const View& view,
+                                         const PacketDataViewSelectionType& selectionType) const
+{
+    this->std(view);
+    this->_attrs(view, A_REVERSE);
+}
+
 void Stylist::packetDataViewOffset(const View& view, const bool selected) const
 {
     this->_attrsReset(view);

@@ -162,6 +162,9 @@ void PacketDataView::_updateSelection()
 
     // update offset
     this->_drawOffsets();
+
+    // update ASCII chars
+    this->_drawAllAsciiChars();
 }
 
 void PacketDataView::_setDataXAndRowSize()
@@ -181,8 +184,13 @@ void PacketDataView::_setDataXAndRowSize()
     Size bytesPerRow = 1;
 
     while (true) {
-        // bytes and spaces
-        const auto dataWidth = bytesPerRow * 8 + bytesPerRow - 1;
+        // bytes + spaces between them
+        auto dataWidth = bytesPerRow * 9 - 1;
+
+        if (_isAsciiVisible) {
+            // ASCII characters + space before them
+            dataWidth += bytesPerRow + 1;
+        }
 
         if (dataWidth + offsetWidth + 1 > this->contentRect().w) {
             bytesPerRow /= 2;
@@ -193,6 +201,7 @@ void PacketDataView::_setDataXAndRowSize()
     }
 
     _dataX = offsetWidth + 1;
+    _asciiCharsX = _dataX + bytesPerRow * 9;
     _rowSize = DataSize::fromBytes(bytesPerRow);
 }
 
@@ -318,6 +327,45 @@ void PacketDataView::_drawAllZones() const
     }
 }
 
+void PacketDataView::_drawAllAsciiChars() const
+{
+    if (!_isAsciiVisible) {
+        return;
+    }
+
+    // clear
+    this->_stylist().std(*this);
+
+    for (Index i = 0; i < _rowSize.bytes(); ++i) {
+        this->_putChar({_asciiCharsX + i, i / _rowSize.bytes()}, ' ');
+    }
+
+    const auto curPacketRegionSeg = _state->currentPacketRegion()->segment();
+
+    for (const auto& asciiChar : _asciiChars) {
+        const auto intersectLower = std::max(curPacketRegionSeg.offsetInPacketBits(),
+                                             asciiChar.offsetInPacketBits);
+        const auto intersectUpper = std::min(curPacketRegionSeg.endOffsetInPacketBits(),
+                                             asciiChar.endOffsetInPacketBits());
+        const auto intersects = intersectUpper > intersectLower;
+
+        if (intersects) {
+            this->_stylist().packetDataViewAuxSelection(*this,
+                                                        Stylist::PacketDataViewSelectionType::CURRENT);
+        } else {
+            if (std::isprint(asciiChar.ch)) {
+                this->_stylist().std(*this);
+            } else {
+                this->_stylist().stdDim(*this);
+            }
+        }
+
+        const chtype ch = std::isprint(asciiChar.ch) ? asciiChar.ch : ACS_BULLET;
+
+        this->_putChar(asciiChar.pt, ch);
+    }
+}
+
 void PacketDataView::_redrawContent()
 {
     this->_clearContent();
@@ -327,9 +375,9 @@ void PacketDataView::_redrawContent()
     }
 
     this->_drawOffsets();
-    _zones.clear();
-    this->_appendZones(_zones, _baseOffsetInPacketBits, _endOffsetInPacketBits);
+    this->_setZonesAndAsciiChars();
     this->_drawAllZones();
+    this->_drawAllAsciiChars();
     this->_hasMoreTop(_baseOffsetInPacketBits != 0);
 
     const auto effectiveTotalSizeBits = _state->activePacketState().packet().indexEntry().effectiveTotalSize().bits();
@@ -337,25 +385,23 @@ void PacketDataView::_redrawContent()
     this->_hasMoreBottom(_endOffsetInPacketBits < effectiveTotalSizeBits);
 }
 
-void PacketDataView::_appendZones(_Zones& zones,
-                                  const Index startOffsetInPacketBits,
-                                  const Index endOffsetInPacketBits)
+void PacketDataView::_setZonesAndAsciiChars()
 {
-    if (startOffsetInPacketBits == endOffsetInPacketBits) {
+    if (_baseOffsetInPacketBits == _endOffsetInPacketBits) {
         return;
     }
 
-    assert(startOffsetInPacketBits < endOffsetInPacketBits);
-
-    // request packet regions
+    assert(_baseOffsetInPacketBits < _endOffsetInPacketBits);
     assert(_state->hasActivePacketState());
 
+    // set zones
     std::vector<PacketRegion::SPC> packetRegions;
+    auto& packet = _state->activePacketState().packet();
 
-    _state->activePacketState().packet().appendPacketRegions(packetRegions,
-                                                             startOffsetInPacketBits,
-                                                             endOffsetInPacketBits);
+    packet.appendPacketRegions(packetRegions, _baseOffsetInPacketBits,
+                               _endOffsetInPacketBits);
     assert(!packetRegions.empty());
+    _zones.clear();
 
     for (auto& packetRegion : packetRegions) {
         const auto bitArray = _state->activePacketState().packet().bitArray(*packetRegion);
@@ -395,8 +441,24 @@ void PacketDataView::_appendZones(_Zones& zones,
 
         if (!zone.bits.empty()) {
             zone.packetRegion = std::move(packetRegion);
-            zones.push_back(std::move(zone));
+            _zones.push_back(std::move(zone));
         }
+    }
+
+    // set ASCII chars
+    _asciiChars.clear();
+    assert((_baseOffsetInPacketBits & 7) == 0);
+
+    for (auto offsetInPacketBits = _baseOffsetInPacketBits;
+            offsetInPacketBits < _endOffsetInPacketBits; offsetInPacketBits += 8) {
+        Point pt;
+
+        pt.y = (offsetInPacketBits - _baseOffsetInPacketBits) / _rowSize.bits();
+        pt.x = _asciiCharsX + (offsetInPacketBits % _rowSize.bits()) / 8;
+        _asciiChars.push_back(_AsciiChar {
+            offsetInPacketBits, pt,
+            static_cast<char>(*packet.data(offsetInPacketBits / 8))
+        });
     }
 }
 
@@ -440,6 +502,18 @@ void PacketDataView::pageUp()
     }
 
     this->_setEndOffsetInPacketBitsFromBaseOffset();
+    this->_redrawContent();
+}
+
+void PacketDataView::isAsciiVisible(const bool isVisible)
+{
+    _isAsciiVisible = isVisible;
+    this->_setDataXAndRowSize();
+
+    if (_state->hasActivePacketState()) {
+        this->_setBaseAndEndOffsetInPacketBitsFromOffset(_curOffsetInPacketBits);
+    }
+
     this->_redrawContent();
 }
 

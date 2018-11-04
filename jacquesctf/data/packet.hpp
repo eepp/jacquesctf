@@ -168,6 +168,12 @@ public:
         return this->bitArray(eventRecord.segment());
     }
 
+    const std::uint8_t *data(const Index offsetInPacketBytes)
+    {
+        assert(offsetInPacketBytes < _indexEntry->effectiveTotalSize().bytes());
+        return _mmapFile->addr() + offsetInPacketBytes;
+    }
+
     bool hasData() const noexcept
     {
         return _indexEntry->effectiveTotalSize() > 0;

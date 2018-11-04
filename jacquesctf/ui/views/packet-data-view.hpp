@@ -68,6 +68,12 @@ public:
                             const InspectScreen::Bookmarks& bookmarks);
     void pageDown();
     void pageUp();
+    void isAsciiVisible(bool isVisible);
+
+    bool isAsciiVisible() const noexcept
+    {
+        return _isAsciiVisible;
+    }
 
     const DataSize& rowSize() const noexcept
     {
@@ -89,11 +95,19 @@ private:
 
     using _Zones = std::vector<_Zone>;
 
-    struct _BitLocation
+    struct _AsciiChar
     {
-        Index byteIndex;
-        Index offsetInByteBits;
+        Index endOffsetInPacketBits() const noexcept
+        {
+            return offsetInPacketBits + 8;
+        }
+
+        Index offsetInPacketBits;
+        Point pt;
+        char ch;
     };
+
+    using _AsciiChars = std::vector<_AsciiChar>;
 
 private:
     void _stateChanged(const Message& msg) override;
@@ -104,11 +118,11 @@ private:
     void _drawZone(const _Zone& zone) const;
     void _drawUnselectedZone(const _Zone& zone) const;
     void _drawAllZones() const;
+    void _drawAllAsciiChars() const;
     bool _isZoneSelected(const _Zone& zone) const;
     void _setDataXAndRowSize();
     void _updateSelection();
-    void _appendZones(_Zones& zones, Index startOffsetInPacketBits,
-                      Index endOffsetInPacketBits);
+    void _setZonesAndAsciiChars();
     void _setPrevCurNextOffsetInPacketBits();
     void _setBaseAndEndOffsetInPacketBitsFromOffset(Index offsetInPacketBits);
 
@@ -143,6 +157,9 @@ private:
     // X position of a row's first bit
     Index _dataX = 0;
 
+    // X position of a row's first ASCII character
+    Index _asciiCharsX = 0;
+
     // bits/row
     DataSize _rowSize;
 
@@ -155,9 +172,13 @@ private:
     // current zones
     _Zones _zones;
 
+    // current ASCII characters
+    _AsciiChars _asciiChars;
+
     boost::optional<Index> _prevOffsetInPacketBits;
     Index _curOffsetInPacketBits = 0;
     boost::optional<Index> _nextOffsetInPacketBits;
+    bool _isAsciiVisible = true;
 };
 
 } // namespace jacques

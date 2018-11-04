@@ -327,6 +327,10 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         this->_redraw();
         break;
 
+    case 'a':
+        _pdView->isAsciiVisible(!_pdView->isAsciiVisible());
+        break;
+
     case '\n':
     case '\r':
         _sdteViewIsVisible = !_sdteViewIsVisible;

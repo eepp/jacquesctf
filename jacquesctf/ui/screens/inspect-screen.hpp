@@ -97,7 +97,7 @@ private:
     std::list<_StateSnapshot> _stateSnapshots;
     decltype(_stateSnapshots)::iterator _currentStateSnapshot;
     CycleWheel<_ErtViewDisplayMode> _ertViewDisplayModeWheel;
-    bool _sdteViewIsVisible = false;
+    bool _sdteViewIsVisible = true;
     Bookmarks _bookmarks;
     bool _goingToBookmark = false;
 };
