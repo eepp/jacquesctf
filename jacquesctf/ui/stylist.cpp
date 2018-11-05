@@ -38,6 +38,7 @@ Stylist::Stylist()
     this->_initColor(_COLOR_ID_STATUS_VIEW_STD, COLOR_WHITE, COLOR_BLUE);
     this->_initColor(_COLOR_ID_PACKET_REGION_INFO_VIEW_STD, COLOR_WHITE, COLOR_MAGENTA);
     this->_initColor(_COLOR_ID_PACKET_REGION_INFO_VIEW_VALUE, COLOR_YELLOW, COLOR_MAGENTA);
+    this->_initColor(_COLOR_ID_PACKET_REGION_INFO_VIEW_ERROR, COLOR_RED, COLOR_WHITE);
     this->_initColor(_COLOR_ID_TABLE_VIEW_WARNING_CELL, COLOR_WHITE, COLOR_YELLOW);
     this->_initColor(_COLOR_ID_TABLE_VIEW_ERROR_CELL, COLOR_RED, -1);
     this->_initColor(_COLOR_ID_SIMPLE_INPUT_VIEW_BORDER, COLOR_BLACK, COLOR_GREEN);
@@ -290,6 +291,13 @@ void Stylist::packetRegionInfoViewValue(const View& view) const
     this->_attrsReset(view);
     this->_attrs(view, A_BOLD);
     this->_color(view, _COLOR_ID_PACKET_REGION_INFO_VIEW_VALUE);
+}
+
+void Stylist::packetRegionInfoViewError(const View& view) const
+{
+    this->_attrsReset(view);
+    this->_attrs(view, A_BOLD);
+    this->_color(view, _COLOR_ID_PACKET_REGION_INFO_VIEW_ERROR);
 }
 
 void Stylist::simpleInputViewBorder(const View& view) const

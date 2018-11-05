@@ -65,6 +65,7 @@ public:
     void statusViewFilename(const View& view) const;
     void packetRegionInfoViewStd(const View& view, bool emphasized = false) const;
     void packetRegionInfoViewValue(const View& view) const;
+    void packetRegionInfoViewError(const View& view) const;
     void simpleInputViewBorder(const View& view) const;
     void packetIndexBuildProgressViewPath(const View& view, bool filename) const;
     void packetIndexBuildProgressViewBar(const View& view, bool on) const;
@@ -152,6 +153,7 @@ private:
         _COLOR_ID_STATUS_VIEW_STD,
         _COLOR_ID_PACKET_REGION_INFO_VIEW_STD,
         _COLOR_ID_PACKET_REGION_INFO_VIEW_VALUE,
+        _COLOR_ID_PACKET_REGION_INFO_VIEW_ERROR,
         _COLOR_ID_SIMPLE_INPUT_VIEW_BORDER,
         _COLOR_ID_PACKET_INDEX_BUILD_PROGRESS_VIEW_PATH,
         _COLOR_ID_DETAILS_VIEW_SUBTITLE,

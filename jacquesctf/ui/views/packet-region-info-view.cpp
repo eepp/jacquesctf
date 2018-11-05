@@ -79,6 +79,7 @@ void PacketRegionInfoView::_redrawContent()
     }
 
     const ContentPacketRegion *cPacketRegion = nullptr;
+    bool isError = false;
 
     this->_moveCursor({0, 0});
 
@@ -117,6 +118,7 @@ void PacketRegionInfoView::_redrawContent()
     } else if (const auto sPacketRegion = dynamic_cast<const ErrorPacketRegion *>(packetRegion)) {
         this->_stylist().packetRegionInfoViewStd(*this, true);
         this->_print("ERROR");
+        isError = true;
     }
 
     // size
@@ -176,6 +178,13 @@ void PacketRegionInfoView::_redrawContent()
         } else if (const auto val = boost::get<std::string>(&varVal)) {
             this->_safePrint("%s", val->c_str());
         }
+    } else if (isError) {
+        const auto& error = _state->activePacketState().packet().error();
+
+        assert(error);
+        this->_safePrint("    ");
+        this->_stylist().packetRegionInfoViewError(*this);
+        this->_safePrint("%s", error->decodingError().what());
     }
 }
 
