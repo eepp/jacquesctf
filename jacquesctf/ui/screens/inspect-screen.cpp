@@ -178,6 +178,7 @@ void InspectScreen::_visibilityChanged()
     _pdView->isVisible(this->isVisible());
     _ertView->isVisible(this->isVisible());
     _priView->isVisible(this->isVisible());
+    _sdteView->isVisible(this->isVisible());
 
     if (this->isVisible()) {
         if (_stateSnapshots.empty()) {
@@ -188,6 +189,7 @@ void InspectScreen::_visibilityChanged()
         _pdView->redraw();
         _ertView->redraw();
         _priView->redraw();
+        _sdteView->redraw();
         this->_tryShowDecodingError();
         _decErrorView->refresh(true);
     }

@@ -53,6 +53,7 @@ private:
                            _Details& details);
 
 private:
+    const yactfr::EventRecordType *_eventRecordType = nullptr;
     const yactfr::DataType *_singleDataType = nullptr;
     const yactfr::DataType *_highlight = nullptr;
 

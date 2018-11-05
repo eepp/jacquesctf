@@ -35,8 +35,12 @@ void SubDataTypeExplorerView::_stateChanged(const Message& msg)
         return;
     }
 
-    this->singleDataType(*packetRegion->scope()->dataType(),
-                         packetRegion->scope()->scope());
+    if (packetRegion->scope()->eventRecord()) {
+        this->eventRecordType(packetRegion->scope()->eventRecord()->type());
+    } else {
+        this->singleDataType(*packetRegion->scope()->dataType(),
+                             packetRegion->scope()->scope());
+    }
 
     if (const auto region = dynamic_cast<const ContentPacketRegion *>(packetRegion)) {
         this->highlightDataType(region->dataType());
