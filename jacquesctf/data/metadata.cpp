@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <fstream>
+#include <numeric>
 #include <yactfr/metadata/clock-type.hpp>
 #include <yactfr/metadata/metadata-stream.hpp>
 #include <yactfr/metadata/packetized-metadata-stream.hpp>
@@ -300,6 +301,24 @@ void Metadata::_setDataTypeParents()
                                     ert->payloadType());
         }
     }
+
+    const auto accFunc = [](const auto total, const auto& str) {
+        return total + str.size();
+    };
+    const auto totalSizeFunc = [accFunc](const auto& dtPathMapPair) {
+        return std::accumulate(std::begin(dtPathMapPair.second.path),
+                               std::end(dtPathMapPair.second.path),
+                               0ULL, accFunc) +
+               dtPathMapPair.second.path.size() + 4;
+    };
+    const auto maxDtPathIt = std::max_element(std::begin(_dataTypePaths),
+                                              std::end(_dataTypePaths),
+                                              [totalSizeFunc](const auto& pairA,
+                                                              const auto& pairB) {
+        return totalSizeFunc(pairA) < totalSizeFunc(pairB);
+    });
+
+    _maxDataTypePathSize = totalSizeFunc(*maxDtPathIt);
 }
 
 const Metadata::DataTypePath& Metadata::dataTypePath(const yactfr::DataType& dataType) const

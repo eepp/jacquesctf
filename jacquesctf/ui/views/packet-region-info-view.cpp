@@ -123,8 +123,12 @@ void PacketRegionInfoView::_redrawContent()
 
     // size
     this->_stylist().packetRegionInfoViewStd(*this, false);
-    this->_safePrint("    %s b",
-                     utils::sepNumber(packetRegion->segment().size().bits(), ',').c_str());
+
+    const auto pathWidth = _state->activeDataStreamFileState().metadata().maxDataTypePathSize();
+    const auto str = utils::sepNumber(packetRegion->segment().size().bits(), ',');
+
+    this->_safeMoveAndPrint({pathWidth + 4 + this->_curMaxOffsetSize() -
+                             2 - str.size(), 0}, "%s b", str.c_str());
 
     // byte order
     if (packetRegion->segment().byteOrder()) {
@@ -135,6 +139,8 @@ void PacketRegionInfoView::_redrawContent()
         } else {
             this->_safePrint("LE");
         }
+    } else {
+        this->_safePrint("      ");
     }
 
     // value
@@ -176,7 +182,20 @@ void PacketRegionInfoView::_redrawContent()
         } else if (const auto val = boost::get<double>(&varVal)) {
             this->_safePrint("%f", *val);
         } else if (const auto val = boost::get<std::string>(&varVal)) {
-            this->_safePrint("%s", val->c_str());
+            for (auto ch : *val) {
+                const auto isPrintable = std::isprint(ch);
+
+                if (!isPrintable) {
+                    this->_stylist().packetRegionInfoViewError(*this);
+                    ch = '?';
+                }
+
+                this->_safePrint("%c", ch);
+
+                if (!isPrintable) {
+                    this->_stylist().packetRegionInfoViewValue(*this);
+                }
+            }
         }
     } else if (isError) {
         const auto& error = _state->activePacketState().packet().error();
@@ -185,6 +204,24 @@ void PacketRegionInfoView::_redrawContent()
         this->_safePrint("    ");
         this->_stylist().packetRegionInfoViewError(*this);
         this->_safePrint("%s", error->decodingError().what());
+    }
+}
+
+Size PacketRegionInfoView::_curMaxOffsetSize()
+{
+    assert(_state->hasActivePacketState());
+
+    const auto& packet = _state->activePacketState().packet();
+    const auto it = _maxOffsetSizes.find(&packet);
+
+    if (it == std::end(_maxOffsetSizes)) {
+        const auto str = utils::sepNumber(packet.indexEntry().effectiveTotalSize().bits());
+        const auto size = str.size();
+
+        _maxOffsetSizes[&packet] = size;
+        return size;
+    } else {
+        return it->second;
     }
 }
 

@@ -40,13 +40,19 @@ public:
     using DataTypeScopeMap = std::unordered_map<const yactfr::DataType *,
                                                 yactfr::Scope>;
     using DataTypePathMap = std::unordered_map<const yactfr::DataType *,
-                                                DataTypePath>;
+                                               DataTypePath>;
 
 public:
     explicit Metadata(const boost::filesystem::path& path);
     const yactfr::DataType *dataTypeParent(const yactfr::DataType& dataType) const;
     yactfr::Scope dataTypeScope(const yactfr::DataType& dataType) const;
     const DataTypePath& dataTypePath(const yactfr::DataType& dataType) const;
+
+    Size maxDataTypePathSize() const noexcept
+    {
+        return _maxDataTypePathSize;
+    }
+
     bool dataTypeIsScopeRoot(const yactfr::DataType& dataType) const;
     DataSize fileSize() const noexcept;
 
@@ -128,6 +134,7 @@ private:
     DataTypeParentMap _dataTypeParents;
     DataTypeScopeMap _dataTypeScopes;
     DataTypePathMap _dataTypePaths;
+    Size _maxDataTypePathSize = 0;
     bool _isCorrelatable = false;
 };
 

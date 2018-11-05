@@ -8,6 +8,8 @@
 #ifndef _JACQUES_PACKET_REGION_INFO_VIEW_HPP
 #define _JACQUES_PACKET_REGION_INFO_VIEW_HPP
 
+#include <unordered_map>
+
 #include "view.hpp"
 
 namespace jacques {
@@ -23,10 +25,12 @@ private:
     void _stateChanged(const Message& msg) override;
     void _redrawContent() override;
     void _safePrintScope(yactfr::Scope scope);
+    Size _curMaxOffsetSize();
 
 private:
     State * const _state;
     const ViewStateObserverGuard _stateObserverGuard;
+    std::unordered_map<const Packet *, Size> _maxOffsetSizes;
 };
 
 } // namespace jacques

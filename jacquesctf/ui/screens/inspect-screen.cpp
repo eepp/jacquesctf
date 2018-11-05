@@ -183,9 +183,8 @@ void InspectScreen::_resized()
 void InspectScreen::_visibilityChanged()
 {
     _pdView->isVisible(this->isVisible());
-    _ertView->isVisible(this->isVisible());
     _priView->isVisible(this->isVisible());
-    _sdteView->isVisible(this->isVisible());
+    this->_updateViews();
 
     if (this->isVisible()) {
         if (_stateSnapshots.empty()) {
