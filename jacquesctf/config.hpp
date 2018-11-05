@@ -53,16 +53,6 @@ public:
         return _filePaths;
     }
 
-    unsigned int bytesPerRowBin() const noexcept
-    {
-        return _bytesPerRowBin;
-    }
-
-    unsigned int bytesPerRowHex() const noexcept
-    {
-        return _bytesPerRowHex;
-    }
-
     bool enableLogging() const noexcept
     {
         return _enableLogging;
@@ -75,8 +65,6 @@ private:
 private:
 	Command _cmd = Command::INSPECT_FILES;
 	std::list<boost::filesystem::path> _filePaths;
-	unsigned int _bytesPerRowBin = 4;
-	unsigned int _bytesPerRowHex = 16;
     bool _enableLogging = false;
 };
 

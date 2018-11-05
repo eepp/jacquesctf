@@ -146,8 +146,6 @@ void Config::_parseArgs(const int argc, const char *argv[])
         ("help,h", "")
         ("version,V", "")
         ("log", "")
-        ("bytes-per-row-bin,b", bpo::value<int>(), "")
-        ("bytes-per-row-hex,x", bpo::value<int>(), "")
         ("paths", bpo::value<std::vector<std::string>>(), "");
 
     bpo::positional_options_description posDesc;
@@ -184,42 +182,6 @@ void Config::_parseArgs(const int argc, const char *argv[])
     std::copy(std::begin(pathArgs), std::end(pathArgs),
               std::back_inserter(_filePaths));
     this->_expandPaths();
-
-    if (vm.count("bytes-per-row-bin")) {
-        if (_cmd == Command::PRINT_METADATA_TEXT) {
-            throw CliError {"--bytes-per-row-bin option is useless when printing a CTF metadata file's text."};
-        }
-
-        const auto value = vm["bytes-per-row-bin"].as<int>();
-
-        if (value <= 0) {
-            std::ostringstream ss;
-
-            ss << "Invalid value for option --bytes-per-row-bin: " <<
-                  value << ".";
-            throw CliError {ss.str()};
-        }
-
-        _bytesPerRowBin = value;
-    }
-
-    if (vm.count("bytes-per-row-hex")) {
-        if (_cmd == Command::PRINT_METADATA_TEXT) {
-            throw CliError {"--bytes-per-row-hex option is useless when printing a CTF metadata file's text."};
-        }
-
-        const auto value = vm["bytes-per-row-hex"].as<int>();
-
-        if (value <= 0) {
-            std::ostringstream ss;
-
-            ss << "Invalid value for option --bytes-per-row-hex: " <<
-                  value << ".";
-            throw CliError {ss.str()};
-        }
-
-        _bytesPerRowHex = value;
-    }
 
     if (vm.count("log")) {
         _enableLogging = true;

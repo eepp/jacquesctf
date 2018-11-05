@@ -61,11 +61,9 @@ static void printCliUsage(const char *cmdName)
                  std::endl <<
                  "Options:" << std::endl <<
                  std::endl <<
-                 "  --bytes-per-row-bin=COUNT, -b COUNT    Show COUNT bytes/row in binary mode" << std::endl <<
-                 "  --bytes-per-row-hex=COUNT, -x COUNT    Show COUNT bytes/row in hex mode" << std::endl <<
-                 "  --log                                  Enable logging (`log.txt`)" << std::endl <<
-                 "  --help, -h                             Print usage and exit" << std::endl <<
-                 "  --version, -V                          Print version and exit" << std::endl <<
+                 "  --log          Enable logging (writes to `log.txt`)" << std::endl <<
+                 "  --help, -h     Print usage and exit" << std::endl <<
+                 "  --version, -V  Print version and exit" << std::endl <<
                  std::endl <<
                  "If PATH is a CTF metadata file, print its text content and exit." << std::endl <<
                  "If PATH is a CTF data stream file, inspect this file." << std::endl <<
