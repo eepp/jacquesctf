@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <cinttypes>
+#include <algorithm>
 #include <cstdio>
 #include <curses.h>
 #include <signal.h>
@@ -27,12 +28,41 @@ StatusView::StatusView(const Rectangle& rect,
     _state {&state},
     _stateObserverGuard {state, *this}
 {
+    this->_createEndPositions();
+}
+
+void StatusView::_createEndPositions()
+{
+    for (const auto& dsfState : _state->dataStreamFileStates()) {
+        _EndPositions positions;
+        const auto& dsf = dsfState->dataStreamFile();
+        const auto packetCountStr = utils::sepNumber(dsf.packetCount());
+
+        positions.packetCount = 0;
+        positions.packetIndex = positions.packetCount + packetCountStr.size() + 1;
+        positions.seqNum = positions.packetIndex + packetCountStr.size() + 5;
+        positions.curOffsetInPacketBits = positions.seqNum +
+                                          packetCountStr.size() + 6;
+
+        const auto& maxEntryIt = std::max_element(std::begin(dsf.packetIndexEntries()),
+                                                  std::end(dsf.packetIndexEntries()),
+                                                  [](const auto& entryA,
+                                                     const auto& entryB) {
+            return entryA.effectiveTotalSize() < entryB.effectiveTotalSize();
+        });
+        const auto maxOffsetInPacketBitsStr = utils::sepNumber(maxEntryIt->effectiveTotalSize().bits());
+
+        positions.dsfPath = positions.curOffsetInPacketBits +
+                            maxOffsetInPacketBitsStr.size() + 6;
+        _endPositions[dsfState.get()] = positions;
+    }
 }
 
 void StatusView::_stateChanged(const Message& msg)
 {
     if (dynamic_cast<const ActiveDataStreamFileChangedMessage *>(&msg) ||
             dynamic_cast<const ActivePacketChangedMessage *>(&msg)) {
+        _curEndPositions = &_endPositions[&_state->activeDataStreamFileState()];
         this->redraw();
     } else if (dynamic_cast<const CurOffsetInPacketChangedMessage *>(&msg)) {
         this->_drawOffset();
@@ -41,23 +71,29 @@ void StatusView::_stateChanged(const Message& msg)
 
 void StatusView::_drawOffset()
 {
-    if (!_state->hasActivePacketState()) {
+    if (!_curEndPositions || !_state->hasActivePacketState()) {
         return;
     }
 
+    // clear previous
     this->_stylist().statusViewStd(*this);
 
-    for (auto x = this->contentRect().w - 47; x < this->contentRect().w - 25; ++x) {
+    for (auto x = this->contentRect().w - _curEndPositions->dsfPath;
+            x < this->contentRect().w - _curEndPositions->curOffsetInPacketBits; ++x) {
         this->_putChar({x, 0}, ' ');
     }
 
-    this->_moveAndPrint({this->contentRect().w - 47, 0}, "{");
+    // draw new
     this->_stylist().statusViewStd(*this, true);
-    this->_moveAndPrint({this->contentRect().w - 46, 0}, "%s",
-                        utils::sepNumber(_state->activePacketState().curOffsetInPacketBits(),
-                                         ',').c_str());
+
+    const auto str = utils::sepNumber(_state->activePacketState().curOffsetInPacketBits(),
+                                      ',');
+
+    this->_moveAndPrint({this->contentRect().w -
+                         _curEndPositions->curOffsetInPacketBits - 2 - str.size(),
+                         0}, "%s", str.c_str());
     this->_stylist().statusViewStd(*this);
-    this->_print(" b}");
+    this->_print(" b");
 }
 
 void StatusView::_redrawContent()
@@ -66,56 +102,41 @@ void StatusView::_redrawContent()
     this->_stylist().statusViewStd(*this);
     this->_clearRect();
 
-    // packet index
-    std::array<char, 32> packetCount;
-    std::array<char, 32> curPacket;
-
-    if (_state->hasActivePacketState()) {
-        const auto index = _state->activePacketState().packetIndexEntry().natIndexInDataStream();
-
-        std::snprintf(curPacket.data(), curPacket.size(), "%s",
-                      utils::sepNumber(static_cast<long long>(index), ',').c_str());
-    } else {
-        std::strcpy(curPacket.data(), "");
+    if (!_curEndPositions) {
+        return;
     }
 
-    const auto count = _state->activeDataStreamFileState().dataStreamFile().packetCount();
-
-    std::snprintf(packetCount.data(), packetCount.size(), "/%s",
-                  utils::sepNumber(count, ',').c_str());
-
-    auto pktInfoPos = Point {
-        this->contentRect().w - std::strlen(packetCount.data()) - std::strlen(curPacket.data()) - 1,
-        0
-    };
-
-    this->_putChar(pktInfoPos, '#');
-    this->_stylist().statusViewStd(*this, true);
-    ++pktInfoPos.x;
-    this->_moveAndPrint(pktInfoPos, "%s", curPacket.data());
-    this->_stylist().statusViewStd(*this);
-    pktInfoPos.x += std::strlen(curPacket.data());
-    this->_moveAndPrint(pktInfoPos, "%s", packetCount.data());
-
-    // packet sequence number
     if (_state->hasActivePacketState()) {
-        const auto& activePacketState = _state->activePacketState();
-        const auto& seqNum = activePacketState.packetIndexEntry().seqNum();
+        // packet index and count
+        const auto count = _state->activeDataStreamFileState().dataStreamFile().packetCount();
+        const auto countStr = utils::sepNumber(count, ',');
+        const auto index = _state->activePacketState().packetIndexEntry().natIndexInDataStream();
+        const auto indexStr = utils::sepNumber(index, ',');
+
+        this->_putChar({this->contentRect().w - _curEndPositions->packetIndex -
+                        indexStr.size() - 1, 0}, '#');
+        this->_stylist().statusViewStd(*this, true);
+        this->_print("%s", indexStr.c_str());
+        this->_stylist().statusViewStd(*this);
+        this->_print("/%s", countStr.c_str());
+
+        // packet sequence number
+        const auto& seqNum = _state->activePacketState().packetIndexEntry().seqNum();
 
         if (seqNum) {
-            this->_moveAndPrint({this->contentRect().w - 25, 0}, "##");
-            this->_stylist().statusViewStd(*this, true);
-            this->_moveAndPrint({this->contentRect().w - 23, 0}, "%s",
-                                utils::sepNumber(*seqNum, ',').c_str());
-            this->_stylist().statusViewStd(*this);
-        }
+            const auto seqNumStr = utils::sepNumber(*seqNum, ',');
 
-        this->_drawOffset();
+            this->_moveAndPrint({this->contentRect().w - _curEndPositions->seqNum -
+                                 seqNumStr.size() - 2, 0}, "##");
+            this->_stylist().statusViewStd(*this, true);
+            this->_safePrint("%s", seqNumStr.c_str());
+        }
     }
 
-    const auto& dsFileState = _state->activeDataStreamFileState();
-    const auto& path = dsFileState.dataStreamFile().path();
-    const auto pathMaxLen = this->contentRect().w - 49;
+    this->_drawOffset();
+
+    const auto& path = _state->activeDataStreamFileState().dataStreamFile().path();
+    const auto pathMaxLen = this->contentRect().w - _curEndPositions->dsfPath;
     std::string dirNameStr, filenameStr;
 
     std::tie(dirNameStr, filenameStr) = utils::formatPath(path, pathMaxLen);

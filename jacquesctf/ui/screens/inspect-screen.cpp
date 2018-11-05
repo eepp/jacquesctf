@@ -129,15 +129,19 @@ void InspectScreen::_updateViews()
         pdViewWidth = this->rect().w;
     }
 
-    _sdteView->isVisible();
-
     if (_ertViewDisplayModeWheel.currentValue() == _ErtViewDisplayMode::HIDDEN) {
         _ertView->moveAndResize({{0, 0}, this->rect().w, 8});
-        _ertView->isVisible(false);
+
+        if (this->isVisible()) {
+            _ertView->isVisible(false);
+        }
     } else {
         _ertView->moveAndResize({{0, pdViewHeight + 1}, this->rect().w,
                                  ertViewHeight});
-        _ertView->isVisible(true);
+
+        if (this->isVisible()) {
+            _ertView->isVisible(true);
+        }
     }
 
     _pdView->moveAndResize({{0, 0}, pdViewWidth, pdViewHeight});
@@ -151,7 +155,10 @@ void InspectScreen::_updateViews()
         _sdteView->moveAndResize({{0, 0}, this->rect().w, pdViewHeight});
     }
 
-    _sdteView->isVisible(_sdteViewIsVisible);
+    if (this->isVisible()) {
+        _sdteView->isVisible(_sdteViewIsVisible);
+    }
+
     _decErrorView->moveAndResize({{this->rect().pos.x + 4,
                                    this->rect().h - 14},
                                   this->rect().w - 8, 12});

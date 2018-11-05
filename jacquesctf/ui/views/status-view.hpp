@@ -8,9 +8,13 @@
 #ifndef _JACQUES_STATUS_VIEW_HPP
 #define _JACQUES_STATUS_VIEW_HPP
 
+#include <unordered_map>
+
 #include "view.hpp"
 
 namespace jacques {
+
+class DataStreamFileState;
 
 class StatusView :
     public View
@@ -20,6 +24,17 @@ public:
                         const Stylist& stylist, State& state);
 
 private:
+    struct _EndPositions
+    {
+        Index packetCount;
+        Index packetIndex;
+        Index seqNum;
+        Index curOffsetInPacketBits;
+        Index dsfPath;
+    };
+
+private:
+    void _createEndPositions();
     void _drawOffset();
     void _stateChanged(const Message& msg) override;
     void _redrawContent() override;
@@ -27,6 +42,8 @@ private:
 private:
     State * const _state;
     const ViewStateObserverGuard _stateObserverGuard;
+    std::unordered_map<const DataStreamFileState *, _EndPositions> _endPositions;
+    const _EndPositions *_curEndPositions = nullptr;
 };
 
 } // namespace jacques

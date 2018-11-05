@@ -347,69 +347,6 @@ static bool tryStartInteractive(const Config& cfg)
         state->gotoPacket(0);
     }
 
-#if 0
-    {
-        const auto printRegion = [](const auto& region) {
-            std::cout << "[" << region.segment().offsetInPacketBits() <<
-                         ", " << region.segment().offsetInPacketBits() + region.segment().size().bits() <<
-                         "[ (" << region.segment().size().bits() << ")";
-
-            if (region.scope()) {
-                std::cout << " {scope " <<
-                             static_cast<int>(region.scope()->scope()) <<
-                             " [" << region.scope()->segment().offsetInPacketBits() <<
-                             ", " << region.scope()->segment().offsetInPacketBits() + region.scope()->segment().size().bits() <<
-                             "[ (" << region.scope()->segment().size().bits() << ")}";
-            }
-
-            if (region.byteOrder()) {
-                if (*region.byteOrder() == ByteOrder::BIG) {
-                    std::cout << " BE";
-                } else {
-                    std::cout << " LE";
-                }
-            }
-
-            if (auto sRegion = dynamic_cast<const ContentPacketRegion *>(&region)) {
-                std::cout << " content ";
-
-                if (sRegion->value()) {
-                    boost::apply_visitor(PrintVisitor {}, *sRegion->value());
-                }
-            } else if (auto sRegion = dynamic_cast<const PaddingPacketRegion *>(&region)) {
-                std::cout << " padding";
-            } else if (auto sRegion = dynamic_cast<const ErrorPacketRegion *>(&region)) {
-                std::cout << " error";
-            }
-
-            std::cout << std::endl;
-        };
-        finiScreen();
-        PacketRegions regions;
-
-        auto& packet = state->activeDataStreamFileState().activePacket();
-
-        packet.appendPacketRegions(regions, 0, 672);
-
-        for (const auto& region : regions) {
-            printRegion(*region);
-        }
-
-        /*
-        printRegion(packet.packetRegionAtOffsetInPacketBits(1376));
-        printRegion(packet.packetRegionAtOffsetInPacketBits(439840));
-        printRegion(packet.packetRegionAtOffsetInPacketBits(439845));
-        printRegion(packet.packetRegionAtOffsetInPacketBits(1376));
-        printRegion(packet.packetRegionAtOffsetInPacketBits(67108688));
-        printRegion(packet.packetRegionAtOffsetInPacketBits(1040712));
-        printRegion(packet.packetRegionAtOffsetInPacketBits(0));
-        printRegion(packet.packetRegionAtOffsetInPacketBits(1376));
-        */
-
-        std::exit(0);
-    }
-#endif
-
     // draw status
     statusView->isVisible(true);
     statusView->redraw();
