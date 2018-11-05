@@ -44,13 +44,14 @@ void StatusView::_createEndPositions()
         positions.curOffsetInPacketBits = positions.seqNum +
                                           packetCountStr.size() + 6;
 
-        const auto& maxEntryIt = std::max_element(std::begin(dsf.packetIndexEntries()),
-                                                  std::end(dsf.packetIndexEntries()),
-                                                  [](const auto& entryA,
-                                                     const auto& entryB) {
+        const auto maxEntryIt = std::max_element(std::begin(dsf.packetIndexEntries()),
+                                                 std::end(dsf.packetIndexEntries()),
+                                                 [](const auto& entryA,
+                                                    const auto& entryB) {
             return entryA.effectiveTotalSize() < entryB.effectiveTotalSize();
         });
-        const auto maxOffsetInPacketBitsStr = utils::sepNumber(maxEntryIt->effectiveTotalSize().bits());
+        const auto maxOffsetInPacketBitsStr = (maxEntryIt == std::end(dsf.packetIndexEntries())) ?
+                                              "" : utils::sepNumber(maxEntryIt->effectiveTotalSize().bits());
 
         positions.dsfPath = positions.curOffsetInPacketBits +
                             maxOffsetInPacketBitsStr.size() + 6;

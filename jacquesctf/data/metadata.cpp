@@ -318,7 +318,8 @@ void Metadata::_setDataTypeParents()
         return totalSizeFunc(pairA) < totalSizeFunc(pairB);
     });
 
-    _maxDataTypePathSize = totalSizeFunc(*maxDtPathIt);
+    _maxDataTypePathSize = maxDtPathIt == std::end(_dataTypePaths) ?
+                                          0 : totalSizeFunc(*maxDtPathIt);
 }
 
 const Metadata::DataTypePath& Metadata::dataTypePath(const yactfr::DataType& dataType) const
