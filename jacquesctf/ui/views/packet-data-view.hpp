@@ -69,10 +69,16 @@ public:
     void pageDown();
     void pageUp();
     void isAsciiVisible(bool isVisible);
+    void isEventRecordFirstPacketRegionEmphasized(bool isEmphasized);
 
     bool isAsciiVisible() const noexcept
     {
         return _isAsciiVisible;
+    }
+
+    bool isEventRecordFirstPacketRegionEmphasized() const noexcept
+    {
+        return _isEventRecordFirstPacketRegionEmphasized;
     }
 
     const DataSize& rowSize() const noexcept
@@ -91,6 +97,7 @@ private:
 
         PacketRegion::SPC packetRegion;
         std::vector<Bit> bits;
+        bool isEventRecordFirst = false;
     };
 
     using _Zones = std::vector<_Zone>;
@@ -179,6 +186,7 @@ private:
     Index _curOffsetInPacketBits = 0;
     boost::optional<Index> _nextOffsetInPacketBits;
     bool _isAsciiVisible = true;
+    bool _isEventRecordFirstPacketRegionEmphasized = true;
 };
 
 } // namespace jacques

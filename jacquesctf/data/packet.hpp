@@ -140,6 +140,7 @@ public:
                              Index endOffsetInPacketBits);
 
     const PacketRegion& packetRegionAtOffsetInPacketBits(Index offsetInPacketBits);
+    const PacketRegion *previousPacketRegion(const PacketRegion& packetRegion);
     const PacketRegion& firstPacketRegion();
     const PacketRegion& lastPacketRegion();
 

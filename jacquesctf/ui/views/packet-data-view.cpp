@@ -98,14 +98,10 @@ void PacketDataView::_setPrevCurNextOffsetInPacketBits()
     assert(curPacketRegion);
 
     // previous
-    if (_curOffsetInPacketBits > 0) {
-        if (curPacketRegion->previousPacketRegionOffsetInPacketBits()) {
-            _prevOffsetInPacketBits = *curPacketRegion->previousPacketRegionOffsetInPacketBits();
-        } else {
-            const auto& prevPacketRegion = packet.packetRegionAtOffsetInPacketBits(_curOffsetInPacketBits - 1);
+    const auto prevPacketRegion = packet.previousPacketRegion(*curPacketRegion);
 
-            _prevOffsetInPacketBits = prevPacketRegion.segment().offsetInPacketBits();
-        }
+    if (prevPacketRegion) {
+        _prevOffsetInPacketBits = prevPacketRegion->segment().offsetInPacketBits();
     } else {
         _prevOffsetInPacketBits = boost::none;
     }
@@ -164,6 +160,7 @@ void PacketDataView::_updateSelection()
     this->_drawOffsets();
 
     // update ASCII chars
+    // TODO: Unselect and select other like we're doing it for the zone.
     this->_drawAllAsciiChars();
 }
 
@@ -283,7 +280,9 @@ void PacketDataView::_drawUnselectedZone(const _Zone& zone) const
     }
 
     if (!bookmark) {
-        if (const auto region = dynamic_cast<const ContentPacketRegion *>(zone.packetRegion.get())) {
+        if (zone.isEventRecordFirst && _isEventRecordFirstPacketRegionEmphasized) {
+            this->_stylist().packetDataViewEventRecordFirstPacketRegion(*this);
+        } else if (const auto region = dynamic_cast<const ContentPacketRegion *>(zone.packetRegion.get())) {
             this->_stylist().std(*this);
         } else if (const auto region = dynamic_cast<const PaddingPacketRegion *>(zone.packetRegion.get())) {
             this->_stylist().packetDataViewPadding(*this);
@@ -398,16 +397,36 @@ void PacketDataView::_setZonesAndAsciiChars()
     std::vector<PacketRegion::SPC> packetRegions;
     auto& packet = _state->activePacketState().packet();
 
-    packet.appendPacketRegions(packetRegions, _baseOffsetInPacketBits,
+    /*
+     * We'll go one packet region before to detect an initial
+     * event record change.
+     */
+    const auto& basePacketRegion = packet.packetRegionAtOffsetInPacketBits(_baseOffsetInPacketBits);
+    auto startingPacketRegion = packet.previousPacketRegion(basePacketRegion);
+
+    if (!startingPacketRegion) {
+        startingPacketRegion = &basePacketRegion;
+    }
+
+    packet.appendPacketRegions(packetRegions,
+                               startingPacketRegion->segment().offsetInPacketBits(),
                                _endOffsetInPacketBits);
     assert(!packetRegions.empty());
     _zones.clear();
+
+    const EventRecord *curEventRecord = nullptr;
 
     for (auto& packetRegion : packetRegions) {
         const auto bitArray = _state->activePacketState().packet().bitArray(*packetRegion);
         const auto firstBitOffsetInPacket = packetRegion->segment().offsetInPacketBits();
 
         _Zone zone;
+
+        if (packetRegion->scope() && packetRegion->scope()->eventRecord() &&
+                packetRegion->scope()->eventRecord() != curEventRecord) {
+            curEventRecord = packetRegion->scope()->eventRecord();
+            zone.isEventRecordFirst = true;
+        }
 
         for (Index indexInBitArray = 0;
                 indexInBitArray < packetRegion->segment().size().bits();
@@ -514,6 +533,12 @@ void PacketDataView::isAsciiVisible(const bool isVisible)
         this->_setBaseAndEndOffsetInPacketBitsFromOffset(_curOffsetInPacketBits);
     }
 
+    this->_redrawContent();
+}
+
+void PacketDataView::isEventRecordFirstPacketRegionEmphasized(const bool isEmphasized)
+{
+    _isEventRecordFirstPacketRegionEmphasized = isEmphasized;
     this->_redrawContent();
 }
 

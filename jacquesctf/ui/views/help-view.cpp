@@ -50,6 +50,8 @@ void HelpView::_buildRows()
         _SectionRow {"`Packet inspection` screen"},
         _KeyRow {"e", "Show/hide `Event records` frame"},
         _KeyRow {"Enter", "Show/hide `Data type` frame"},
+        _KeyRow {"a", "Show/hide ASCII characters"},
+        _KeyRow {"E", "Toggle event record's first region emphasis"},
         _KeyRow {"#", "Show decoding error, if any"},
         _KeyRow {"Left", "Go to previous region"},
         _KeyRow {"Right", "Go to next region"},

@@ -66,7 +66,12 @@ public:
         return _scope.get();
     }
 
-    Scope::SP scopePtr() const
+    Scope::SP scopePtr()
+    {
+        return _scope;
+    }
+
+    Scope::SPC scopePtr() const
     {
         return _scope;
     }

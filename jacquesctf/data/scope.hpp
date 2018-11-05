@@ -22,6 +22,7 @@ class Scope :
 {
 public:
     using SP = std::shared_ptr<Scope>;
+    using SPC = std::shared_ptr<const Scope>;
 
 public:
     explicit Scope(yactfr::Scope scope);
@@ -34,7 +35,12 @@ public:
         return _eventRecord.get();
     }
 
-    EventRecord::SP eventRecordPtr() const noexcept
+    EventRecord::SP eventRecordPtr()
+    {
+        return _eventRecord;
+    }
+
+    EventRecord::SPC eventRecordPtr() const
     {
         return _eventRecord;
     }

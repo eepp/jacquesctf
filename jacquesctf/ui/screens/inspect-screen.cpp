@@ -327,6 +327,11 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         this->_redraw();
         break;
 
+    case 'E':
+        _pdView->isEventRecordFirstPacketRegionEmphasized(!_pdView->isEventRecordFirstPacketRegionEmphasized());
+        _pdView->redraw();
+        break;
+
     case 'a':
         _pdView->isAsciiVisible(!_pdView->isAsciiVisible());
         break;

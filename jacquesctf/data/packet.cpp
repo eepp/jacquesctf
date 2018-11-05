@@ -680,4 +680,18 @@ const PacketRegion& Packet::firstPacketRegion()
     return this->packetRegionAtOffsetInPacketBits(0);
 }
 
+const PacketRegion *Packet::previousPacketRegion(const PacketRegion& packetRegion)
+{
+    // previous
+    if (packetRegion.segment().offsetInPacketBits() == 0) {
+        return nullptr;
+    }
+
+    if (packetRegion.previousPacketRegionOffsetInPacketBits()) {
+        return &this->packetRegionAtOffsetInPacketBits(*packetRegion.previousPacketRegionOffsetInPacketBits());
+    }
+
+    return &this->packetRegionAtOffsetInPacketBits(packetRegion.segment().offsetInPacketBits() - 1);
+}
+
 } // namespace jacques

@@ -61,6 +61,7 @@ Stylist::Stylist()
     this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_SELECTION_NEXT, COLOR_GREEN, -1);
     this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_OFFSET, COLOR_YELLOW, -1);
     this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_PADDING, COLOR_BLUE, -1);
+    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_EVENT_RECORD_FIRST_PACKET_REGION, COLOR_YELLOW, -1);
     this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_1, COLOR_BLACK, COLOR_YELLOW);
     this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_2, COLOR_BLACK, COLOR_GREEN);
     this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_3, COLOR_BLACK, COLOR_BLUE);
@@ -524,6 +525,12 @@ void Stylist::packetDataViewBookmark(const View& view, const unsigned int id) co
 
     this->_attrsReset(view);
     this->_color(view, colorPair);
+}
+
+void Stylist::packetDataViewEventRecordFirstPacketRegion(const View& view) const
+{
+    this->_attrsReset(view);
+    this->_color(view, _COLOR_ID_PACKET_DATA_VIEW_EVENT_RECORD_FIRST_PACKET_REGION);
 }
 
 } // namespace jacques

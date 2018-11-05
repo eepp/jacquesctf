@@ -28,6 +28,7 @@ class EventRecord :
 {
 public:
     using SP = std::shared_ptr<EventRecord>;
+    using SPC = std::shared_ptr<const EventRecord>;
 
 public:
     static SP createFromPacketSequenceIterator(yactfr::PacketSequenceIterator& it,
