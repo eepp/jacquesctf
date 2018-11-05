@@ -301,6 +301,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     case 127:
     case 8:
     case '9':
+    case KEY_BACKSPACE:
         this->_goBack();
         break;
 

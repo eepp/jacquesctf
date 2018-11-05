@@ -51,7 +51,7 @@ std::unique_ptr<const SearchQuery> SearchController::start()
             // enter
             accepted = true;
             break;
-        } else if (ch == 127 || ch == 8) {
+        } else if (ch == 127 || ch == 8 || ch == KEY_BACKSPACE) {
             // backspace
             if (!buf.empty()) {
                 buf.pop_back();
