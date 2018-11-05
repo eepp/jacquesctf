@@ -161,9 +161,11 @@ public:
     void visit(const yactfr::StaticArrayType& type) override
     {
         this->_setParentAndPath(type);
-        _stack.push_back({&type, &_arrayElemStr});
+        _stack.push_back({&type, _curDtName});
+        _curDtName = &_arrayElemStr;
         type.elemType().accept(*this);
         _stack.pop_back();
+        _curDtName = nullptr;
     }
 
     void visit(const yactfr::StaticTextArrayType& type) override
@@ -174,9 +176,11 @@ public:
     void visit(const yactfr::DynamicArrayType& type) override
     {
         this->_setParentAndPath(type);
-        _stack.push_back({&type, &_arrayElemStr});
+        _stack.push_back({&type, _curDtName});
+        _curDtName = &_arrayElemStr;
         type.elemType().accept(*this);
         _stack.pop_back();
+        _curDtName = nullptr;
     }
 
     void visit(const yactfr::DynamicTextArrayType& type) override
