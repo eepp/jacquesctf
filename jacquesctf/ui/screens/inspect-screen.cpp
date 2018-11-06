@@ -345,6 +345,10 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         _pdView->isAsciiVisible(!_pdView->isAsciiVisible());
         break;
 
+    case 'x':
+        _pdView->isHex(!_pdView->isHex());
+        break;
+
     case '\n':
     case '\r':
         _sdteViewIsVisible = !_sdteViewIsVisible;
@@ -409,7 +413,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 
         Index reqOffsetInPacketBits;
 
-        if (this->_state().curOffsetInPacketBits() < _pdView->rowSize().bits()) {
+        if (this->_state().curOffsetInPacketBits() < _pdView->rowSize()) {
             reqOffsetInPacketBits = 0;
         } else {
             reqOffsetInPacketBits = this->_state().curOffsetInPacketBits() -

@@ -30,7 +30,7 @@ void PacketState::gotoPreviousEventRecord(Size count)
 
     if (!curEventRecord) {
         if (_curOffsetInPacketBits >=
-                _packet->indexEntry().effectiveContentSize().bits()) {
+                _packet->indexEntry().effectiveContentSize()) {
             auto lastEr = _packet->lastEventRecord();
 
             assert(lastEr);
@@ -106,7 +106,7 @@ void PacketState::gotoNextPacketRegion()
     const auto& currentPacketRegion = this->currentPacketRegion();
 
     if (currentPacketRegion.segment().endOffsetInPacketBits() ==
-            _packet->indexEntry().effectiveTotalSize().bits()) {
+            _packet->indexEntry().effectiveTotalSize()) {
         return;
     }
 
@@ -135,7 +135,7 @@ void PacketState::gotoPacketRegionAtOffsetInPacketBits(const Index offsetInPacke
         return;
     }
 
-    assert(offsetInPacketBits < _packet->indexEntry().effectiveTotalSize().bits());
+    assert(offsetInPacketBits < _packet->indexEntry().effectiveTotalSize());
     _curOffsetInPacketBits = offsetInPacketBits;
     _state->_notify(CurOffsetInPacketChangedMessage {});
 }

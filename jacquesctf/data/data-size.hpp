@@ -78,19 +78,9 @@ public:
         return _sizeBits + size._sizeBits;
     }
 
-    DataSize operator+(const Size size) const noexcept
-    {
-        return _sizeBits + size;
-    }
-
     DataSize operator-(const DataSize& size) const noexcept
     {
         return _sizeBits - size._sizeBits;
-    }
-
-    DataSize operator-(const Size size) const noexcept
-    {
-        return _sizeBits - size;
     }
 
     DataSize& operator+=(const DataSize& size) noexcept
@@ -130,6 +120,54 @@ std::ostream& operator<<(std::ostream& stream, const DataSize& dataSize)
                                            ',');
     stream << qty << ' ' << units;
     return stream;
+}
+
+static inline
+DataSize operator+(const Size left, const DataSize& right)
+{
+    return left + right.bits();
+}
+
+static inline
+DataSize operator-(const Size left, const DataSize& right)
+{
+    return left - right.bits();
+}
+
+static inline
+bool operator<(const Size left, const DataSize& right)
+{
+    return left < right.bits();
+}
+
+static inline
+bool operator<=(const Size left, const DataSize& right)
+{
+    return left <= right.bits();
+}
+
+static inline
+bool operator==(const Size left, const DataSize& right)
+{
+    return left == right.bits();
+}
+
+static inline
+bool operator!=(const Size left, const DataSize& right)
+{
+    return left != right.bits();
+}
+
+static inline
+bool operator>(const Size left, const DataSize& right)
+{
+    return left > right.bits();
+}
+
+static inline
+bool operator>=(const Size left, const DataSize& right)
+{
+    return left >= right.bits();
 }
 
 static inline

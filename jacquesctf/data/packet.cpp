@@ -255,7 +255,7 @@ void Packet::_tryCachePaddingPacketRegionBeforeCurIt(Scope::SP scope)
 
     if (_packetRegionCache.empty()) {
         if (this->_itOffsetInPacketBits() == 0 ||
-                this->_itOffsetInPacketBits() >= _preambleSize.bits()) {
+                this->_itOffsetInPacketBits() >= _preambleSize) {
             return;
         }
 

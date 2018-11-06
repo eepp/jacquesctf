@@ -51,7 +51,7 @@ void HelpView::_buildRows()
         _KeyRow {"e", "Show/hide `Event records` frame"},
         _KeyRow {"Enter", "Show/hide `Data type` frame"},
         _KeyRow {"a", "Show/hide ASCII characters"},
-        _KeyRow {"x", "Show data in binary or hexadecimal"},
+        _KeyRow {"x", "Show packet data in binary or hexadecimal"},
         _KeyRow {"E", "Toggle event record's first region emphasis"},
         _KeyRow {"#", "Show decoding error, if any"},
         _KeyRow {"Left", "Go to previous region"},

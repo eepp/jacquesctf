@@ -450,8 +450,8 @@ void Packet::appendPacketRegions(ContainerT& regions,
 {
     theLogger->debug("Appending packet regions for user in [{} b, {} b[.",
                      offsetInPacketBits, endOffsetInPacketBits);
-    assert(offsetInPacketBits < _indexEntry->effectiveTotalSize().bits());
-    assert(endOffsetInPacketBits <= _indexEntry->effectiveTotalSize().bits());
+    assert(offsetInPacketBits < _indexEntry->effectiveTotalSize());
+    assert(endOffsetInPacketBits <= _indexEntry->effectiveTotalSize());
     assert(offsetInPacketBits < endOffsetInPacketBits);
     theLogger->debug("Preamble size: {} b.", _preambleSize.bits());
 

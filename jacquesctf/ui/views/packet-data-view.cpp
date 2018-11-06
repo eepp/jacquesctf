@@ -65,16 +65,14 @@ void PacketDataView::_stateChanged(const Message& msg)
 void PacketDataView::_setBaseAndEndOffsetInPacketBitsFromOffset(const Index offsetInPacketBits)
 {
     assert(_state->hasActivePacketState());
-
-    const auto effectiveTotalSizeBits = _state->activePacketState().packet().indexEntry().effectiveTotalSize().bits();
-
-    assert(offsetInPacketBits < effectiveTotalSizeBits);
+    assert(offsetInPacketBits <
+           _state->activePacketState().packet().indexEntry().effectiveTotalSize());
 
     const auto rowOffsetInPacketBits = offsetInPacketBits -
                                        (offsetInPacketBits % _rowSize.bits());
     const auto halfPageSize = this->_halfPageSize();
 
-    if (rowOffsetInPacketBits < halfPageSize.bits()) {
+    if (rowOffsetInPacketBits < halfPageSize) {
         _baseOffsetInPacketBits = 0;
     } else {
         _baseOffsetInPacketBits = rowOffsetInPacketBits - halfPageSize.bits();
@@ -108,22 +106,35 @@ void PacketDataView::_setPrevCurNextOffsetInPacketBits()
 
     // next
     if (curPacketRegion->segment().endOffsetInPacketBits() <
-            packet.indexEntry().effectiveTotalSize().bits()) {
+            packet.indexEntry().effectiveTotalSize()) {
         _nextOffsetInPacketBits = curPacketRegion->segment().endOffsetInPacketBits();
     } else {
         _nextOffsetInPacketBits = boost::none;
     }
 }
 
-bool PacketDataView::_isZoneSelected(const _Zone& zone) const
+bool PacketDataView::_isCharSelected(const _Char& ch) const
 {
-    const auto zoneOffsetInPacketBits = zone.packetRegion->segment().offsetInPacketBits();
+    const auto selectedPacketRegionIt = std::find_if(std::begin(ch.packetRegions),
+                                                     std::end(ch.packetRegions),
+                                                     [this](const auto& packetRegion) {
+        return packetRegion->segment().offsetInPacketBits() == _curOffsetInPacketBits;
+    });
 
-    return zoneOffsetInPacketBits == _curOffsetInPacketBits ||
-           (_prevOffsetInPacketBits &&
-            zoneOffsetInPacketBits == *_prevOffsetInPacketBits) ||
+    if (selectedPacketRegionIt != std::end(ch.packetRegions)) {
+        return true;
+    }
+
+    if (_isHex) {
+        return false;
+    }
+
+    const auto chSingleOffsetInPacketBits = ch.packetRegions.front()->segment().offsetInPacketBits();
+
+    return (_prevOffsetInPacketBits &&
+            chSingleOffsetInPacketBits == *_prevOffsetInPacketBits) ||
            (_nextOffsetInPacketBits &&
-            zoneOffsetInPacketBits == *_nextOffsetInPacketBits);
+            chSingleOffsetInPacketBits == *_nextOffsetInPacketBits);
 }
 
 void PacketDataView::_updateSelection()
@@ -132,27 +143,29 @@ void PacketDataView::_updateSelection()
 
     if (_state->curOffsetInPacketBits() < _baseOffsetInPacketBits ||
             _state->curOffsetInPacketBits() >= _endOffsetInPacketBits ||
-            _zones.empty()) {
-        // outside the current zones: reset base offset
+            _chars.empty()) {
+        // outside the current character: reset base offset
         this->_setBaseAndEndOffsetInPacketBitsFromOffset(_state->curOffsetInPacketBits());
         this->_setPrevCurNextOffsetInPacketBits();
         this->_redrawContent();
         return;
     }
 
-    // "erase" currently selected zones
-    for (const auto& zone : _zones) {
-        if (this->_isZoneSelected(zone)) {
-            this->_drawUnselectedZone(zone);
+    // "erase" currently selected characters
+    // TODO: do not search linearly
+    for (const auto& ch : _chars) {
+        if (this->_isCharSelected(ch)) {
+            this->_drawUnselectedChar(ch);
         }
     }
 
-    // draw new selected zones
+    // draw new selected characters
+    // TODO: do not search linearly
     this->_setPrevCurNextOffsetInPacketBits();
 
-    for (const auto& zone : _zones) {
-        if (this->_isZoneSelected(zone)) {
-            this->_drawZone(zone);
+    for (const auto& ch : _chars) {
+        if (this->_isCharSelected(ch)) {
+            this->_drawChar(ch);
         }
     }
 
@@ -160,7 +173,7 @@ void PacketDataView::_updateSelection()
     this->_drawOffsets();
 
     // update ASCII chars
-    // TODO: Unselect and select other like we're doing it for the zone.
+    // TODO: unselect and select other like we're doing it for the num chars
     this->_drawAllAsciiChars();
 }
 
@@ -182,7 +195,7 @@ void PacketDataView::_setDataXAndRowSize()
 
     while (true) {
         // bytes + spaces between them
-        auto dataWidth = bytesPerRow * 9 - 1;
+        auto dataWidth = bytesPerRow * (this->_charsPerByte() + 1) - 1;
 
         if (_isAsciiVisible) {
             // ASCII characters + space before them
@@ -198,7 +211,7 @@ void PacketDataView::_setDataXAndRowSize()
     }
 
     _dataX = offsetWidth + 1;
-    _asciiCharsX = _dataX + bytesPerRow * 9;
+    _asciiCharsX = _dataX + bytesPerRow * (this->_charsPerByte() + 1);
     _rowSize = DataSize::fromBytes(bytesPerRow);
 }
 
@@ -215,7 +228,7 @@ void PacketDataView::_drawOffsets() const
     auto offsetInPacketBits = _baseOffsetInPacketBits;
 
     for (Index y = 0; y < this->contentRect().h; ++y) {
-        if (offsetInPacketBits >= packetTotalSize.bits()) {
+        if (offsetInPacketBits >= packetTotalSize) {
             // clear
             for (Index x = 0; x < _dataX - 1; ++x) {
                 this->_putChar({x, y}, ' ');
@@ -231,7 +244,7 @@ void PacketDataView::_drawOffsets() const
             this->_moveCursor({0, y});
 
             const auto selected = _curOffsetInPacketBits >= offsetInPacketBits &&
-                                  _curOffsetInPacketBits < offsetInPacketBits + _rowSize.bits();
+                                  _curOffsetInPacketBits < offsetInPacketBits + _rowSize;
 
             this->_stylist().packetDataViewOffset(*this, selected);
 
@@ -245,15 +258,10 @@ void PacketDataView::_drawOffsets() const
     }
 }
 
-void PacketDataView::_drawZoneBits(const _Zone& zone) const
+void PacketDataView::_setBookmarkStyle(const _Char& ch) const
 {
-    for (const auto& bit : zone.bits) {
-        this->_putChar(bit.pt, bit.value);
-    }
-}
+    assert(!_isHex);
 
-void PacketDataView::_drawUnselectedZone(const _Zone& zone) const
-{
     const auto it = _bookmarks->find(_state->activeDataStreamFileStateIndex());
     const InspectScreen::PacketBookmarks *bookmarks = nullptr;
 
@@ -267,11 +275,12 @@ void PacketDataView::_drawUnselectedZone(const _Zone& zone) const
     }
 
     bool bookmark = false;
+    const auto& singlePacketRegion = *ch.packetRegions.front();
 
     if (bookmarks) {
         for (Index id = 0; id < bookmarks->size(); ++id) {
-            if (bookmarks->at(id) && *(bookmarks->at(id)) ==
-                                     zone.packetRegion->segment().offsetInPacketBits()) {
+            if (bookmarks->at(id) &&
+                    *(bookmarks->at(id)) == singlePacketRegion.segment().offsetInPacketBits()) {
                 this->_stylist().packetDataViewBookmark(*this, id);
                 bookmark = true;
                 break;
@@ -280,49 +289,67 @@ void PacketDataView::_drawUnselectedZone(const _Zone& zone) const
     }
 
     if (!bookmark) {
-        if (zone.isEventRecordFirst && _isEventRecordFirstPacketRegionEmphasized) {
+        if (ch.isEventRecordFirst && _isEventRecordFirstPacketRegionEmphasized) {
             this->_stylist().packetDataViewEventRecordFirstPacketRegion(*this);
-        } else if (const auto region = dynamic_cast<const ContentPacketRegion *>(zone.packetRegion.get())) {
+        } else if (const auto region = dynamic_cast<const ContentPacketRegion *>(&singlePacketRegion)) {
             this->_stylist().std(*this);
-        } else if (const auto region = dynamic_cast<const PaddingPacketRegion *>(zone.packetRegion.get())) {
+        } else if (const auto region = dynamic_cast<const PaddingPacketRegion *>(&singlePacketRegion)) {
             this->_stylist().packetDataViewPadding(*this);
-        } else if (const auto region = dynamic_cast<const ErrorPacketRegion *>(zone.packetRegion.get())) {
+        } else if (const auto region = dynamic_cast<const ErrorPacketRegion *>(&singlePacketRegion)) {
             this->_stylist().error(*this);
         } else {
             std::abort();
         }
     }
-
-    this->_drawZoneBits(zone);
 }
 
-void PacketDataView::_drawZone(const _Zone& zone) const
+void PacketDataView::_drawUnselectedChar(const _Char& ch) const
 {
-    const auto zoneOffsetInPacketBits = zone.packetRegion->segment().offsetInPacketBits();
+    if (_isHex) {
+        this->_stylist().std(*this);
+    } else {
+        this->_setBookmarkStyle(ch);
+    }
 
-    if (zoneOffsetInPacketBits == _curOffsetInPacketBits) {
-        this->_stylist().packetDataViewSelection(*this,
-                                                 Stylist::PacketDataViewSelectionType::CURRENT);
-    } else if (_prevOffsetInPacketBits &&
-            zoneOffsetInPacketBits == *_prevOffsetInPacketBits) {
+    this->_putChar(ch.pt, ch.value);
+}
+
+void PacketDataView::_drawChar(const _Char& ch) const
+{
+    const auto& singlePacketRegionOffsetBits = ch.packetRegions.front()->segment().offsetInPacketBits();
+    const auto selectedPacketRegionIt = std::find_if(std::begin(ch.packetRegions),
+                                                     std::end(ch.packetRegions),
+                                                     [this](const auto& packetRegion) {
+        return packetRegion->segment().offsetInPacketBits() == _curOffsetInPacketBits;
+    });
+
+    if (selectedPacketRegionIt != std::end(ch.packetRegions)) {
+        if (ch.packetRegions.size() == 1) {
+            this->_stylist().packetDataViewSelection(*this,
+                                                     Stylist::PacketDataViewSelectionType::CURRENT);
+        } else {
+            this->_stylist().packetDataViewAuxSelection(*this,
+                                                        Stylist::PacketDataViewSelectionType::CURRENT);
+        }
+    } else if (!_isHex && _prevOffsetInPacketBits &&
+            singlePacketRegionOffsetBits == *_prevOffsetInPacketBits) {
         this->_stylist().packetDataViewSelection(*this,
                                                  Stylist::PacketDataViewSelectionType::PREVIOUS);
-    } else if (_nextOffsetInPacketBits &&
-            zoneOffsetInPacketBits == *_nextOffsetInPacketBits) {
+    } else if (!_isHex && _nextOffsetInPacketBits &&
+            singlePacketRegionOffsetBits == *_nextOffsetInPacketBits) {
         this->_stylist().packetDataViewSelection(*this,
                                                  Stylist::PacketDataViewSelectionType::NEXT);
     } else {
-        this->_drawUnselectedZone(zone);
-        return;
+        this->_drawUnselectedChar(ch);
     }
 
-    this->_drawZoneBits(zone);
+    this->_putChar(ch.pt, ch.value);
 }
 
-void PacketDataView::_drawAllZones() const
+void PacketDataView::_drawAllNumericChars() const
 {
-    for (const auto& zone : _zones) {
-        this->_drawZone(zone);
+    for (const auto& ch : _chars) {
+        this->_drawChar(ch);
     }
 }
 
@@ -374,17 +401,174 @@ void PacketDataView::_redrawContent()
     }
 
     this->_drawOffsets();
-    this->_setZonesAndAsciiChars();
-    this->_drawAllZones();
+    this->_setNumericCharsAndAsciiChars();
+    this->_drawAllNumericChars();
     this->_drawAllAsciiChars();
     this->_hasMoreTop(_baseOffsetInPacketBits != 0);
 
-    const auto effectiveTotalSizeBits = _state->activePacketState().packet().indexEntry().effectiveTotalSize().bits();
+    const auto effectiveTotalSizeBits = _state->activePacketState().packet().indexEntry().effectiveTotalSize();
 
     this->_hasMoreBottom(_endOffsetInPacketBits < effectiveTotalSizeBits);
 }
 
-void PacketDataView::_setZonesAndAsciiChars()
+static inline chtype charFromNibble(const std::uint8_t nibble)
+{
+    if (nibble < 10) {
+        return '0' + nibble;
+    } else {
+        return 'a' + nibble - 10;
+    }
+}
+
+void PacketDataView::_setHexChars(std::vector<PacketRegion::SPC>& packetRegions)
+{
+    /*
+     * The strategy here is to create all the nibble characters first,
+     * and then iterate the packet regions and find the already-created
+     * character to append a packet region (if not already appended).
+     */
+    const auto data = _state->activePacketState().packet().data(_baseOffsetInPacketBits / 8);
+
+    for (auto offsetInPacketBits = _baseOffsetInPacketBits;
+            offsetInPacketBits < _endOffsetInPacketBits;
+            offsetInPacketBits += 8) {
+        const auto byte = data[(offsetInPacketBits - _baseOffsetInPacketBits) / 8];
+        const auto y = (offsetInPacketBits - _baseOffsetInPacketBits) /
+                       _rowSize.bits();
+        const auto byteIndexInRow = (offsetInPacketBits % _rowSize.bits()) / 8;
+
+        // high nibble
+        {
+            _Char ch;
+
+            ch.pt.y = y;
+            ch.pt.x = _dataX + byteIndexInRow * 3;
+
+            const auto nibble = (byte >> 4) & 0xf;
+
+            ch.value = charFromNibble(nibble);
+            _chars.push_back(std::move(ch));
+        }
+
+        // low nibble
+        {
+            _Char ch;
+
+            ch.pt.y = y;
+            ch.pt.x = _dataX + byteIndexInRow * 3 + 1;
+
+            const auto nibble = byte & 0xf;
+
+            ch.value = charFromNibble(nibble);
+            _chars.push_back(std::move(ch));
+        }
+    }
+
+    const EventRecord *curEventRecord = nullptr;
+
+    for (auto& packetRegion : packetRegions) {
+        const auto bitArray = _state->activePacketState().packet().bitArray(*packetRegion);
+        const auto firstBitOffsetInPacket = packetRegion->segment().offsetInPacketBits();
+
+        bool isEventRecordFirst = false;
+
+        if (packetRegion->scope() && packetRegion->scope()->eventRecord() &&
+                packetRegion->scope()->eventRecord() != curEventRecord) {
+            curEventRecord = packetRegion->scope()->eventRecord();
+            isEventRecordFirst = true;
+        }
+
+        /*
+         * Iterate the whole bit array. This is just simpler: one out of
+         * four bits won't alter a character.
+         */
+        for (Index indexInBitArray = 0;
+                indexInBitArray < packetRegion->segment().size();
+                ++indexInBitArray) {
+            const auto bitOffsetInPacket = firstBitOffsetInPacket +
+                                           indexInBitArray;
+
+            if (bitOffsetInPacket < _baseOffsetInPacketBits ||
+                    bitOffsetInPacket >= _endOffsetInPacketBits) {
+                // not visible
+                continue;
+            }
+
+            // times two because `_chars` contains nibbles, not bytes
+            auto charIndex = ((bitOffsetInPacket / 8) -
+                              (_baseOffsetInPacketBits / 8)) * 2;
+            const auto bitLoc = bitArray.bitLocation(indexInBitArray);
+
+            if (bitLoc.bitIndexInByte() < 4) {
+                // low nibble
+                charIndex += 1;
+            }
+
+            assert(charIndex < _chars.size());
+
+            // get existing character (created above)
+            auto& ch = _chars[charIndex];
+
+            ch.isEventRecordFirst = isEventRecordFirst;
+
+            if (ch.packetRegions.empty() ||
+                    ch.packetRegions.front().get() != packetRegion.get()) {
+                // associate character to packet region
+                ch.packetRegions.push_back(packetRegion);
+            }
+        }
+    }
+}
+
+void PacketDataView::_setBinaryChars(std::vector<PacketRegion::SPC>& packetRegions)
+{
+    const EventRecord *curEventRecord = nullptr;
+
+    for (auto& packetRegion : packetRegions) {
+        const auto bitArray = _state->activePacketState().packet().bitArray(*packetRegion);
+        const auto firstBitOffsetInPacket = packetRegion->segment().offsetInPacketBits();
+        bool isEventRecordFirst = false;
+
+        if (packetRegion->scope() && packetRegion->scope()->eventRecord() &&
+                packetRegion->scope()->eventRecord() != curEventRecord) {
+            curEventRecord = packetRegion->scope()->eventRecord();
+            isEventRecordFirst = true;
+        }
+
+        for (Index indexInBitArray = 0;
+                indexInBitArray < packetRegion->segment().size();
+                ++indexInBitArray) {
+            const auto bitOffsetInPacket = firstBitOffsetInPacket +
+                                           indexInBitArray;
+
+            if (bitOffsetInPacket < _baseOffsetInPacketBits ||
+                    bitOffsetInPacket >= _endOffsetInPacketBits) {
+                // not visible
+                continue;
+            }
+
+            _Char ch;
+            const auto bitLoc = bitArray.bitLocation(indexInBitArray);
+
+            ch.value = '0' + bitArray[bitLoc];
+            ch.pt.y = (bitOffsetInPacket - _baseOffsetInPacketBits) /
+                      _rowSize.bits();
+
+            const auto byteIndex = (bitOffsetInPacket % _rowSize.bits()) / 8;
+
+            /*
+             * 28000 00101101 11010010 11101010 00010010
+             *       ^ _dataX [6]      ^ + byteIndex * 9 [+ 2 * 9]
+             *                              ^ + 7 - bitLoc.bitIndexInByte [+ 7 - 2]
+             */
+            ch.pt.x = _dataX + byteIndex * 9 + 7 - bitLoc.bitIndexInByte();
+            ch.packetRegions.push_back(packetRegion);
+            _chars.push_back(std::move(ch));
+        }
+    }
+}
+
+void PacketDataView::_setNumericCharsAndAsciiChars()
 {
     if (_baseOffsetInPacketBits == _endOffsetInPacketBits) {
         return;
@@ -393,7 +577,7 @@ void PacketDataView::_setZonesAndAsciiChars()
     assert(_baseOffsetInPacketBits < _endOffsetInPacketBits);
     assert(_state->hasActivePacketState());
 
-    // set zones
+    // set numeric characters
     std::vector<PacketRegion::SPC> packetRegions;
     auto& packet = _state->activePacketState().packet();
 
@@ -412,56 +596,12 @@ void PacketDataView::_setZonesAndAsciiChars()
                                startingPacketRegion->segment().offsetInPacketBits(),
                                _endOffsetInPacketBits);
     assert(!packetRegions.empty());
-    _zones.clear();
+    _chars.clear();
 
-    const EventRecord *curEventRecord = nullptr;
-
-    for (auto& packetRegion : packetRegions) {
-        const auto bitArray = _state->activePacketState().packet().bitArray(*packetRegion);
-        const auto firstBitOffsetInPacket = packetRegion->segment().offsetInPacketBits();
-
-        _Zone zone;
-
-        if (packetRegion->scope() && packetRegion->scope()->eventRecord() &&
-                packetRegion->scope()->eventRecord() != curEventRecord) {
-            curEventRecord = packetRegion->scope()->eventRecord();
-            zone.isEventRecordFirst = true;
-        }
-
-        for (Index indexInBitArray = 0;
-                indexInBitArray < packetRegion->segment().size().bits();
-                ++indexInBitArray) {
-            const auto bitOffsetInPacket = firstBitOffsetInPacket +
-                                           indexInBitArray;
-
-            if (bitOffsetInPacket < _baseOffsetInPacketBits ||
-                    bitOffsetInPacket >= _endOffsetInPacketBits) {
-                // not visible
-                continue;
-            }
-
-            _Zone::Bit bit;
-            const auto bitLoc = bitArray.bitLocation(indexInBitArray);
-
-            bit.value = '0' + bitArray[bitLoc];
-            bit.pt.y = (bitOffsetInPacket - _baseOffsetInPacketBits) /
-                       _rowSize.bits();
-
-            const auto byteIndex = (bitOffsetInPacket % _rowSize.bits()) / 8;
-
-            /*
-             * 28000 00101101 11010010 11101010 00010010
-             *       ^ _dataX [6]      ^ + byteIndex * 9 [+ 2 * 9]
-             *                              ^ + 7 - bitLoc.bitIndexInByte [+ 7 - 2]
-             */
-            bit.pt.x = _dataX + byteIndex * 9 + 7 - bitLoc.bitIndexInByte();
-            zone.bits.push_back(bit);
-        }
-
-        if (!zone.bits.empty()) {
-            zone.packetRegion = std::move(packetRegion);
-            _zones.push_back(std::move(zone));
-        }
+    if (_isHex) {
+        this->_setHexChars(packetRegions);
+    } else {
+        this->_setBinaryChars(packetRegions);
     }
 
     // set ASCII chars
@@ -539,6 +679,18 @@ void PacketDataView::isAsciiVisible(const bool isVisible)
 void PacketDataView::isEventRecordFirstPacketRegionEmphasized(const bool isEmphasized)
 {
     _isEventRecordFirstPacketRegionEmphasized = isEmphasized;
+    this->_redrawContent();
+}
+
+void PacketDataView::isHex(const bool isHex)
+{
+    _isHex = isHex;
+    this->_setDataXAndRowSize();
+
+    if (_state->hasActivePacketState()) {
+        this->_setBaseAndEndOffsetInPacketBitsFromOffset(_curOffsetInPacketBits);
+    }
+
     this->_redrawContent();
 }
 

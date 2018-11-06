@@ -23,21 +23,23 @@ namespace jacques {
  * This is the packet inspection view.
  *
  * The view has a current base offset which is the offset of the first
- * visible bit (top left), if any.
+ * visible bit/nibble (top left), if any.
  *
  * The view contains a current vector of zones. A zone is a vector of
- * zone bits, and it is also linked to a packet region. A zone bit is a
- * point and a character (e.g., `0` or `1`). Therefore a zone contains
- * which exact bits to draw on the view and their value.
+ * zone characters, and it is also linked to a packet region. A zone
+ * character is a point and a character (e.g., `0`, `1`, `5`, `c`).
+ * Therefore a zone contains which exact characters to draw on the view
+ * and their value.
  *
  * The view builds zones from the current packet's packet regions with
- * _appendZones(). This method takes the current base offset into
- * account.
+ * _setZonesAndAsciiChars(). This method takes the current base offset
+ * into account.
  *
  * The order of the current zones is the same as their underlying packet
  * regions. However, because we're showing bytes with the positional
  * notation (where the byte's LSB is the right-most bit), little endian
- * packet regions can lead to holes within zones. For example:
+ * packet regions can lead to holes within zones. For example, in
+ * binary:
  *
  *     Bits: 11010010 00101001 10010010 11110101
  *     Zone: 32221111 33333333 44433333 55544444
@@ -68,6 +70,7 @@ public:
                             const InspectScreen::Bookmarks& bookmarks);
     void pageDown();
     void pageUp();
+    void isHex(bool isHex);
     void isAsciiVisible(bool isVisible);
     void isEventRecordFirstPacketRegionEmphasized(bool isEmphasized);
 
@@ -81,26 +84,26 @@ public:
         return _isEventRecordFirstPacketRegionEmphasized;
     }
 
+    bool isHex() const noexcept
+    {
+        return _isHex;
+    }
+
     const DataSize& rowSize() const noexcept
     {
         return _rowSize;
     }
 
 private:
-    struct _Zone
+    struct _Char
     {
-        struct Bit
-        {
-            Point pt;
-            chtype value;
-        };
-
-        PacketRegion::SPC packetRegion;
-        std::vector<Bit> bits;
+        Point pt;
+        chtype value;
+        std::vector<PacketRegion::SPC> packetRegions;
         bool isEventRecordFirst = false;
     };
 
-    using _Zones = std::vector<_Zone>;
+    using _Chars = std::vector<_Char>;
 
     struct _AsciiChar
     {
@@ -121,15 +124,17 @@ private:
     void _redrawContent() override;
     void _resized() override;
     void _drawOffsets() const;
-    void _drawZoneBits(const _Zone& zone) const;
-    void _drawZone(const _Zone& zone) const;
-    void _drawUnselectedZone(const _Zone& zone) const;
-    void _drawAllZones() const;
+    void _setBookmarkStyle(const _Char& ch) const;
+    void _drawChar(const _Char& ch) const;
+    void _drawUnselectedChar(const _Char& ch) const;
+    void _drawAllNumericChars() const;
     void _drawAllAsciiChars() const;
-    bool _isZoneSelected(const _Zone& zone) const;
+    bool _isCharSelected(const _Char& ch) const;
     void _setDataXAndRowSize();
     void _updateSelection();
-    void _setZonesAndAsciiChars();
+    void _setHexChars(std::vector<PacketRegion::SPC>& packetRegions);
+    void _setBinaryChars(std::vector<PacketRegion::SPC>& packetRegions);
+    void _setNumericCharsAndAsciiChars();
     void _setPrevCurNextOffsetInPacketBits();
     void _setBaseAndEndOffsetInPacketBitsFromOffset(Index offsetInPacketBits);
 
@@ -156,12 +161,17 @@ private:
         return DataSize {this->contentRect().h / 2 * _rowSize.bits()};
     }
 
+    Size _charsPerByte() const noexcept
+    {
+        return _isHex ? 2 : 8;
+    }
+
 private:
     State * const _state;
     const ViewStateObserverGuard _stateObserverGuard;
     const InspectScreen::Bookmarks * const _bookmarks;
 
-    // X position of a row's first bit
+    // X position of a row's first numeric character
     Index _dataX = 0;
 
     // X position of a row's first ASCII character
@@ -176,8 +186,8 @@ private:
     // offset of the first invisible bit (last visible bit's offset + 1)
     Index _endOffsetInPacketBits = 0;
 
-    // current zones
-    _Zones _zones;
+    // current numeric characters
+    _Chars _chars;
 
     // current ASCII characters
     _AsciiChars _asciiChars;
@@ -187,6 +197,7 @@ private:
     boost::optional<Index> _nextOffsetInPacketBits;
     bool _isAsciiVisible = true;
     bool _isEventRecordFirstPacketRegionEmphasized = true;
+    bool _isHex = true;
 };
 
 } // namespace jacques
