@@ -110,23 +110,10 @@ private:
         chtype value;
         std::vector<PacketRegion::SPC> packetRegions;
         bool isEventRecordFirst = false;
+        bool isPrintable = true;
     };
 
     using _Chars = std::vector<_Char>;
-
-    struct _AsciiChar
-    {
-        Index endOffsetInPacketBits() const noexcept
-        {
-            return offsetInPacketBits + 8;
-        }
-
-        Index offsetInPacketBits;
-        Point pt;
-        char ch;
-    };
-
-    using _AsciiChars = std::vector<_AsciiChar>;
 
 private:
     void _stateChanged(const Message& msg) override;
@@ -143,6 +130,7 @@ private:
     void _updateSelection();
     void _setHexChars(std::vector<PacketRegion::SPC>& packetRegions);
     void _setBinaryChars(std::vector<PacketRegion::SPC>& packetRegions);
+    void _setAsciiChars(std::vector<PacketRegion::SPC>& packetRegions);
     void _setNumericCharsAndAsciiChars();
     void _setPrevCurNextOffsetInPacketBits();
     void _setBaseAndEndOffsetInPacketBitsFromOffset(Index offsetInPacketBits);
@@ -199,7 +187,7 @@ private:
     _Chars _chars;
 
     // current ASCII characters
-    _AsciiChars _asciiChars;
+    _Chars _asciiChars;
 
     boost::optional<Index> _prevOffsetInPacketBits;
     Index _curOffsetInPacketBits = 0;

@@ -162,6 +162,12 @@ void PacketDataView::_updateSelection()
         }
     }
 
+    for (const auto& ch : _asciiChars) {
+        if (this->_isCharSelected(ch)) {
+            this->_drawUnselectedChar(ch);
+        }
+    }
+
     // draw new selected characters
     // TODO: do not search linearly
     this->_setPrevCurNextOffsetInPacketBits();
@@ -172,12 +178,14 @@ void PacketDataView::_updateSelection()
         }
     }
 
+    for (const auto& ch : _asciiChars) {
+        if (this->_isCharSelected(ch)) {
+            this->_drawChar(ch);
+        }
+    }
+
     // update offset
     this->_drawOffsets();
-
-    // update ASCII chars
-    // TODO: unselect and select other like we're doing it for the num chars
-    this->_drawAllAsciiChars();
 }
 
 void PacketDataView::_setDataXAndRowSize()
@@ -264,7 +272,12 @@ void PacketDataView::_drawOffsets() const
 void PacketDataView::_setCustomStyle(const _Char& ch) const
 {
     if (ch.packetRegions.size() != 1) {
-        this->_stylist().std(*this);
+        if (ch.isPrintable) {
+            this->_stylist().std(*this);
+        } else {
+            this->_stylist().stdDim(*this);
+        }
+
         return;
     }
 
@@ -298,7 +311,11 @@ void PacketDataView::_setCustomStyle(const _Char& ch) const
         if (ch.isEventRecordFirst && _isEventRecordFirstPacketRegionEmphasized) {
             this->_stylist().packetDataViewEventRecordFirstPacketRegion(*this);
         } else if (const auto region = dynamic_cast<const ContentPacketRegion *>(&singlePacketRegion)) {
-            this->_stylist().std(*this);
+            if (ch.isPrintable) {
+                this->_stylist().std(*this);
+            } else {
+                this->_stylist().stdDim(*this);
+            }
         } else if (const auto region = dynamic_cast<const PaddingPacketRegion *>(&singlePacketRegion)) {
             this->_stylist().packetDataViewPadding(*this);
         } else if (const auto region = dynamic_cast<const ErrorPacketRegion *>(&singlePacketRegion)) {
@@ -371,36 +388,8 @@ void PacketDataView::_drawAllAsciiChars() const
         return;
     }
 
-    // clear
-    this->_stylist().std(*this);
-
-    for (Index i = 0; i < _rowSize.bytes(); ++i) {
-        this->_putChar({_asciiCharsX + i, i / _rowSize.bytes()}, ' ');
-    }
-
-    const auto curPacketRegionSeg = _state->currentPacketRegion()->segment();
-
-    for (const auto& asciiChar : _asciiChars) {
-        const auto intersectLower = std::max(curPacketRegionSeg.offsetInPacketBits(),
-                                             asciiChar.offsetInPacketBits);
-        const auto intersectUpper = std::min(curPacketRegionSeg.endOffsetInPacketBits(),
-                                             asciiChar.endOffsetInPacketBits());
-        const auto intersects = intersectUpper > intersectLower;
-
-        if (intersects) {
-            this->_stylist().packetDataViewAuxSelection(*this,
-                                                        Stylist::PacketDataViewSelectionType::CURRENT);
-        } else {
-            if (std::isprint(asciiChar.ch)) {
-                this->_stylist().std(*this);
-            } else {
-                this->_stylist().stdDim(*this);
-            }
-        }
-
-        const chtype ch = std::isprint(asciiChar.ch) ? asciiChar.ch : ACS_BULLET;
-
-        this->_putChar(asciiChar.pt, ch);
+    for (const auto& ch : _asciiChars) {
+        this->_drawChar(ch);
     }
 }
 
@@ -490,10 +479,6 @@ void PacketDataView::_setHexChars(std::vector<PacketRegion::SPC>& packetRegions)
             isEventRecordFirst = true;
         }
 
-        /*
-         * Iterate the whole bit array. This is just simpler: one out of
-         * four bits won't alter a character.
-         */
         for (Index indexInBitArray = 0;
                 indexInBitArray < packetRegion->segment().size();
                 ++indexInBitArray) {
@@ -520,6 +505,81 @@ void PacketDataView::_setHexChars(std::vector<PacketRegion::SPC>& packetRegions)
 
             // get existing character (created above)
             auto& ch = _chars[charIndex];
+
+            ch.isEventRecordFirst = isEventRecordFirst;
+
+            if (ch.packetRegions.empty() ||
+                    ch.packetRegions.back().get() != packetRegion.get()) {
+                // associate character to packet region
+                ch.packetRegions.push_back(packetRegion);
+            }
+        }
+    }
+}
+
+void PacketDataView::_setAsciiChars(std::vector<PacketRegion::SPC>& packetRegions)
+{
+    /*
+     * Similar strategy to what we're doing in _setHexChars(), only here
+     * the characters represent whole bytes, not nibbles.
+     */
+    assert((_baseOffsetInPacketBits & 7) == 0);
+
+    const auto& packet = _state->activePacketState().packet();
+
+    for (auto offsetInPacketBits = _baseOffsetInPacketBits;
+            offsetInPacketBits < _endOffsetInPacketBits; offsetInPacketBits += 8) {
+        _Char ch;
+
+        ch.pt.y = (offsetInPacketBits - _baseOffsetInPacketBits) /
+                  _rowSize.bits();
+        ch.pt.x = _asciiCharsX + (offsetInPacketBits % _rowSize.bits()) / 8;
+
+        const char value = static_cast<chtype>(*packet.data(offsetInPacketBits / 8));
+
+        if (!std::isprint(value)) {
+            ch.isPrintable = false;
+            ch.value = ACS_BULLET;
+        } else {
+            ch.value = value;
+        }
+
+        _asciiChars.push_back(std::move(ch));
+    }
+
+    const EventRecord *curEventRecord = nullptr;
+
+    for (auto& packetRegion : packetRegions) {
+        const auto bitArray = _state->activePacketState().packet().bitArray(*packetRegion);
+        const auto firstBitOffsetInPacket = packetRegion->segment().offsetInPacketBits();
+
+        bool isEventRecordFirst = false;
+
+        if (packetRegion->scope() && packetRegion->scope()->eventRecord() &&
+                packetRegion->scope()->eventRecord() != curEventRecord) {
+            curEventRecord = packetRegion->scope()->eventRecord();
+            isEventRecordFirst = true;
+        }
+
+        for (Index indexInBitArray = 0;
+                indexInBitArray < packetRegion->segment().size();
+                ++indexInBitArray) {
+            const auto bitOffsetInPacket = firstBitOffsetInPacket +
+                                           indexInBitArray;
+
+            if (bitOffsetInPacket < _baseOffsetInPacketBits ||
+                    bitOffsetInPacket >= _endOffsetInPacketBits) {
+                // not visible
+                continue;
+            }
+
+            const auto charIndex = ((bitOffsetInPacket / 8) -
+                                    (_baseOffsetInPacketBits / 8));
+
+            assert(charIndex < _asciiChars.size());
+
+            // get existing character (created above)
+            auto& ch = _asciiChars[charIndex];
 
             ch.isEventRecordFirst = isEventRecordFirst;
 
@@ -619,19 +679,7 @@ void PacketDataView::_setNumericCharsAndAsciiChars()
 
     // set ASCII chars
     _asciiChars.clear();
-    assert((_baseOffsetInPacketBits & 7) == 0);
-
-    for (auto offsetInPacketBits = _baseOffsetInPacketBits;
-            offsetInPacketBits < _endOffsetInPacketBits; offsetInPacketBits += 8) {
-        Point pt;
-
-        pt.y = (offsetInPacketBits - _baseOffsetInPacketBits) / _rowSize.bits();
-        pt.x = _asciiCharsX + (offsetInPacketBits % _rowSize.bits()) / 8;
-        _asciiChars.push_back(_AsciiChar {
-            offsetInPacketBits, pt,
-            static_cast<char>(*packet.data(offsetInPacketBits / 8))
-        });
-    }
+    this->_setAsciiChars(packetRegions);
 }
 
 void PacketDataView::pageDown()
