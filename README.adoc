@@ -1,0 +1,96 @@
+// Render with Asciidoctor
+
+= Jacques CTF
+v0.1
+Philippe Proulx
+
+**_Jacques{nbsp}CTF_** is a https://diamon.org/ctf/[CTF] trace inspection
+tool with a text (terminal) user interface.
+
+Like Jacques Cartier, Jacques{nbsp}CTF can explore the sea of bits of a
+CTF data stream file and discover unsuspected lands of problems within
+packets.
+
+
+== Features
+
+* Full hexadecimal and binary packet data inspection with:
+** Current data type or event record type (metadata) with highlight.
+** ASCII equivalent of data bytes (like any typical hex editor).
+** Padding regions shown with a different color.
+** Decoding error region clearly shown, if any, with textual details.
+** Current datum path (metadata), size, byte order, and decoded value.
+** Current event record details:
+*** Index within packet.
+*** Offset within packet.
+*** Size.
+*** Type name.
+*** Type ID.
+*** Timestamp (first).
+** Custom bookmarks to mark regions and return to them.
+** Search or go to a region by:
+*** Packet index within its data stream file.
+*** Packet sequence number.
+*** Event record index within its packet.
+*** Offset within packet or data stream file.
+*** Timestamp.
+*** Event record with type name.
+*** Event record with type ID.
+* Anywhere in the application, you can change the current timestamp
+  format (full date and time, nanoseconds since origin, or cycles) or
+  size format (B/KiB/MiB/GiB, bytes and extra bits, and bits).
+* Packet table with details:
+** Index within data stream file.
+** Offset within data stream file.
+** Total size.
+** Content size.
+** Beginning and end timestamps, and duration.
+** Event record count.
+** Data stream type and data stream IDs.
+** Sequence number.
+** Discarded event record counter value.
+* Data stream file table with details:
+** Path.
+** File size.
+** Packet count.
+** Beginning and end timestamps, and duration.
+** Data stream type and data stream IDs.
+* Trace details:
+** Number of data stream files, data streams, and packets.
+** Effective and expected packet total and content sizes.
+** Intersection and disjoint set timestamps and durations.
+** Metadata stream information.
+* Data type (metadata) explorer:
+** Data stream types (packet header and context, event record header and
+   first context).
+** Event record types (event record header, contexts, and payload).
+
+
+== Build and install
+
+Make sure you have the build time requirements:
+
+* Linux/Unix platform
+* https://cmake.org/[CMake] ≥ 3.1.0
+* pass:[C++14] compiler
+* http://www.boost.org/[Boost] ≥ 1.58
+* https://www.gnu.org/software/ncurses/[ncurses]
+* Latest version of https://github.com/eepp/yactfr[yactfr]
+
+.Build and install Jacques CTF from source
+----
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=release ..
+make
+make install
+----
+
+You can specify your favorite C and pass:[C++] compilers with the usual
+`CC` and `CXX` environment variables when you run `cmake`, and
+additional options with `CFLAGS` and `CXXFLAGS`.
+
+Specify `-DCMAKE_INSTALL_PREFIX=_PREFIX_` to `cmake` to install yactfr
+to the `_PREFIX_` directory instead of the default `/usr/local`
+directory.
+
