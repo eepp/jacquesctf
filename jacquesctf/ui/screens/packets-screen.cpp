@@ -165,14 +165,14 @@ KeyHandlingReaction PacketsScreen::_handleKey(const int key)
 
         if (!query) {
             // canceled or invalid
-            _ptView->redraw();
+            this->_redraw();
             break;
         }
 
         this->_state().search(*query);
 
         _lastQuery = std::move(query);
-        _ptView->redraw();
+        this->_redraw();
         break;
     }
 

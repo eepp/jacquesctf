@@ -469,7 +469,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 
         if (!query) {
             // canceled or invalid
-            _ertView->redraw();
+            this->_redraw();
             break;
         }
 
@@ -482,6 +482,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         this->_snapshotState();
 
         _lastQuery = std::move(query);
+        this->_redraw();
         this->_tryShowDecodingError();
         break;
     }
