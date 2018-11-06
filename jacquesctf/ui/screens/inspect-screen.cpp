@@ -309,10 +309,12 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     case '9':
     case KEY_BACKSPACE:
         this->_goBack();
+        this->_tryShowDecodingError();
         break;
 
     case '0':
         this->_goForward();
+        this->_tryShowDecodingError();
         break;
 
     case '#':
@@ -480,7 +482,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         this->_snapshotState();
 
         _lastQuery = std::move(query);
-        _ertView->redraw();
+        this->_tryShowDecodingError();
         break;
     }
 
@@ -491,7 +493,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 
         this->_state().search(*_lastQuery);
         this->_snapshotState();
-        _ertView->redraw();
+        this->_tryShowDecodingError();
         break;
 
     case '-':
