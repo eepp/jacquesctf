@@ -226,6 +226,23 @@ void PacketDataView::_setDataXAndRowSize()
     _rowSize = DataSize::fromBytes(bytesPerRow);
 }
 
+void PacketDataView::_drawSeparators() const
+{
+    this->_stylist().stdDim(*this);
+
+    for (Index y = 0; y < this->contentRect().h; ++y) {
+        this->_putChar({_dataX - 1, y}, ACS_VLINE);
+    }
+
+    if (!_isAsciiVisible) {
+        return;
+    }
+
+    for (Index y = 0; y < this->contentRect().h; ++y) {
+        this->_putChar({_asciiCharsX - 1, y}, ACS_VLINE);
+    }
+}
+
 void PacketDataView::_drawOffsets() const
 {
     if (!_state->hasActivePacketState()) {
@@ -402,6 +419,7 @@ void PacketDataView::_redrawContent()
     }
 
     this->_drawOffsets();
+    this->_drawSeparators();
     this->_setNumericCharsAndAsciiChars();
     this->_drawAllNumericChars();
     this->_drawAllAsciiChars();
@@ -550,7 +568,6 @@ void PacketDataView::_setAsciiChars(std::vector<PacketRegion::SPC>& packetRegion
     const EventRecord *curEventRecord = nullptr;
 
     for (auto& packetRegion : packetRegions) {
-        const auto bitArray = _state->activePacketState().packet().bitArray(*packetRegion);
         const auto firstBitOffsetInPacket = packetRegion->segment().offsetInPacketBits();
 
         bool isEventRecordFirst = false;

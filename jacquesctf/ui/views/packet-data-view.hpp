@@ -119,6 +119,7 @@ private:
     void _stateChanged(const Message& msg) override;
     void _redrawContent() override;
     void _resized() override;
+    void _drawSeparators() const;
     void _drawOffsets() const;
     void _setCustomStyle(const _Char& ch) const;
     void _drawChar(const _Char& ch) const;
