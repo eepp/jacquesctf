@@ -115,26 +115,29 @@ void PacketDataView::_setPrevCurNextOffsetInPacketBits()
 
 bool PacketDataView::_isCharSelected(const _Char& ch) const
 {
-    const auto selectedPacketRegionIt = std::find_if(std::begin(ch.packetRegions),
-                                                     std::end(ch.packetRegions),
-                                                     [this](const auto& packetRegion) {
-        return packetRegion->segment().offsetInPacketBits() == _curOffsetInPacketBits;
-    });
+    auto selectedPacketRegionIt = ch.packetRegionIt(_curOffsetInPacketBits);
 
     if (selectedPacketRegionIt != std::end(ch.packetRegions)) {
         return true;
     }
 
-    if (_isHex) {
-        return false;
+    if (_prevOffsetInPacketBits) {
+        selectedPacketRegionIt = ch.packetRegionIt(*_prevOffsetInPacketBits);
+
+        if (selectedPacketRegionIt != std::end(ch.packetRegions)) {
+            return true;
+        }
     }
 
-    const auto chSingleOffsetInPacketBits = ch.packetRegions.front()->segment().offsetInPacketBits();
+    if (_nextOffsetInPacketBits) {
+        selectedPacketRegionIt = ch.packetRegionIt(*_nextOffsetInPacketBits);
 
-    return (_prevOffsetInPacketBits &&
-            chSingleOffsetInPacketBits == *_prevOffsetInPacketBits) ||
-           (_nextOffsetInPacketBits &&
-            chSingleOffsetInPacketBits == *_nextOffsetInPacketBits);
+        if (selectedPacketRegionIt != std::end(ch.packetRegions)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void PacketDataView::_updateSelection()
@@ -258,9 +261,12 @@ void PacketDataView::_drawOffsets() const
     }
 }
 
-void PacketDataView::_setBookmarkStyle(const _Char& ch) const
+void PacketDataView::_setCustomStyle(const _Char& ch) const
 {
-    assert(!_isHex);
+    if (ch.packetRegions.size() != 1) {
+        this->_stylist().std(*this);
+        return;
+    }
 
     const auto it = _bookmarks->find(_state->activeDataStreamFileStateIndex());
     const InspectScreen::PacketBookmarks *bookmarks = nullptr;
@@ -305,23 +311,13 @@ void PacketDataView::_setBookmarkStyle(const _Char& ch) const
 
 void PacketDataView::_drawUnselectedChar(const _Char& ch) const
 {
-    if (_isHex) {
-        this->_stylist().std(*this);
-    } else {
-        this->_setBookmarkStyle(ch);
-    }
-
+    this->_setCustomStyle(ch);
     this->_putChar(ch.pt, ch.value);
 }
 
 void PacketDataView::_drawChar(const _Char& ch) const
 {
-    const auto& singlePacketRegionOffsetBits = ch.packetRegions.front()->segment().offsetInPacketBits();
-    const auto selectedPacketRegionIt = std::find_if(std::begin(ch.packetRegions),
-                                                     std::end(ch.packetRegions),
-                                                     [this](const auto& packetRegion) {
-        return packetRegion->segment().offsetInPacketBits() == _curOffsetInPacketBits;
-    });
+    auto selectedPacketRegionIt = ch.packetRegionIt(_curOffsetInPacketBits);
 
     if (selectedPacketRegionIt != std::end(ch.packetRegions)) {
         if (ch.packetRegions.size() == 1) {
@@ -331,19 +327,35 @@ void PacketDataView::_drawChar(const _Char& ch) const
             this->_stylist().packetDataViewAuxSelection(*this,
                                                         Stylist::PacketDataViewSelectionType::CURRENT);
         }
-    } else if (!_isHex && _prevOffsetInPacketBits &&
-            singlePacketRegionOffsetBits == *_prevOffsetInPacketBits) {
-        this->_stylist().packetDataViewSelection(*this,
-                                                 Stylist::PacketDataViewSelectionType::PREVIOUS);
-    } else if (!_isHex && _nextOffsetInPacketBits &&
-            singlePacketRegionOffsetBits == *_nextOffsetInPacketBits) {
-        this->_stylist().packetDataViewSelection(*this,
-                                                 Stylist::PacketDataViewSelectionType::NEXT);
-    } else {
-        this->_drawUnselectedChar(ch);
+
+        this->_putChar(ch.pt, ch.value);
+        return;
     }
 
-    this->_putChar(ch.pt, ch.value);
+    if (ch.packetRegions.size() != 1) {
+        this->_drawUnselectedChar(ch);
+        return;
+    }
+
+    const auto& singlePacketRegion = *ch.packetRegions.front();
+
+    if (_prevOffsetInPacketBits &&
+            *_prevOffsetInPacketBits == singlePacketRegion.segment().offsetInPacketBits()) {
+        this->_stylist().packetDataViewSelection(*this,
+                                                 Stylist::PacketDataViewSelectionType::PREVIOUS);
+        this->_putChar(ch.pt, ch.value);
+        return;
+    }
+
+    if (_nextOffsetInPacketBits &&
+            *_nextOffsetInPacketBits == singlePacketRegion.segment().offsetInPacketBits()) {
+        this->_stylist().packetDataViewSelection(*this,
+                                                 Stylist::PacketDataViewSelectionType::NEXT);
+        this->_putChar(ch.pt, ch.value);
+        return;
+    }
+
+    this->_drawUnselectedChar(ch);
 }
 
 void PacketDataView::_drawAllNumericChars() const
@@ -512,7 +524,7 @@ void PacketDataView::_setHexChars(std::vector<PacketRegion::SPC>& packetRegions)
             ch.isEventRecordFirst = isEventRecordFirst;
 
             if (ch.packetRegions.empty() ||
-                    ch.packetRegions.front().get() != packetRegion.get()) {
+                    ch.packetRegions.back().get() != packetRegion.get()) {
                 // associate character to packet region
                 ch.packetRegions.push_back(packetRegion);
             }

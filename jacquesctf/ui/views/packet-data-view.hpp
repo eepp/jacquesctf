@@ -97,6 +97,15 @@ public:
 private:
     struct _Char
     {
+        auto packetRegionIt(const Index offsetInPacketBits) const
+        {
+            return std::find_if(std::begin(packetRegions),
+                                std::end(packetRegions),
+                                [offsetInPacketBits](const auto& packetRegion) {
+                return packetRegion->segment().offsetInPacketBits() == offsetInPacketBits;
+            });
+        }
+
         Point pt;
         chtype value;
         std::vector<PacketRegion::SPC> packetRegions;
@@ -124,7 +133,7 @@ private:
     void _redrawContent() override;
     void _resized() override;
     void _drawOffsets() const;
-    void _setBookmarkStyle(const _Char& ch) const;
+    void _setCustomStyle(const _Char& ch) const;
     void _drawChar(const _Char& ch) const;
     void _drawUnselectedChar(const _Char& ch) const;
     void _drawAllNumericChars() const;
