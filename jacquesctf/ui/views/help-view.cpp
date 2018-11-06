@@ -53,7 +53,7 @@ void HelpView::_buildRows()
         _KeyRow {"a", "Show/hide ASCII characters"},
         _KeyRow {"x", "Show packet data in binary or hexadecimal"},
         _KeyRow {"E", "Toggle event record's first region emphasis"},
-        _KeyRow {"#", "Show decoding error, if any"},
+        _KeyRow {"#, `", "Show decoding error, if any"},
         _KeyRow {"Left", "Go to previous region"},
         _KeyRow {"Right", "Go to next region"},
         _KeyRow {"Up", "Go to region on a preceding row"},
