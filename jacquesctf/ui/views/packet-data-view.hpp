@@ -25,41 +25,24 @@ namespace jacques {
  * The view has a current base offset which is the offset of the first
  * visible bit/nibble (top left), if any.
  *
- * The view contains a current vector of zones. A zone is a vector of
- * zone characters, and it is also linked to a packet region. A zone
- * character is a point and a character (e.g., `0`, `1`, `5`, `c`).
- * Therefore a zone contains which exact characters to draw on the view
- * and their value.
+ * The view contains a current vector of character objects. A character
+ * is linked to one or more packet regions. A character contains a point
+ * and a value to print (e.g., `0`, `1`, `5`, `c`).
  *
- * The view builds zones from the current packet's packet regions with
- * _setZonesAndAsciiChars(). This method takes the current base offset
- * into account.
+ * The view builds character objects from the current packet's packet
+ * regions with _setNumericCharsAndAsciiChars(). This method takes the
+ * current base offset into account.
  *
- * The order of the current zones is the same as their underlying packet
- * regions. However, because we're showing bytes with the positional
- * notation (where the byte's LSB is the right-most bit), little endian
- * packet regions can lead to holes within zones. For example, in
- * binary:
+ * A character can be linked to more than one packet regions in
+ * hexadecimal display mode (when `_isHex` is true). This is because a
+ * single nibble can contain up to four individual bits which belong to
+ * different packet regions.
  *
- *     Bits: 11010010 00101001 10010010 11110101
- *     Zone: 32221111 33333333 44433333 55544444
- *
- * The first zone is on the right of the first byte, and the following
- * zone is on its left. The third zone is on the right of the first
- * byte, on all the second byte, and on the right of the third byte.
- *
- * Of course, if we were to make the left-most byte's bit the LSB, the
- * zones would be naturally ordered:
- *
- *     Bits: 01001011 10010100 01001001 10101111
- *     Zone: 11112223 33333333 33333444 44444555
- *
- * However:
- *
- * 1. Most software developers and computer engineers are used to
- *    the LSB being the byte's right-most bit.
- * 2. In a CTF data stream, the byte order can change from one byte to
- *    the other: in this case, big endian zones would look odd.
+ * ASCII characters use the same character class. An ASCII character can
+ * have its `isPrintable` property set to false, in which case the view
+ * must print an alternative (printable) character with a different
+ * style. Hex editors typically use `.` for this (we use `ACS_BULLET`, a
+ * centered dot).
  */
 class PacketDataView :
     public View
