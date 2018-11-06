@@ -228,9 +228,16 @@ void PacketDataView::_setDataXAndRowSize()
 
 void PacketDataView::_drawSeparators() const
 {
+    if (!_state->hasActivePacketState()) {
+        return;
+    }
+
+    const auto yEnd = (_endOffsetInPacketBits - _baseOffsetInPacketBits) /
+                      _rowSize.bits();
+
     this->_stylist().stdDim(*this);
 
-    for (Index y = 0; y < this->contentRect().h; ++y) {
+    for (Index y = 0; y < yEnd; ++y) {
         this->_putChar({_dataX - 1, y}, ACS_VLINE);
     }
 
@@ -238,7 +245,7 @@ void PacketDataView::_drawSeparators() const
         return;
     }
 
-    for (Index y = 0; y < this->contentRect().h; ++y) {
+    for (Index y = 0; y < yEnd; ++y) {
         this->_putChar({_asciiCharsX - 1, y}, ACS_VLINE);
     }
 }
