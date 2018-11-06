@@ -549,6 +549,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     _pdView->refresh();
     _ertView->refresh();
     _priView->refresh();
+    _sdteView->refresh();
 
     /*
      * Touch because the content could be unchanged from the last
