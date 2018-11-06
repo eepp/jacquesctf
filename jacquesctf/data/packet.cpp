@@ -540,7 +540,7 @@ void Packet::_cachePacketRegionsFromOneErAtCurIt(const Index indexInPacket)
     using ElemKind = yactfr::Element::Kind;
 
     assert(_it->kind() == ElemKind::EVENT_RECORD_BEGINNING);
-    this->_cachePacketRegionsAtCurIt(yactfr::Element::Kind::EVENT_RECORD_END,
+    this->_cachePacketRegionsAtCurIt(ElemKind::EVENT_RECORD_END,
                                      true, true, indexInPacket);
 }
 

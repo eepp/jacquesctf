@@ -439,7 +439,7 @@ static inline chtype charFromNibble(const std::uint8_t nibble)
     }
 }
 
-void PacketDataView::_setHexChars(std::vector<PacketRegion::SPC>& packetRegions)
+void PacketDataView::_setHexChars()
 {
     /*
      * The strategy here is to create all the nibble characters first,
@@ -485,7 +485,7 @@ void PacketDataView::_setHexChars(std::vector<PacketRegion::SPC>& packetRegions)
 
     const EventRecord *curEventRecord = nullptr;
 
-    for (auto& packetRegion : packetRegions) {
+    for (auto& packetRegion : _packetRegions) {
         const auto bitArray = _state->activePacketState().packet().bitArray(*packetRegion);
         const auto firstBitOffsetInPacket = packetRegion->segment().offsetInPacketBits();
 
@@ -527,15 +527,15 @@ void PacketDataView::_setHexChars(std::vector<PacketRegion::SPC>& packetRegions)
             ch.isEventRecordFirst = isEventRecordFirst;
 
             if (ch.packetRegions.empty() ||
-                    ch.packetRegions.back().get() != packetRegion.get()) {
+                    ch.packetRegions.back() != packetRegion.get()) {
                 // associate character to packet region
-                ch.packetRegions.push_back(packetRegion);
+                ch.packetRegions.push_back(packetRegion.get());
             }
         }
     }
 }
 
-void PacketDataView::_setAsciiChars(std::vector<PacketRegion::SPC>& packetRegions)
+void PacketDataView::_setAsciiChars()
 {
     /*
      * Similar strategy to what we're doing in _setHexChars(), only here
@@ -567,7 +567,7 @@ void PacketDataView::_setAsciiChars(std::vector<PacketRegion::SPC>& packetRegion
 
     const EventRecord *curEventRecord = nullptr;
 
-    for (auto& packetRegion : packetRegions) {
+    for (const auto& packetRegion : _packetRegions) {
         const auto firstBitOffsetInPacket = packetRegion->segment().offsetInPacketBits();
 
         bool isEventRecordFirst = false;
@@ -601,19 +601,19 @@ void PacketDataView::_setAsciiChars(std::vector<PacketRegion::SPC>& packetRegion
             ch.isEventRecordFirst = isEventRecordFirst;
 
             if (ch.packetRegions.empty() ||
-                    ch.packetRegions.back().get() != packetRegion.get()) {
+                    ch.packetRegions.back() != packetRegion.get()) {
                 // associate character to packet region
-                ch.packetRegions.push_back(packetRegion);
+                ch.packetRegions.push_back(packetRegion.get());
             }
         }
     }
 }
 
-void PacketDataView::_setBinaryChars(std::vector<PacketRegion::SPC>& packetRegions)
+void PacketDataView::_setBinaryChars()
 {
     const EventRecord *curEventRecord = nullptr;
 
-    for (auto& packetRegion : packetRegions) {
+    for (const auto& packetRegion : _packetRegions) {
         const auto bitArray = _state->activePacketState().packet().bitArray(*packetRegion);
         const auto firstBitOffsetInPacket = packetRegion->segment().offsetInPacketBits();
         bool isEventRecordFirst = false;
@@ -652,7 +652,7 @@ void PacketDataView::_setBinaryChars(std::vector<PacketRegion::SPC>& packetRegio
              *                              ^ + 7 - bitLoc.bitIndexInByte [+ 7 - 2]
              */
             ch.pt.x = _dataX + byteIndex * 9 + 7 - bitLoc.bitIndexInByte();
-            ch.packetRegions.push_back(packetRegion);
+            ch.packetRegions.push_back(packetRegion.get());
             _chars.push_back(std::move(ch));
         }
     }
@@ -682,21 +682,22 @@ void PacketDataView::_setNumericCharsAndAsciiChars()
         startingPacketRegion = &basePacketRegion;
     }
 
-    packet.appendPacketRegions(packetRegions,
+    _packetRegions.clear();
+    packet.appendPacketRegions(_packetRegions,
                                startingPacketRegion->segment().offsetInPacketBits(),
                                _endOffsetInPacketBits);
-    assert(!packetRegions.empty());
+    assert(!_packetRegions.empty());
     _chars.clear();
 
     if (_isHex) {
-        this->_setHexChars(packetRegions);
+        this->_setHexChars();
     } else {
-        this->_setBinaryChars(packetRegions);
+        this->_setBinaryChars();
     }
 
     // set ASCII chars
     _asciiChars.clear();
-    this->_setAsciiChars(packetRegions);
+    this->_setAsciiChars();
 }
 
 void PacketDataView::pageDown()

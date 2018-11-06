@@ -108,7 +108,7 @@ private:
 
         Point pt;
         chtype value;
-        std::vector<PacketRegion::SPC> packetRegions;
+        std::vector<const PacketRegion *> packetRegions;
         bool isEventRecordFirst = false;
         bool isPrintable = true;
     };
@@ -129,9 +129,9 @@ private:
     bool _isCharSelected(const _Char& ch) const;
     void _setDataXAndRowSize();
     void _updateSelection();
-    void _setHexChars(std::vector<PacketRegion::SPC>& packetRegions);
-    void _setBinaryChars(std::vector<PacketRegion::SPC>& packetRegions);
-    void _setAsciiChars(std::vector<PacketRegion::SPC>& packetRegions);
+    void _setHexChars();
+    void _setBinaryChars();
+    void _setAsciiChars();
     void _setNumericCharsAndAsciiChars();
     void _setPrevCurNextOffsetInPacketBits();
     void _setBaseAndEndOffsetInPacketBitsFromOffset(Index offsetInPacketBits);
@@ -189,6 +189,9 @@ private:
 
     // current ASCII characters
     _Chars _asciiChars;
+
+    // current packet regions (owned here)
+    std::vector<PacketRegion::SPC> _packetRegions;
 
     boost::optional<Index> _prevOffsetInPacketBits;
     Index _curOffsetInPacketBits = 0;
