@@ -550,6 +550,7 @@ void PacketDataView::_setBinaryChars(std::vector<PacketRegion::SPC>& packetRegio
             _Char ch;
             const auto bitLoc = bitArray.bitLocation(indexInBitArray);
 
+            ch.isEventRecordFirst = isEventRecordFirst;
             ch.value = '0' + bitArray[bitLoc];
             ch.pt.y = (bitOffsetInPacket - _baseOffsetInPacketBits) /
                       _rowSize.bits();

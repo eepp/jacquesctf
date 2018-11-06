@@ -146,39 +146,33 @@ void PacketRegionInfoView::_redrawContent()
     // value
     if (cPacketRegion && cPacketRegion->value()) {
         const auto& varVal = *cPacketRegion->value();
-        std::string intFmt;
-
-        if (cPacketRegion->dataType().isIntType()) {
-            const auto& intType = *cPacketRegion->dataType().asIntType();
-
-            if (intType.isUnsignedIntType()) {
-                switch (intType.displayBase()) {
-                case yactfr::DisplayBase::OCTAL:
-                    intFmt = "0%" PRIo64;
-                    break;
-
-                case yactfr::DisplayBase::HEXADECIMAL:
-                    intFmt = "0x%" PRIx64;
-                    break;
-
-                default:
-                    intFmt = "%" PRIu64;
-                    break;
-                }
-            } else {
-                intFmt = "%" PRId64;
-            }
-        }
 
         this->_safePrint("    ");
         this->_stylist().packetRegionInfoViewValue(*this);
 
         if (const auto val = boost::get<std::int64_t>(&varVal)) {
-            assert(!intFmt.empty());
-            this->_safePrint(intFmt.c_str(), *val);
+            this->_safePrint("%s", utils::sepNumber(static_cast<long long>(*val), ',').c_str());
         } else if (const auto val = boost::get<std::uint64_t>(&varVal)) {
-            assert(!intFmt.empty());
-            this->_safePrint(intFmt.c_str(), *val);
+            std::string intFmt;
+
+            switch (cPacketRegion->dataType().asIntType()->displayBase()) {
+            case yactfr::DisplayBase::OCTAL:
+                intFmt = "0%" PRIo64;
+                break;
+
+            case yactfr::DisplayBase::HEXADECIMAL:
+                intFmt = "0x%" PRIx64;
+                break;
+
+            default:
+                break;
+            }
+
+            if (intFmt.empty()) {
+                this->_safePrint("%s", utils::sepNumber(static_cast<unsigned long long>(*val), ',').c_str());
+            } else {
+                this->_safePrint(intFmt.c_str(), *val);
+            }
         } else if (const auto val = boost::get<double>(&varVal)) {
             this->_safePrint("%f", *val);
         } else if (const auto val = boost::get<std::string>(&varVal)) {
