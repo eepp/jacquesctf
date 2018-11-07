@@ -96,6 +96,9 @@ void SearchInputView::_drawFormatText(const std::string& text)
             this->_appendChar(*it);
             ++it;
         }
+    } else if (*it == '@') {
+        this->_appendChar(*it);
+        ++it;
     } else if (*it == '$') {
         this->_appendChar(*it);
         ++it;

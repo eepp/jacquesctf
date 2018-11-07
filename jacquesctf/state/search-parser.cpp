@@ -109,6 +109,7 @@ std::unique_ptr<const SearchQuery> SearchParser::parse(const std::string& input)
 
     switch (*it) {
     case '#':
+    case '@':
         ret = this->_parseIndex(it, std::end(input), isDiff, mul);
         break;
 
@@ -223,7 +224,23 @@ std::unique_ptr<const SearchQuery> SearchParser::_parseIndex(std::string::const_
                                                              const bool isDiff,
                                                              const long long mul)
 {
-    // skip '#'
+    if (*it == '@') {
+        ++it;
+
+        if (it == end) {
+            return nullptr;
+        }
+
+        // event record index
+        const auto value = this->_parseInt(it, end);
+
+        if (!value) {
+            return nullptr;
+        }
+
+        return std::make_unique<const EventRecordIndexSearchQuery>(isDiff, mul * *value);
+    }
+
     ++it;
 
     if (it == end) {
@@ -235,23 +252,6 @@ std::unique_ptr<const SearchQuery> SearchParser::_parseIndex(std::string::const_
 
         if (it == end) {
             return nullptr;
-        }
-
-        if (*it == '#') {
-            ++it;
-
-            if (it == end) {
-                return nullptr;
-            }
-
-            // event record index
-            const auto value = this->_parseInt(it, end);
-
-            if (!value) {
-                return nullptr;
-            }
-
-            return std::make_unique<const EventRecordIndexSearchQuery>(isDiff, mul * *value);
         }
 
         // packet sequence number
