@@ -162,9 +162,11 @@ void PacketDataView::_updateSelection()
         }
     }
 
-    for (const auto& ch : _asciiChars) {
-        if (this->_isCharSelected(ch)) {
-            this->_drawUnselectedChar(ch);
+    if (_isAsciiVisible) {
+        for (const auto& ch : _asciiChars) {
+            if (this->_isCharSelected(ch)) {
+                this->_drawUnselectedChar(ch);
+            }
         }
     }
 
@@ -178,9 +180,11 @@ void PacketDataView::_updateSelection()
         }
     }
 
-    for (const auto& ch : _asciiChars) {
-        if (this->_isCharSelected(ch)) {
-            this->_drawChar(ch);
+    if (_isAsciiVisible) {
+        for (const auto& ch : _asciiChars) {
+            if (this->_isCharSelected(ch)) {
+                this->_drawChar(ch);
+            }
         }
     }
 
