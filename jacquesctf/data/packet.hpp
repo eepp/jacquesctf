@@ -143,8 +143,8 @@ public:
     const PacketRegion *previousPacketRegion(const PacketRegion& packetRegion);
     const PacketRegion& firstPacketRegion();
     const PacketRegion& lastPacketRegion();
-    const EventRecord *eventRecordAtOrAfterNsFromOrigin(long long nsFromOrigin);
-    const EventRecord *eventRecordAtOrAfterCycles(unsigned long long cycles);
+    const EventRecord *eventRecordBeforeOrAtNsFromOrigin(long long nsFromOrigin);
+    const EventRecord *eventRecordBeforeOrAtCycles(unsigned long long cycles);
 
     BitArray bitArray(const PacketSegment& segment) const noexcept
     {
@@ -429,16 +429,31 @@ private:
         regions.push_back(std::static_pointer_cast<const PacketRegion>(*it));
     }
 
-    template <typename CpNearestFuncT, typename TsGeCompFuncT, typename ValueT>
-    const EventRecord *_eventRecordAtOrAfterTs(CpNearestFuncT&& cpNearestFunc,
-                                               TsGeCompFuncT&& tsGeCompFunc,
-                                               const ValueT value)
+    template <typename CpNearestFuncT, typename GetProcFuncT, typename PropT>
+    const EventRecord *_eventRecordBeforeOrAtTs(CpNearestFuncT&& cpNearestFunc,
+                                                GetProcFuncT&& getProcFuncT,
+                                                const PropT prop)
     {
         if (!_metadata->isCorrelatable()) {
             return nullptr;
         }
 
-        const auto cp = std::forward<CpNearestFuncT>(cpNearestFunc)(value);
+        if (_checkpoints.eventRecordCount() == 0) {
+            return nullptr;
+        }
+
+        const auto eventRecord = _checkpoints.lastEventRecord();
+
+        assert(eventRecord);
+
+        if (eventRecord->firstTimestamp() && _indexEntry->endTimestamp() &&
+                prop >= std::forward<GetProcFuncT>(getProcFuncT)(*eventRecord->firstTimestamp()) &&
+                prop < std::forward<GetProcFuncT>(getProcFuncT)(*_indexEntry->endTimestamp())) {
+            // special case: between last event record and end of packet
+            return eventRecord.get();
+        }
+
+        const auto cp = std::forward<CpNearestFuncT>(cpNearestFunc)(prop);
 
         if (!cp) {
             return nullptr;
@@ -470,8 +485,18 @@ private:
 
                 firstTs = Timestamp {elem};
 
-                if (std::forward<TsGeCompFuncT>(tsGeCompFunc)(*firstTs, value)) {
+                const auto erProp = std::forward<GetProcFuncT>(getProcFuncT)(*firstTs);
+
+                if (erProp == prop) {
                     indexInPacket = curIndex;
+                    _it = _endIt;
+                } else if (erProp > prop) {
+                    // we're looking for the previous one
+                    if (curIndex == 0) {
+                        return nullptr;
+                    }
+
+                    indexInPacket = curIndex - 1;
                     _it = _endIt;
                 } else {
                     ++_it;

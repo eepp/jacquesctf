@@ -694,28 +694,28 @@ const PacketRegion *Packet::previousPacketRegion(const PacketRegion& packetRegio
     return &this->packetRegionAtOffsetInPacketBits(packetRegion.segment().offsetInPacketBits() - 1);
 }
 
-const EventRecord *Packet::eventRecordAtOrAfterNsFromOrigin(const long long nsFromOrigin)
+const EventRecord *Packet::eventRecordBeforeOrAtNsFromOrigin(const long long nsFromOrigin)
 {
     const auto cpNearestFunc = [this](const long long nsFromOrigin) -> const PacketCheckpoints::Checkpoint * {
         return _checkpoints.nearestCheckpointBeforeOrAtNsFromOrigin(nsFromOrigin);
     };
-    const auto tsGeCompFunc = [](const Timestamp& ts, const long long nsFromOrigin) -> bool {
-        return ts.nsFromOrigin() >= nsFromOrigin;
+    const auto getPropFunc = [](const Timestamp& ts) -> long long {
+        return ts.nsFromOrigin();
     };
 
-    return this->_eventRecordAtOrAfterTs(cpNearestFunc, tsGeCompFunc, nsFromOrigin);
+    return this->_eventRecordBeforeOrAtTs(cpNearestFunc, getPropFunc, nsFromOrigin);
 }
 
-const EventRecord *Packet::eventRecordAtOrAfterCycles(const unsigned long long cycles)
+const EventRecord *Packet::eventRecordBeforeOrAtCycles(const unsigned long long cycles)
 {
     const auto cpNearestFunc = [this](const unsigned long long cycles) -> const PacketCheckpoints::Checkpoint * {
         return _checkpoints.nearestCheckpointBeforeOrAtCycles(cycles);
     };
-    const auto tsGeCompFunc = [](const Timestamp& ts, const unsigned long long cycles) -> bool {
-        return ts.cycles() >= cycles;
+    const auto getPropFunc = [](const Timestamp& ts) -> unsigned long long {
+        return ts.cycles();
     };
 
-    return this->_eventRecordAtOrAfterTs(cpNearestFunc, tsGeCompFunc, cycles);
+    return this->_eventRecordBeforeOrAtTs(cpNearestFunc, getPropFunc, cycles);
 }
 
 } // namespace jacques

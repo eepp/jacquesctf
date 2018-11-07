@@ -322,7 +322,7 @@ const PacketIndexEntry *DataStreamFile::packetIndexEntryContainingNsFromOrigin(c
     const auto valueInTsFunc = [](const long long nsFromOrigin,
                                   const PacketIndexEntry& entry) -> bool {
         return nsFromOrigin >= entry.beginningTimestamp()->nsFromOrigin() &&
-               nsFromOrigin <= entry.endTimestamp()->nsFromOrigin();
+               nsFromOrigin < entry.endTimestamp()->nsFromOrigin();
     };
 
     return this->_packetIndexEntryContainingValue(tsLtCompFunc, valueInTsFunc,
@@ -338,7 +338,7 @@ const PacketIndexEntry *DataStreamFile::packetIndexEntryContainingCycles(const u
     const auto valueInTsFunc = [](const unsigned long long cycles,
                                   const PacketIndexEntry& entry) -> bool {
         return cycles >= entry.beginningTimestamp()->cycles() &&
-               cycles <= entry.endTimestamp()->cycles();
+               cycles < entry.endTimestamp()->cycles();
     };
 
     return this->_packetIndexEntryContainingValue(tsLtCompFunc, valueInTsFunc,

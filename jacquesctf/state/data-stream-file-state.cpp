@@ -432,6 +432,11 @@ bool DataStreamFileState::search(const SearchQuery& query)
             }
         }
 
+        if (sQuery->unit() == TimestampSearchQuery::Unit::CYCLE &&
+                reqValue < 0) {
+            return false;
+        }
+
         const PacketIndexEntry *indexEntry = nullptr;
 
         switch (sQuery->unit()) {
@@ -450,15 +455,20 @@ bool DataStreamFileState::search(const SearchQuery& query)
 
         auto& packet = _dataStreamFile->packetAtIndex(indexEntry->indexInDataStream(),
                                                       *_packetCheckpointsBuildListener);
+
+        if (packet.eventRecordCount() == 0) {
+            return false;
+        }
+
         const EventRecord *eventRecord = nullptr;
 
         switch (sQuery->unit()) {
         case TimestampSearchQuery::Unit::NS:
-            eventRecord = packet.eventRecordAtOrAfterNsFromOrigin(reqValue);
+            eventRecord = packet.eventRecordBeforeOrAtNsFromOrigin(reqValue);
             break;
 
         case TimestampSearchQuery::Unit::CYCLE:
-            eventRecord = packet.eventRecordAtOrAfterCycles(static_cast<unsigned long long>(reqValue));
+            eventRecord = packet.eventRecordBeforeOrAtCycles(static_cast<unsigned long long>(reqValue));
             break;
         }
 
