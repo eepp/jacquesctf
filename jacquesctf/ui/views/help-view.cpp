@@ -160,7 +160,8 @@ void HelpView::_buildRows()
         _EmptyRow {},
         _SectionRow {"Search syntax"},
         _TextRow {"X is a constant integer which you can write in decimal, hexadecimal"},
-        _TextRow {"(`0x` prefix), or octal (`0` prefix)."},
+        _TextRow {"(`0x` prefix), or octal (`0` prefix). Commas (`,`) are ignored in"},
+        _TextRow {"decimal constant integers (for example, `192,283,038`)."},
         _EmptyRow {},
         _SearchSyntaxRow {"Packet at index X within data stream file", "#X"},
         _SearchSyntaxRow {"Packet at relative index X within data stream file", "+#X  -#X"},
@@ -168,23 +169,23 @@ void HelpView::_buildRows()
         _SearchSyntaxRow {"Packet with sequence number X", "##X"},
         _SearchSyntaxRow {"Packet with relative sequence number X", "+##X  -##X"},
         _EmptyRow {},
-        _SearchSyntaxRow {"Event record at index X within packet", "###X"},
-        _SearchSyntaxRow {"Event record at relative index X within packet", "+###X  -###X"},
-        _EmptyRow {},
-        _SearchSyntaxRow {"Offset X (bits) within data stream file", ":X"},
-        _SearchSyntaxRow {"Relative offset X (bits) within data stream file", "+:X  -:X"},
-        _SearchSyntaxRow {"Offset X (bytes) within data stream file", ":$X"},
-        _SearchSyntaxRow {"Relative offset X (bytes) within data stream file", "+:$X  -:$X"},
+        _SearchSyntaxRow {"Event record at index X within packet", "@X"},
+        _SearchSyntaxRow {"Event record at relative index X within packet", "+@X  -@X"},
         _EmptyRow {},
         _SearchSyntaxRow {"Offset X (bits) within packet", "X"},
         _SearchSyntaxRow {"Relative offset X (bits) within packet", "+X  -X"},
         _SearchSyntaxRow {"Offset X (bytes) within packet", "$X"},
         _SearchSyntaxRow {"Relative offset X (bytes) within packet", "+$X  -$X"},
         _EmptyRow {},
-        _SearchSyntaxRow {"Timestamp X (ns)", "*X  *-X"},
-        _SearchSyntaxRow {"Relative timestamp X (ns)", "+*X  -*X"},
-        _SearchSyntaxRow {"Timestamp X (cycles)", "**X"},
-        _SearchSyntaxRow {"Relative timestamp X (cycles)", "+**X  -**X"},
+        _SearchSyntaxRow {"Offset X (bits) within data stream file", ":X"},
+        _SearchSyntaxRow {"Relative offset X (bits) within data stream file", "+:X  -:X"},
+        _SearchSyntaxRow {"Offset X (bytes) within data stream file", ":$X"},
+        _SearchSyntaxRow {"Relative offset X (bytes) within data stream file", "+:$X  -:$X"},
+        _EmptyRow {},
+        _SearchSyntaxRow {"Event record with timestamp X (ns from origin)", "*X  *-X"},
+        _SearchSyntaxRow {"Event record with relative timestamp X (ns from origin)", "+*X  -*X"},
+        _SearchSyntaxRow {"Event record with timestamp X (cycles)", "**X"},
+        _SearchSyntaxRow {"Event record with relative timestamp X (cycles)", "+**X  -**X"},
         _EmptyRow {},
         _SearchSyntaxRow {"Next event record with type name NAME", "/NAME"},
         _SearchSyntaxRow {"Next event record with type ID X", "%X"},
@@ -196,7 +197,7 @@ void HelpView::_buildRows()
     for (const auto& row : _rows) {
         if (auto ssRow = boost::get<_SearchSyntaxRow>(&row)) {
             _ssRowFmtPos = std::max(_ssRowFmtPos,
-                                    static_cast<Size>(ssRow->descr.size() + 2));
+                                    static_cast<Size>(ssRow->descr.size() + 4));
         }
     }
 
@@ -255,7 +256,7 @@ void HelpView::_drawRows()
                                 keyRow->descr.c_str());
         } else if (auto textRow = boost::get<_TextRow>(&row)) {
             this->_stylist().std(*this);
-            this->_moveCursor({startX, y});
+            this->_moveCursor({startX + 2, y});
             this->_stylist().std(*this, textRow->bold);
 
             for (const auto& ch : textRow->line) {
@@ -268,7 +269,7 @@ void HelpView::_drawRows()
             }
         } else if (auto ssRow = boost::get<_SearchSyntaxRow>(&row)) {
             this->_stylist().std(*this);
-            this->_moveCursor({startX, y});
+            this->_moveCursor({startX + 2, y});
 
             for (const auto& ch : ssRow->descr) {
                 if (ch == 'X') {
