@@ -124,27 +124,31 @@ void Packet::_ensureOffsetInPacketBitsIsCached(const Index offsetInPacketBits)
 
     assert(cp);
 
-    auto nextIndex = cp->first->indexInPacket();
-    Index index;
+    auto curIndex = cp->first->indexInPacket();
 
     _it.restorePosition(cp->second);
 
     // find closest event record before or containing offset
     while (true) {
         if (_it->kind() == yactfr::Element::Kind::EVENT_RECORD_BEGINNING) {
-            if (this->_itOffsetInPacketBits() >= offsetInPacketBits) {
-                index = nextIndex;
+            if (this->_itOffsetInPacketBits() == offsetInPacketBits) {
+                break;
+            } else if (this->_itOffsetInPacketBits() > offsetInPacketBits) {
+                // we want the previous one which includes `offsetInPacketBits`
+                assert(curIndex != 0);
+                --curIndex;
                 break;
             }
 
-            ++nextIndex;
+        } else if (_it->kind() == yactfr::Element::Kind::EVENT_RECORD_END) {
+            ++curIndex;
         }
 
         ++_it;
     }
 
     // no we have its index: cache event records around this one
-    this->_ensureEventRecordIsCached(index);
+    this->_ensureEventRecordIsCached(curIndex);
 }
 
 void Packet::_cacheContentPacketRegionAtCurIt(Scope::SP scope)
