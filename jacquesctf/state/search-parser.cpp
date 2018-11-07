@@ -184,14 +184,37 @@ boost::optional<long long> SearchParser::_parseInt(std::string::const_iterator& 
         return boost::none;
     }
 
-    char *strEnd;
-    const auto value = std::strtoll(&(*begin), &strEnd, 0);
+    auto rBegin = begin;
+    std::string buf;
+    auto nbCommas = 0U;
 
-    if ((value == 0 && &(*begin) == strEnd) || errno == ERANGE) {
+    if (*begin != '0') {
+        // remove commas
+        for (auto it = begin; it != end; ++it) {
+            if (*it == ',') {
+                ++nbCommas;
+                continue;
+            }
+
+            if (!std::isdigit(*it)) {
+                break;
+            }
+
+            buf += *it;
+        }
+
+        assert(!buf.empty());
+        rBegin = std::cbegin(buf);
+    }
+
+    char *strEnd;
+    const auto value = std::strtoll(&(*rBegin), &strEnd, 0);
+
+    if ((value == 0 && &(*rBegin) == strEnd) || errno == ERANGE) {
         return boost::none;
     }
 
-    begin += (strEnd - &(*begin));
+    begin += (strEnd - &(*rBegin)) + nbCommas;
     return value;
 }
 

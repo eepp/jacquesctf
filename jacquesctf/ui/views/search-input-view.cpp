@@ -131,7 +131,7 @@ static int isHexDigit(const int ch)
 
 static int isDecDigit(const int ch)
 {
-    return std::isdigit(ch);
+    return std::isdigit(ch) || ch == ',';
 }
 
 static int isOctDigit(const int ch)
