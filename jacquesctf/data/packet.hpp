@@ -143,6 +143,8 @@ public:
     const PacketRegion *previousPacketRegion(const PacketRegion& packetRegion);
     const PacketRegion& firstPacketRegion();
     const PacketRegion& lastPacketRegion();
+    const EventRecord *eventRecordAtOrAfterNsFromOrigin(long long nsFromOrigin);
+    const EventRecord *eventRecordAtOrAfterCycles(unsigned long long cycles);
 
     BitArray bitArray(const PacketSegment& segment) const noexcept
     {
@@ -199,7 +201,7 @@ public:
     {
         assert(reqIndexInPacket < _checkpoints.eventRecordCount());
         this->_ensureEventRecordIsCached(reqIndexInPacket);
-        return **_eventRecordCacheItFromIndexInPacket(reqIndexInPacket);
+        return **this->_eventRecordCacheItFromIndexInPacket(reqIndexInPacket);
     }
 
     const EventRecord *firstEventRecord() const
@@ -425,6 +427,77 @@ private:
     void _appendConstPacketRegion(ContainerT& regions, const IterT& it) const
     {
         regions.push_back(std::static_pointer_cast<const PacketRegion>(*it));
+    }
+
+    template <typename CpNearestFuncT, typename TsGeCompFuncT, typename ValueT>
+    const EventRecord *_eventRecordAtOrAfterTs(CpNearestFuncT&& cpNearestFunc,
+                                               TsGeCompFuncT&& tsGeCompFunc,
+                                               const ValueT value)
+    {
+        if (!_metadata->isCorrelatable()) {
+            return nullptr;
+        }
+
+        const auto cp = std::forward<CpNearestFuncT>(cpNearestFunc)(value);
+
+        if (!cp) {
+            return nullptr;
+        }
+
+        _it.restorePosition(cp->second);
+
+        auto curIndex = cp->first->indexInPacket();
+        auto inEventRecord = false;
+        boost::optional<Timestamp> firstTs;
+        boost::optional<Index> indexInPacket;
+
+        while (_it != _endIt) {
+            switch (_it->kind()) {
+            case yactfr::Element::Kind::EVENT_RECORD_BEGINNING:
+                inEventRecord = true;
+                firstTs = boost::none;
+                ++_it;
+                break;
+
+            case yactfr::Element::Kind::CLOCK_VALUE:
+            {
+                if (firstTs || !inEventRecord) {
+                    ++_it;
+                    break;
+                }
+
+                auto& elem = static_cast<const yactfr::ClockValueElement&>(*_it);
+
+                firstTs = Timestamp {elem};
+
+                if (std::forward<TsGeCompFuncT>(tsGeCompFunc)(*firstTs, value)) {
+                    indexInPacket = curIndex;
+                    _it = _endIt;
+                } else {
+                    ++_it;
+                }
+
+                break;
+            }
+
+            case yactfr::Element::Kind::EVENT_RECORD_END:
+                inEventRecord = false;
+                ++curIndex;
+                ++_it;
+                break;
+
+            default:
+                ++_it;
+                break;
+            }
+        }
+
+        if (!indexInPacket || *indexInPacket > _checkpoints.eventRecordCount()) {
+            return nullptr;
+        }
+
+        this->_ensureEventRecordIsCached(*indexInPacket);
+        return _eventRecordCacheItFromIndexInPacket(*indexInPacket)->get();
     }
 
 private:

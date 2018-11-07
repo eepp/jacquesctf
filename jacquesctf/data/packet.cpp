@@ -66,7 +66,7 @@ void Packet::_ensureEventRecordIsCached(const Index indexInPacket)
                                       indexInPacket - halfMaxCacheSize;
 
     // find nearest event record checkpoint
-    auto cp = _checkpoints.nearestCheckpointBeforeOrAtIndex(toCacheIndexInPacket);
+    const auto cp = _checkpoints.nearestCheckpointBeforeOrAtIndex(toCacheIndexInPacket);
 
     assert(cp);
 
@@ -120,7 +120,7 @@ void Packet::_ensureOffsetInPacketBitsIsCached(const Index offsetInPacketBits)
     }
 
     // find nearest event record checkpoint by offset
-    auto cp = _checkpoints.nearestCheckpointBeforeOrAtOffsetInPacketBits(offsetInPacketBits);
+    const auto cp = _checkpoints.nearestCheckpointBeforeOrAtOffsetInPacketBits(offsetInPacketBits);
 
     assert(cp);
 
@@ -692,6 +692,30 @@ const PacketRegion *Packet::previousPacketRegion(const PacketRegion& packetRegio
     }
 
     return &this->packetRegionAtOffsetInPacketBits(packetRegion.segment().offsetInPacketBits() - 1);
+}
+
+const EventRecord *Packet::eventRecordAtOrAfterNsFromOrigin(const long long nsFromOrigin)
+{
+    const auto cpNearestFunc = [this](const long long nsFromOrigin) -> const PacketCheckpoints::Checkpoint * {
+        return _checkpoints.nearestCheckpointBeforeOrAtNsFromOrigin(nsFromOrigin);
+    };
+    const auto tsGeCompFunc = [](const Timestamp& ts, const long long nsFromOrigin) -> bool {
+        return ts.nsFromOrigin() >= nsFromOrigin;
+    };
+
+    return this->_eventRecordAtOrAfterTs(cpNearestFunc, tsGeCompFunc, nsFromOrigin);
+}
+
+const EventRecord *Packet::eventRecordAtOrAfterCycles(const unsigned long long cycles)
+{
+    const auto cpNearestFunc = [this](const unsigned long long cycles) -> const PacketCheckpoints::Checkpoint * {
+        return _checkpoints.nearestCheckpointBeforeOrAtCycles(cycles);
+    };
+    const auto tsGeCompFunc = [](const Timestamp& ts, const unsigned long long cycles) -> bool {
+        return ts.cycles() >= cycles;
+    };
+
+    return this->_eventRecordAtOrAfterTs(cpNearestFunc, tsGeCompFunc, cycles);
 }
 
 } // namespace jacques

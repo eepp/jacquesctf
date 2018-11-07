@@ -313,33 +313,36 @@ const PacketIndexEntry& DataStreamFile::packetIndexEntryContainingOffsetBits(con
     return *it;
 }
 
-const PacketIndexEntry *DataStreamFile::packetIndexEntryContainingTimestamp(const Timestamp& ts)
+const PacketIndexEntry *DataStreamFile::packetIndexEntryContainingNsFromOrigin(const long long nsFromOrigin)
 {
-    assert(_isIndexBuilt);
+    const auto tsLtCompFunc = [](const Timestamp& ts,
+                                 const long long nsFromOrigin) -> bool {
+        return ts.nsFromOrigin() < nsFromOrigin;
+    };
+    const auto valueInTsFunc = [](const long long nsFromOrigin,
+                                  const PacketIndexEntry& entry) -> bool {
+        return nsFromOrigin >= entry.beginningTimestamp()->nsFromOrigin() &&
+               nsFromOrigin <= entry.endTimestamp()->nsFromOrigin();
+    };
 
-    auto it = std::lower_bound(std::begin(_index), std::end(_index),
-                               ts, [](const auto& entry,
-                                      const auto ts) {
-        if (!entry.beginningTimestamp()) {
-            return true;
-        }
+    return this->_packetIndexEntryContainingValue(tsLtCompFunc, valueInTsFunc,
+                                                  nsFromOrigin);
+}
 
-        return *entry.beginningTimestamp() < ts;
-    });
+const PacketIndexEntry *DataStreamFile::packetIndexEntryContainingCycles(const unsigned long long cycles)
+{
+    const auto tsLtCompFunc = [](const Timestamp& ts,
+                                 const unsigned long long cycles) -> bool {
+        return ts.cycles() < cycles;
+    };
+    const auto valueInTsFunc = [](const unsigned long long cycles,
+                                  const PacketIndexEntry& entry) -> bool {
+        return cycles >= entry.beginningTimestamp()->cycles() &&
+               cycles <= entry.endTimestamp()->cycles();
+    };
 
-    if (it == std::end(_index)) {
-        return nullptr;
-    }
-
-    if (!it->beginningTimestamp() || !it->endTimestamp()) {
-        return nullptr;
-    }
-
-    if (ts < it->beginningTimestamp() || ts > it->endTimestamp()) {
-        return nullptr;
-    }
-
-    return &(*it);
+    return this->_packetIndexEntryContainingValue(tsLtCompFunc, valueInTsFunc,
+                                                  cycles);
 }
 
 const PacketIndexEntry *DataStreamFile::packetIndexEntryWithSeqNum(const Index seqNum)

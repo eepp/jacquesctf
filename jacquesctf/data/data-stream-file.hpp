@@ -41,7 +41,8 @@ public:
     Packet& packetAtIndex(Index index, PacketCheckpointsBuildListener& buildListener);
     const PacketIndexEntry& packetIndexEntryContainingOffsetBits(Index offsetBits);
     const PacketIndexEntry *packetIndexEntryWithSeqNum(Index seqNum);
-    const PacketIndexEntry *packetIndexEntryContainingTimestamp(const Timestamp& ts);
+    const PacketIndexEntry *packetIndexEntryContainingNsFromOrigin(long long nsFromOrigin);
+    const PacketIndexEntry *packetIndexEntryContainingCycles(unsigned long long cycles);
 
     Size packetCount() const noexcept
     {
@@ -117,6 +118,57 @@ private:
     void _addPacketIndexEntry(Index offsetInDataStreamBytes,
                               const _IndexBuildingState& state,
                               bool isInvalid);
+
+    template <typename TsLtCompFuncT, typename ValueInTsFuncT, typename ValueT>
+    const PacketIndexEntry *_packetIndexEntryContainingValue(TsLtCompFuncT&& tsLtCompFunc,
+                                                             ValueInTsFuncT&& valueInTsFunc,
+                                                             const ValueT value)
+    {
+        if (!_metadata->isCorrelatable()) {
+            return nullptr;
+        }
+
+        if (_index.empty()) {
+            return nullptr;
+        }
+
+        auto it = std::lower_bound(std::begin(_index), std::end(_index),
+                                   value, [tsLtCompFunc](const auto& entry,
+                                                         const auto value) {
+            if (!entry.beginningTimestamp()) {
+                return false;
+            }
+
+            return std::forward<TsLtCompFuncT>(tsLtCompFunc)(*entry.beginningTimestamp(),
+                                                             value);
+        });
+
+        if (it == std::end(_index)) {
+            --it;
+        }
+
+        if (!it->beginningTimestamp() || !it->endTimestamp()) {
+            return nullptr;
+        }
+
+        if (!std::forward<ValueInTsFuncT>(valueInTsFunc)(value, *it)) {
+            if (it == std::begin(_index)) {
+                return nullptr;
+            }
+
+            --it;
+
+            if (!it->beginningTimestamp() || !it->endTimestamp()) {
+                return nullptr;
+            }
+
+            if (!std::forward<ValueInTsFuncT>(valueInTsFunc)(value, *it)) {
+                return nullptr;
+            }
+        }
+
+        return &*it;
+    }
 
 private:
     const boost::filesystem::path _path;

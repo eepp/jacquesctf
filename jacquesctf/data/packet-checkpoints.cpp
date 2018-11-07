@@ -244,21 +244,6 @@ const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointAfterOf
     });
 }
 
-const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeOrAtTimestamp(const Timestamp& ts) const
-{
-    return this->nearestCheckpointBeforeOrAtNsFromEpoch(ts.nsFromOrigin());
-}
-
-const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeTimestamp(const Timestamp& ts) const
-{
-    return this->nearestCheckpointBeforeNsFromEpoch(ts.nsFromOrigin());
-}
-
-const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointAfterTimestamp(const Timestamp& ts) const
-{
-    return this->nearestCheckpointAfterNsFromEpoch(ts.nsFromOrigin());
-}
-
 static bool nsFromOriginLessThan(const PacketCheckpoints::Checkpoint& checkpoint,
                                  const long long nsFromOrigin)
 {
@@ -281,7 +266,7 @@ static bool nsFromOriginEqual(const EventRecord& eventRecord,
     return eventRecord.firstTimestamp()->nsFromOrigin() == nsFromOrigin;
 }
 
-const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeOrAtNsFromEpoch(const long long nsFromOrigin) const
+const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeOrAtNsFromOrigin(const long long nsFromOrigin) const
 {
     const auto checkpoint = this->_nearestCheckpointBeforeOrAt(nsFromOrigin,
                                                                nsFromOriginLessThan,
@@ -299,7 +284,7 @@ const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeO
     return checkpoint;
 }
 
-const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeNsFromEpoch(const long long nsFromOrigin) const
+const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeNsFromOrigin(const long long nsFromOrigin) const
 {
     const auto checkpoint = this->_nearestCheckpointBefore(nsFromOrigin,
                                                            nsFromOriginLessThan);
@@ -316,7 +301,7 @@ const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeN
     return checkpoint;
 }
 
-const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointAfterNsFromEpoch(const long long nsFromOrigin) const
+const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointAfterNsFromOrigin(const long long nsFromOrigin) const
 {
     const auto checkpoint = this->_nearestCheckpointAfter(nsFromOrigin,
                                                           [](const auto nsFromOrigin,
@@ -328,6 +313,89 @@ const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointAfterNs
         }
 
         return nsFromOrigin < eventRecord.firstTimestamp()->nsFromOrigin();
+    });
+
+    if (!checkpoint) {
+        return nullptr;
+    }
+
+    if (!checkpoint->first->firstTimestamp()) {
+        // checkpoint's event record does not even have a timestamp
+        return nullptr;
+    }
+
+    return checkpoint;
+}
+
+static bool cyclesLessThan(const PacketCheckpoints::Checkpoint& checkpoint,
+                           const unsigned long long cycles)
+{
+    const auto& eventRecord = *checkpoint.first;
+
+    if (!eventRecord.firstTimestamp()) {
+        return false;
+    }
+
+    return eventRecord.firstTimestamp()->cycles() < cycles;
+}
+
+static bool cyclesEqual(const EventRecord& eventRecord,
+                        const unsigned long long cycles)
+{
+    if (!eventRecord.firstTimestamp()) {
+        return false;
+    }
+
+    return eventRecord.firstTimestamp()->cycles() == cycles;
+}
+
+const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeOrAtCycles(const unsigned long long cycles) const
+{
+    const auto checkpoint = this->_nearestCheckpointBeforeOrAt(cycles,
+                                                               cyclesLessThan,
+                                                               cyclesEqual);
+
+    if (!checkpoint) {
+        return nullptr;
+    }
+
+    if (!checkpoint->first->firstTimestamp()) {
+        // checkpoint's event record does not even have a timestamp
+        return nullptr;
+    }
+
+    return checkpoint;
+}
+
+const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointBeforeCycles(const unsigned long long cycles) const
+{
+    const auto checkpoint = this->_nearestCheckpointBefore(cycles,
+                                                           cyclesLessThan);
+
+    if (!checkpoint) {
+        return nullptr;
+    }
+
+    if (!checkpoint->first->firstTimestamp()) {
+        // checkpoint's event record does not even have a timestamp
+        return nullptr;
+    }
+
+    return checkpoint;
+}
+
+const PacketCheckpoints::Checkpoint *PacketCheckpoints::nearestCheckpointAfterCycles(const unsigned long long cycles) const
+{
+    const auto checkpoint = this->_nearestCheckpointAfter(cycles,
+                                                          [](const auto cycles,
+                                                             const auto& checkpoint) {
+        const auto& eventRecord = *checkpoint.first;
+
+        if (!eventRecord.firstTimestamp()) {
+            return false;
+        }
+
+        return cycles < eventRecord.firstTimestamp()->cycles();
     });
 
     if (!checkpoint) {

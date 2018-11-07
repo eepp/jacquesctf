@@ -67,14 +67,14 @@ public:
     const Checkpoint *nearestCheckpointBeforeOrAtOffsetInPacketBits(Index offsetInPacketBits) const;
     const Checkpoint *nearestCheckpointBeforeOffsetInPacketBits(Index offsetInPacketBits) const;
     const Checkpoint *nearestCheckpointAfterOffsetInPacketBits(Index offsetInPacketBits) const;
-    const Checkpoint *nearestCheckpointBeforeOrAtTimestamp(const Timestamp& ts) const;
-    const Checkpoint *nearestCheckpointBeforeTimestamp(const Timestamp& ts) const;
-    const Checkpoint *nearestCheckpointAfterTimestamp(const Timestamp& ts) const;
-    const Checkpoint *nearestCheckpointBeforeOrAtNsFromEpoch(long long nsFromEpoch) const;
-    const Checkpoint *nearestCheckpointBeforeNsFromEpoch(long long nsFromEpoch) const;
-    const Checkpoint *nearestCheckpointAfterNsFromEpoch(long long nsFromEpoch) const;
+    const Checkpoint *nearestCheckpointBeforeOrAtNsFromOrigin(long long nsFromOrigin) const;
+    const Checkpoint *nearestCheckpointBeforeNsFromOrigin(long long nsFromOrigin) const;
+    const Checkpoint *nearestCheckpointAfterNsFromOrigin(long long nsFromOrigin) const;
+    const Checkpoint *nearestCheckpointBeforeOrAtCycles(unsigned long long cycles) const;
+    const Checkpoint *nearestCheckpointBeforeCycles(unsigned long long cycles) const;
+    const Checkpoint *nearestCheckpointAfterCycles(unsigned long long cycles) const;
 
-    EventRecord::SP nearestEventRecordBeforeOrAtIndex(Index indexInPacket) const
+    EventRecord::SP nearestEventRecordBeforeOrAtIndex(const Index indexInPacket) const
     {
         auto checkpoint = this->nearestCheckpointBeforeOrAtIndex(indexInPacket);
 
@@ -85,7 +85,7 @@ public:
         return checkpoint->first;
     }
 
-    EventRecord::SP nearestEventRecordBeforeIndex(Index indexInPacket) const
+    EventRecord::SP nearestEventRecordBeforeIndex(const Index indexInPacket) const
     {
         auto checkpoint = this->nearestCheckpointBeforeIndex(indexInPacket);
 
@@ -96,7 +96,7 @@ public:
         return checkpoint->first;
     }
 
-    EventRecord::SP nearestEventRecordAfterIndex(Index indexInPacket) const
+    EventRecord::SP nearestEventRecordAfterIndex(const Index indexInPacket) const
     {
         auto checkpoint = this->nearestCheckpointAfterIndex(indexInPacket);
 
@@ -107,7 +107,7 @@ public:
         return checkpoint->first;
     }
 
-    EventRecord::SP nearestEventRecordBeforeOrAtOffsetInPacketBits(Index offsetInPacketBits) const
+    EventRecord::SP nearestEventRecordBeforeOrAtOffsetInPacketBits(const Index offsetInPacketBits) const
     {
         auto checkpoint = this->nearestCheckpointBeforeOrAtOffsetInPacketBits(offsetInPacketBits);
 
@@ -118,7 +118,7 @@ public:
         return checkpoint->first;
     }
 
-    EventRecord::SP nearestEventRecordBeforeOffsetInPacketBits(Index offsetInPacketBits) const
+    EventRecord::SP nearestEventRecordBeforeOffsetInPacketBits(const Index offsetInPacketBits) const
     {
         auto checkpoint = this->nearestCheckpointBeforeOffsetInPacketBits(offsetInPacketBits);
 
@@ -129,7 +129,7 @@ public:
         return checkpoint->first;
     }
 
-    EventRecord::SP nearestEventRecordAfterOffsetInPacketBits(Index offsetInPacketBits) const
+    EventRecord::SP nearestEventRecordAfterOffsetInPacketBits(const Index offsetInPacketBits) const
     {
         auto checkpoint = this->nearestCheckpointAfterOffsetInPacketBits(offsetInPacketBits);
 
@@ -140,9 +140,9 @@ public:
         return checkpoint->first;
     }
 
-    EventRecord::SP nearestEventRecordBeforeOrAtTimestamp(const Timestamp& ts) const
+    EventRecord::SP nearestEventRecordBeforeOrAtNsFromOrigin(const long long nsFromOrigin) const
     {
-        auto checkpoint = this->nearestCheckpointBeforeOrAtTimestamp(ts);
+        auto checkpoint = this->nearestCheckpointBeforeOrAtNsFromOrigin(nsFromOrigin);
 
         if (!checkpoint) {
             return nullptr;
@@ -151,9 +151,9 @@ public:
         return checkpoint->first;
     }
 
-    EventRecord::SP nearestEventRecordBeforeTimestamp(const Timestamp& ts) const
+    EventRecord::SP nearestEventRecordBeforeNsFromOrigin(const long long nsFromOrigin) const
     {
-        auto checkpoint = this->nearestCheckpointBeforeTimestamp(ts);
+        auto checkpoint = this->nearestCheckpointBeforeNsFromOrigin(nsFromOrigin);
 
         if (!checkpoint) {
             return nullptr;
@@ -162,9 +162,9 @@ public:
         return checkpoint->first;
     }
 
-    EventRecord::SP nearestEventRecordAfterTimestamp(const Timestamp& ts) const
+    EventRecord::SP nearestEventRecordAfterNsFromOrigin(const long long nsFromOrigin) const
     {
-        auto checkpoint = this->nearestCheckpointAfterTimestamp(ts);
+        auto checkpoint = this->nearestCheckpointAfterNsFromOrigin(nsFromOrigin);
 
         if (!checkpoint) {
             return nullptr;
@@ -173,9 +173,9 @@ public:
         return checkpoint->first;
     }
 
-    EventRecord::SP nearestEventRecordBeforeOrAtNsFromEpoch(long long nsFromEpoch) const
+    EventRecord::SP nearestEventRecordBeforeOrAtCycles(const unsigned long long cycles) const
     {
-        auto checkpoint = this->nearestCheckpointBeforeOrAtNsFromEpoch(nsFromEpoch);
+        auto checkpoint = this->nearestCheckpointBeforeOrAtCycles(cycles);
 
         if (!checkpoint) {
             return nullptr;
@@ -184,9 +184,9 @@ public:
         return checkpoint->first;
     }
 
-    EventRecord::SP nearestEventRecordBeforeNsFromEpoch(long long nsFromEpoch) const
+    EventRecord::SP nearestEventRecordBeforeCycles(const unsigned long long cycles) const
     {
-        auto checkpoint = this->nearestCheckpointBeforeNsFromEpoch(nsFromEpoch);
+        auto checkpoint = this->nearestCheckpointBeforeCycles(cycles);
 
         if (!checkpoint) {
             return nullptr;
@@ -195,9 +195,9 @@ public:
         return checkpoint->first;
     }
 
-    EventRecord::SP nearestEventRecordAfterNsFromEpoch(long long nsFromEpoch) const
+    EventRecord::SP nearestEventRecordAfterCycles(const unsigned long long cycles) const
     {
-        auto checkpoint = this->nearestCheckpointAfterNsFromEpoch(nsFromEpoch);
+        auto checkpoint = this->nearestCheckpointAfterCycles(cycles);
 
         if (!checkpoint) {
             return nullptr;

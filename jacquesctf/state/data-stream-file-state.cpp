@@ -407,6 +407,75 @@ bool DataStreamFileState::search(const SearchQuery& query)
         };
 
         return this->_gotoNextEventRecordWithProperty(compareFunc);
+    } else if (const auto sQuery = dynamic_cast<const TimestampSearchQuery *>(&query)) {
+        if (!_activePacketState) {
+            return false;
+        }
+
+        auto reqValue = sQuery->value();
+
+        if (sQuery->isDiff()) {
+            const auto curEventRecord = _activePacketState->currentEventRecord();
+
+            if (!curEventRecord || !curEventRecord->firstTimestamp()) {
+                return false;
+            }
+
+            switch (sQuery->unit()) {
+            case TimestampSearchQuery::Unit::NS:
+                reqValue += curEventRecord->firstTimestamp()->nsFromOrigin();
+                break;
+
+            case TimestampSearchQuery::Unit::CYCLE:
+                reqValue += static_cast<long long>(curEventRecord->firstTimestamp()->cycles());
+                break;
+            }
+        }
+
+        const PacketIndexEntry *indexEntry = nullptr;
+
+        switch (sQuery->unit()) {
+        case TimestampSearchQuery::Unit::NS:
+            indexEntry = _dataStreamFile->packetIndexEntryContainingNsFromOrigin(reqValue);
+            break;
+
+        case TimestampSearchQuery::Unit::CYCLE:
+            indexEntry = _dataStreamFile->packetIndexEntryContainingCycles(static_cast<unsigned long long>(reqValue));
+            break;
+        }
+
+        if (!indexEntry) {
+            return false;
+        }
+
+        auto& packet = _dataStreamFile->packetAtIndex(indexEntry->indexInDataStream(),
+                                                      *_packetCheckpointsBuildListener);
+        const EventRecord *eventRecord = nullptr;
+
+        switch (sQuery->unit()) {
+        case TimestampSearchQuery::Unit::NS:
+            eventRecord = packet.eventRecordAtOrAfterNsFromOrigin(reqValue);
+            break;
+
+        case TimestampSearchQuery::Unit::CYCLE:
+            eventRecord = packet.eventRecordAtOrAfterCycles(static_cast<unsigned long long>(reqValue));
+            break;
+        }
+
+        if (!eventRecord) {
+            return false;
+        }
+
+        // `eventRecord` can become invalid through `this->gotoPacket()`
+        const auto offsetInPacketBits = eventRecord->segment().offsetInPacketBits();
+
+        if (_activePacketState->packet().indexEntry() != *indexEntry) {
+            // change packet
+            this->gotoPacket(indexEntry->indexInDataStream());
+        }
+
+        _activePacketState->gotoPacketRegionAtOffsetInPacketBits(offsetInPacketBits);
+        return true;
     }
 
     return false;
