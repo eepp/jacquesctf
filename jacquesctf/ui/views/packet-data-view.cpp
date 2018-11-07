@@ -780,4 +780,14 @@ void PacketDataView::isHex(const bool isHex)
     this->_redrawContent();
 }
 
+void PacketDataView::centerSelection()
+{
+    if (!_state->hasActivePacketState()) {
+        return;
+    }
+
+    this->_setBaseAndEndOffsetInPacketBitsFromOffset(_curOffsetInPacketBits);
+    this->_redrawContent();
+}
+
 } // namespace jacques

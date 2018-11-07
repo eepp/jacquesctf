@@ -351,6 +351,10 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         _pdView->isHex(!_pdView->isHex());
         break;
 
+    case 'c':
+        _pdView->centerSelection();
+        break;
+
     case '\n':
     case '\r':
         _sdteViewIsVisible = !_sdteViewIsVisible;
@@ -358,7 +362,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         this->_redraw();
         break;
 
-    case 'c':
+    case 'C':
         this->_state().gotoPacketContext();
         this->_snapshotState();
         break;

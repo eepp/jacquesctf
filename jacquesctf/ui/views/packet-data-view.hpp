@@ -53,6 +53,7 @@ public:
                             const InspectScreen::Bookmarks& bookmarks);
     void pageDown();
     void pageUp();
+    void centerSelection();
     void isHex(bool isHex);
     void isAsciiVisible(bool isVisible);
     void isEventRecordFirstPacketRegionEmphasized(bool isEmphasized);
