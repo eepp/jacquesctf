@@ -163,12 +163,15 @@ KeyHandlingReaction PacketsScreen::_handleKey(const int key)
     case 'N':
     case 'k':
     case ':':
+    case '$':
+    case '*':
     case 'P':
     {
         std::string init;
 
         switch (key) {
         case 'N':
+        case '*':
             init = "*";
             break;
 
@@ -182,6 +185,10 @@ KeyHandlingReaction PacketsScreen::_handleKey(const int key)
 
         case 'P':
             init = "#";
+            break;
+
+        case '$':
+            init = "$";
             break;
 
         default:
