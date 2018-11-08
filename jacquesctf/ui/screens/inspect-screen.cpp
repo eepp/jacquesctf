@@ -41,6 +41,7 @@ InspectScreen::InspectScreen(const Rectangle& rect, const Config& cfg,
     _ertViewDisplayModeWheel {
         _ErtViewDisplayMode::SHORT,
         _ErtViewDisplayMode::LONG,
+        _ErtViewDisplayMode::FULL,
         _ErtViewDisplayMode::HIDDEN,
     }
 {
@@ -116,6 +117,18 @@ void InspectScreen::_updateViews()
         ertViewHeight = this->rect().h / 2;
         break;
 
+    case _ErtViewDisplayMode::FULL:
+        if (this->isVisible()) {
+            _pdView->isVisible(false);
+            _sdteView->isVisible(false);
+            _priView->isVisible(false);
+            _ertView->isVisible(true);
+        }
+
+        _ertView->moveAndResize(this->rect());
+        _ertView->centerSelectedRow(false);
+        return;
+
     default:
         break;
     }
@@ -142,6 +155,11 @@ void InspectScreen::_updateViews()
         if (this->isVisible()) {
             _ertView->isVisible(true);
         }
+    }
+
+    if (this->isVisible()) {
+        _pdView->isVisible(true);
+        _priView->isVisible(true);
     }
 
     _pdView->moveAndResize({{0, 0}, pdViewWidth, pdViewHeight});

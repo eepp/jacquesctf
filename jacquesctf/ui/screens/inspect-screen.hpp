@@ -67,6 +67,7 @@ private:
         HIDDEN,
         SHORT,
         LONG,
+        FULL,
     };
 
 private:

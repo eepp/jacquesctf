@@ -48,7 +48,7 @@ void HelpView::_buildRows()
         _KeyRow {"F10, Q", "Quit program"},
         _EmptyRow {},
         _SectionRow {"\"Packet inspection\" screen"},
-        _KeyRow {"e", "Show/hide \"Event records\" frame"},
+        _KeyRow {"e", "Cycle \"Event records\" frame's height"},
         _KeyRow {"Enter", "Show/hide \"Data type\" frame"},
         _KeyRow {"a", "Packet data: show/hide ASCII characters"},
         _KeyRow {"o", "Packet data: show offsets in bytes or bits"},
