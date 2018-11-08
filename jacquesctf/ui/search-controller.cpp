@@ -22,10 +22,10 @@ SearchController::SearchController(const Screen& parentScreen,
 {
 }
 
-std::unique_ptr<const SearchQuery> SearchController::start()
+std::unique_ptr<const SearchQuery> SearchController::start(const std::string& init)
 {
     const auto lineLen = _searchView->contentRect().w - 2;
-    std::string buf;
+    std::string buf = init;
 
     _searchView->redraw();
     _searchView->isVisible(true);
@@ -37,7 +37,9 @@ std::unique_ptr<const SearchQuery> SearchController::start()
 
     const auto prevCurs = curs_set(1);
 
+    _searchView->drawCurrentText(buf);
     _searchView->refresh(true);
+    move(startY, startX + buf.size());
     doupdate();
 
     bool accepted = false;

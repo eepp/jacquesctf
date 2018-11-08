@@ -21,8 +21,13 @@ class SearchController
 public:
     explicit SearchController(const Screen& parentScreen,
                               const Stylist& stylist);
-    std::unique_ptr<const SearchQuery> start();
+    std::unique_ptr<const SearchQuery> start(const std::string& init);
     void parentScreenResized(const Screen& parentScreen);
+
+    std::unique_ptr<const SearchQuery> start()
+    {
+        return this->start(std::string {});
+    }
 
 private:
     static Rectangle _viewRect(const Screen& parentScreen)

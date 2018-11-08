@@ -160,8 +160,35 @@ KeyHandlingReaction PacketsScreen::_handleKey(const int key)
 
     case '/':
     case 'g':
+    case 'N':
+    case 'k':
+    case ':':
+    case 'P':
     {
-        auto query = _searchController.start();
+        std::string init;
+
+        switch (key) {
+        case 'N':
+            init = "*";
+            break;
+
+        case 'k':
+            init = "**";
+            break;
+
+        case ':':
+            init = ":";
+            break;
+
+        case 'P':
+            init = "#";
+            break;
+
+        default:
+            break;
+        }
+
+        auto query = _searchController.start(init);
 
         if (!query) {
             // canceled or invalid
