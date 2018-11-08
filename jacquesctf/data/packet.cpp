@@ -334,6 +334,9 @@ void Packet::_cachePacketPreamblePacketRegions()
 
             case ElemKind::SCOPE_BEGINNING:
             {
+                // cache padding before scope
+                this->_tryCachePaddingPacketRegionBeforeCurIt(curScope);
+
                 auto& elem = static_cast<const yactfr::ScopeBeginningElement&>(*_it);
 
                 curScope = std::make_shared<Scope>(elem.scope());
@@ -456,6 +459,9 @@ void Packet::_cachePacketRegionsAtCurIt(const yactfr::Element::Kind endElemKind,
             break;
 
         case ElemKind::SCOPE_BEGINNING:
+            // cache padding before scope
+            this->_tryCachePaddingPacketRegionBeforeCurIt(curScope);
+
             if (setCurScope) {
                 auto& elem = static_cast<const yactfr::ScopeBeginningElement&>(*_it);
 
@@ -490,6 +496,9 @@ void Packet::_cachePacketRegionsAtCurIt(const yactfr::Element::Kind endElemKind,
             break;
 
         case ElemKind::EVENT_RECORD_BEGINNING:
+            // cache padding before event record
+            this->_tryCachePaddingPacketRegionBeforeCurIt(curScope);
+
             if (setCurEventRecord) {
                 curEr = std::make_shared<EventRecord>(erIndexInPacket);
                 curEr->segment().offsetInPacketBits(this->_itOffsetInPacketBits());
