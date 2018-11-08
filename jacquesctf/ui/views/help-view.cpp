@@ -85,6 +85,7 @@ void HelpView::_buildRows()
         _KeyRow {"3", "Set/unset region bookmark #3"},
         _KeyRow {"4", "Set/unset region bookmark #4"},
         _KeyRow {"/, g", "Search/go to (see syntax below)"},
+        _KeyRow {"G", "Live search/go to (see syntax below)"},
         _KeyRow {"P", "Go to packet with index"},
         _KeyRow {":", "Go to offset within data stream"},
         _KeyRow {"N", "Go to event record with timestamp (ns)"},

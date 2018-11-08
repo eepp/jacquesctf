@@ -67,6 +67,7 @@ void StatusView::_stateChanged(const Message& msg)
         this->redraw();
     } else if (dynamic_cast<const CurOffsetInPacketChangedMessage *>(&msg)) {
         this->_drawOffset();
+        this->refresh();
     }
 }
 

@@ -22,7 +22,8 @@ SearchController::SearchController(const Screen& parentScreen,
 {
 }
 
-std::unique_ptr<const SearchQuery> SearchController::start(const std::string& init)
+std::unique_ptr<const SearchQuery> SearchController::startLive(const std::string& init,
+                                                               const LiveUpdateFunc& liveUpdateFunc)
 {
     const auto lineLen = _searchView->contentRect().w - 2;
     std::string buf = init;
@@ -37,9 +38,9 @@ std::unique_ptr<const SearchQuery> SearchController::start(const std::string& in
 
     const auto prevCurs = curs_set(1);
 
-    _searchView->drawCurrentText(buf);
-    _searchView->refresh(true);
     move(startY, startX + buf.size());
+    this->_tryLiveUpdate(buf, liveUpdateFunc);
+    _searchView->refresh();
     doupdate();
 
     bool accepted = false;
@@ -57,14 +58,12 @@ std::unique_ptr<const SearchQuery> SearchController::start(const std::string& in
             // backspace
             if (!buf.empty()) {
                 buf.pop_back();
-                _searchView->drawCurrentText(buf);
-                move(startY, startX + buf.size());
+                this->_tryLiveUpdate(buf, liveUpdateFunc);
             }
         } else if (ch == 23) {
             // ctrl+w
             buf.clear();
-            _searchView->drawCurrentText(buf);
-            move(startY, startX + buf.size());
+            this->_tryLiveUpdate(buf, liveUpdateFunc);
         } else if (ch == 4) {
             // ctrl+d
             break;
@@ -75,8 +74,7 @@ std::unique_ptr<const SearchQuery> SearchController::start(const std::string& in
             }
 
             buf.push_back(static_cast<char>(ch));
-            _searchView->drawCurrentText(buf);
-            move(startY, startX + buf.size());
+            this->_tryLiveUpdate(buf, liveUpdateFunc);
         }
 
         _searchView->refresh();

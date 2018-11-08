@@ -214,7 +214,7 @@ void InspectScreen::_tryShowDecodingError()
     }
 }
 
-void InspectScreen::_snapshotState()
+InspectScreen::_StateSnapshot InspectScreen::_takeStateSnapshot()
 {
     _StateSnapshot snapshot;
 
@@ -226,6 +226,13 @@ void InspectScreen::_snapshotState()
         snapshot.packetIndexInDataStreamFile = activeDsfState.activePacketStateIndex();
         snapshot.offsetInPacketBits = activeDsfState.curOffsetInPacketBits();
     }
+
+    return snapshot;
+}
+
+void InspectScreen::_snapshotState()
+{
+    const auto snapshot = this->_takeStateSnapshot();
 
     if (!_stateSnapshots.empty()) {
         if (*_currentStateSnapshot == snapshot) {
@@ -288,6 +295,14 @@ void InspectScreen::_restoreStateSnapshot(const _StateSnapshot& snapshot)
         assert(this->_state().hasActivePacketState());
         this->_state().gotoPacketRegionAtOffsetInPacketBits(snapshot.offsetInPacketBits);
     }
+}
+
+void InspectScreen::_refreshViews()
+{
+    _pdView->refresh();
+    _ertView->refresh();
+    _priView->refresh();
+    _sdteView->refresh();
 }
 
 KeyHandlingReaction InspectScreen::_handleKey(const int key)
@@ -476,6 +491,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 
     case '/':
     case 'g':
+    case 'G':
     case 'N':
     case 'k':
     case ':':
@@ -504,7 +520,29 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
             break;
         }
 
-        auto query = _searchController.start(init);
+        std::unique_ptr<const SearchQuery> query;
+
+        if (key == 'G') {
+            const auto snapshot = this->_takeStateSnapshot();
+            const auto liveUpdateFunc = [this, snapshot](const auto& query) {
+                // start from initial state
+                this->_restoreStateSnapshot(snapshot);
+
+                // this makes the appropriate views update and redraw
+                this->_state().search(query);
+
+                // refresh background views
+                this->_refreshViews();
+            };
+
+            query = _searchController.startLive(init, liveUpdateFunc);
+
+            if (key == 'G') {
+                this->_restoreStateSnapshot(snapshot);
+            }
+        } else {
+            query = _searchController.start(init);
+        }
 
         if (!query) {
             // canceled or invalid
@@ -586,10 +624,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         break;
     }
 
-    _pdView->refresh();
-    _ertView->refresh();
-    _priView->refresh();
-    _sdteView->refresh();
+    this->_refreshViews();
 
     /*
      * Touch because the content could be unchanged from the last

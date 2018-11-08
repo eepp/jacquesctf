@@ -19,10 +19,19 @@ namespace jacques {
 class SearchController
 {
 public:
+    using LiveUpdateFunc = std::function<void (const SearchQuery&)>;
+
+public:
     explicit SearchController(const Screen& parentScreen,
                               const Stylist& stylist);
-    std::unique_ptr<const SearchQuery> start(const std::string& init);
+    std::unique_ptr<const SearchQuery> startLive(const std::string& init,
+                                                 const LiveUpdateFunc& liveUpdateFunc);
     void parentScreenResized(const Screen& parentScreen);
+
+    std::unique_ptr<const SearchQuery> start(const std::string& init)
+    {
+        return this->startLive(init, [](const auto&) {});
+    }
 
     std::unique_ptr<const SearchQuery> start()
     {
@@ -30,6 +39,24 @@ public:
     }
 
 private:
+    void _tryLiveUpdate(const std::string& buf,
+                        const LiveUpdateFunc& liveUpdateFunc)
+    {
+        const auto query = SearchParser {}.parse(buf);
+        const auto startX = _searchView->rect().pos.x + 1;
+        const auto startY = _searchView->rect().pos.y + 1;
+
+        if (query) {
+            curs_set(0);
+            liveUpdateFunc(*query);
+        }
+
+        _searchView->redraw(true);
+        _searchView->drawCurrentText(buf);
+        move(startY, startX + buf.size());
+        curs_set(1);
+    }
+
     static Rectangle _viewRect(const Screen& parentScreen)
     {
         const auto& screenRect = parentScreen.rect();

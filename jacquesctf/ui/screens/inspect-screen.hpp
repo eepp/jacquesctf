@@ -76,12 +76,14 @@ private:
     void _visibilityChanged() override;
     void _tryShowDecodingError();
     void _snapshotState();
+    _StateSnapshot _takeStateSnapshot();
     void _goBack();
     void _goForward();
     void _restoreStateSnapshot(const _StateSnapshot& snapshot);
     void _updateViews();
     void _toggleBookmark(unsigned int id);
     void _gotoBookmark(unsigned int id);
+    void _refreshViews();
 
 private:
     std::unique_ptr<EventRecordTableView> _ertView;
