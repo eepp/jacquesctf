@@ -149,6 +149,30 @@ void Packet::_ensureOffsetInPacketBitsIsCached(const Index offsetInPacketBits)
 
     // no we have its index: cache event records around this one
     this->_ensureEventRecordIsCached(curIndex);
+
+    /*
+     * This scenario can happen:
+     *
+     * 1. _ensureEventRecordIsCached() above did not do anything because
+     *    the event record at `curIndex` is already in cache.
+     * 2. The event record at `curIndex` is the event record cache's
+     *    last one.
+     * 3. `offsetInPacketBits` is a padding region between two event
+     *    records.
+     * 4. `offsetInPacketBits` is greater than or equal to the cache's
+     *    last event record's end offset.
+     *
+     * Just in case, make sure that the following event record is also
+     * in cache. If it was not, then the caches will be cleared and many
+     * event records will be cached around the one at `curIndex`,
+     * therefore the packet region cache will include the padding
+     * region.
+     */
+    ++curIndex;
+
+    if (curIndex < _checkpoints.eventRecordCount()) {
+        this->_ensureEventRecordIsCached(curIndex);
+    }
 }
 
 void Packet::_cacheContentPacketRegionAtCurIt(Scope::SP scope)
