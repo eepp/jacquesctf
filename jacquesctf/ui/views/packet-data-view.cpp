@@ -518,17 +518,17 @@ void PacketDataView::_setHexChars()
             isEventRecordFirst = true;
         }
 
-        for (Index indexInBitArray = 0;
-                indexInBitArray < packetRegion->segment().size();
-                ++indexInBitArray) {
-            const auto bitOffsetInPacket = firstBitOffsetInPacket +
-                                           indexInBitArray;
+        const auto startOffsetInPacketBits = std::max(firstBitOffsetInPacket,
+                                                      _baseOffsetInPacketBits);
+        const auto endOffsetInPacketBits = std::min(firstBitOffsetInPacket +
+                                                    packetRegion->segment().size().bits(),
+                                                    _endOffsetInPacketBits);
 
-            if (bitOffsetInPacket < _baseOffsetInPacketBits ||
-                    bitOffsetInPacket >= _endOffsetInPacketBits) {
-                // not visible
-                continue;
-            }
+        for (Index bitOffsetInPacket = startOffsetInPacketBits;
+                bitOffsetInPacket < endOffsetInPacketBits;
+                ++bitOffsetInPacket) {
+            const auto indexInBitArray = bitOffsetInPacket -
+                                         firstBitOffsetInPacket;
 
             // times two because `_chars` contains nibbles, not bytes
             auto charIndex = ((bitOffsetInPacket / 8) -
@@ -599,18 +599,15 @@ void PacketDataView::_setAsciiChars()
             isEventRecordFirst = true;
         }
 
-        for (Index indexInBitArray = 0;
-                indexInBitArray < packetRegion->segment().size();
-                ++indexInBitArray) {
-            const auto bitOffsetInPacket = firstBitOffsetInPacket +
-                                           indexInBitArray;
+        const auto startOffsetInPacketBits = std::max(firstBitOffsetInPacket,
+                                                      _baseOffsetInPacketBits);
+        const auto endOffsetInPacketBits = std::min(firstBitOffsetInPacket +
+                                                    packetRegion->segment().size().bits(),
+                                                    _endOffsetInPacketBits);
 
-            if (bitOffsetInPacket < _baseOffsetInPacketBits ||
-                    bitOffsetInPacket >= _endOffsetInPacketBits) {
-                // not visible
-                continue;
-            }
-
+        for (Index bitOffsetInPacket = startOffsetInPacketBits;
+                bitOffsetInPacket < endOffsetInPacketBits;
+                ++bitOffsetInPacket) {
             const auto charIndex = ((bitOffsetInPacket / 8) -
                                     (_baseOffsetInPacketBits / 8));
 
@@ -645,18 +642,17 @@ void PacketDataView::_setBinaryChars()
             isEventRecordFirst = true;
         }
 
-        for (Index indexInBitArray = 0;
-                indexInBitArray < packetRegion->segment().size();
-                ++indexInBitArray) {
-            const auto bitOffsetInPacket = firstBitOffsetInPacket +
-                                           indexInBitArray;
+        const auto startOffsetInPacketBits = std::max(firstBitOffsetInPacket,
+                                                      _baseOffsetInPacketBits);
+        const auto endOffsetInPacketBits = std::min(firstBitOffsetInPacket +
+                                                    packetRegion->segment().size().bits(),
+                                                    _endOffsetInPacketBits);
 
-            if (bitOffsetInPacket < _baseOffsetInPacketBits ||
-                    bitOffsetInPacket >= _endOffsetInPacketBits) {
-                // not visible
-                continue;
-            }
-
+        for (Index bitOffsetInPacket = startOffsetInPacketBits;
+                bitOffsetInPacket < endOffsetInPacketBits;
+                ++bitOffsetInPacket) {
+            const auto indexInBitArray = bitOffsetInPacket -
+                                         firstBitOffsetInPacket;
             _Char ch;
             const auto bitLoc = bitArray.bitLocation(indexInBitArray);
 
