@@ -16,7 +16,8 @@ packets.
 
 * Full hexadecimal and binary packet data inspection with:
 ** Current data type or event record type (metadata) with highlight.
-** ASCII equivalent of data bytes (like any typical hex editor).
+** ASCII equivalent of data bytes (like your typical hex editor).
+** Packet data offsets in decimal or hexadecimal, bytes or bits.
 ** Padding regions shown with a different color.
 ** Decoding error region clearly shown, if any, with textual details.
 ** Current datum path (metadata), size, byte order, and decoded value.
