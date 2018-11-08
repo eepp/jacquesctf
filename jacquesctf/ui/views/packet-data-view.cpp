@@ -21,6 +21,7 @@
 #include "padding-packet-region.hpp"
 #include "error-packet-region.hpp"
 #include "inspect-screen.hpp"
+#include "utils.hpp"
 
 namespace jacques {
 
@@ -199,10 +200,15 @@ void PacketDataView::_setDataXAndRowSize()
     }
 
     // we can compute log16, or we can do that:
-    std::array<char, 16> buf;
+    std::array<char, 32> buf;
+    const Size div = _isOffsetInBytes ? 8 : 1;
+    const auto maxOffset = static_cast<unsigned long long>(_state->activePacketState().packetIndexEntry().effectiveTotalSize().bits() / div);
 
-    std::sprintf(buf.data(), "%" PRIx64,
-                 static_cast<std::uint64_t>(_state->activePacketState().packetIndexEntry().effectiveTotalSize().bits()));
+    if (_isOffsetInHex) {
+        std::sprintf(buf.data(), "%llx", maxOffset);
+    } else {
+        std::strcpy(buf.data(), utils::sepNumber(maxOffset).c_str());
+    }
 
     const auto offsetWidth = std::strlen(buf.data());
 
@@ -265,6 +271,7 @@ void PacketDataView::_drawOffsets() const
     const auto& packetTotalSize = _state->activePacketState().packetIndexEntry().effectiveTotalSize();
     const auto maxOffsetWidth = _dataX - 1;
     auto offsetInPacketBits = _baseOffsetInPacketBits;
+    const Size div = _isOffsetInBytes ? 8 : 1;
 
     for (Index y = 0; y < this->contentRect().h; ++y) {
         if (offsetInPacketBits >= packetTotalSize) {
@@ -273,10 +280,15 @@ void PacketDataView::_drawOffsets() const
                 this->_putChar({x, y}, ' ');
             }
         } else {
-            std::array<char, 16> buf;
+            std::array<char, 32> buf;
+            const auto dispOffsetInPacketBits = offsetInPacketBits / div;
 
-            std::sprintf(buf.data(), "%" PRIx64,
-                         static_cast<std::uint64_t>(offsetInPacketBits));
+            if (_isOffsetInHex) {
+                std::sprintf(buf.data(), "%llx", dispOffsetInPacketBits);
+            } else {
+                std::strcpy(buf.data(),
+                            utils::sepNumber(dispOffsetInPacketBits, ',').c_str());
+            }
 
             const auto offsetWidth = std::strlen(buf.data());
 
@@ -700,7 +712,7 @@ void PacketDataView::_setNumericCharsAndAsciiChars()
     assert(!_packetRegions.empty());
     _chars.clear();
 
-    if (_isHex) {
+    if (_isDataInHex) {
         this->_setHexChars();
     } else {
         this->_setBinaryChars();
@@ -772,9 +784,9 @@ void PacketDataView::isEventRecordFirstPacketRegionEmphasized(const bool isEmpha
     this->_redrawContent();
 }
 
-void PacketDataView::isHex(const bool isHex)
+void PacketDataView::isDataInHex(const bool isDataInHex)
 {
-    _isHex = isHex;
+    _isDataInHex = isDataInHex;
     this->_setDataXAndRowSize();
 
     if (_state->hasActivePacketState()) {
@@ -791,6 +803,30 @@ void PacketDataView::centerSelection()
     }
 
     this->_setBaseAndEndOffsetInPacketBitsFromOffset(_curOffsetInPacketBits);
+    this->_redrawContent();
+}
+
+void PacketDataView::isOffsetInHex(const bool isOffsetInHex)
+{
+    _isOffsetInHex = isOffsetInHex;
+    this->_setDataXAndRowSize();
+
+    if (_state->hasActivePacketState()) {
+        this->_setBaseAndEndOffsetInPacketBitsFromOffset(_curOffsetInPacketBits);
+    }
+
+    this->_redrawContent();
+}
+
+void PacketDataView::isOffsetInBytes(const bool isOffsetInBytes)
+{
+    _isOffsetInBytes = isOffsetInBytes;
+    this->_setDataXAndRowSize();
+
+    if (_state->hasActivePacketState()) {
+        this->_setBaseAndEndOffsetInPacketBitsFromOffset(_curOffsetInPacketBits);
+    }
+
     this->_redrawContent();
 }
 

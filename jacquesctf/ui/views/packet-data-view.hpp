@@ -54,9 +54,11 @@ public:
     void pageDown();
     void pageUp();
     void centerSelection();
-    void isHex(bool isHex);
+    void isDataInHex(bool isDataInHex);
     void isAsciiVisible(bool isVisible);
     void isEventRecordFirstPacketRegionEmphasized(bool isEmphasized);
+    void isOffsetInHex(bool isOffsetInHex);
+    void isOffsetInBytes(bool isOffsetInBytes);
 
     bool isAsciiVisible() const noexcept
     {
@@ -68,9 +70,19 @@ public:
         return _isEventRecordFirstPacketRegionEmphasized;
     }
 
-    bool isHex() const noexcept
+    bool isDataInHex() const noexcept
     {
-        return _isHex;
+        return _isDataInHex;
+    }
+
+    bool isOffsetInHex() const noexcept
+    {
+        return _isOffsetInHex;
+    }
+
+    bool isOffsetInBytes() const noexcept
+    {
+        return _isOffsetInBytes;
     }
 
     const DataSize& rowSize() const noexcept
@@ -145,7 +157,7 @@ private:
 
     Size _charsPerByte() const noexcept
     {
-        return _isHex ? 2 : 8;
+        return _isDataInHex ? 2 : 8;
     }
 
 private:
@@ -182,7 +194,9 @@ private:
     boost::optional<Index> _nextOffsetInPacketBits;
     bool _isAsciiVisible = true;
     bool _isEventRecordFirstPacketRegionEmphasized = true;
-    bool _isHex = true;
+    bool _isDataInHex = true;
+    bool _isOffsetInHex = false;
+    bool _isOffsetInBytes = true;
 };
 
 } // namespace jacques
