@@ -297,18 +297,18 @@ const PacketIndexEntry& DataStreamFile::packetIndexEntryContainingOffsetBits(con
 {
     assert(this->hasOffsetBits(offsetBits));
 
-    auto it = std::lower_bound(std::begin(_index), std::end(_index),
-                               offsetBits, [](const auto& entry,
-                                              const auto offsetBits) {
-        return entry.offsetInDataStreamBits() < offsetBits;
+    auto it = std::upper_bound(std::begin(_index), std::end(_index),
+                               offsetBits, [](const auto offsetBits,
+                                              const auto& entry) {
+        return offsetBits <
+               entry.offsetInDataStreamBits() + entry.effectiveTotalSize();
     });
 
     assert(it != std::end(_index));
+    assert(offsetBits >= it->offsetInDataStreamBits() &&
+           offsetBits < it->offsetInDataStreamBits() +
+                        it->effectiveTotalSize());
 
-    if (it->offsetInDataStreamBits() > offsetBits) {
-        assert(it != std::begin(_index));
-        --it;
-    }
 
     return *it;
 }
