@@ -26,27 +26,27 @@ class ViewStateObserverGuard;
 /*
  * Base class of all views.
  *
- * A view manages an ncurses window. The View class provides many useful
- * protected methods to its derived classes, like View::_clearContent(),
- * View::_moveCursor(), and View::_safeMoveAndPrint().
+ * A view manages an ncurses window. The `View` class provides many
+ * useful protected methods to its derived classes, like
+ * _clearContent(), _moveCursor(), and _safeMoveAndPrint().
  *
- * A view is built with a decoration style (see DecorationStyle): either
- * it has a border or none. When it has a border, it can have a title,
- * and can be focused or blurred (see View::focus() and View::blur()).
- * Also, when it has a title, the protected View::_hasMoreTop() and
- * View::_hasMoreBottom() control whether or not the top and bottom
- * right "more content" indicator exists.
+ * A view is built with a decoration style (see `DecorationStyle`):
+ * either it has a border or none. When it has a border, it can have a
+ * title, and can be focused or blurred (see focus() and blur()). Also,
+ * when it has a title, the protected _hasMoreTop() and _hasMoreBottom()
+ * control whether or not the top and bottom right "more content"
+ * indicator exists.
  *
- * You can publicly refresh and redraw a view. See the View::refresh()
- * and View::redraw() methods's documentation for more information.
+ * You can publicly refresh and redraw a view. See the refresh() and
+ * redraw() methods's documentation for more information.
  *
- * The visibility (View::isVisible()) of a view controls whether or not
- * this view effectively refreshes its underlying ncurses window when
- * you call View::refresh().
+ * The visibility (isVisible()) of a view controls whether or not this
+ * view effectively refreshes its underlying ncurses window when you
+ * call refresh().
  *
  * A derived view can subscribe to the application's state with a
  * ViewStateObserverGuard instance. This RAII helper has an underlying
- * StateObserverGuard and uses View::_stateChanged() as the observer.
+ * StateObserverGuard and uses _stateChanged() as the observer.
  *
  * The View class is friend with the Stylist class: the Stylist class
  * has a bunch of stylizing methods which apply to a view and it needs
@@ -86,7 +86,7 @@ public:
      * Refreshes this view, that is, copies the view's currently
      * _changed_ characters since the last refresh to the screen buffer.
      * If `touch` is true, touches this view before refreshing (see
-     * View::touch()).
+     * touch()).
      *
      * This method only applies if the view is visible.
      *
@@ -113,14 +113,14 @@ public:
     /*
      * Redraws this view. This method makes the view redraw every
      * character according to its current state, and then calls
-     * View::refresh(touch).
+     * `refresh(touch)`.
      */
     void redraw(bool touch = false);
 
     /*
      * Touches this view's window: invalidates all the current
-     * characters so that the next call to View::refresh() copies _all_
-     * the view's characters to the screen buffer.
+     * characters so that the next call to refresh() copies _all_ the
+     * view's characters to the screen buffer.
      */
     void touch() const;
 
@@ -132,7 +132,7 @@ public:
     /*
      * Sets this view's visibility to `isVisible`.
      *
-     * When the view is not visible, View::refresh() has no effect.
+     * When the view is not visible, refresh() has no effect.
      */
     void isVisible(const bool isVisible)
     {
@@ -156,8 +156,7 @@ public:
      * This view's content rectangle relative to the view's rectangle.
      *
      * If this view has no borders, then the content rectangle's
-     * dimensions are the same as View::rect(), but the position is
-     * {0, 0}.
+     * dimensions are the same as rect(), but the position is {0, 0}.
      *
      * A lot of protected methods taking a `contentPos` parameter apply
      * to a position relative to the content rectangle's position.
@@ -169,32 +168,32 @@ public:
 
 protected:
     /*
-     * Called by the state (through a ViewStateObserverGuard) when the
+     * Called by the state (through a `ViewStateObserverGuard`) when the
      * state changes.
      */
     virtual void _stateChanged(const Message& msg);
 
     /*
      * Implementation must redraw the whole content (everything in
-     * View::contentRect()).
+     * contentRect()).
      */
     virtual void _redrawContent();
 
     /*
-     * Called _after_ the view is resized (View::rect() and
-     * View::contentRect() are already changed).
+     * Called _after_ the view is resized (rect() and contentRect() are
+     * already changed).
      */
     virtual void _resized();
 
     /*
-     * Clears everything in the content rectangle (View::contentRect())
-     * with the Stylist::std() style.
+     * Clears everything in the content rectangle (contentRect()) with
+     * the Stylist::std() style.
      */
     void _clearContent() const;
 
     /*
-     * Clears the whole view's rectangle (View::rect()) without applying
-     * any specific style.
+     * Clears the whole view's rectangle (rect()) without applying any
+     * specific style.
      */
     void _clearRect() const;
 
@@ -233,7 +232,7 @@ protected:
 
     /*
      * Puts a single character `ch` at `contentPos` relative to
-     * View::contentRect().
+     * contentRect().
      */
     void _putChar(const Point& contentPos, const chtype ch) const
     {
@@ -253,8 +252,8 @@ protected:
      * Prints a formatted string at the current cursor position.
      *
      * This method is not safe and could print outside the view. Use
-     * View::_safePrint() for a safe version which truncates the
-     * formatted string.
+     * _safePrint() for a safe version which truncates the formatted
+     * string.
      */
     int _print(const char *fmt, ...) const
     {
@@ -269,8 +268,8 @@ protected:
     }
 
     /*
-     * Like View::_print(), but truncates the formatted string so that
-     * it's not printed outside the view.
+     * Like _print(), but truncates the formatted string so that it's
+     * not printed outside the view.
      */
     int _safePrint(const char *fmt, ...) const
     {
@@ -285,7 +284,7 @@ protected:
     }
 
     /*
-     * Moves the cursor at `contentPos` relative to View::contentRect().
+     * Moves the cursor at `contentPos` relative to contentRect().
      */
     void _moveCursor(const Point& contentPos) const
     {
@@ -296,7 +295,7 @@ protected:
     }
 
     /*
-     * Calls View::_moveCursor(contentPos), and then View::_safePrint().
+     * Calls _moveCursor(contentPos), and then _safePrint().
      */
     int _safeMoveAndPrint(const Point& contentPos, const char *fmt, ...) const
     {
@@ -313,7 +312,7 @@ protected:
     }
 
     /*
-     * Calls View::_moveCursor(contentPos), and then View::_print().
+     * Calls _moveCursor(contentPos), and then _print().
      */
     int _moveAndPrint(const Point& contentPos, const char *fmt, ...) const
     {

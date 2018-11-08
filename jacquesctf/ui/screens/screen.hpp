@@ -22,11 +22,13 @@ namespace jacques {
  * Base class for all screens.
  *
  * A screen is a controller which handles user keys and changes the
- * state or specific views accordingly. A screen usually owns one or
- * more specific views. There's never more than one screen displayed on
- * the terminal at a given time. However, a screen is not necessarily
- * full screen: there can be other, "permanent" views on the top,
- * bottom, or sides.
+ * state or specific views accordingly (although most views are
+ * autonomous, in that they react to state changes).
+ *
+ * A screen usually owns one or more specific views. There's never more
+ * than one screen displayed on the terminal at a given time. However, a
+ * screen is not necessarily full screen: there can be other,
+ * "permanent" views on the top, bottom, or sides.
  *
  * As a convenience, the base screen holds the stylist and state, which
  * are almost always needed by derived screens anyway.
@@ -49,7 +51,7 @@ public:
      * Resizes the screen.
      *
      * The derived screen has the responsibility of resizing its views
-     * accordingly in the virtual Screen::_resized() method.
+     * accordingly in the virtual _resized() method.
      */
     void resize(const Size w, const Size h)
     {
@@ -63,7 +65,7 @@ public:
      * Redraws the screen.
      *
      * The derived screen has the responsibility of redrawing its views
-     * accordingly in the virtual Screen::_redraw() method.
+     * accordingly in the virtual _redraw() method.
      */
     void redraw()
     {
@@ -73,9 +75,9 @@ public:
     /*
      * Sets the screen's visibility to `isVisible`.
      *
-     * If the visibility changes, calls the virtual
-     * Screen::_visibilityChanged() method so that the derived screen
-     * can set its views's visibility accordingly.
+     * If the visibility changes, calls the virtual _visibilityChanged()
+     * method so that the derived screen can set its views's visibility
+     * accordingly.
      */
     void isVisible(const bool isVisible)
     {
@@ -107,8 +109,8 @@ public:
 
 protected:
     /*
-     * Implementation must redraw the whole content (Screen::rect()) of
-     * the screen.
+     * Implementation must redraw the whole content (rect()) of the
+     * screen.
      */
     virtual void _redraw() = 0;
 
@@ -120,16 +122,21 @@ protected:
     virtual KeyHandlingReaction _handleKey(int key) = 0;
 
     /*
-     * Called when the screen needs to be resized. Screen::rect() is
-     * already changed. Implementation must move/resize its views and
-     * make sure nothing is drawn outside Screen::rect().
+     * Called when the screen needs to be resized. rect() is already
+     * changed. Implementation must move/resize its views and make sure
+     * nothing is drawn outside rect().
      */
     virtual void _resized() = 0;
 
     /*
-     * Called when the screen's visibility changes. Implementation can
-     * change the visibility of its views and perform any required
-     * updates before the terminal screen is updated.
+     * Called when the screen's visibility changes (new visibility is
+     * given by isVisible()). Implementation can change the visibility
+     * of its views and perform any required updates before the terminal
+     * screen is updated.
+     *
+     * Usually, when isVisible() is true, then a full redraw of all the
+     * visible views is needed to overwrite the previously visible
+     * screen's characters.
      */
     virtual void _visibilityChanged();
 
