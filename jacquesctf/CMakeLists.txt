@@ -58,11 +58,7 @@ add_executable (
     data/timestamp.cpp
     data/trace.cpp
     jacques.cpp
-    state/active-data-stream-file-changed-message.cpp
-    state/active-packet-changed-message.cpp
-    state/cur-offset-in-packet-changed-message.cpp
     state/data-stream-file-state.cpp
-    state/message-visitor.cpp
     state/packet-state.cpp
     state/search-parser.cpp
     state/state.cpp

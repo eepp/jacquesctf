@@ -22,7 +22,6 @@
 namespace jacques {
 
 class View;
-class Message;
 
 /*
  * This state (application's model) guarantees the following:
@@ -46,7 +45,7 @@ class State :
     friend class PacketState;
 
 public:
-    using Observer = std::function<void (const Message&)>;
+    using Observer = std::function<void (const Message)>;
 
 public:
     explicit State(const std::list<boost::filesystem::path>& paths,
@@ -169,7 +168,7 @@ public:
     }
 
 private:
-    void _notify(const Message& msg);
+    void _notify(Message msg);
 
 private:
     std::vector<Observer> _observers;

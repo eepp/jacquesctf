@@ -9,9 +9,7 @@
 #include <numeric>
 
 #include "event-record-table-view.hpp"
-#include "active-data-stream-file-changed-message.hpp"
-#include "active-packet-changed-message.hpp"
-#include "cur-offset-in-packet-changed-message.hpp"
+#include "message.hpp"
 
 namespace jacques {
 
@@ -167,10 +165,10 @@ void EventRecordTableView::_selectLast()
     this->_selectionIndex(_state->activePacketState().packet().eventRecordCount() - 1);
 }
 
-void EventRecordTableView::_stateChanged(const Message& msg)
+void EventRecordTableView::_stateChanged(const Message msg)
 {
-    if (dynamic_cast<const ActiveDataStreamFileChangedMessage *>(&msg) ||
-            dynamic_cast<const ActivePacketChangedMessage *>(&msg)) {
+    if (msg == Message::ACTIVE_DATA_STREAM_FILE_CHANGED ||
+            msg == Message::ACTIVE_PACKET_CHANGED) {
         /*
          * Go back to 0 without drawing first in case there's less event
          * records than our current selection index.

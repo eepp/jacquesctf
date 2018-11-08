@@ -340,8 +340,7 @@ KeyHandlingReaction DataTypesScreen::_handleKey(const int key)
             break;
         }
 
-        _ertTableView->selectEventRecordType(_lastQuery->pattern(),
-                                             SearchDirection::FORWARD);
+        _ertTableView->selectEventRecordType(_lastQuery->pattern(), true);
         this->_updateViews();
         _ertTableView->centerSelectedRow();
         break;

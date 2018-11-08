@@ -10,12 +10,10 @@
 
 namespace jacques {
 
-class MessageVisitor;
-
-class Message
-{
-protected:
-    virtual void _acceptVisitor(MessageVisitor& visitor) = 0;
+enum class Message {
+    ACTIVE_DATA_STREAM_FILE_CHANGED,
+    ACTIVE_PACKET_CHANGED,
+    CUR_OFFSET_IN_PACKET_CHANGED,
 };
 
 } // namespace jacques

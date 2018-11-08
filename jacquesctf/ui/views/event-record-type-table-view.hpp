@@ -12,12 +12,10 @@
 #include <vector>
 #include <string>
 #include <array>
-#include <boost/optional.hpp>
 #include <yactfr/metadata/fwd.hpp>
 
 #include "table-view.hpp"
 #include "state.hpp"
-#include "search-direction.hpp"
 
 namespace jacques {
 
@@ -31,7 +29,7 @@ public:
     void dataStreamType(const yactfr::DataStreamType& dst);
     const yactfr::EventRecordType *eventRecordType() const;
     void selectEventRecordType(const std::string& pattern,
-                               const boost::optional<SearchDirection>& direction = boost::none);
+                               bool relative = false);
     void selectEventRecordType(yactfr::TypeId id);
 
     Size eventRecordTypeCount() const

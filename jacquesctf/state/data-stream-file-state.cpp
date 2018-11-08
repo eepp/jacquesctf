@@ -12,7 +12,7 @@
 #include <fcntl.h>
 
 #include "data-stream-file-state.hpp"
-#include "active-packet-changed-message.hpp"
+#include "message.hpp"
 #include "search-parser.hpp"
 #include "state.hpp"
 #include "io-error.hpp"
@@ -73,7 +73,7 @@ void DataStreamFileState::_gotoPacket(const Index index)
     assert(index < _dataStreamFile->packetCount());
     _activePacketStateIndex = index;
     _activePacketState = &this->_packetState(index);
-    _state->_notify(ActivePacketChangedMessage {});
+    _state->_notify(Message::ACTIVE_PACKET_CHANGED);
 }
 
 void DataStreamFileState::gotoPacket(const Index index)

@@ -9,7 +9,7 @@
 #include <numeric>
 
 #include "data-stream-file-table-view.hpp"
-#include "active-data-stream-file-changed-message.hpp"
+#include "message.hpp"
 #include "utils.hpp"
 
 namespace jacques {
@@ -24,9 +24,9 @@ DataStreamFileTableView::DataStreamFileTableView(const Rectangle& rect,
     this->_setColumnDescriptions();
 }
 
-void DataStreamFileTableView::_stateChanged(const Message& msg)
+void DataStreamFileTableView::_stateChanged(const Message msg)
 {
-    if (dynamic_cast<const ActiveDataStreamFileChangedMessage *>(&msg)) {
+    if (msg == Message::ACTIVE_DATA_STREAM_FILE_CHANGED) {
         this->_selectionIndex(_state->activeDataStreamFileStateIndex());
     }
 }

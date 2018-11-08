@@ -112,7 +112,7 @@ private:
     using _Chars = std::vector<_Char>;
 
 private:
-    void _stateChanged(const Message& msg) override;
+    void _stateChanged(Message msg) override;
     void _redrawContent() override;
     void _resized() override;
     void _drawSeparators() const;

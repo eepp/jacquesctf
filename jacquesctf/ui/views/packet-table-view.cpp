@@ -9,8 +9,7 @@
 #include <numeric>
 
 #include "packet-table-view.hpp"
-#include "active-data-stream-file-changed-message.hpp"
-#include "active-packet-changed-message.hpp"
+#include "message.hpp"
 
 namespace jacques {
 
@@ -299,11 +298,11 @@ void PacketTableView::selectedPacketIndex(Index index)
     this->_selectionIndex(index);
 }
 
-void PacketTableView::_stateChanged(const Message& msg)
+void PacketTableView::_stateChanged(const Message msg)
 {
     bool updateSelection = false;
 
-    if (dynamic_cast<const ActiveDataStreamFileChangedMessage *>(&msg)) {
+    if (msg == Message::ACTIVE_DATA_STREAM_FILE_CHANGED) {
         /*
          * Go back to 0 without drawing first in case there's less
          * packets than our current selection index.
@@ -311,7 +310,7 @@ void PacketTableView::_stateChanged(const Message& msg)
         this->_selectionIndex(0, false);
         this->redraw();
         updateSelection = true;
-    } else if (dynamic_cast<const ActivePacketChangedMessage *>(&msg)) {
+    } else if (msg == Message::ACTIVE_PACKET_CHANGED) {
         updateSelection = true;
     }
 

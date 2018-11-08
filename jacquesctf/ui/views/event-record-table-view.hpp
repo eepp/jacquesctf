@@ -27,7 +27,7 @@ protected:
     bool _hasIndex(Index index) override;
     void _resized() override;
     void _selectLast() override;
-    void _stateChanged(const Message& msg) override;
+    void _stateChanged(Message msg) override;
 
 private:
     void _setColumnDescriptions();

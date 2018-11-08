@@ -25,7 +25,7 @@ SubDataTypeExplorerView::SubDataTypeExplorerView(const Rectangle& rect,
 {
 }
 
-void SubDataTypeExplorerView::_stateChanged(const Message& msg)
+void SubDataTypeExplorerView::_stateChanged(const Message)
 {
     const auto& packetRegion = _state->currentPacketRegion();
 

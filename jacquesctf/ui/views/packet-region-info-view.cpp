@@ -15,8 +15,7 @@
 #include "stylist.hpp"
 #include "packet-region-info-view.hpp"
 #include "utils.hpp"
-#include "active-data-stream-file-changed-message.hpp"
-#include "active-packet-changed-message.hpp"
+#include "message.hpp"
 #include "content-packet-region.hpp"
 #include "padding-packet-region.hpp"
 #include "error-packet-region.hpp"
@@ -32,7 +31,7 @@ PacketRegionInfoView::PacketRegionInfoView(const Rectangle& rect,
 {
 }
 
-void PacketRegionInfoView::_stateChanged(const Message& msg)
+void PacketRegionInfoView::_stateChanged(const Message)
 {
     this->redraw();
 }

@@ -20,7 +20,7 @@ public:
                                      const Stylist& stylist, State& state);
 
 private:
-    void _stateChanged(const Message& msg) override;
+    void _stateChanged(Message msg) override;
 
 private:
     State * const _state;

@@ -10,7 +10,7 @@
 #include "packet-state.hpp"
 #include "packet-region.hpp"
 #include "state.hpp"
-#include "cur-offset-in-packet-changed-message.hpp"
+#include "message.hpp"
 
 namespace jacques {
 
@@ -137,7 +137,7 @@ void PacketState::gotoPacketRegionAtOffsetInPacketBits(const Index offsetInPacke
 
     assert(offsetInPacketBits < _packet->indexEntry().effectiveTotalSize());
     _curOffsetInPacketBits = offsetInPacketBits;
-    _state->_notify(CurOffsetInPacketChangedMessage {});
+    _state->_notify(Message::CUR_OFFSET_IN_PACKET_CHANGED);
 }
 
 

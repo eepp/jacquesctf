@@ -9,7 +9,7 @@
 #include "utils.hpp"
 #include "stylist.hpp"
 #include "state.hpp"
-#include "active-packet-changed-message.hpp"
+#include "message.hpp"
 
 namespace jacques {
 
@@ -100,9 +100,9 @@ void PacketDecodingErrorDetailsView::_redrawContent()
     }
 }
 
-void PacketDecodingErrorDetailsView::_stateChanged(const Message& msg)
+void PacketDecodingErrorDetailsView::_stateChanged(const Message msg)
 {
-    if (dynamic_cast<const ActivePacketChangedMessage *>(&msg)) {
+    if (msg == Message::ACTIVE_PACKET_CHANGED) {
         this->_redrawContent();
     }
 }

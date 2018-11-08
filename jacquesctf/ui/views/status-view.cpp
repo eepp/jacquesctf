@@ -16,9 +16,7 @@
 #include "stylist.hpp"
 #include "status-view.hpp"
 #include "utils.hpp"
-#include "active-data-stream-file-changed-message.hpp"
-#include "active-packet-changed-message.hpp"
-#include "cur-offset-in-packet-changed-message.hpp"
+#include "message.hpp"
 
 namespace jacques {
 
@@ -59,13 +57,13 @@ void StatusView::_createEndPositions()
     }
 }
 
-void StatusView::_stateChanged(const Message& msg)
+void StatusView::_stateChanged(const Message msg)
 {
-    if (dynamic_cast<const ActiveDataStreamFileChangedMessage *>(&msg) ||
-            dynamic_cast<const ActivePacketChangedMessage *>(&msg)) {
+    if (msg == Message::ACTIVE_DATA_STREAM_FILE_CHANGED ||
+            msg == Message::ACTIVE_PACKET_CHANGED) {
         _curEndPositions = &_endPositions[&_state->activeDataStreamFileState()];
         this->redraw();
-    } else if (dynamic_cast<const CurOffsetInPacketChangedMessage *>(&msg)) {
+    } else if (msg == Message::CUR_OFFSET_IN_PACKET_CHANGED) {
         this->_drawOffset();
         this->refresh();
     }

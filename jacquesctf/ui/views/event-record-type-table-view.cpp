@@ -175,7 +175,7 @@ void EventRecordTypeTableView::_selectLast()
 }
 
 void EventRecordTypeTableView::selectEventRecordType(const std::string& pattern,
-                                                     const boost::optional<SearchDirection>& direction)
+                                                     const bool relative)
 {
     if (!_eventRecordTypes || _eventRecordTypes->empty()) {
         return;
@@ -183,9 +183,7 @@ void EventRecordTypeTableView::selectEventRecordType(const std::string& pattern,
 
     Index startIndex = 0;
 
-    if (direction) {
-        assert(*direction == SearchDirection::FORWARD);
-
+    if (relative) {
         startIndex = this->_selectionIndex() + 1;
 
         if (startIndex == _eventRecordTypes->size()) {

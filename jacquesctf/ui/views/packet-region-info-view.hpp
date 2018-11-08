@@ -22,7 +22,7 @@ public:
                                 const Stylist& stylist, State& state);
 
 private:
-    void _stateChanged(const Message& msg) override;
+    void _stateChanged(Message msg) override;
     void _redrawContent() override;
     void _safePrintScope(yactfr::Scope scope);
     Size _curMaxOffsetSize();

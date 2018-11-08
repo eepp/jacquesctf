@@ -36,7 +36,7 @@ private:
 private:
     void _createEndPositions();
     void _drawOffset();
-    void _stateChanged(const Message& msg) override;
+    void _stateChanged(Message msg) override;
     void _redrawContent() override;
 
 private:

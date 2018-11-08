@@ -29,7 +29,7 @@ public:
 
 private:
     void _drawRows() override;
-    void _stateChanged(const Message& msg) override;
+    void _stateChanged(Message msg) override;
     void _buildTraceInfoRows(const Metadata& metadata);
     void _buildRows();
 

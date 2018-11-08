@@ -32,7 +32,7 @@ private:
     bool _hasIndex(Index index) override;
     void _selectLast() override;
     void _resized() override;
-    void _stateChanged(const Message& msg) override;
+    void _stateChanged(Message msg) override;
     void _setColumnDescriptions();
     void _resetRow(const std::vector<TableViewColumnDescription>& descrs);
 

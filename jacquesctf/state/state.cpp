@@ -14,7 +14,6 @@
 #include "search-parser.hpp"
 #include "message.hpp"
 #include "metadata-error.hpp"
-#include "active-data-stream-file-changed-message.hpp"
 
 namespace jacques {
 
@@ -74,7 +73,7 @@ void State::gotoDataStreamFile(const Index index)
 
     _activeDataStreamFileStateIndex = index;
     _activeDataStreamFileState = _dataStreamFileStates[index].get();
-    this->_notify(ActiveDataStreamFileChangedMessage {});
+    this->_notify(Message::ACTIVE_DATA_STREAM_FILE_CHANGED);
 
     if (_activeDataStreamFileState->dataStreamFile().packetCount() > 0) {
         if (!_activeDataStreamFileState->hasActivePacketState()) {
@@ -101,7 +100,7 @@ void State::gotoNextDataStreamFile()
     this->gotoDataStreamFile(_activeDataStreamFileStateIndex + 1);
 }
 
-void State::_notify(const Message& msg)
+void State::_notify(const Message msg)
 {
     for (const auto& observer : _observers) {
         if (observer) {

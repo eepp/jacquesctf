@@ -14,9 +14,7 @@
 #include "stylist.hpp"
 #include "packet-data-view.hpp"
 #include "utils.hpp"
-#include "active-data-stream-file-changed-message.hpp"
-#include "active-packet-changed-message.hpp"
-#include "cur-offset-in-packet-changed-message.hpp"
+#include "message.hpp"
 #include "content-packet-region.hpp"
 #include "padding-packet-region.hpp"
 #include "error-packet-region.hpp"
@@ -47,10 +45,10 @@ void PacketDataView::_resized()
     this->_redrawContent();
 }
 
-void PacketDataView::_stateChanged(const Message& msg)
+void PacketDataView::_stateChanged(const Message msg)
 {
-    if (dynamic_cast<const ActiveDataStreamFileChangedMessage *>(&msg) ||
-            dynamic_cast<const ActivePacketChangedMessage *>(&msg)) {
+    if (msg == Message::ACTIVE_DATA_STREAM_FILE_CHANGED ||
+            msg == Message::ACTIVE_PACKET_CHANGED) {
         if (_state->hasActivePacketState()) {
             this->_setDataXAndRowSize();
             this->_setPrevCurNextOffsetInPacketBits();
@@ -58,7 +56,7 @@ void PacketDataView::_stateChanged(const Message& msg)
         }
 
         this->_redrawContent();
-    } else if (dynamic_cast<const CurOffsetInPacketChangedMessage *>(&msg)) {
+    } else if (msg == Message::CUR_OFFSET_IN_PACKET_CHANGED) {
         this->_updateSelection();
     }
 }

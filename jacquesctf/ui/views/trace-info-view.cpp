@@ -20,7 +20,7 @@
 #include "timestamp.hpp"
 #include "time-ops.hpp"
 #include "stylist.hpp"
-#include "active-data-stream-file-changed-message.hpp"
+#include "message.hpp"
 
 namespace jacques {
 
@@ -443,9 +443,9 @@ void TraceInfoView::_drawRows()
     }
 }
 
-void TraceInfoView::_stateChanged(const Message& msg)
+void TraceInfoView::_stateChanged(const Message msg)
 {
-    if (dynamic_cast<const ActiveDataStreamFileChangedMessage *>(&msg)) {
+    if (msg == Message::ACTIVE_DATA_STREAM_FILE_CHANGED) {
         _rows = &_traceInfo[_state->metadata().traceType().get()];
         this->_index(0);
         this->_rowCount(_rows->size());

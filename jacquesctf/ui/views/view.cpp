@@ -90,7 +90,7 @@ void View::moveAndResize(const Rectangle& rect)
     this->redraw();
 }
 
-void View::_stateChanged(const Message& msg)
+void View::_stateChanged(const Message)
 {
 }
 

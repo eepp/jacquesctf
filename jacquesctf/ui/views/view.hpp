@@ -171,7 +171,7 @@ protected:
      * Called by the state (through a `ViewStateObserverGuard`) when the
      * state changes.
      */
-    virtual void _stateChanged(const Message& msg);
+    virtual void _stateChanged(Message msg);
 
     /*
      * Implementation must redraw the whole content (everything in
