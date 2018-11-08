@@ -311,7 +311,7 @@ void PacketTableView::_stateChanged(const Message& msg)
         this->_selectionIndex(0, false);
         this->redraw();
         updateSelection = true;
-    } else if (auto sMsg = dynamic_cast<const ActivePacketChangedMessage *>(&msg)) {
+    } else if (dynamic_cast<const ActivePacketChangedMessage *>(&msg)) {
         updateSelection = true;
     }
 

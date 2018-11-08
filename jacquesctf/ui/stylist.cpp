@@ -462,7 +462,7 @@ void Stylist::packetDataViewSelection(const View& view,
 {
     this->_attrsReset(view);
 
-    int colorPair;
+    int colorPair = 0;
 
     switch (selectionType) {
     case PacketDataViewSelectionType::PREVIOUS:

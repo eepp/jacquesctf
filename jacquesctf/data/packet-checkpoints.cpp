@@ -64,8 +64,8 @@ void PacketCheckpoints::_tryCreateCheckpoints(yactfr::PacketSequence& seq,
      */
     yactfr::PacketSequenceIteratorPosition lastPos;
     yactfr::PacketSequenceIteratorPosition penultimatePos;
-    Index lastIndex;
-    Index penultimateIndex;
+    Index lastIndex = 0;
+    Index penultimateIndex = 0;
 
     try {
         this->_lastEventRecordPositions(lastPos, penultimatePos, lastIndex,

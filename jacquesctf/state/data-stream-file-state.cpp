@@ -334,7 +334,7 @@ bool DataStreamFileState::search(const SearchQuery& query)
         this->gotoPacketRegionAtOffsetInPacketBits(eventRecord.segment().offsetInPacketBits());
         return true;
     } else if (const auto sQuery = dynamic_cast<const OffsetSearchQuery *>(&query)) {
-        long long reqOffsetBits;
+        auto reqOffsetBits = sQuery->value();
 
         if (sQuery->target() == OffsetSearchQuery::Target::PACKET &&
                 !_activePacketState) {
@@ -344,22 +344,18 @@ bool DataStreamFileState::search(const SearchQuery& query)
         if (sQuery->isDiff()) {
             switch (sQuery->target()) {
             case OffsetSearchQuery::Target::PACKET:
-                reqOffsetBits = static_cast<long long>(_activePacketState->curOffsetInPacketBits()) +
-                                sQuery->value();
+                reqOffsetBits += static_cast<long long>(_activePacketState->curOffsetInPacketBits());
                 break;
 
             case OffsetSearchQuery::Target::DATA_STREAM_FILE:
             {
                 const auto curPacketOffsetBitsInDataStream = _activePacketState->packetIndexEntry().offsetInDataStreamBits();
 
-                reqOffsetBits = static_cast<long long>(curPacketOffsetBitsInDataStream +
-                                                       _activePacketState->curOffsetInPacketBits()) +
-                                sQuery->value();
+                reqOffsetBits += static_cast<long long>(curPacketOffsetBitsInDataStream +
+                                                        _activePacketState->curOffsetInPacketBits());
                 break;
             }
             }
-        } else {
-            reqOffsetBits = sQuery->value();
         }
 
         if (reqOffsetBits < 0) {
