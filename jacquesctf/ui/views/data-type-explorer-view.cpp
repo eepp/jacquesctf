@@ -283,7 +283,7 @@ void DataTypeExplorerView::_drawRows()
     this->_clearContent();
 
     if (this->_rowCount() == 0) {
-        this->_stylist().error(*this);
+        this->_stylist().std(*this, true);
 
         const std::string msg {"Nothing to show here!"};
 
