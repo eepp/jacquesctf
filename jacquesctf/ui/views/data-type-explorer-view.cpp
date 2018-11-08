@@ -201,6 +201,7 @@ void DataTypeExplorerView::reset()
     _singleDataType = nullptr;
     _eventRecordType = nullptr;
     _rows.clear();
+    this->_rowCount(0);
     this->clearHighlight();
     this->redraw();
 }
@@ -283,8 +284,11 @@ void DataTypeExplorerView::_drawRows()
 
     if (this->_rowCount() == 0) {
         this->_stylist().error(*this);
-        this->_moveAndPrint(this->contentRect().pos,
-                            "Nothing to show here!");
+
+        const std::string msg {"Nothing to show here!"};
+
+        this->_safeMoveAndPrint({this->contentRect().w / 2 - msg.size() / 2,
+                                 this->contentRect().h / 2}, "%s", msg.c_str());
         return;
     }
 
