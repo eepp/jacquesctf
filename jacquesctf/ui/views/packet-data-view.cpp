@@ -31,6 +31,7 @@ PacketDataView::PacketDataView(const Rectangle& rect,
     _stateObserverGuard {state, *this},
     _bookmarks {&bookmarks}
 {
+    this->_setTitle();
 }
 
 void PacketDataView::_resized()
@@ -305,6 +306,29 @@ void PacketDataView::_drawOffsets() const
             offsetInPacketBits += _rowSize.bits();
         }
     }
+}
+
+void PacketDataView::_setTitle()
+{
+    std::string title = "Packet data (offsets: ";
+
+    if (_isOffsetInHex) {
+        title += "hex";
+    } else {
+        title += "dec";
+    }
+
+    title += ", ";
+
+    if (_isOffsetInBytes) {
+        title += "bytes";
+    } else {
+        title += "bits";
+    }
+
+    title += ")";
+    this->_title(title);
+    this->_decorate();
 }
 
 void PacketDataView::_setCustomStyle(const _Char& ch) const
@@ -809,6 +833,7 @@ void PacketDataView::isOffsetInHex(const bool isOffsetInHex)
         this->_setBaseAndEndOffsetInPacketBitsFromOffset(_curOffsetInPacketBits);
     }
 
+    this->_setTitle();
     this->_redrawContent();
 }
 
@@ -821,6 +846,7 @@ void PacketDataView::isOffsetInBytes(const bool isOffsetInBytes)
         this->_setBaseAndEndOffsetInPacketBitsFromOffset(_curOffsetInPacketBits);
     }
 
+    this->_setTitle();
     this->_redrawContent();
 }
 

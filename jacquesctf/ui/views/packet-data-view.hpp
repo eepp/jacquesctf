@@ -117,6 +117,7 @@ private:
     void _resized() override;
     void _drawSeparators() const;
     void _drawOffsets() const;
+    void _setTitle();
     void _setCustomStyle(const _Char& ch) const;
     void _drawChar(const _Char& ch) const;
     void _drawUnselectedChar(const _Char& ch) const;
