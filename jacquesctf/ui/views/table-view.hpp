@@ -30,12 +30,12 @@ public:
     explicit TableViewColumnDescription(const std::string& title,
                                         Size contentWidth);
 
-    const std::string& title() const
+    const std::string& title() const noexcept
     {
         return _title;
     }
 
-    Size contentWidth() const
+    Size contentWidth() const noexcept
     {
         return _contentWidth;
     }
@@ -68,17 +68,17 @@ protected:
 public:
     virtual ~TableViewCell();
 
-    TextAlignment textAlignment() const
+    TextAlignment textAlignment() const noexcept
     {
         return _textAlignment;
     }
 
-    bool emphasized() const
+    bool emphasized() const noexcept
     {
         return _emphasized;
     }
 
-    void emphasized(const bool emphasized)
+    void emphasized(const bool emphasized) noexcept
     {
         _emphasized = emphasized;
     }
@@ -88,17 +88,17 @@ public:
         return _style;
     }
 
-    void style(const Style style)
+    void style(const Style style) noexcept
     {
         _style = style;
     }
 
-    bool na() const
+    bool na() const noexcept
     {
         return _na;
     }
 
-    void na(const bool na)
+    void na(const bool na) noexcept
     {
         _na = na;
     }
@@ -116,7 +116,7 @@ class TextTableViewCell :
 public:
     explicit TextTableViewCell(TextAlignment textAlignment);
 
-    const std::string& text() const
+    const std::string& text() const noexcept
     {
         return _text;
     }
@@ -136,7 +136,7 @@ class PathTableViewCell :
 public:
     explicit PathTableViewCell();
 
-    const boost::filesystem::path& path() const
+    const boost::filesystem::path& path() const noexcept
     {
         return _path;
     }
@@ -156,12 +156,12 @@ class BoolTableViewCell :
 public:
     explicit BoolTableViewCell(TextAlignment textAlignment);
 
-    bool value() const
+    bool value() const noexcept
     {
         return _value;
     }
 
-    void value(const bool value)
+    void value(const bool value) noexcept
     {
         _value = value;
     }
@@ -184,27 +184,27 @@ public:
 public:
     explicit IntTableViewCell(TextAlignment textAlignment);
 
-    Radix radix() const
+    Radix radix() const noexcept
     {
         return _radix;
     }
 
-    void radix(const Radix radix)
+    void radix(const Radix radix) noexcept
     {
         _radix = radix;
     }
 
-    bool radixPrefix() const
+    bool radixPrefix() const noexcept
     {
         return _radixPrefix;
     }
 
-    void radixPrefix(const bool radixPrefix)
+    void radixPrefix(const bool radixPrefix) noexcept
     {
         _radixPrefix = radixPrefix;
     }
 
-    void sep(const bool sep)
+    void sep(const bool sep) noexcept
     {
         _sep = sep;
     }
@@ -226,12 +226,12 @@ class SignedIntTableViewCell :
 public:
     explicit SignedIntTableViewCell(TextAlignment textAlignment);
 
-    long long value() const
+    long long value() const noexcept
     {
         return _value;
     }
 
-    void value(const long long value)
+    void value(const long long value) noexcept
     {
         _value = value;
     }
@@ -246,12 +246,12 @@ class UnsignedIntTableViewCell :
 public:
     explicit UnsignedIntTableViewCell(TextAlignment textAlignment);
 
-    unsigned long long value() const
+    unsigned long long value() const noexcept
     {
         return _value;
     }
 
-    void value(const unsigned long long value)
+    void value(const unsigned long long value) noexcept
     {
         _value = value;
     }
@@ -276,12 +276,12 @@ public:
         return _size;
     }
 
-    utils::SizeFormatMode formatMode() const
+    utils::SizeFormatMode formatMode() const noexcept
     {
         return _formatMode;
     }
 
-    void formatMode(const utils::SizeFormatMode formatMode)
+    void formatMode(const utils::SizeFormatMode formatMode) noexcept
     {
         _formatMode = formatMode;
     }
@@ -297,7 +297,7 @@ class TimestampTableViewCell :
 public:
     explicit TimestampTableViewCell(TimestampFormatMode tsFormatMode);
 
-    const Timestamp& ts() const
+    const Timestamp& ts() const noexcept
     {
         return _ts;
     }
@@ -307,12 +307,12 @@ public:
         _ts = ts;
     }
 
-    TimestampFormatMode formatMode() const
+    TimestampFormatMode formatMode() const noexcept
     {
         return _formatMode;
     }
 
-    void formatMode(const TimestampFormatMode formatMode)
+    void formatMode(const TimestampFormatMode formatMode) noexcept
     {
         _formatMode = formatMode;
     }
