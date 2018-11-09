@@ -50,6 +50,10 @@ void EventRecordTableView::_resetRow(const std::vector<TableViewColumnDescriptio
     if (descrs.size() >= 6) {
         _row.push_back(std::make_unique<TimestampTableViewCell>(_tsFormatMode));
     }
+
+    if (descrs.size() >= 7) {
+        _row.push_back(std::make_unique<DurationTableViewCell>(_tsFormatMode));
+    }
 }
 
 void EventRecordTableView::_setColumnDescriptions()
@@ -61,6 +65,7 @@ void EventRecordTableView::_setColumnDescriptions()
         TableViewColumnDescription {"ERT name", 8},
         TableViewColumnDescription {"ERT ID", 8},
         TableViewColumnDescription {"Timestamp: first", 29},
+        TableViewColumnDescription {"Duration since last ER", 23},
     };
 
     const auto accOp = [](Size sz, const TableViewColumnDescription& descr) {
@@ -86,6 +91,10 @@ void EventRecordTableView::_setColumnDescriptions()
 
     if (descrs.size() >= 6) {
         totWidth += descrs[5].contentWidth();
+    }
+
+    if (descrs.size() >= 7) {
+        totWidth += descrs[6].contentWidth();
     }
 
     descrs[3] = TableViewColumnDescription {
@@ -129,6 +138,24 @@ void EventRecordTableView::_drawRow(const Index index)
         }
     }
 
+    if (_row.size() >= 7) {
+        auto& cell = static_cast<DurationTableViewCell&>(*_row[6]);
+
+        if (index == 0 || !eventRecord.firstTimestamp()) {
+            cell.na(true);
+        } else {
+            auto& prevEventRecord = _state->activePacketState().packet().eventRecordAtIndexInPacket(index - 1);
+
+            if (!prevEventRecord.firstTimestamp()) {
+                cell.na(true);
+            } else {
+                cell.na(false);
+                cell.beginningTimestamp(*prevEventRecord.firstTimestamp());
+                cell.endTimestamp(*eventRecord.firstTimestamp());
+            }
+        }
+    }
+
     this->_drawCells(index, _row);
 }
 
@@ -143,7 +170,14 @@ bool EventRecordTableView::_hasIndex(const Index index)
 
 void EventRecordTableView::timestampFormatMode(const TimestampFormatMode tsFormatMode)
 {
-    static_cast<TimestampTableViewCell&>(*_row[5]).formatMode(tsFormatMode);
+    if (_row.size() >= 6) {
+        static_cast<TimestampTableViewCell&>(*_row[5]).formatMode(tsFormatMode);
+    }
+
+    if (_row.size() >= 7) {
+        static_cast<DurationTableViewCell&>(*_row[6]).formatMode(tsFormatMode);
+    }
+
     _tsFormatMode = tsFormatMode;
     this->_redrawRows();
 }
