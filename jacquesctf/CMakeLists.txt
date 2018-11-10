@@ -123,3 +123,7 @@ target_compile_definitions (
     jacquesctf PRIVATE
     "-DJACQUES_VERSION=\"${PROJECT_VERSION}\""
 )
+install (
+    TARGETS jacquesctf
+    RUNTIME DESTINATION bin
+)
