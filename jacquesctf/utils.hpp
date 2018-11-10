@@ -14,6 +14,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/utility.hpp>
 #include <boost/optional.hpp>
+#include <yactfr/metadata/metadata-parse-error.hpp>
 
 #include "aliases.hpp"
 
@@ -87,6 +88,9 @@ std::pair<std::string, std::string> formatSize(Size sizeBits,
 
 std::pair<std::string, std::string> formatNs(long long ns,
                                              const boost::optional<char>& sep = boost::none);
+
+void printMetadataParseError(std::ostream& os, const std::string& path,
+                             const yactfr::MetadataParseError& error);
 
 } // namespace utils
 } // namespace jacques

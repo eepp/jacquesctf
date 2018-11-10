@@ -47,11 +47,11 @@ Metadata::Metadata(const bfs::path& path) :
         this->_setDataTypeParents();
         this->_setIsCorrelatable();
     } catch (const yactfr::InvalidMetadataStream& ex) {
-        _invalidStreamError = ex;
+        throw MetadataError<yactfr::InvalidMetadataStream> {path, ex};
     } catch (const yactfr::InvalidMetadata& ex) {
-        _invalidMetadataError = ex;
+        throw MetadataError<yactfr::InvalidMetadata> {path, ex};
     } catch (const yactfr::MetadataParseError& ex) {
-        _parseError = ex;
+        throw MetadataError<yactfr::MetadataParseError> {path, ex};
     }
 }
 

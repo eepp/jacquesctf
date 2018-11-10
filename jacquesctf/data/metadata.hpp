@@ -25,6 +25,34 @@
 
 namespace jacques {
 
+template <typename SubErrorT>
+class MetadataError final :
+    public std::runtime_error
+{
+public:
+    explicit MetadataError(const boost::filesystem::path& path,
+                           const SubErrorT& subError) :
+        std::runtime_error {subError.what()},
+        _path {path},
+        _subError {subError}
+    {
+    }
+
+    const boost::filesystem::path& path() const noexcept
+    {
+        return _path;
+    }
+
+    const SubErrorT& subError() const noexcept
+    {
+        return _subError;
+    }
+
+private:
+    const boost::filesystem::path _path;
+    const SubErrorT _subError;
+};
+
 class Metadata :
     boost::noncopyable
 {
@@ -86,21 +114,6 @@ public:
         return _stream.uuid;
     }
 
-    const boost::optional<yactfr::InvalidMetadataStream>& invalidStreamError() const noexcept
-    {
-        return _invalidStreamError;
-    }
-
-    const boost::optional<yactfr::InvalidMetadata>& invalidMetadataError() const noexcept
-    {
-        return _invalidMetadataError;
-    }
-
-    const boost::optional<yactfr::MetadataParseError>& parseError() const noexcept
-    {
-        return _parseError;
-    }
-
     yactfr::TraceType::SP traceType() const noexcept
     {
         return _traceType;
@@ -127,9 +140,6 @@ private:
         boost::optional<boost::uuids::uuid> uuid;
     } _stream;
 
-    boost::optional<yactfr::InvalidMetadataStream> _invalidStreamError;
-    boost::optional<yactfr::InvalidMetadata> _invalidMetadataError;
-    boost::optional<yactfr::MetadataParseError> _parseError;
     yactfr::TraceType::SP _traceType;
     DataTypeParentMap _dataTypeParents;
     DataTypeScopeMap _dataTypeScopes;

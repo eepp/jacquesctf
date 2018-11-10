@@ -16,7 +16,6 @@
 #include "config.hpp"
 #include "stylist.hpp"
 #include "state.hpp"
-#include "metadata-error.hpp"
 #include "inspect-screen.hpp"
 #include "help-screen.hpp"
 #include "packets-screen.hpp"
@@ -242,24 +241,22 @@ static bool tryStartInteractive(const Config& cfg)
     try {
         state = std::make_unique<State>(cfg.filePaths(),
                                         packetCheckpointsBuildProgressUpdater);
-    } catch (const MetadataError& error) {
+    } catch (const MetadataError<yactfr::InvalidMetadataStream>& ex) {
         finiScreen();
-
-        auto& metadata = error.metadata();
-
-        utils::error() << "Metadata error: `" << metadata.path().string() << "`: ";
-
-        if (metadata.invalidStreamError()) {
-            std::cerr << "Invalid metadata stream: " <<
-                         metadata.invalidStreamError()->what() << std::endl;
-        } else if (metadata.invalidMetadataError()) {
-            std::cerr << "Invalid metadata: " <<
-                         metadata.invalidMetadataError()->what() << std::endl;
-        } else if (metadata.parseError()) {
-            std::cerr << "Cannot parse metadata text:\n" <<
-                         metadata.parseError()->what();
-        }
-
+        utils::error() << "Metadata error: `" << ex.path().string() <<
+                          "`: invalid metadata stream: " << ex.what() <<
+                          std::endl;
+        return false;
+    } catch (const MetadataError<yactfr::InvalidMetadata>& ex) {
+        finiScreen();
+        utils::error() << "Metadata error: `" << ex.path().string() <<
+                          "`: invalid metadata: " << ex.what() <<
+                          std::endl;
+        return false;
+    } catch (const MetadataError<yactfr::MetadataParseError>& ex) {
+        finiScreen();
+        utils::printMetadataParseError(std::cerr, ex.path().string(),
+                                       ex.subError());
         return false;
     }
 

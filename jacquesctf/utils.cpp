@@ -353,5 +353,18 @@ std::pair<std::string, std::string> formatNs(long long ns,
     return {sStr, nsStr};
 }
 
+void printMetadataParseError(std::ostream& os, const std::string& path,
+                             const yactfr::MetadataParseError& error)
+{
+    for (auto it = std::rbegin(error.errorMessages());
+            it != std::rend(error.errorMessages()); ++it) {
+        const auto& msg = *it;
+
+        os << path << ":" << msg.location().natLineNumber() <<
+              ":" << msg.location().natColNumber() <<
+              ": " << msg.message() << std::endl;
+    }
+}
+
 } // namespace utils
 } // namespace jacques

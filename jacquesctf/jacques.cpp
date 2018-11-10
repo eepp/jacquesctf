@@ -72,9 +72,10 @@ static void printVersion()
 static bool printMetadataText(const Config& cfg)
 {
     std::unique_ptr<const yactfr::MetadataStream> stream;
+    const auto& path = *std::begin(cfg.filePaths());
 
     try {
-        std::ifstream fileStream {std::begin(cfg.filePaths())->string().c_str(),
+        std::ifstream fileStream {path.string().c_str(),
                                   std::ios::in | std::ios::binary};
         stream = yactfr::createMetadataStream(fileStream);
     } catch (const yactfr::InvalidMetadataStream& ex) {
@@ -84,8 +85,7 @@ static bool printMetadataText(const Config& cfg)
         utils::error() << "Invalid metadata: " << ex.what() << std::endl;
         return false;
     } catch (const yactfr::MetadataParseError& ex) {
-        utils::error() << "Cannot parse metadata text:" << std::endl <<
-                          ex.what();
+        utils::printMetadataParseError(std::cerr, path.string(), ex);
         return false;
     }
 

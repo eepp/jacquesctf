@@ -13,7 +13,6 @@
 #include "trace.hpp"
 #include "search-parser.hpp"
 #include "message.hpp"
-#include "metadata-error.hpp"
 
 namespace jacques {
 
