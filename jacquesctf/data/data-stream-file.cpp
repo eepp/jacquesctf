@@ -65,44 +65,61 @@ void DataStreamFile::buildIndex(const BuildIndexProgressFunc& progressFunc,
 }
 
 void DataStreamFile::_addPacketIndexEntry(const Index offsetInDataStreamBytes,
+                                          const Index offsetInDataStreamBits,
                                           const _IndexBuildingState& state,
                                           bool isInvalid)
 {
     auto expectedTotalSize = state.expectedTotalSize;
     auto expectedContentSize = state.expectedContentSize;
+    DataSize effectiveTotalSize;
+    DataSize effectiveContentSize;
 
-    if (!expectedTotalSize && !isInvalid) {
+    if (!expectedTotalSize) {
         expectedTotalSize = _fileSize;
     }
 
-    if (!expectedContentSize && !isInvalid) {
+    if (!expectedContentSize) {
         expectedContentSize = expectedTotalSize;
     }
 
     const auto availSize = DataSize::fromBytes(_fileSize.bytes() -
                                                offsetInDataStreamBytes);
-    auto effectiveTotalSize = expectedTotalSize ? *expectedTotalSize : 0;
 
-    if (effectiveTotalSize > availSize) {
-        // not enough data
-        isInvalid = true;
-        effectiveTotalSize = availSize;
-        _isComplete = false;
+    if (isInvalid) {
+        effectiveContentSize = offsetInDataStreamBits -
+                               offsetInDataStreamBytes * 8;
+
+        if (state.expectedTotalSize &&
+                *state.expectedTotalSize <= availSize) {
+            effectiveTotalSize = *state.expectedTotalSize;
+        } else {
+            effectiveTotalSize = availSize;
+        }
+    } else {
+        effectiveTotalSize = *expectedTotalSize;
+        effectiveContentSize = *expectedContentSize;
+
+        if (effectiveTotalSize > availSize) {
+            effectiveTotalSize = availSize;
+            isInvalid = true;
+        }
+
+        if (effectiveContentSize > effectiveTotalSize ||
+                effectiveContentSize > availSize) {
+            effectiveContentSize = effectiveTotalSize;
+            isInvalid = true;
+        }
     }
 
-    auto effectiveContentSize = expectedContentSize ? *expectedContentSize : 0;
-
-    if (effectiveContentSize > effectiveTotalSize) {
-        isInvalid = true;
-        effectiveContentSize = effectiveTotalSize;
-        _isComplete = false;
+    if (isInvalid) {
+        _hasError = true;
     }
 
     _index.push_back(PacketIndexEntry {
         _index.size(), offsetInDataStreamBytes,
         state.packetContextOffsetInPacketBits,
         state.preambleSize,
-        *expectedTotalSize, *expectedContentSize,
+        expectedTotalSize, expectedContentSize,
         effectiveTotalSize, effectiveContentSize,
         state.dst, state.dataStreamId, state.tsBegin, state.tsEnd, state.seqNum,
         state.discardedEventRecordCounter, isInvalid,
@@ -159,7 +176,8 @@ void DataStreamFile::_buildIndex(const BuildIndexProgressFunc& progressFunc,
             {
                 state.preambleSize = it.offset() - offsetBytes * 8;
                 state.inPacketContextScope = false;
-                this->_addPacketIndexEntry(offsetBytes, state, false);
+                this->_addPacketIndexEntry(offsetBytes, it.offset(),
+                                           state, false);
 
                 if (_index.size() % step == 0) {
                     progressFunc(_index.back());
@@ -278,7 +296,7 @@ void DataStreamFile::_buildIndex(const BuildIndexProgressFunc& progressFunc,
              * entry: create an invalid entry so that we know about
              * this.
              */
-            this->_addPacketIndexEntry(offsetBytes, state, true);
+            this->_addPacketIndexEntry(offsetBytes, it.offset(), state, true);
         }
     }
 }

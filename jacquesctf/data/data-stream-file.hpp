@@ -84,9 +84,9 @@ public:
         return _fileSize;
     }
 
-    bool isComplete() const noexcept
+    bool hasError() const noexcept
     {
-        return _isComplete;
+        return _hasError;
     }
 
     const Metadata& metadata() const noexcept
@@ -116,6 +116,7 @@ private:
     void _buildIndex(const BuildIndexProgressFunc& progressFunc,
                      Size step);
     void _addPacketIndexEntry(Index offsetInDataStreamBytes,
+                              Index offsetInDataStreamBits,
                               const _IndexBuildingState& state,
                               bool isInvalid);
 
@@ -180,7 +181,7 @@ private:
     std::vector<std::unique_ptr<Packet>> _packets;
     int _fd;
     bool _isIndexBuilt = false;
-    bool _isComplete = true;
+    bool _hasError = false;
 };
 
 } // namespace jacques

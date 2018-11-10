@@ -230,6 +230,10 @@ void PacketDataView::_setDataXAndRowSize()
         bytesPerRow *= 2;
     }
 
+    if (bytesPerRow > _state->activePacketState().packetIndexEntry().effectiveTotalSize().bytes()) {
+        bytesPerRow = _state->activePacketState().packetIndexEntry().effectiveTotalSize().bytes();
+    }
+
     _dataX = offsetWidth + 1;
     _asciiCharsX = _dataX + bytesPerRow * (this->_charsPerByte() + 1);
     _rowSize = DataSize::fromBytes(bytesPerRow);

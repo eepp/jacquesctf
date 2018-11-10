@@ -182,10 +182,10 @@ void DataStreamFileTableView::_drawRow(const Index index)
     }
 
     for (auto& cell : _row) {
-        if (dsf.isComplete()) {
-            cell->style(TableViewCell::Style::NORMAL);
-        } else {
+        if (dsf.hasError()) {
             cell->style(TableViewCell::Style::ERROR);
+        } else {
+            cell->style(TableViewCell::Style::NORMAL);
         }
     }
 
