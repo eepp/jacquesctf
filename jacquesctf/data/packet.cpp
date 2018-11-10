@@ -607,6 +607,21 @@ void Packet::_cacheRegionsAtCurItUntilError(const Index initErIndexInPacket)
 void Packet::_cacheRegionsFromErsAtCurIt(const Index erIndexInPacket,
                                          const Size erCount)
 {
+    /*
+     * This function's logic:
+     *
+     *     Cache all requested event records, minus one if the packet
+     *       has an error and it's the last event record. This step does
+     *       not throw a decoding error: this would be a bug.
+     *
+     *     If we need to cache the last event record:
+     *         If the packet has an error:
+     *             Cache all regions until said error. This will
+     *               necessarily create the last event record, but it
+     *               could be incomplete.
+     *         Else:
+     *             Cache any padding region after the last event record.
+     */
     assert(erCount > 0);
 
     theLogger->debug("Caching event records #{} to #{}.",
@@ -621,7 +636,8 @@ void Packet::_cacheRegionsFromErsAtCurIt(const Index erIndexInPacket,
     const auto endErIndexInPacket = erIndexInPacket + erCount;
     auto endErIndexInPacketBeforeLast = endErIndexInPacket;
 
-    if (endErIndexInPacketBeforeLast == _checkpoints.eventRecordCount()) {
+    if (_checkpoints.error() &&
+            endErIndexInPacketBeforeLast == _checkpoints.eventRecordCount()) {
         --endErIndexInPacketBeforeLast;
     }
 
