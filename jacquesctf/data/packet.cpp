@@ -31,7 +31,7 @@ Packet::Packet(const PacketIndexEntry& indexEntry,
     _checkpoints {
         seq, metadata, *_indexEntry, 20011, packetCheckpointsBuildListener,
     },
-    _lruPacketRegionCache {2000},
+    _lruRegionCache {2000},
     _preambleSize {
         indexEntry.preambleSize() ? *indexEntry.preambleSize() :
         indexEntry.effectiveContentSize()
@@ -45,7 +45,7 @@ Packet::Packet(const PacketIndexEntry& indexEntry,
                      reinterpret_cast<std::uintptr_t>(_mmapFile->addr()),
                      _mmapFile->offsetBytes(), _mmapFile->size().bytes(),
                      _mmapFile->fileSize().bytes());
-    this->_cachePacketPreamblePacketRegions();
+    this->_cachePreambleRegions();
 }
 
 void Packet::_ensureEventRecordIsCached(const Index indexInPacket)
@@ -82,7 +82,7 @@ void Packet::_ensureEventRecordIsCached(const Index indexInPacket)
                 const auto count = std::min(_eventRecordCacheMaxSize,
                                             _checkpoints.eventRecordCount() - curIndex);
 
-                this->_cachePacketRegionsFromErsAtCurIt(curIndex, count);
+                this->_cacheRegionsFromErsAtCurIt(curIndex, count);
                 return;
             }
 
@@ -95,16 +95,16 @@ void Packet::_ensureEventRecordIsCached(const Index indexInPacket)
 
 void Packet::_ensureOffsetInPacketBitsIsCached(const Index offsetInPacketBits)
 {
-    if (this->_packetRegionCacheContainsOffsetInPacketBits(_packetRegionCache,
-                                                           offsetInPacketBits)) {
+    if (this->_regionCacheContainsOffsetInPacketBits(_regionCache,
+                                                     offsetInPacketBits)) {
         return;
     }
 
     // preamble?
-    if (this->_packetRegionCacheContainsOffsetInPacketBits(_preamblePacketRegionCache,
-                                                           offsetInPacketBits)) {
+    if (this->_regionCacheContainsOffsetInPacketBits(_preambleRegionCache,
+                                                     offsetInPacketBits)) {
         // this is the current cache now
-        _packetRegionCache = _preamblePacketRegionCache;
+        _regionCache = _preambleRegionCache;
         _eventRecordCache.clear();
         return;
     }
@@ -175,7 +175,7 @@ void Packet::_ensureOffsetInPacketBitsIsCached(const Index offsetInPacketBits)
     }
 }
 
-void Packet::_cacheContentPacketRegionAtCurIt(Scope::SP scope)
+void Packet::_cacheContentRegionAtCurIt(Scope::SP scope)
 {
     using ElemKind = yactfr::Element::Kind;
 
@@ -184,16 +184,16 @@ void Packet::_cacheContentPacketRegionAtCurIt(Scope::SP scope)
     switch (_it->kind()) {
     case ElemKind::SIGNED_INT:
     case ElemKind::SIGNED_ENUM:
-        region = this->_contentPacketRegionFromBitArrayElemAtCurIt<yactfr::SignedIntElement>(scope);
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::SignedIntElement>(scope);
         break;
 
     case ElemKind::UNSIGNED_INT:
     case ElemKind::UNSIGNED_ENUM:
-        region = this->_contentPacketRegionFromBitArrayElemAtCurIt<yactfr::UnsignedIntElement>(scope);
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::UnsignedIntElement>(scope);
         break;
 
     case ElemKind::FLOAT:
-        region = this->_contentPacketRegionFromBitArrayElemAtCurIt<yactfr::FloatElement>(scope);
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FloatElement>(scope);
         break;
 
     case ElemKind::STRING_BEGINNING:
@@ -273,15 +273,15 @@ void Packet::_cacheContentPacketRegionAtCurIt(Scope::SP scope)
     ++_it;
 
     assert(region);
-    this->_trySetPreviousPacketRegionOffsetInPacketBits(*region);
-    _packetRegionCache.push_back(std::move(region));
+    this->_trySetPreviousRegionOffsetInPacketBits(*region);
+    _regionCache.push_back(std::move(region));
 }
 
-void Packet::_tryCachePaddingPacketRegionBeforeCurIt(Scope::SP scope)
+void Packet::_tryCachePaddingRegionBeforeCurIt(Scope::SP scope)
 {
     PacketSegment segment;
 
-    if (_packetRegionCache.empty()) {
+    if (_regionCache.empty()) {
         if (this->_itOffsetInPacketBits() == 0 ||
                 this->_itOffsetInPacketBits() >= _preambleSize) {
             return;
@@ -289,39 +289,39 @@ void Packet::_tryCachePaddingPacketRegionBeforeCurIt(Scope::SP scope)
 
         segment = PacketSegment {0, this->_itOffsetInPacketBits()};
     } else {
-        const auto& prevPacketRegion = _packetRegionCache.back();
+        const auto& prevRegion = _regionCache.back();
 
-        if (prevPacketRegion->segment().endOffsetInPacketBits() ==
+        if (prevRegion->segment().endOffsetInPacketBits() ==
                 this->_itOffsetInPacketBits()) {
             return;
         }
 
-        assert(prevPacketRegion->segment().endOffsetInPacketBits() <
+        assert(prevRegion->segment().endOffsetInPacketBits() <
                this->_itOffsetInPacketBits());
 
         segment = PacketSegment {
-            prevPacketRegion->segment().endOffsetInPacketBits(),
+            prevRegion->segment().endOffsetInPacketBits(),
             this->_itOffsetInPacketBits() -
-            prevPacketRegion->segment().endOffsetInPacketBits(),
-            prevPacketRegion->segment().byteOrder()
+            prevRegion->segment().endOffsetInPacketBits(),
+            prevRegion->segment().byteOrder()
         };
     }
 
-    auto packetRegion = std::make_shared<PaddingPacketRegion>(segment,
+    auto region = std::make_shared<PaddingPacketRegion>(segment,
                                                               std::move(scope));
 
-    this->_trySetPreviousPacketRegionOffsetInPacketBits(*packetRegion);
-    _packetRegionCache.push_back(std::move(packetRegion));
+    this->_trySetPreviousRegionOffsetInPacketBits(*region);
+    _regionCache.push_back(std::move(region));
 }
 
-void Packet::_cachePacketPreamblePacketRegions()
+void Packet::_cachePreambleRegions()
 {
     theLogger->debug("Caching preamble packet regions.");
 
     using ElemKind = yactfr::Element::Kind;
 
-    assert(_preamblePacketRegionCache.empty());
-    assert(_packetRegionCache.empty());
+    assert(_preambleRegionCache.empty());
+    assert(_regionCache.empty());
 
     // go to beginning of packet
     theLogger->debug("Seeking packet at offset {} B.",
@@ -330,8 +330,8 @@ void Packet::_cachePacketPreamblePacketRegions()
 
     // special case: no event records and an error: cache everything now
     if (_checkpoints.error() && _checkpoints.eventRecordCount() == 0) {
-        this->_cachePacketRegionsAtCurItUntilError();
-        _preamblePacketRegionCache = _packetRegionCache;
+        this->_cacheRegionsAtCurItUntilError();
+        _preambleRegionCache = _regionCache;
         return;
     }
 
@@ -350,16 +350,16 @@ void Packet::_cachePacketPreamblePacketRegions()
             case ElemKind::STRING_BEGINNING:
             case ElemKind::STATIC_TEXT_ARRAY_BEGINNING:
             case ElemKind::DYNAMIC_TEXT_ARRAY_BEGINNING:
-                this->_tryCachePaddingPacketRegionBeforeCurIt(curScope);
+                this->_tryCachePaddingRegionBeforeCurIt(curScope);
 
-                // _cacheContentPacketRegionAtCurIt() increments the iterator
-                this->_cacheContentPacketRegionAtCurIt(curScope);
+                // _cacheContentRegionAtCurIt() increments the iterator
+                this->_cacheContentRegionAtCurIt(curScope);
                 break;
 
             case ElemKind::SCOPE_BEGINNING:
             {
                 // cache padding before scope
-                this->_tryCachePaddingPacketRegionBeforeCurIt(curScope);
+                this->_tryCachePaddingRegionBeforeCurIt(curScope);
 
                 auto& elem = static_cast<const yactfr::ScopeBeginningElement&>(*_it);
 
@@ -393,7 +393,7 @@ void Packet::_cachePacketPreamblePacketRegions()
 
             case ElemKind::EVENT_RECORD_BEGINNING:
                 // cache padding before first event record
-                this->_tryCachePaddingPacketRegionBeforeCurIt(curScope);
+                this->_tryCachePaddingRegionBeforeCurIt(curScope);
                 isDone = true;
                 break;
 
@@ -403,7 +403,7 @@ void Packet::_cachePacketPreamblePacketRegions()
                     ++_it;
                 }
 
-                this->_tryCachePaddingPacketRegionBeforeCurIt(curScope);
+                this->_tryCachePaddingRegionBeforeCurIt(curScope);
                 isDone = true;
                 break;
 
@@ -421,9 +421,9 @@ void Packet::_cachePacketPreamblePacketRegions()
         OptByteOrder byteOrder;
 
         // remaining data until end of packet is an error region
-        if (!_packetRegionCache.empty()) {
-            offsetStartBits = _packetRegionCache.back()->segment().endOffsetInPacketBits();
-            byteOrder = _packetRegionCache.back()->segment().byteOrder();
+        if (!_regionCache.empty()) {
+            offsetStartBits = _regionCache.back()->segment().endOffsetInPacketBits();
+            byteOrder = _regionCache.back()->segment().byteOrder();
         }
 
         const auto offsetEndBits = _indexEntry->effectiveTotalSize().bits();
@@ -432,27 +432,27 @@ void Packet::_cachePacketPreamblePacketRegions()
             const PacketSegment segment {
                 offsetStartBits, offsetEndBits - offsetStartBits, byteOrder
             };
-            auto packetRegion = std::make_shared<ErrorPacketRegion>(segment);
+            auto region = std::make_shared<ErrorPacketRegion>(segment);
 
-            this->_trySetPreviousPacketRegionOffsetInPacketBits(*packetRegion);
-            _packetRegionCache.push_back(std::move(packetRegion));
+            this->_trySetPreviousRegionOffsetInPacketBits(*region);
+            _regionCache.push_back(std::move(region));
         }
     }
 
-    if (!_packetRegionCache.empty()) {
+    if (!_regionCache.empty()) {
         theLogger->debug("Preamble packet region cache now spans [{} b, {} b[.",
-                         _packetRegionCache.front()->segment().offsetInPacketBits(),
-                         _packetRegionCache.back()->segment().offsetInPacketBits() +
-                         _packetRegionCache.back()->segment().size().bits());
+                         _regionCache.front()->segment().offsetInPacketBits(),
+                         _regionCache.back()->segment().offsetInPacketBits() +
+                         _regionCache.back()->segment().size().bits());
     }
 
-    _preamblePacketRegionCache = _packetRegionCache;
+    _preambleRegionCache = _regionCache;
 }
 
-void Packet::_cachePacketRegionsAtCurIt(const yactfr::Element::Kind endElemKind,
-                                        const bool setCurScope,
-                                        const bool setCurEventRecord,
-                                        Index erIndexInPacket)
+void Packet::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind,
+                                  const bool setCurScope,
+                                  const bool setCurEventRecord,
+                                  Index erIndexInPacket)
 {
     using ElemKind = yactfr::Element::Kind;
 
@@ -476,15 +476,15 @@ void Packet::_cachePacketRegionsAtCurIt(const yactfr::Element::Kind endElemKind,
         case ElemKind::STRING_BEGINNING:
         case ElemKind::STATIC_TEXT_ARRAY_BEGINNING:
         case ElemKind::DYNAMIC_TEXT_ARRAY_BEGINNING:
-            this->_tryCachePaddingPacketRegionBeforeCurIt(curScope);
+            this->_tryCachePaddingRegionBeforeCurIt(curScope);
 
-            // _cacheContentPacketRegionAtCurIt() increments the iterator
-            this->_cacheContentPacketRegionAtCurIt(curScope);
+            // _cacheContentRegionAtCurIt() increments the iterator
+            this->_cacheContentRegionAtCurIt(curScope);
             break;
 
         case ElemKind::SCOPE_BEGINNING:
             // cache padding before scope
-            this->_tryCachePaddingPacketRegionBeforeCurIt(curScope);
+            this->_tryCachePaddingRegionBeforeCurIt(curScope);
 
             if (setCurScope) {
                 auto& elem = static_cast<const yactfr::ScopeBeginningElement&>(*_it);
@@ -521,7 +521,7 @@ void Packet::_cachePacketRegionsAtCurIt(const yactfr::Element::Kind endElemKind,
 
         case ElemKind::EVENT_RECORD_BEGINNING:
             // cache padding before event record
-            this->_tryCachePaddingPacketRegionBeforeCurIt(curScope);
+            this->_tryCachePaddingRegionBeforeCurIt(curScope);
 
             if (setCurEventRecord) {
                 curEr = std::make_shared<EventRecord>(erIndexInPacket);
@@ -572,28 +572,28 @@ void Packet::_cachePacketRegionsAtCurIt(const yactfr::Element::Kind endElemKind,
     }
 }
 
-void Packet::_cachePacketRegionsFromOneErAtCurIt(const Index indexInPacket)
+void Packet::_cacheRegionsFromOneErAtCurIt(const Index indexInPacket)
 {
     using ElemKind = yactfr::Element::Kind;
 
     assert(_it->kind() == ElemKind::EVENT_RECORD_BEGINNING);
-    this->_cachePacketRegionsAtCurIt(ElemKind::EVENT_RECORD_END,
-                                     true, true, indexInPacket);
+    this->_cacheRegionsAtCurIt(ElemKind::EVENT_RECORD_END,
+                               true, true, indexInPacket);
 }
 
-void Packet::_cachePacketRegionsAtCurItUntilError()
+void Packet::_cacheRegionsAtCurItUntilError()
 {
     try {
-        this->_cachePacketRegionsAtCurIt(yactfr::Element::Kind::PACKET_END,
-                                         false, false, 0);
+        this->_cacheRegionsAtCurIt(yactfr::Element::Kind::PACKET_END,
+                                   false, false, 0);
     } catch (const yactfr::DecodingError&) {
         Index offsetStartBits = _preambleSize.bits();
         OptByteOrder byteOrder;
 
         // remaining data until end of packet is an error region
-        if (!_packetRegionCache.empty()) {
-            offsetStartBits = _packetRegionCache.back()->segment().endOffsetInPacketBits();
-            byteOrder = _packetRegionCache.back()->segment().byteOrder();
+        if (!_regionCache.empty()) {
+            offsetStartBits = _regionCache.back()->segment().endOffsetInPacketBits();
+            byteOrder = _regionCache.back()->segment().byteOrder();
         }
 
         const auto offsetEndBits = _indexEntry->effectiveTotalSize().bits();
@@ -602,15 +602,15 @@ void Packet::_cachePacketRegionsAtCurItUntilError()
             const PacketSegment segment {
                 offsetStartBits, offsetEndBits - offsetStartBits, byteOrder
             };
-            auto packetRegion = std::make_shared<ErrorPacketRegion>(segment);
+            auto region = std::make_shared<ErrorPacketRegion>(segment);
 
-            this->_trySetPreviousPacketRegionOffsetInPacketBits(*packetRegion);
-            _packetRegionCache.push_back(std::move(packetRegion));
+            this->_trySetPreviousRegionOffsetInPacketBits(*region);
+            _regionCache.push_back(std::move(region));
         }
     }
 }
 
-void Packet::_cachePacketRegionsFromErsAtCurIt(const Index erIndexInPacket,
+void Packet::_cacheRegionsFromErsAtCurIt(const Index erIndexInPacket,
                                              const Size erCount)
 {
     assert(erCount > 0);
@@ -621,7 +621,7 @@ void Packet::_cachePacketRegionsFromErsAtCurIt(const Index erIndexInPacket,
     using ElemKind = yactfr::Element::Kind;
 
     assert(_it->kind() == ElemKind::EVENT_RECORD_BEGINNING);
-    _packetRegionCache.clear();
+    _regionCache.clear();
     _eventRecordCache.clear();
 
     const auto endErIndexInPacket = erIndexInPacket + erCount;
@@ -632,7 +632,7 @@ void Packet::_cachePacketRegionsFromErsAtCurIt(const Index erIndexInPacket,
             ++_it;
         }
 
-        this->_cachePacketRegionsFromOneErAtCurIt(index);
+        this->_cacheRegionsFromOneErAtCurIt(index);
     }
 
     if (endErIndexInPacket == _checkpoints.eventRecordCount()) {
@@ -644,91 +644,91 @@ void Packet::_cachePacketRegionsFromErsAtCurIt(const Index erIndexInPacket,
              * then create an error packet region with the remaining
              * data.
              */
-            this->_cachePacketRegionsAtCurItUntilError();
+            this->_cacheRegionsAtCurItUntilError();
         } else {
             // end of packet: also cache any padding before the end of packet
             while (_it->kind() != ElemKind::PACKET_END) {
                 ++_it;
             }
 
-            this->_tryCachePaddingPacketRegionBeforeCurIt(nullptr);
+            this->_tryCachePaddingRegionBeforeCurIt(nullptr);
         }
     }
 
-    if (!_packetRegionCache.empty()) {
+    if (!_regionCache.empty()) {
         theLogger->debug("Packet region cache now spans [{} b, {} b[.",
-                         _packetRegionCache.front()->segment().offsetInPacketBits(),
-                         _packetRegionCache.back()->segment().offsetInPacketBits() +
-                         _packetRegionCache.back()->segment().size().bits());
+                         _regionCache.front()->segment().offsetInPacketBits(),
+                         _regionCache.back()->segment().offsetInPacketBits() +
+                         _regionCache.back()->segment().size().bits());
     }
 }
 
-const PacketRegion& Packet::packetRegionAtOffsetInPacketBits(const Index offsetInPacketBits)
+const PacketRegion& Packet::regionAtOffsetInPacketBits(const Index offsetInPacketBits)
 {
     theLogger->debug("Requesting single packet region at offset {} b.",
                      offsetInPacketBits);
 
-    auto packetRegionFromLru = _lruPacketRegionCache.get(offsetInPacketBits);
+    auto regionFromLru = _lruRegionCache.get(offsetInPacketBits);
 
-    if (packetRegionFromLru) {
+    if (regionFromLru) {
         theLogger->debug("LRU cache hit: cache size {}.",
-                         _lruPacketRegionCache.size());
-        return **packetRegionFromLru;
+                         _lruRegionCache.size());
+        return **regionFromLru;
     }
 
     theLogger->debug("LRU cache miss: cache size {}.",
-                     _lruPacketRegionCache.size());
+                     _lruRegionCache.size());
     this->_ensureOffsetInPacketBitsIsCached(offsetInPacketBits);
 
-    const auto it = this->_packetRegionCacheItBeforeOrAtOffsetInPacketBits(offsetInPacketBits);
-    const auto& packetRegion = **it;
+    const auto it = this->_regionCacheItBeforeOrAtOffsetInPacketBits(offsetInPacketBits);
+    const auto& region = **it;
 
     /*
      * Add both the requested offset and the actual packet region's offset
      * to the cache so that future requests using this exact offset hit
      * the cache.
      */
-    if (!_lruPacketRegionCache.contains(offsetInPacketBits)) {
+    if (!_lruRegionCache.contains(offsetInPacketBits)) {
         theLogger->debug("Adding to LRU cache (offset {} b).",
                          offsetInPacketBits);
-        _lruPacketRegionCache.insert(offsetInPacketBits, *it);
+        _lruRegionCache.insert(offsetInPacketBits, *it);
     }
 
-    const auto drOffsetInPacketBits = packetRegion.segment().offsetInPacketBits();
+    const auto drOffsetInPacketBits = region.segment().offsetInPacketBits();
 
-    if (!_lruPacketRegionCache.contains(drOffsetInPacketBits)) {
+    if (!_lruRegionCache.contains(drOffsetInPacketBits)) {
         theLogger->debug("Adding to LRU cache (offset {} b).",
                          drOffsetInPacketBits);
-        _lruPacketRegionCache.insert(drOffsetInPacketBits, *it);
+        _lruRegionCache.insert(drOffsetInPacketBits, *it);
     }
 
-    return packetRegion;
+    return region;
 }
 
-const PacketRegion& Packet::lastPacketRegion()
+const PacketRegion& Packet::lastRegion()
 {
     // request the packet's last bit: then we know we have the last packet region
-    return this->packetRegionAtOffsetInPacketBits(_indexEntry->effectiveTotalSize().bits() - 1);
+    return this->regionAtOffsetInPacketBits(_indexEntry->effectiveTotalSize().bits() - 1);
 }
 
-const PacketRegion& Packet::firstPacketRegion()
+const PacketRegion& Packet::firstRegion()
 {
     // request the packet's last bit: then we know we have the last packet region
-    return this->packetRegionAtOffsetInPacketBits(0);
+    return this->regionAtOffsetInPacketBits(0);
 }
 
-const PacketRegion *Packet::previousPacketRegion(const PacketRegion& packetRegion)
+const PacketRegion *Packet::previousRegion(const PacketRegion& region)
 {
     // previous
-    if (packetRegion.segment().offsetInPacketBits() == 0) {
+    if (region.segment().offsetInPacketBits() == 0) {
         return nullptr;
     }
 
-    if (packetRegion.previousPacketRegionOffsetInPacketBits()) {
-        return &this->packetRegionAtOffsetInPacketBits(*packetRegion.previousPacketRegionOffsetInPacketBits());
+    if (region.previousRegionOffsetInPacketBits()) {
+        return &this->regionAtOffsetInPacketBits(*region.previousRegionOffsetInPacketBits());
     }
 
-    return &this->packetRegionAtOffsetInPacketBits(packetRegion.segment().offsetInPacketBits() - 1);
+    return &this->regionAtOffsetInPacketBits(region.segment().offsetInPacketBits() - 1);
 }
 
 const EventRecord *Packet::eventRecordBeforeOrAtNsFromOrigin(const long long nsFromOrigin)

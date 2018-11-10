@@ -87,12 +87,12 @@ void PacketState::gotoPreviousPacketRegion()
 
     const auto& currentPacketRegion = this->currentPacketRegion();
 
-    if (currentPacketRegion.previousPacketRegionOffsetInPacketBits()) {
-        this->gotoPacketRegionAtOffsetInPacketBits(*currentPacketRegion.previousPacketRegionOffsetInPacketBits());
+    if (currentPacketRegion.previousRegionOffsetInPacketBits()) {
+        this->gotoPacketRegionAtOffsetInPacketBits(*currentPacketRegion.previousRegionOffsetInPacketBits());
         return;
     }
 
-    const auto& prevPacketRegion = _packet->packetRegionAtOffsetInPacketBits(_curOffsetInPacketBits - 1);
+    const auto& prevPacketRegion = _packet->regionAtOffsetInPacketBits(_curOffsetInPacketBits - 1);
 
     this->gotoPacketRegionAtOffsetInPacketBits(prevPacketRegion);
 }
@@ -126,7 +126,7 @@ void PacketState::gotoPacketContext()
 
 void PacketState::gotoLastPacketRegion()
 {
-    this->gotoPacketRegionAtOffsetInPacketBits(_packet->lastPacketRegion());
+    this->gotoPacketRegionAtOffsetInPacketBits(_packet->lastRegion());
 }
 
 void PacketState::gotoPacketRegionAtOffsetInPacketBits(const Index offsetInPacketBits)

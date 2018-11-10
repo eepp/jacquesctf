@@ -47,7 +47,7 @@ void DataStreamFileState::gotoOffsetBits(const Index offsetBits)
         return;
     }
 
-    const auto& region = _activePacketState->packet().packetRegionAtOffsetInPacketBits(offsetInPacketBits);
+    const auto& region = _activePacketState->packet().regionAtOffsetInPacketBits(offsetInPacketBits);
 
     _activePacketState->gotoPacketRegionAtOffsetInPacketBits(region);
 }
@@ -371,7 +371,7 @@ bool DataStreamFileState::search(const SearchQuery& query)
                 return false;
             }
 
-            const auto& region = _activePacketState->packet().packetRegionAtOffsetInPacketBits(offsetInPacketBits);
+            const auto& region = _activePacketState->packet().regionAtOffsetInPacketBits(offsetInPacketBits);
 
             _activePacketState->gotoPacketRegionAtOffsetInPacketBits(region);
             break;

@@ -467,7 +467,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
                                     _pdView->rowSize().bits();
         }
 
-        const auto& reqPacketRegion = packet.packetRegionAtOffsetInPacketBits(reqOffsetInPacketBits);
+        const auto& reqPacketRegion = packet.regionAtOffsetInPacketBits(reqOffsetInPacketBits);
 
         this->_state().gotoPacketRegionAtOffsetInPacketBits(reqPacketRegion.segment().offsetInPacketBits());
         break;
@@ -491,9 +491,9 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
                                               curPacketRegion.segment().endOffsetInPacketBits());
 
         reqOffsetInPacketBits = std::min(reqOffsetInPacketBits,
-                                         packet.lastPacketRegion().segment().offsetInPacketBits());
+                                         packet.lastRegion().segment().offsetInPacketBits());
 
-        const auto& reqPacketRegion = packet.packetRegionAtOffsetInPacketBits(reqOffsetInPacketBits);
+        const auto& reqPacketRegion = packet.regionAtOffsetInPacketBits(reqOffsetInPacketBits);
 
         this->_state().gotoPacketRegionAtOffsetInPacketBits(reqPacketRegion.segment().offsetInPacketBits());
         break;

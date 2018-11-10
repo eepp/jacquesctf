@@ -53,7 +53,7 @@ public:
 
     const EventRecord *currentEventRecord()
     {
-        const auto& packetRegion = _packet->packetRegionAtOffsetInPacketBits(_curOffsetInPacketBits);
+        const auto& packetRegion = _packet->regionAtOffsetInPacketBits(_curOffsetInPacketBits);
         const auto& scope = packetRegion.scope();
 
         if (!scope) {
@@ -66,7 +66,7 @@ public:
 
     const PacketRegion& currentPacketRegion()
     {
-        return _packet->packetRegionAtOffsetInPacketBits(_curOffsetInPacketBits);
+        return _packet->regionAtOffsetInPacketBits(_curOffsetInPacketBits);
     }
 
     State& state() noexcept

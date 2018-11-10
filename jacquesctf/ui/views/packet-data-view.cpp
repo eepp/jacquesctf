@@ -96,7 +96,7 @@ void PacketDataView::_setPrevCurNextOffsetInPacketBits()
     assert(curPacketRegion);
 
     // previous
-    const auto prevPacketRegion = packet.previousPacketRegion(*curPacketRegion);
+    const auto prevPacketRegion = packet.previousRegion(*curPacketRegion);
 
     if (prevPacketRegion) {
         _prevOffsetInPacketBits = prevPacketRegion->segment().offsetInPacketBits();
@@ -716,17 +716,17 @@ void PacketDataView::_setNumericCharsAndAsciiChars()
      * We'll go one packet region before to detect an initial
      * event record change.
      */
-    const auto& basePacketRegion = packet.packetRegionAtOffsetInPacketBits(_baseOffsetInPacketBits);
-    auto startingPacketRegion = packet.previousPacketRegion(basePacketRegion);
+    const auto& basePacketRegion = packet.regionAtOffsetInPacketBits(_baseOffsetInPacketBits);
+    auto startingPacketRegion = packet.previousRegion(basePacketRegion);
 
     if (!startingPacketRegion) {
         startingPacketRegion = &basePacketRegion;
     }
 
     _packetRegions.clear();
-    packet.appendPacketRegions(_packetRegions,
-                               startingPacketRegion->segment().offsetInPacketBits(),
-                               _endOffsetInPacketBits);
+    packet.appendRegions(_packetRegions,
+                         startingPacketRegion->segment().offsetInPacketBits(),
+                         _endOffsetInPacketBits);
     assert(!_packetRegions.empty());
     _chars.clear();
 

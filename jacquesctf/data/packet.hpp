@@ -86,8 +86,8 @@ namespace jacques {
  *     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
  *     preamble packet region cache
  *
- * If _cachePacketRegionsFromErsAtCurIt() adds anything to the packet
- * region cache, if the last event record to be part of the cache is the
+ * If _cacheRegionsFromErsAtCurIt() adds anything to the packet region
+ * cache, if the last event record to be part of the cache is the
  * packet's last event record, it also adds any padding or error packet
  * region before the end of the packet:
  *
@@ -115,11 +115,11 @@ namespace jacques {
  *
  * There's also an LRU cache (offset in packet to packet region) for
  * frequently accessed packet regions by offset (with
- * packetRegionAtOffsetInPacketBits()): when there's a cache miss, the
- * method calls _ensureOffsetInPacketBitsIsCached() to update the packet
- * region and event record caches and then adds the packet region entry
- * to the LRU cache. The LRU cache avoids performing a binary search by
- * _packetRegionCacheItBeforeOrAtOffsetInPacketBits() every time.
+ * regionAtOffsetInPacketBits()): when there's a cache miss, the method
+ * calls _ensureOffsetInPacketBitsIsCached() to update the packet region
+ * and event record caches and then adds the packet region entry to the
+ * LRU cache. The LRU cache avoids performing a binary search by
+ * _regionCacheItBeforeOrAtOffsetInPacketBits() every time.
  */
 class Packet :
     boost::noncopyable
@@ -136,13 +136,55 @@ public:
                     PacketCheckpointsBuildListener& packetCheckpointsBuildListener);
 
     template <typename ContainerT>
-    void appendPacketRegions(ContainerT& regions, Index offsetInPacketBits,
-                             Index endOffsetInPacketBits);
+    void appendRegions(ContainerT& regions,
+                       const Index offsetInPacketBits,
+                       const Index endOffsetInPacketBits)
+    {
+        theLogger->debug("Appending packet regions for user in [{} b, {} b[.",
+                         offsetInPacketBits, endOffsetInPacketBits);
+        assert(offsetInPacketBits < _indexEntry->effectiveTotalSize());
+        assert(endOffsetInPacketBits <= _indexEntry->effectiveTotalSize());
+        assert(offsetInPacketBits < endOffsetInPacketBits);
+        theLogger->debug("Preamble size: {} b.", _preambleSize.bits());
 
-    const PacketRegion& packetRegionAtOffsetInPacketBits(Index offsetInPacketBits);
-    const PacketRegion *previousPacketRegion(const PacketRegion& packetRegion);
-    const PacketRegion& firstPacketRegion();
-    const PacketRegion& lastPacketRegion();
+        auto curOffsetInPacketBits = offsetInPacketBits;
+
+        while (true) {
+            this->_ensureOffsetInPacketBitsIsCached(curOffsetInPacketBits);
+
+            auto it = this->_regionCacheItBeforeOrAtOffsetInPacketBits(curOffsetInPacketBits);
+
+            /*
+             * If `curOffsetInPacketBits` was the exact offset of a packet
+             * region, then it is unchanged here.
+             */
+            curOffsetInPacketBits = (*it)->segment().offsetInPacketBits();
+            theLogger->debug("Current offset: {} b.", curOffsetInPacketBits);
+
+            while (true) {
+                if (it == std::end(_regionCache)) {
+                    // need to cache more
+                    theLogger->debug("End of current packet region cache: "
+                                     "cache more (current offset: {} b).",
+                                     curOffsetInPacketBits);
+                    break;
+                }
+
+                this->_appendConstRegion(regions, it);
+                curOffsetInPacketBits = (*it)->segment().endOffsetInPacketBits();
+                ++it;
+
+                if (curOffsetInPacketBits >= endOffsetInPacketBits) {
+                    return;
+                }
+            }
+        }
+    }
+
+    const PacketRegion& regionAtOffsetInPacketBits(Index offsetInPacketBits);
+    const PacketRegion *previousRegion(const PacketRegion& region);
+    const PacketRegion& firstRegion();
+    const PacketRegion& lastRegion();
     const EventRecord *eventRecordBeforeOrAtNsFromOrigin(long long nsFromOrigin);
     const EventRecord *eventRecordBeforeOrAtCycles(unsigned long long cycles);
 
@@ -156,9 +198,9 @@ public:
         };
     }
 
-    BitArray bitArray(const PacketRegion& packetRegion) const noexcept
+    BitArray bitArray(const PacketRegion& region) const noexcept
     {
-        return this->bitArray(packetRegion.segment());
+        return this->bitArray(region.segment());
     }
 
     BitArray bitArray(const Scope& scope) const noexcept
@@ -223,7 +265,7 @@ public:
     }
 
 private:
-    using PacketRegionCache = std::vector<PacketRegion::SP>;
+    using RegionCache = std::vector<PacketRegion::SP>;
     using EventRecordCache = std::vector<EventRecord::SP>;
 
 private:
@@ -234,7 +276,7 @@ private:
      *
      * Clears the event record cache.
      */
-    void _cachePacketPreamblePacketRegions();
+    void _cachePreambleRegions();
 
     /*
      * Makes sure that the event record at index `indexInPacket` exists
@@ -258,22 +300,21 @@ private:
      * iterator until any decoding error and then an error packet
      * region.
      */
-    void _cachePacketRegionsAtCurItUntilError();
+    void _cacheRegionsAtCurItUntilError();
 
     /*
      * After clearing the caches, caches all the packet regions from the
      * event records starting at the current iterator, for `erCount`
      * event records.
      */
-    void _cachePacketRegionsFromErsAtCurIt(Index erIndexInPacket,
-                                           Size erCount);
+    void _cacheRegionsFromErsAtCurIt(Index erIndexInPacket, Size erCount);
 
     /*
      * Appends a single event record (having index `indexInPacket`)
      * worth of packet regions to the cache starting at the current
      * iterator.
      */
-    void _cachePacketRegionsFromOneErAtCurIt(Index indexInPacket);
+    void _cacheRegionsFromOneErAtCurIt(Index indexInPacket);
 
     /*
      * Appends packet regions to the packet region cache (and updates
@@ -281,9 +322,9 @@ private:
      * iterator. Stops appending _after_ the iterator's current
      * element's kind is `endElemKind`.
      */
-    void _cachePacketRegionsAtCurIt(yactfr::Element::Kind endElemKind,
-                                    bool setCurScope, bool setCurEventRecord,
-                                    Index erIndexInPacket);
+    void _cacheRegionsAtCurIt(yactfr::Element::Kind endElemKind,
+                              bool setCurScope, bool setCurEventRecord,
+                              Index erIndexInPacket);
 
     /*
      * Tries to append a padding packet region to the current cache,
@@ -293,7 +334,7 @@ private:
      * byte order. The padding packet region is assigned scope `scope`
      * (can be `nullptr`).
      */
-    void _tryCachePaddingPacketRegionBeforeCurIt(Scope::SP scope);
+    void _tryCachePaddingRegionBeforeCurIt(Scope::SP scope);
 
     /*
      * Appends a content packet region to the current cache from the
@@ -301,14 +342,14 @@ private:
      * iterator so that it contains the following element. The content
      * packet region is assigned scope `scope` (cannot be `nullptr`).
      */
-    void _cacheContentPacketRegionAtCurIt(Scope::SP scope);
+    void _cacheContentRegionAtCurIt(Scope::SP scope);
 
     /*
      * Returns whether or not the packet region cache `cache` contains
      * the bit `offsetInPacketBits`.
      */
-    bool _packetRegionCacheContainsOffsetInPacketBits(const PacketRegionCache& cache,
-                                                      const Index offsetInPacketBits) const
+    bool _regionCacheContainsOffsetInPacketBits(const RegionCache& cache,
+                                                const Index offsetInPacketBits) const
     {
         if (cache.empty()) {
             return false;
@@ -322,22 +363,22 @@ private:
      * Returns the packet region, within the current cache, of which the
      * offset is less than or equal to `offsetInPacketBits`.
      */
-    PacketRegionCache::const_iterator _packetRegionCacheItBeforeOrAtOffsetInPacketBits(const Index offsetInPacketBits)
+    RegionCache::const_iterator _regionCacheItBeforeOrAtOffsetInPacketBits(const Index offsetInPacketBits)
     {
-        assert(!_packetRegionCache.empty());
-        assert(this->_packetRegionCacheContainsOffsetInPacketBits(_packetRegionCache,
-                                                                  offsetInPacketBits));
+        assert(!_regionCache.empty());
+        assert(this->_regionCacheContainsOffsetInPacketBits(_regionCache,
+                                                            offsetInPacketBits));
 
         const auto lessThanFunc = [](const auto& offsetInPacketBits,
-                                     const auto packetRegion) {
+                                     const auto region) {
             return offsetInPacketBits <
-                   packetRegion->segment().offsetInPacketBits();
+                   region->segment().offsetInPacketBits();
         };
-        auto it = std::upper_bound(std::begin(_packetRegionCache),
-                                   std::end(_packetRegionCache),
+        auto it = std::upper_bound(std::begin(_regionCache),
+                                   std::end(_regionCache),
                                    offsetInPacketBits, lessThanFunc);
 
-        assert(it != std::begin(_packetRegionCache));
+        assert(it != std::begin(_regionCache));
 
         // we found one that is greater than, decrement once to find <=
         --it;
@@ -400,7 +441,7 @@ private:
      * assigned scope `scope` (cannot be `nullptr`).
      */
     template <typename ElemT>
-    ContentPacketRegion::SP _contentPacketRegionFromBitArrayElemAtCurIt(Scope::SP scope)
+    ContentPacketRegion::SP _contentRegionFromBitArrayElemAtCurIt(Scope::SP scope)
     {
         auto& elem = static_cast<const ElemT&>(*_it);
         const PacketSegment segment {
@@ -414,17 +455,17 @@ private:
                                                      ContentPacketRegion::Value {elem.value()});
     }
 
-    void _trySetPreviousPacketRegionOffsetInPacketBits(PacketRegion& packetRegion) const
+    void _trySetPreviousRegionOffsetInPacketBits(PacketRegion& region) const
     {
-        if (_packetRegionCache.empty()) {
+        if (_regionCache.empty()) {
             return;
         }
 
-        packetRegion.previousPacketRegionOffsetInPacketBits(_packetRegionCache.back()->segment().offsetInPacketBits());
+        region.previousRegionOffsetInPacketBits(_regionCache.back()->segment().offsetInPacketBits());
     }
 
     template <typename ContainerT, typename IterT>
-    void _appendConstPacketRegion(ContainerT& regions, const IterT& it) const
+    void _appendConstRegion(ContainerT& regions, const IterT& it) const
     {
         regions.push_back(std::static_pointer_cast<const PacketRegion>(*it));
     }
@@ -533,59 +574,13 @@ private:
     yactfr::PacketSequenceIterator _it;
     yactfr::PacketSequenceIterator _endIt;
     PacketCheckpoints _checkpoints;
-    PacketRegionCache _packetRegionCache;
-    PacketRegionCache _preamblePacketRegionCache;
+    RegionCache _regionCache;
+    RegionCache _preambleRegionCache;
     EventRecordCache _eventRecordCache;
-    LruCache<Index, PacketRegion::SP> _lruPacketRegionCache;
+    LruCache<Index, PacketRegion::SP> _lruRegionCache;
     const Size _eventRecordCacheMaxSize = 500;
     const DataSize _preambleSize;
 };
-
-template <typename ContainerT>
-void Packet::appendPacketRegions(ContainerT& regions,
-                                 const Index offsetInPacketBits,
-                                 const Index endOffsetInPacketBits)
-{
-    theLogger->debug("Appending packet regions for user in [{} b, {} b[.",
-                     offsetInPacketBits, endOffsetInPacketBits);
-    assert(offsetInPacketBits < _indexEntry->effectiveTotalSize());
-    assert(endOffsetInPacketBits <= _indexEntry->effectiveTotalSize());
-    assert(offsetInPacketBits < endOffsetInPacketBits);
-    theLogger->debug("Preamble size: {} b.", _preambleSize.bits());
-
-    auto curOffsetInPacketBits = offsetInPacketBits;
-
-    while (true) {
-        this->_ensureOffsetInPacketBitsIsCached(curOffsetInPacketBits);
-
-        auto it = this->_packetRegionCacheItBeforeOrAtOffsetInPacketBits(curOffsetInPacketBits);
-
-        /*
-         * If `curOffsetInPacketBits` was the exact offset of a packet
-         * region, then it is unchanged here.
-         */
-        curOffsetInPacketBits = (*it)->segment().offsetInPacketBits();
-        theLogger->debug("Current offset: {} b.", curOffsetInPacketBits);
-
-        while (true) {
-            if (it == std::end(_packetRegionCache)) {
-                // need to cache more
-                theLogger->debug("End of current packet region cache: "
-                                 "cache more (current offset: {} b).",
-                                 curOffsetInPacketBits);
-                break;
-            }
-
-            this->_appendConstPacketRegion(regions, it);
-            curOffsetInPacketBits = (*it)->segment().endOffsetInPacketBits();
-            ++it;
-
-            if (curOffsetInPacketBits >= endOffsetInPacketBits) {
-                return;
-            }
-        }
-    }
-}
 
 } // namespace jacques
 

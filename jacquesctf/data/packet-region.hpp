@@ -81,14 +81,14 @@ public:
         return _seg;
     }
 
-    const boost::optional<Index>& previousPacketRegionOffsetInPacketBits() const noexcept
+    const boost::optional<Index>& previousRegionOffsetInPacketBits() const noexcept
     {
-        return _prevPacketRegionOffsetInPacketBits;
+        return _prevRegionOffsetInPacketBits;
     }
 
-    void previousPacketRegionOffsetInPacketBits(const Index offsetInPacketBits)
+    void previousRegionOffsetInPacketBits(const Index offsetInPacketBits)
     {
-        _prevPacketRegionOffsetInPacketBits = offsetInPacketBits;
+        _prevRegionOffsetInPacketBits = offsetInPacketBits;
     }
 
     bool operator<(const PacketRegion& other) const noexcept
@@ -111,7 +111,7 @@ private:
     virtual void _accept(PacketRegionVisitor& visitor) = 0;
 
 private:
-    boost::optional<Index> _prevPacketRegionOffsetInPacketBits;
+    boost::optional<Index> _prevRegionOffsetInPacketBits;
     PacketSegment _seg;
     Scope::SP _scope;
 };
