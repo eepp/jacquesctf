@@ -32,16 +32,16 @@ public:
 class Config
 {
 public:
-	enum class Command
-	{
-		INSPECT_FILES,
-		PRINT_METADATA_TEXT,
+    enum class Command
+    {
+        INSPECT_FILES,
+        PRINT_METADATA_TEXT,
         PRINT_CLI_USAGE,
         PRINT_VERSION,
-	};
+    };
 
 public:
-	explicit Config(int argc, const char *argv[]);
+    explicit Config(int argc, const char *argv[]);
 
     Command command() const noexcept
     {
@@ -58,8 +58,8 @@ private:
     void _expandPaths();
 
 private:
-	Command _cmd = Command::INSPECT_FILES;
-	std::list<boost::filesystem::path> _filePaths;
+    Command _cmd = Command::INSPECT_FILES;
+    std::list<boost::filesystem::path> _filePaths;
 };
 
 } // namespace jacques
