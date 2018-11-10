@@ -323,6 +323,14 @@ void InspectScreen::_refreshViews()
     _sdteView->refresh();
 }
 
+void InspectScreen::_setLastOffsetInRowBits()
+{
+    if (!_lastOffsetInRowBits) {
+        _lastOffsetInRowBits = this->_state().curOffsetInPacketBits() %
+                               _pdView->rowSize().bits();
+    }
+}
+
 KeyHandlingReaction InspectScreen::_handleKey(const int key)
 {
     const auto goingToBookmark = _goingToBookmark;
@@ -334,6 +342,10 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         _pdView->redraw();
         _ertView->redraw();
         _priView->redraw();
+    }
+
+    if (key != KEY_DOWN && key != KEY_UP) {
+        _lastOffsetInRowBits = boost::none;
     }
 
     switch (key) {
@@ -461,10 +473,18 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         Index reqOffsetInPacketBits;
 
         if (this->_state().curOffsetInPacketBits() < _pdView->rowSize()) {
-            reqOffsetInPacketBits = 0;
+            break;
         } else {
-            reqOffsetInPacketBits = this->_state().curOffsetInPacketBits() -
-                                    _pdView->rowSize().bits();
+            const auto curOffsetInPacketBits = this->_state().curOffsetInPacketBits();
+            const auto rowSizeBits = _pdView->rowSize().bits();
+
+            this->_setLastOffsetInRowBits();
+
+            const auto rowOffsetInPacketBits = curOffsetInPacketBits -
+                                               (curOffsetInPacketBits % rowSizeBits);
+
+            reqOffsetInPacketBits = rowOffsetInPacketBits - rowSizeBits +
+                                    *_lastOffsetInRowBits;
         }
 
         const auto& reqPacketRegion = packet.regionAtOffsetInPacketBits(reqOffsetInPacketBits);
@@ -485,13 +505,20 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
             break;
         }
 
-        const auto& curPacketRegion = *this->_state().currentPacketRegion();
-        auto reqOffsetInPacketBits = std::max(this->_state().curOffsetInPacketBits() +
-                                              _pdView->rowSize().bits(),
-                                              curPacketRegion.segment().endOffsetInPacketBits());
+        this->_setLastOffsetInRowBits();
 
-        reqOffsetInPacketBits = std::min(reqOffsetInPacketBits,
-                                         packet.lastRegion().segment().offsetInPacketBits());
+        const auto& curPacketRegion = *this->_state().currentPacketRegion();
+        const auto nextOffsetInPacketBits = this->_state().curOffsetInPacketBits() -
+                                            (this->_state().curOffsetInPacketBits() %
+                                             _pdView->rowSize().bits()) +
+                                            _pdView->rowSize().bits() +
+                                            *_lastOffsetInRowBits;
+        const auto reqOffsetInPacketBits = std::max(nextOffsetInPacketBits,
+                                                    curPacketRegion.segment().endOffsetInPacketBits());
+
+        if (reqOffsetInPacketBits > packet.lastRegion().segment().offsetInPacketBits()) {
+            break;
+        }
 
         const auto& reqPacketRegion = packet.regionAtOffsetInPacketBits(reqOffsetInPacketBits);
 

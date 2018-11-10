@@ -85,6 +85,7 @@ private:
     void _toggleBookmark(unsigned int id);
     void _gotoBookmark(unsigned int id);
     void _refreshViews();
+    void _setLastOffsetInRowBits();
 
 private:
     std::unique_ptr<EventRecordTableView> _ertView;
@@ -103,6 +104,7 @@ private:
     bool _sdteViewIsVisible = true;
     Bookmarks _bookmarks;
     bool _goingToBookmark = false;
+    boost::optional<Index> _lastOffsetInRowBits;
 };
 
 } // namespace jacques
