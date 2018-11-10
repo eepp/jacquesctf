@@ -171,7 +171,7 @@ public:
                 }
 
                 this->_appendConstRegion(regions, it);
-                curOffsetInPacketBits = (*it)->segment().endOffsetInPacketBits();
+                curOffsetInPacketBits = *(*it)->segment().endOffsetInPacketBits();
                 ++it;
 
                 if (curOffsetInPacketBits >= endOffsetInPacketBits) {
@@ -190,10 +190,12 @@ public:
 
     BitArray bitArray(const PacketSegment& segment) const noexcept
     {
+        assert(segment.size());
+
         return BitArray {
             _mmapFile->addr() + segment.offsetInPacketBits() / 8,
             segment.offsetInFirstByteBits(),
-            segment.size(),
+            *segment.size(),
             segment.byteOrder()
         };
     }
@@ -356,7 +358,7 @@ private:
         }
 
         return offsetInPacketBits >= cache.front()->segment().offsetInPacketBits() &&
-               offsetInPacketBits < cache.back()->segment().endOffsetInPacketBits();
+               offsetInPacketBits < *cache.back()->segment().endOffsetInPacketBits();
     }
 
     /*

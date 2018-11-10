@@ -124,7 +124,7 @@ void PacketRegionInfoView::_redrawContent()
     this->_stylist().packetRegionInfoViewStd(*this, false);
 
     const auto pathWidth = _state->activeDataStreamFileState().metadata().maxDataTypePathSize();
-    const auto str = utils::sepNumber(packetRegion->segment().size().bits(), ',');
+    const auto str = utils::sepNumber(packetRegion->segment().size()->bits(), ',');
 
     this->_safeMoveAndPrint({pathWidth + 4 + this->_curMaxOffsetSize() -
                              2 - str.size(), 0}, "%s b", str.c_str());

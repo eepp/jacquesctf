@@ -514,7 +514,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
                                             _pdView->rowSize().bits() +
                                             *_lastOffsetInRowBits;
         const auto reqOffsetInPacketBits = std::max(nextOffsetInPacketBits,
-                                                    curPacketRegion.segment().endOffsetInPacketBits());
+                                                    *curPacketRegion.segment().endOffsetInPacketBits());
 
         if (reqOffsetInPacketBits > packet.lastRegion().segment().offsetInPacketBits()) {
             break;

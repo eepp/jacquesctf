@@ -105,12 +105,12 @@ void PacketState::gotoNextPacketRegion()
 
     const auto& currentPacketRegion = this->currentPacketRegion();
 
-    if (currentPacketRegion.segment().endOffsetInPacketBits() ==
+    if (*currentPacketRegion.segment().endOffsetInPacketBits() ==
             _packet->indexEntry().effectiveTotalSize()) {
         return;
     }
 
-    this->gotoPacketRegionAtOffsetInPacketBits(currentPacketRegion.segment().endOffsetInPacketBits());
+    this->gotoPacketRegionAtOffsetInPacketBits(*currentPacketRegion.segment().endOffsetInPacketBits());
 }
 
 void PacketState::gotoPacketContext()

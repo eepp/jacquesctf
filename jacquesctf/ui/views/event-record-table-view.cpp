@@ -114,7 +114,15 @@ void EventRecordTableView::_drawRow(const Index index)
 
     static_cast<UnsignedIntTableViewCell&>(*_row[0]).value(eventRecord.natIndexInPacket());
     static_cast<DataSizeTableViewCell&>(*_row[1]).size(eventRecord.segment().offsetInPacketBits());
-    static_cast<DataSizeTableViewCell&>(*_row[2]).size(eventRecord.segment().size());
+
+    auto& sizeCell = static_cast<DataSizeTableViewCell&>(*_row[2]);
+
+    if (eventRecord.segment().size()) {
+        sizeCell.na(false);
+        sizeCell.size(*eventRecord.segment().size());
+    } else {
+        sizeCell.na(true);
+    }
 
     if (_row.size() >= 4) {
         if (eventRecord.type().name()) {

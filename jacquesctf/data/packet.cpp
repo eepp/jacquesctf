@@ -291,18 +291,18 @@ void Packet::_tryCachePaddingRegionBeforeCurIt(Scope::SP scope)
     } else {
         const auto& prevRegion = _regionCache.back();
 
-        if (prevRegion->segment().endOffsetInPacketBits() ==
+        if (*prevRegion->segment().endOffsetInPacketBits() ==
                 this->_itOffsetInPacketBits()) {
             return;
         }
 
-        assert(prevRegion->segment().endOffsetInPacketBits() <
+        assert(*prevRegion->segment().endOffsetInPacketBits() <
                this->_itOffsetInPacketBits());
 
         segment = PacketSegment {
-            prevRegion->segment().endOffsetInPacketBits(),
+            *prevRegion->segment().endOffsetInPacketBits(),
             this->_itOffsetInPacketBits() -
-            prevRegion->segment().endOffsetInPacketBits(),
+            *prevRegion->segment().endOffsetInPacketBits(),
             prevRegion->segment().byteOrder()
         };
     }
@@ -422,7 +422,7 @@ void Packet::_cachePreambleRegions()
 
         // remaining data until end of packet is an error region
         if (!_regionCache.empty()) {
-            offsetStartBits = _regionCache.back()->segment().endOffsetInPacketBits();
+            offsetStartBits = *_regionCache.back()->segment().endOffsetInPacketBits();
             byteOrder = _regionCache.back()->segment().byteOrder();
         }
 
@@ -443,7 +443,7 @@ void Packet::_cachePreambleRegions()
         theLogger->debug("Preamble packet region cache now spans [{} b, {} b[.",
                          _regionCache.front()->segment().offsetInPacketBits(),
                          _regionCache.back()->segment().offsetInPacketBits() +
-                         _regionCache.back()->segment().size().bits());
+                         _regionCache.back()->segment().size()->bits());
     }
 
     _preambleRegionCache = _regionCache;
@@ -592,7 +592,7 @@ void Packet::_cacheRegionsAtCurItUntilError()
 
         // remaining data until end of packet is an error region
         if (!_regionCache.empty()) {
-            offsetStartBits = _regionCache.back()->segment().endOffsetInPacketBits();
+            offsetStartBits = *_regionCache.back()->segment().endOffsetInPacketBits();
             byteOrder = _regionCache.back()->segment().byteOrder();
         }
 
@@ -659,7 +659,7 @@ void Packet::_cacheRegionsFromErsAtCurIt(const Index erIndexInPacket,
         theLogger->debug("Packet region cache now spans [{} b, {} b[.",
                          _regionCache.front()->segment().offsetInPacketBits(),
                          _regionCache.back()->segment().offsetInPacketBits() +
-                         _regionCache.back()->segment().size().bits());
+                         _regionCache.back()->segment().size()->bits());
     }
 }
 

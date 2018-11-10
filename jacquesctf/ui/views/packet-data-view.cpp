@@ -105,9 +105,9 @@ void PacketDataView::_setPrevCurNextOffsetInPacketBits()
     }
 
     // next
-    if (curPacketRegion->segment().endOffsetInPacketBits() <
+    if (*curPacketRegion->segment().endOffsetInPacketBits() <
             packet.indexEntry().effectiveTotalSize()) {
-        _nextOffsetInPacketBits = curPacketRegion->segment().endOffsetInPacketBits();
+        _nextOffsetInPacketBits = *curPacketRegion->segment().endOffsetInPacketBits();
     } else {
         _nextOffsetInPacketBits = boost::none;
     }
@@ -545,7 +545,7 @@ void PacketDataView::_setHexChars()
         const auto startOffsetInPacketBits = std::max(firstBitOffsetInPacket,
                                                       _baseOffsetInPacketBits);
         const auto endOffsetInPacketBits = std::min(firstBitOffsetInPacket +
-                                                    packetRegion->segment().size().bits(),
+                                                    packetRegion->segment().size()->bits(),
                                                     _endOffsetInPacketBits);
 
         for (Index bitOffsetInPacket = startOffsetInPacketBits;
@@ -626,7 +626,7 @@ void PacketDataView::_setAsciiChars()
         const auto startOffsetInPacketBits = std::max(firstBitOffsetInPacket,
                                                       _baseOffsetInPacketBits);
         const auto endOffsetInPacketBits = std::min(firstBitOffsetInPacket +
-                                                    packetRegion->segment().size().bits(),
+                                                    packetRegion->segment().size()->bits(),
                                                     _endOffsetInPacketBits);
 
         for (Index bitOffsetInPacket = startOffsetInPacketBits;
@@ -669,7 +669,7 @@ void PacketDataView::_setBinaryChars()
         const auto startOffsetInPacketBits = std::max(firstBitOffsetInPacket,
                                                       _baseOffsetInPacketBits);
         const auto endOffsetInPacketBits = std::min(firstBitOffsetInPacket +
-                                                    packetRegion->segment().size().bits(),
+                                                    packetRegion->segment().size()->bits(),
                                                     _endOffsetInPacketBits);
 
         for (Index bitOffsetInPacket = startOffsetInPacketBits;

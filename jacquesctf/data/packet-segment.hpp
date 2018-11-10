@@ -39,7 +39,7 @@ public:
     PacketSegment() = default;
     PacketSegment(const PacketSegment&) = default;
     explicit PacketSegment(Index offsetInPacketBits, const DataSize& size,
-                         const OptByteOrder& byteOrder = boost::none);
+                           const OptByteOrder& byteOrder = boost::none);
     PacketSegment& operator=(const PacketSegment&) = default;
 
     Index offsetInPacketBits() const noexcept
@@ -47,9 +47,13 @@ public:
         return _offsetInPacketBits;
     }
 
-    Index endOffsetInPacketBits() const noexcept
+    boost::optional<Index> endOffsetInPacketBits() const noexcept
     {
-        return _offsetInPacketBits + _size.bits();
+        if (!_size) {
+            return boost::none;
+        }
+
+        return _offsetInPacketBits + _size->bits();
     }
 
     void offsetInPacketBits(const Index offsetInPacketBits) noexcept
@@ -62,7 +66,7 @@ public:
         return _offsetInPacketBits & 7;
     }
 
-    const DataSize& size() const noexcept
+    const boost::optional<DataSize>& size() const noexcept
     {
         return _size;
     }
@@ -94,7 +98,7 @@ public:
 
 private:
     Index _offsetInPacketBits = 0;
-    DataSize _size = 0;
+    boost::optional<DataSize> _size;
     OptByteOrder _byteOrder;
 };
 
