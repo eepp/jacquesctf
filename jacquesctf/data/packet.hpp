@@ -29,7 +29,6 @@
 #include "metadata.hpp"
 #include "memory-mapped-file.hpp"
 #include "lru-cache.hpp"
-#include "logging.hpp"
 
 namespace jacques {
 
@@ -140,12 +139,9 @@ public:
                        const Index offsetInPacketBits,
                        const Index endOffsetInPacketBits)
     {
-        theLogger->debug("Appending packet regions for user in [{} b, {} b[.",
-                         offsetInPacketBits, endOffsetInPacketBits);
         assert(offsetInPacketBits < _indexEntry->effectiveTotalSize());
         assert(endOffsetInPacketBits <= _indexEntry->effectiveTotalSize());
         assert(offsetInPacketBits < endOffsetInPacketBits);
-        theLogger->debug("Preamble size: {} b.", _preambleSize.bits());
 
         auto curOffsetInPacketBits = offsetInPacketBits;
 
@@ -159,14 +155,10 @@ public:
              * region, then it is unchanged here.
              */
             curOffsetInPacketBits = (*it)->segment().offsetInPacketBits();
-            theLogger->debug("Current offset: {} b.", curOffsetInPacketBits);
 
             while (true) {
                 if (it == std::end(_regionCache)) {
                     // need to cache more
-                    theLogger->debug("End of current packet region cache: "
-                                     "cache more (current offset: {} b).",
-                                     curOffsetInPacketBits);
                     break;
                 }
 

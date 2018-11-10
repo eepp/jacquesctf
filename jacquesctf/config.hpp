@@ -53,11 +53,6 @@ public:
         return _filePaths;
     }
 
-    bool enableLogging() const noexcept
-    {
-        return _enableLogging;
-    }
-
 private:
     void _parseArgs(int argc, const char *argv[]);
     void _expandPaths();
@@ -65,7 +60,6 @@ private:
 private:
 	Command _cmd = Command::INSPECT_FILES;
 	std::list<boost::filesystem::path> _filePaths;
-    bool _enableLogging = false;
 };
 
 } // namespace jacques

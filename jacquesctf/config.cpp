@@ -145,7 +145,6 @@ void Config::_parseArgs(const int argc, const char *argv[])
     optDesc.add_options()
         ("help,h", "")
         ("version,V", "")
-        ("log", "")
         ("paths", bpo::value<std::vector<std::string>>(), "");
 
     bpo::positional_options_description posDesc;
@@ -182,11 +181,6 @@ void Config::_parseArgs(const int argc, const char *argv[])
     std::copy(std::begin(pathArgs), std::end(pathArgs),
               std::back_inserter(_filePaths));
     this->_expandPaths();
-
-    if (vm.count("log")) {
-        _enableLogging = true;
-        return;
-    }
 }
 
 } // namespace jacques

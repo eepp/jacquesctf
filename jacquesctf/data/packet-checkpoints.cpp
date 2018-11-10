@@ -9,7 +9,6 @@
 #include <algorithm>
 
 #include "packet-checkpoints.hpp"
-#include "logging.hpp"
 
 namespace jacques {
 
@@ -28,7 +27,6 @@ PacketCheckpoints::PacketCheckpoints(yactfr::PacketSequence& seq,
 {
     this->_tryCreateCheckpoints(seq, metadata, packetIndexEntry,
                                 step, packetCheckpointsBuildListener);
-    theLogger->debug("Packet checkpoints: {}.", _checkpoints.size());
 }
 
 void PacketCheckpoints::_tryCreateCheckpoints(yactfr::PacketSequence& seq,

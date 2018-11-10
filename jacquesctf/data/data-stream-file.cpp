@@ -8,6 +8,9 @@
 #include <cassert>
 #include <algorithm>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "data-stream-file.hpp"
 #include "io-error.hpp"
