@@ -96,15 +96,15 @@ void DataTypesScreen::highlightCurrentDataType()
     const auto curDst = activePacketState.packetIndexEntry().dataStreamType();
     const auto curEventRecord = this->_state().currentEventRecord();
 
-    if (curEventRecord) {
+    if (curEventRecord && curEventRecord->type()) {
         assert(curDst);
 
         _dstTableView->selectDataStreamType(curDst->id());
         _ertTableView->dataStreamType(*curDst);
-        _ertTableView->selectEventRecordType(curEventRecord->type().id());
+        _ertTableView->selectEventRecordType(curEventRecord->type()->id());
         _dstTableView->centerSelectedRow(true);
         _ertTableView->centerSelectedRow(true);
-        _dtExplorerView->eventRecordType(curEventRecord->type());
+        _dtExplorerView->eventRecordType(*curEventRecord->type());
         _focusedView->blur();
         _focusedView = _ertTableView.get();
         _focusedView->focus();

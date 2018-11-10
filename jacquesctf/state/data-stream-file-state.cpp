@@ -389,17 +389,25 @@ bool DataStreamFileState::search(const SearchQuery& query)
         }
 
         const auto compareFunc = [sQuery](const EventRecord& eventRecord) {
-            return eventRecord.type().id() == static_cast<Index>(sQuery->value());
+            if (!eventRecord.type()) {
+                return false;
+            }
+
+            return eventRecord.type()->id() == static_cast<Index>(sQuery->value());
         };
 
         return this->_gotoNextEventRecordWithProperty(compareFunc);
     } else if (const auto sQuery = dynamic_cast<const EventRecordTypeNameSearchQuery *>(&query)) {
         const auto compareFunc = [sQuery](const EventRecord& eventRecord) {
-            if (!eventRecord.type().name()) {
+            if (!eventRecord.type()) {
                 return false;
             }
 
-            return sQuery->matches(*eventRecord.type().name());
+            if (!eventRecord.type()->name()) {
+                return false;
+            }
+
+            return sQuery->matches(*eventRecord.type()->name());
         };
 
         return this->_gotoNextEventRecordWithProperty(compareFunc);

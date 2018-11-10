@@ -133,22 +133,26 @@ void PacketCheckpointsBuildProgressView::_drawProgress()
 
     // ERT name
     this->_clearRow(ertNameY);
+    this->_clearRow(ertIdY);
 
-    const auto& ert = _eventRecord->type();
+    const auto ert = _eventRecord->type();
 
-    if (ert.name()) {
+    if (!ert) {
+        return;
+    }
+
+    if (ert->name()) {
         this->_stylist().std(*this);
         this->_moveAndPrint({titleX, ertNameY}, "ERT name:");
         this->_stylist().std(*this, true);
-        this->_moveAndPrint({infoX, ertNameY}, "%s", ert.name()->c_str());
+        this->_moveAndPrint({infoX, ertNameY}, "%s", ert->name()->c_str());
     }
 
     // ERT ID
-    this->_clearRow(ertIdY);
     this->_stylist().std(*this);
     this->_moveAndPrint({titleX, ertIdY}, "ERT ID:");
     this->_stylist().std(*this, true);
-    this->_moveAndPrint({infoX, ertIdY}, "%llu", ert.id());
+    this->_moveAndPrint({infoX, ertIdY}, "%llu", ert->id());
 }
 
 void PacketCheckpointsBuildProgressView::_redrawContent()

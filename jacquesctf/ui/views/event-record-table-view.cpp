@@ -115,26 +115,29 @@ void EventRecordTableView::_drawRow(const Index index)
     static_cast<UnsignedIntTableViewCell&>(*_row[0]).value(eventRecord.natIndexInPacket());
     static_cast<DataSizeTableViewCell&>(*_row[1]).size(eventRecord.segment().offsetInPacketBits());
 
-    auto& sizeCell = static_cast<DataSizeTableViewCell&>(*_row[2]);
-
     if (eventRecord.segment().size()) {
-        sizeCell.na(false);
-        sizeCell.size(*eventRecord.segment().size());
+        _row[2]->na(false);
+        static_cast<DataSizeTableViewCell&>(*_row[2]).size(*eventRecord.segment().size());
     } else {
-        sizeCell.na(true);
+        _row[2]->na(true);
     }
 
     if (_row.size() >= 4) {
-        if (eventRecord.type().name()) {
+        if (eventRecord.type() && eventRecord.type()->name()) {
             _row[3]->na(false);
-            static_cast<TextTableViewCell&>(*_row[3]).text(*eventRecord.type().name());
+            static_cast<TextTableViewCell&>(*_row[3]).text(*eventRecord.type()->name());
         } else {
             _row[3]->na(true);
         }
     }
 
     if (_row.size() >= 5) {
-        static_cast<UnsignedIntTableViewCell&>(*_row[4]).value(eventRecord.type().id());
+        if (eventRecord.type()) {
+            _row[4]->na(false);
+            static_cast<UnsignedIntTableViewCell&>(*_row[4]).value(eventRecord.type()->id());
+        } else {
+            _row[4]->na(true);
+        }
     }
 
     if (_row.size() >= 6) {

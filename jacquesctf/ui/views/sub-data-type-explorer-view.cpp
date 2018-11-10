@@ -35,8 +35,9 @@ void SubDataTypeExplorerView::_stateChanged(const Message)
         return;
     }
 
-    if (packetRegion->scope()->eventRecord()) {
-        this->eventRecordType(packetRegion->scope()->eventRecord()->type());
+    if (packetRegion->scope()->eventRecord() &&
+            packetRegion->scope()->eventRecord()->type()) {
+        this->eventRecordType(*packetRegion->scope()->eventRecord()->type());
     } else {
         this->singleDataType(*packetRegion->scope()->dataType(),
                              packetRegion->scope()->scope());

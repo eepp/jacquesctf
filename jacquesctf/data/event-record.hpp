@@ -43,9 +43,9 @@ public:
                          const boost::optional<Timestamp>& firstTs,
                          const PacketSegment& segment);
 
-    const yactfr::EventRecordType& type() const noexcept
+    const yactfr::EventRecordType *type() const noexcept
     {
-        return *_type;
+        return _type;
     }
 
     void type(const yactfr::EventRecordType& type) noexcept
