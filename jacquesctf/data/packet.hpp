@@ -302,7 +302,7 @@ private:
      * iterator until any decoding error and then an error packet
      * region.
      */
-    void _cacheRegionsAtCurItUntilError();
+    void _cacheRegionsAtCurItUntilError(Index initErIndexInPacket);
 
     /*
      * After clearing the caches, caches all the packet regions from the
@@ -325,7 +325,6 @@ private:
      * element's kind is `endElemKind`.
      */
     void _cacheRegionsAtCurIt(yactfr::Element::Kind endElemKind,
-                              bool setCurScope, bool setCurEventRecord,
                               Index erIndexInPacket);
 
     /*

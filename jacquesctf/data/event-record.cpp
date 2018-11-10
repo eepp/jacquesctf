@@ -6,6 +6,7 @@
  */
 
 #include <yactfr/metadata/event-record-type.hpp>
+#include <yactfr/decoding-errors.hpp>
 
 #include "event-record.hpp"
 
@@ -32,53 +33,53 @@ EventRecord::SP EventRecord::createFromPacketSequenceIterator(yactfr::PacketSequ
                                                               const Index packetOffsetInDataStreamBytes,
                                                               const Index indexInPacket)
 {
-    const yactfr::EventRecordType *eventRecordType = nullptr;
-    boost::optional<Timestamp> firstTs;
-    PacketSegment segment;
     const auto packetOffsetInDataStreamBits = packetOffsetInDataStreamBytes * 8;
+    EventRecord::SP eventRecord;
 
-    while (true) {
-        // TODO: replace with element visitor
-        switch (it->kind()) {
-        case yactfr::Element::Kind::EVENT_RECORD_BEGINNING:
-            segment.offsetInPacketBits(it.offset() - packetOffsetInDataStreamBits);
-            break;
+    try {
+        while (true) {
+            // TODO: replace with element visitor
+            switch (it->kind()) {
+            case yactfr::Element::Kind::EVENT_RECORD_BEGINNING:
+                eventRecord = std::make_shared<EventRecord>(indexInPacket);
+                eventRecord->segment().offsetInPacketBits(it.offset() - packetOffsetInDataStreamBits);
+                break;
 
-        case yactfr::Element::Kind::EVENT_RECORD_TYPE:
-        {
-            auto& elem = static_cast<const yactfr::EventRecordTypeElement&>(*it);
+            case yactfr::Element::Kind::EVENT_RECORD_TYPE:
+            {
+                auto& elem = static_cast<const yactfr::EventRecordTypeElement&>(*it);
 
-            eventRecordType = &elem.eventRecordType();
-            break;
-        }
-
-        case yactfr::Element::Kind::CLOCK_VALUE:
-        {
-            if (firstTs || !metadata.isCorrelatable()) {
+                eventRecord->type(elem.eventRecordType());
                 break;
             }
 
-            auto& elem = static_cast<const yactfr::ClockValueElement&>(*it);
+            case yactfr::Element::Kind::CLOCK_VALUE:
+            {
+                if (eventRecord->firstTimestamp() || !metadata.isCorrelatable()) {
+                    break;
+                }
 
-            firstTs = Timestamp {elem};
-            break;
+                auto& elem = static_cast<const yactfr::ClockValueElement&>(*it);
+
+                eventRecord->firstTimestamp(Timestamp {elem});
+                break;
+            }
+
+            case yactfr::Element::Kind::EVENT_RECORD_END:
+            {
+                eventRecord->segment().size(it.offset() - packetOffsetInDataStreamBits -
+                                            eventRecord->segment().offsetInPacketBits());
+                return eventRecord;
+            }
+
+            default:
+                break;
+            }
+
+            ++it;
         }
-
-        case yactfr::Element::Kind::EVENT_RECORD_END:
-        {
-            segment.size(it.offset() - packetOffsetInDataStreamBits -
-                         segment.offsetInPacketBits());
-            assert(eventRecordType);
-            return std::make_shared<EventRecord>(*eventRecordType,
-                                                 indexInPacket,
-                                                 firstTs, segment);
-        }
-
-        default:
-            break;
-        }
-
-        ++it;
+    } catch (const yactfr::DecodingError& ex) {
+        return eventRecord;
     }
 
     std::abort();

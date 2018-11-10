@@ -330,7 +330,7 @@ void Packet::_cachePreambleRegions()
 
     // special case: no event records and an error: cache everything now
     if (_checkpoints.error() && _checkpoints.eventRecordCount() == 0) {
-        this->_cacheRegionsAtCurItUntilError();
+        this->_cacheRegionsAtCurItUntilError(0);
         _preambleRegionCache = _regionCache;
         return;
     }
@@ -450,8 +450,6 @@ void Packet::_cachePreambleRegions()
 }
 
 void Packet::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind,
-                                  const bool setCurScope,
-                                  const bool setCurEventRecord,
                                   Index erIndexInPacket)
 {
     using ElemKind = yactfr::Element::Kind;
@@ -483,19 +481,17 @@ void Packet::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind,
             break;
 
         case ElemKind::SCOPE_BEGINNING:
+        {
             // cache padding before scope
             this->_tryCachePaddingRegionBeforeCurIt(curScope);
 
-            if (setCurScope) {
-                auto& elem = static_cast<const yactfr::ScopeBeginningElement&>(*_it);
+            auto& elem = static_cast<const yactfr::ScopeBeginningElement&>(*_it);
 
-                assert(curEr);
-                curScope = std::make_shared<Scope>(curEr, elem.scope());
-                curScope->segment().offsetInPacketBits(this->_itOffsetInPacketBits());
-            }
-
+            curScope = std::make_shared<Scope>(curEr, elem.scope());
+            curScope->segment().offsetInPacketBits(this->_itOffsetInPacketBits());
             ++_it;
             break;
+        }
 
         case ElemKind::STRUCT_BEGINNING:
         {
@@ -510,7 +506,7 @@ void Packet::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind,
         }
 
         case ElemKind::SCOPE_END:
-            if (setCurScope && curScope) {
+            if (curScope) {
                 curScope->segment().size(this->_itOffsetInPacketBits() -
                                          curScope->segment().offsetInPacketBits());
                 curScope = nullptr;
@@ -522,21 +518,20 @@ void Packet::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind,
         case ElemKind::EVENT_RECORD_BEGINNING:
             // cache padding before event record
             this->_tryCachePaddingRegionBeforeCurIt(curScope);
+            curEr = std::make_shared<EventRecord>(erIndexInPacket);
+            curEr->segment().offsetInPacketBits(this->_itOffsetInPacketBits());
 
-            if (setCurEventRecord) {
-                curEr = std::make_shared<EventRecord>(erIndexInPacket);
-                curEr->segment().offsetInPacketBits(this->_itOffsetInPacketBits());
-            }
-
+            // immediately cache it because this loop could throw before the end
+            _eventRecordCache.push_back(curEr);
             ++_it;
             break;
 
         case ElemKind::EVENT_RECORD_END:
-            if (setCurEventRecord && curEr) {
+            if (curEr) {
                 curEr->segment().size(this->_itOffsetInPacketBits() -
                                       curEr->segment().offsetInPacketBits());
-                _eventRecordCache.push_back(std::move(curEr));
                 curScope = nullptr;
+                curEr = nullptr;
                 ++erIndexInPacket;
             }
 
@@ -544,7 +539,7 @@ void Packet::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind,
             break;
 
         case ElemKind::EVENT_RECORD_TYPE:
-            if (setCurEventRecord && curEr) {
+            if (curEr) {
                 auto& elem = static_cast<const yactfr::EventRecordTypeElement&>(*_it);
 
                 curEr->type(elem.eventRecordType());
@@ -554,7 +549,7 @@ void Packet::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind,
             break;
 
         case ElemKind::CLOCK_VALUE:
-            if (setCurEventRecord && curEr) {
+            if (curEr) {
                 if (!curEr->firstTimestamp() && _metadata->isCorrelatable()) {
                     auto& elem = static_cast<const yactfr::ClockValueElement&>(*_it);
 
@@ -577,15 +572,14 @@ void Packet::_cacheRegionsFromOneErAtCurIt(const Index indexInPacket)
     using ElemKind = yactfr::Element::Kind;
 
     assert(_it->kind() == ElemKind::EVENT_RECORD_BEGINNING);
-    this->_cacheRegionsAtCurIt(ElemKind::EVENT_RECORD_END,
-                               true, true, indexInPacket);
+    this->_cacheRegionsAtCurIt(ElemKind::EVENT_RECORD_END, indexInPacket);
 }
 
-void Packet::_cacheRegionsAtCurItUntilError()
+void Packet::_cacheRegionsAtCurItUntilError(const Index initErIndexInPacket)
 {
     try {
         this->_cacheRegionsAtCurIt(yactfr::Element::Kind::PACKET_END,
-                                   false, false, 0);
+                                   initErIndexInPacket);
     } catch (const yactfr::DecodingError&) {
         Index offsetStartBits = _preambleSize.bits();
         OptByteOrder byteOrder;
@@ -611,7 +605,7 @@ void Packet::_cacheRegionsAtCurItUntilError()
 }
 
 void Packet::_cacheRegionsFromErsAtCurIt(const Index erIndexInPacket,
-                                             const Size erCount)
+                                         const Size erCount)
 {
     assert(erCount > 0);
 
@@ -625,8 +619,16 @@ void Packet::_cacheRegionsFromErsAtCurIt(const Index erIndexInPacket,
     _eventRecordCache.clear();
 
     const auto endErIndexInPacket = erIndexInPacket + erCount;
+    auto endErIndexInPacketBeforeLast = endErIndexInPacket;
 
-    for (Index index = erIndexInPacket; index < endErIndexInPacket; ++index) {
+    if (endErIndexInPacketBeforeLast == _checkpoints.eventRecordCount()) {
+        --endErIndexInPacketBeforeLast;
+    }
+
+    assert(erIndexInPacket <= endErIndexInPacketBeforeLast);
+
+    for (Index index = erIndexInPacket;
+            index < endErIndexInPacketBeforeLast; ++index) {
         while (_it->kind() != ElemKind::EVENT_RECORD_BEGINNING) {
             assert(_it->kind() != ElemKind::PACKET_CONTENT_END);
             ++_it;
@@ -644,7 +646,7 @@ void Packet::_cacheRegionsFromErsAtCurIt(const Index erIndexInPacket,
              * then create an error packet region with the remaining
              * data.
              */
-            this->_cacheRegionsAtCurItUntilError();
+            this->_cacheRegionsAtCurItUntilError(endErIndexInPacketBeforeLast);
         } else {
             // end of packet: also cache any padding before the end of packet
             while (_it->kind() != ElemKind::PACKET_END) {

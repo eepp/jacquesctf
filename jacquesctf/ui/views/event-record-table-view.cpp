@@ -155,6 +155,7 @@ void EventRecordTableView::_drawRow(const Index index)
         if (index == 0 || !eventRecord.firstTimestamp()) {
             cell.na(true);
         } else {
+            const auto curTs = *eventRecord.firstTimestamp();
             auto& prevEventRecord = _state->activePacketState().packet().eventRecordAtIndexInPacket(index - 1);
 
             if (!prevEventRecord.firstTimestamp()) {
@@ -162,7 +163,7 @@ void EventRecordTableView::_drawRow(const Index index)
             } else {
                 cell.na(false);
                 cell.beginningTimestamp(*prevEventRecord.firstTimestamp());
-                cell.endTimestamp(*eventRecord.firstTimestamp());
+                cell.endTimestamp(curTs);
             }
         }
     }
