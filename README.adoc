@@ -28,18 +28,19 @@ packets.
 *** Type name.
 *** Type ID.
 *** Timestamp (first).
+*** Duration since last event record.
 ** Custom bookmarks to mark regions and return to them.
 ** Search or go to a region by:
 *** Packet index within its data stream file.
 *** Packet sequence number.
 *** Event record index within its packet.
 *** Offset within packet or data stream file.
-*** Timestamp.
+*** Timestamp (nanoseconds from origin or cycles).
 *** Event record with type name.
 *** Event record with type ID.
 * Anywhere in the application, you can change the current timestamp
   format (full date and time, nanoseconds since origin, or cycles) or
-  size format (B/KiB/MiB/GiB, bytes and extra bits, and bits).
+  size format (B/KiB/MiB/GiB, bytes and extra bits, and bits) of tables.
 * Packet table with details:
 ** Index within data stream file.
 ** Offset within data stream file.
