@@ -348,9 +348,15 @@ public:
         _endTimestamp = endTimestamp;
     }
 
-    Duration duration() const noexcept
+    Duration absDuration() const noexcept
     {
-        return _endTimestamp - _beginningTimestamp;
+        return std::max(_beginningTimestamp, _endTimestamp) -
+               std::min(_beginningTimestamp, _endTimestamp);
+    }
+
+    bool isNegative() const noexcept
+    {
+        return _beginningTimestamp > _endTimestamp;
     }
 
     bool cycleDiffAvailable() const noexcept
@@ -358,12 +364,12 @@ public:
         return _beginningTimestamp.frequency() == _endTimestamp.frequency();
     }
 
-    long long cycleDiff() const noexcept
+    long long absCycleDiff() const noexcept
     {
         assert(this->cycleDiffAvailable());
 
         // FIXME: this is not accurate enough
-        const auto nsDiff = static_cast<double>(this->duration().ns());
+        const auto nsDiff = static_cast<double>(this->absDuration().ns());
         const auto sDiff = nsDiff / 1'000'000'000.;
 
         return static_cast<long long>(sDiff * _beginningTimestamp.frequency());

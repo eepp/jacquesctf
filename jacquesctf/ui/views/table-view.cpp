@@ -423,16 +423,27 @@ void TableView::_drawCell(const Point& contentPos,
         case TimestampFormatMode::LONG:
         case TimestampFormatMode::SHORT:
         {
-            rCell->duration().format(buf.data(), buf.size());
+            char *fmtBuf = buf.data();
+            auto fmtSize = buf.size();
+
+            if (rCell->isNegative()) {
+                buf[0] = '-';
+                ++fmtBuf;
+                --fmtSize;
+            }
+
+            rCell->absDuration().format(fmtBuf, fmtSize);
             break;
         }
 
         case TimestampFormatMode::NS_FROM_ORIGIN:
         {
-            const auto parts = utils::formatNs(rCell->duration().ns(), ',');
+            const auto parts = utils::formatNs(rCell->absDuration().ns(), ',');
             const auto partsWidth = parts.first.size() + parts.second.size() + 4;
             const auto startPos = Point {
-                contentPos.x + descr.contentWidth() - partsWidth, contentPos.y
+                contentPos.x + descr.contentWidth() - partsWidth -
+                (rCell->isNegative() ? 1 : 0),
+                contentPos.y
             };
 
             if (customStyle) {
@@ -440,19 +451,25 @@ void TableView::_drawCell(const Point& contentPos,
             }
 
             this->_clearCell(contentPos, descr.contentWidth());
-            this->_moveAndPrint(startPos, "%s,", parts.first.c_str());
+            this->_moveCursor(startPos);
+
+            if (rCell->isNegative()) {
+                this->_appendChar('-');
+            }
+
+            this->_safePrint("%s,", parts.first.c_str());
 
             if (customStyle) {
                 this->_stylist().tableViewTsCellNsPart(*this, cell.emphasized());
             }
 
-            this->_print("%s", parts.second.c_str());
+            this->_safePrint("%s", parts.second.c_str());
 
             if (customStyle) {
                 this->_stylist().tableViewTextCell(*this, cell.emphasized());
             }
 
-            this->_print(" ns");
+            this->_safePrint(" ns");
             break;
         }
 
@@ -468,8 +485,9 @@ void TableView::_drawCell(const Point& contentPos,
                 break;
             }
 
-            std::sprintf(buf.data(), "%s cc", utils::sepNumber(rCell->cycleDiff(),
-                                                            ',').c_str());
+            std::sprintf(buf.data(), "%s%s cc",
+                         rCell->isNegative() ? "-" : "",
+                         utils::sepNumber(rCell->absCycleDiff(), ',').c_str());
             break;
 
         default:
