@@ -92,7 +92,7 @@ You can specify your favorite C and pass:[C++] compilers with the usual
 `CC` and `CXX` environment variables when you run `cmake`, and
 additional options with `CFLAGS` and `CXXFLAGS`.
 
-Specify `-DCMAKE_INSTALL_PREFIX=_PREFIX_` to `cmake` to install yactfr
-to the `_PREFIX_` directory instead of the default `/usr/local`
-directory.
+Specify `-DCMAKE_INSTALL_PREFIX=_PREFIX_` to `cmake` to install
+Jacques{nbsp}CTF to the `_PREFIX_` directory instead of the default
+`/usr/local` directory.
 
