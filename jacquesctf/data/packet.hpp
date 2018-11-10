@@ -173,13 +173,46 @@ public:
         }
     }
 
+    /*
+     * Returned region is guaranteed to be valid until you call another
+     * `Packet` method on the same packet object.
+     */
     const PacketRegion& regionAtOffsetInPacketBits(Index offsetInPacketBits);
+
+    /*
+     * Returned region is guaranteed to be valid until you call another
+     * `Packet` method on the same packet object.
+     */
     const PacketRegion *previousRegion(const PacketRegion& region);
+
+    /*
+     * Returned region is guaranteed to be valid until you call another
+     * `Packet` method on this packet object.
+     */
     const PacketRegion& firstRegion();
+
+    /*
+     * Returned region is guaranteed to be valid until you call another
+     * `Packet` method on this packet object.
+     */
     const PacketRegion& lastRegion();
+
+    /*
+     * Returned event record is guaranteed to be valid until you call
+     * another `Packet` method on this packet object.
+     */
     const EventRecord *eventRecordBeforeOrAtNsFromOrigin(long long nsFromOrigin);
+
+    /*
+     * Returned event record is guaranteed to be valid until you call
+     * another `Packet` method on this packet object.
+     */
     const EventRecord *eventRecordBeforeOrAtCycles(unsigned long long cycles);
 
+    /*
+     * Returned bit array remains valid as long as this packet object
+     * exists.
+     */
     BitArray bitArray(const PacketSegment& segment) const noexcept
     {
         assert(segment.size());
@@ -192,21 +225,36 @@ public:
         };
     }
 
+    /*
+     * Returned bit array remains valid as long as this packet object
+     * exists.
+     */
     BitArray bitArray(const PacketRegion& region) const noexcept
     {
         return this->bitArray(region.segment());
     }
 
+    /*
+     * Returned bit array remains valid as long as this packet object
+     * exists.
+     */
     BitArray bitArray(const Scope& scope) const noexcept
     {
         return this->bitArray(scope.segment());
     }
 
+    /*
+     * Returned bit array remains valid as long as this packet object
+     * exists.
+     */
     BitArray bitArray(const EventRecord& eventRecord) const noexcept
     {
         return this->bitArray(eventRecord.segment());
     }
 
+    /*
+     * Returned data remains valid as long as this packet object exists.
+     */
     const std::uint8_t *data(const Index offsetInPacketBytes) const
     {
         assert(offsetInPacketBytes < _indexEntry->effectiveTotalSize().bytes());
@@ -218,6 +266,10 @@ public:
         return _indexEntry->effectiveTotalSize() > 0;
     }
 
+    /*
+     * Returned index entry remains valid as long as this packet object
+     * exists.
+     */
     const PacketIndexEntry& indexEntry() const noexcept
     {
         return *_indexEntry;
@@ -240,6 +292,10 @@ public:
         return **this->_eventRecordCacheItFromIndexInPacket(reqIndexInPacket);
     }
 
+    /*
+     * Returned event record is guaranteed to be valid until you call
+     * another `Packet` method on this packet object.
+     */
     const EventRecord *firstEventRecord() const
     {
         if (_checkpoints.eventRecordCount() == 0) {
@@ -249,6 +305,10 @@ public:
         return _checkpoints.firstEventRecord().get();
     }
 
+    /*
+     * Returned event record is guaranteed to be valid until you call
+     * another `Packet` method on this packet object.
+     */
     const EventRecord *lastEventRecord() const
     {
         if (_checkpoints.eventRecordCount() == 0) {
