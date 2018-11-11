@@ -490,6 +490,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         const auto& reqPacketRegion = packet.regionAtOffsetInPacketBits(reqOffsetInPacketBits);
 
         this->_state().gotoPacketRegionAtOffsetInPacketBits(reqPacketRegion.segment().offsetInPacketBits());
+        this->_snapshotState();
         break;
     }
 
@@ -523,6 +524,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         const auto& reqPacketRegion = packet.regionAtOffsetInPacketBits(reqOffsetInPacketBits);
 
         this->_state().gotoPacketRegionAtOffsetInPacketBits(reqPacketRegion.segment().offsetInPacketBits());
+        this->_snapshotState();
         break;
     }
 
