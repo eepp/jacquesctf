@@ -331,12 +331,15 @@ void InspectScreen::_setLastOffsetInRowBits()
 KeyHandlingReaction InspectScreen::_handleKey(const int key)
 {
     const auto goingToBookmark = _goingToBookmark;
+    const auto decErrorViewWasVisible = _decErrorView->isVisible();
 
     _goingToBookmark = false;
 
     if (_decErrorView->isVisible()) {
         _decErrorView->isVisible(false);
         this->_redraw();
+
+
     }
 
     if (key != KEY_DOWN && key != KEY_UP) {
@@ -403,6 +406,11 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 
     case '\n':
     case '\r':
+        if (decErrorViewWasVisible) {
+            // use Enter to close the box in this case
+            break;
+        }
+
         _sdteViewIsVisible = !_sdteViewIsVisible;
         this->_updateViews();
         this->_redraw();
