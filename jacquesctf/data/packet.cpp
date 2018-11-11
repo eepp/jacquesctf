@@ -255,12 +255,16 @@ void Packet::_cacheContentRegionAtCurIt(Scope::SP scope)
         break;
     }
 
-    // caller expects the iterator to be passed this packet region
-    ++_it;
-
     assert(region);
     this->_trySetPreviousRegionOffsetInPacketBits(*region);
     _regionCache.push_back(std::move(region));
+
+    /*
+     * Caller expects the iterator to be passed this packet region. Do
+     * it after caching the region because `++_it` could throw a
+     * decoding error.
+     */
+    ++_it;
 }
 
 void Packet::_tryCachePaddingRegionBeforeCurIt(Scope::SP scope)

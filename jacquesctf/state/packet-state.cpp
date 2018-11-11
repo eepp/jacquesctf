@@ -72,6 +72,8 @@ void PacketState::gotoNextEventRecord(Size count)
 
     const auto& nextEventRecord = _packet->eventRecordAtIndexInPacket(newIndex);
 
+    if (nextEventRecord.segment().offsetInPacketBits())
+
     this->gotoPacketRegionAtOffsetInPacketBits(nextEventRecord.segment().offsetInPacketBits());
 }
 
@@ -132,6 +134,26 @@ void PacketState::gotoLastPacketRegion()
 void PacketState::gotoPacketRegionAtOffsetInPacketBits(const Index offsetInPacketBits)
 {
     if (offsetInPacketBits == _curOffsetInPacketBits) {
+        return;
+    }
+
+    if (offsetInPacketBits >= _packet->indexEntry().effectiveTotalSize()) {
+        /*
+         * This is a general protection against going too far. This can
+         * happen, for example, if an event record begins exactly where
+         * the packet content ends, which can happen if yactfr emitted a
+         * "event record beginning" element immediately after aligning
+         * its cursor.
+         *
+         * For example, given a packet content of 256 bits, if the
+         * current cursor is at 224 bits, and the next event record
+         * needs to be aligned to 64 bits, then yactfr aligns its cursor
+         * to 256 bits, emits a "event record beginning" element at
+         * 256 bits, and then eventually returns a decoding error
+         * because it cannot decode more. In this case, Jacques CTF
+         * considers there's an event record at offset 256, but there's
+         * no packet region at offset 256.
+         */
         return;
     }
 
