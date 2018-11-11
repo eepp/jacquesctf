@@ -78,13 +78,27 @@ static bool initScreen()
         return false;
     }
 
+    // do not print user keys
     noecho();
+
+    // make keys immediately available (disable line buffering)
     cbreak();
+
+    // faster cursor motion and detect return key
     nonl();
+
+    // enable special keys
     keypad(stdscr, TRUE);
+
+    // disable cursor block
     curs_set(0);
+
+    // use colors
     start_color();
+
+    // support user's foreground/background colors
     use_default_colors();
+
     return true;
 }
 
@@ -94,6 +108,8 @@ static void sigHandler(const int signo)
         finiScreen();
         std::cerr << '\n';
         utils::error() << "Interrupted by user.\n";
+
+        // just exit immediately
         std::exit(0);
     }
 }
@@ -349,7 +365,7 @@ static bool tryStartInteractive(const Config& cfg)
 
     while (!done) {
         const auto ch = getch();
-        bool renderStatus = true;
+        bool refreshStatus = true;
 
         switch (ch) {
         case KEY_RESIZE:
@@ -361,7 +377,7 @@ static bool tryStartInteractive(const Config& cfg)
                 stylist->error();
                 mvprintw(0, 0, "Terminal size must be at least 80x16 (currently %dx%d).",
                          COLS, LINES);
-                renderStatus = false;
+                refreshStatus = false;
                 break;
             }
 
@@ -494,7 +510,7 @@ static bool tryStartInteractive(const Config& cfg)
             redrawCurScreen = false;
         }
 
-        if (renderStatus) {
+        if (refreshStatus) {
             statusView->refresh();
         }
 
