@@ -45,7 +45,6 @@ static bool screenInited = false;
 static void finiScreen()
 {
     if (screenInited) {
-        curs_set(1);
         endwin();
         screenInited = false;
     }
