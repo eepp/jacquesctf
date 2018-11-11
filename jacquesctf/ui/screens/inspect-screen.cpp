@@ -446,6 +446,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     case KEY_END:
         this->_state().gotoLastPacketRegion();
         this->_snapshotState();
+        this->_tryShowDecodingError();
         break;
 
     case KEY_LEFT:
