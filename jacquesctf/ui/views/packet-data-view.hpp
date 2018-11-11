@@ -56,6 +56,7 @@ public:
     void centerSelection();
     void isDataInHex(bool isDataInHex);
     void isAsciiVisible(bool isVisible);
+    void isPrevNextVisible(bool isVisible);
     void isEventRecordFirstPacketRegionEmphasized(bool isEmphasized);
     void isOffsetInHex(bool isOffsetInHex);
     void isOffsetInBytes(bool isOffsetInBytes);
@@ -63,6 +64,11 @@ public:
     bool isAsciiVisible() const noexcept
     {
         return _isAsciiVisible;
+    }
+
+    bool isPrevNextVisible() const noexcept
+    {
+        return _isPrevNextVisible;
     }
 
     bool isEventRecordFirstPacketRegionEmphasized() const noexcept
@@ -194,6 +200,7 @@ private:
     Index _curOffsetInPacketBits = 0;
     boost::optional<Index> _nextOffsetInPacketBits;
     bool _isAsciiVisible = true;
+    bool _isPrevNextVisible = true;
     bool _isEventRecordFirstPacketRegionEmphasized = true;
     bool _isDataInHex = true;
     bool _isOffsetInHex = false;

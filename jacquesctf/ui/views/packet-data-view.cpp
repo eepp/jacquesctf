@@ -424,20 +424,22 @@ void PacketDataView::_drawChar(const _Char& ch) const
 
     const auto& singlePacketRegion = *ch.packetRegions.front();
 
-    if (_prevOffsetInPacketBits &&
-            *_prevOffsetInPacketBits == singlePacketRegion.segment().offsetInPacketBits()) {
-        this->_stylist().packetDataViewSelection(*this,
-                                                 Stylist::PacketDataViewSelectionType::PREVIOUS);
-        this->_putChar(ch.pt, ch.value);
-        return;
-    }
+    if (_isPrevNextVisible) {
+        if (_prevOffsetInPacketBits &&
+                *_prevOffsetInPacketBits == singlePacketRegion.segment().offsetInPacketBits()) {
+            this->_stylist().packetDataViewSelection(*this,
+                                                     Stylist::PacketDataViewSelectionType::PREVIOUS);
+            this->_putChar(ch.pt, ch.value);
+            return;
+        }
 
-    if (_nextOffsetInPacketBits &&
-            *_nextOffsetInPacketBits == singlePacketRegion.segment().offsetInPacketBits()) {
-        this->_stylist().packetDataViewSelection(*this,
-                                                 Stylist::PacketDataViewSelectionType::NEXT);
-        this->_putChar(ch.pt, ch.value);
-        return;
+        if (_nextOffsetInPacketBits &&
+                *_nextOffsetInPacketBits == singlePacketRegion.segment().offsetInPacketBits()) {
+            this->_stylist().packetDataViewSelection(*this,
+                                                     Stylist::PacketDataViewSelectionType::NEXT);
+            this->_putChar(ch.pt, ch.value);
+            return;
+        }
     }
 
     this->_drawUnselectedChar(ch);
@@ -799,6 +801,12 @@ void PacketDataView::isAsciiVisible(const bool isVisible)
         this->_setBaseAndEndOffsetInPacketBitsFromOffset(_curOffsetInPacketBits);
     }
 
+    this->_redrawContent();
+}
+
+void PacketDataView::isPrevNextVisible(const bool isVisible)
+{
+    _isPrevNextVisible = isVisible;
     this->_redrawContent();
 }
 

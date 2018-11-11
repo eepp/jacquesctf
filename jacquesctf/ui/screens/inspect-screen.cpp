@@ -388,6 +388,10 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         _pdView->isAsciiVisible(!_pdView->isAsciiVisible());
         break;
 
+    case 'v':
+        _pdView->isPrevNextVisible(!_pdView->isPrevNextVisible());
+        break;
+
     case 'x':
         _pdView->isDataInHex(!_pdView->isDataInHex());
         break;

@@ -50,6 +50,7 @@ void HelpView::_buildRows()
         _SectionRow {"\"Packet inspection\" screen"},
         _KeyRow {"e", "Cycle \"Event records\" frame's height"},
         _KeyRow {"Enter", "Show/hide \"Data type\" frame"},
+        _KeyRow {"v", "Packet data: show/hide previous/next regions"},
         _KeyRow {"a", "Packet data: show/hide ASCII characters"},
         _KeyRow {"o", "Packet data: show offsets in bytes or bits"},
         _KeyRow {"O", "Packet data: show offsets in decimal or hexadecimal"},
