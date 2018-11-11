@@ -381,6 +381,7 @@ static bool tryStartInteractive(const Config& cfg)
             break;
 
         case 'r':
+        case 12:
             clear();
             refresh();
             statusView->redraw();
@@ -436,6 +437,7 @@ static bool tryStartInteractive(const Config& cfg)
 
         case 'h':
         case 'H':
+        case '?':
             if (curScreen == helpScreen.get()) {
                 break;
             }
@@ -447,6 +449,7 @@ static bool tryStartInteractive(const Config& cfg)
             break;
 
         case 'q':
+        case 27:
             if (curScreen == inspectScreen.get()) {
                 break;
             } else if (curScreen == helpScreen.get()) {
