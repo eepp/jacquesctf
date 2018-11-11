@@ -349,12 +349,10 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     case '9':
     case KEY_BACKSPACE:
         this->_goBack();
-        this->_tryShowDecodingError();
         break;
 
     case '0':
         this->_goForward();
-        this->_tryShowDecodingError();
         break;
 
     case '#':
