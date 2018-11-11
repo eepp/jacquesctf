@@ -245,7 +245,9 @@ void PacketDataView::_drawSeparators() const
         return;
     }
 
-    const auto yEnd = (_endOffsetInPacketBits - _baseOffsetInPacketBits) /
+    const auto endOffsetInPacketBits = _endOffsetInPacketBits + _rowSize.bits() - 1;
+
+    const auto yEnd = (endOffsetInPacketBits - _baseOffsetInPacketBits) /
                       _rowSize.bits();
 
     this->_stylist().stdDim(*this);
