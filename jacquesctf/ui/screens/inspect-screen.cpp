@@ -210,10 +210,7 @@ void InspectScreen::_visibilityChanged()
             this->_snapshotState();
         }
 
-        _pdView->redraw();
-        _ertView->redraw();
-        _priView->redraw();
-        _sdteView->redraw();
+        this->_redraw();
         this->_tryShowDecodingError();
         _decErrorView->refresh(true);
     }
@@ -339,9 +336,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 
     if (_decErrorView->isVisible()) {
         _decErrorView->isVisible(false);
-        _pdView->redraw();
-        _ertView->redraw();
-        _priView->redraw();
+        this->_redraw();
     }
 
     if (key != KEY_DOWN && key != KEY_UP) {
@@ -426,10 +421,8 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     case '4':
         if (goingToBookmark) {
             this->_gotoBookmark(key - '1');
-            _pdView->redraw();
         } else {
             this->_toggleBookmark(key - '1');
-            _pdView->redraw();
         }
 
         break;
