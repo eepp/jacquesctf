@@ -198,7 +198,6 @@ void PacketDataView::_setDataXAndRowSize()
         return;
     }
 
-    // we can compute log16, or we can do that:
     std::array<char, 32> buf;
     const Size div = _isOffsetInBytes ? 8 : 1;
     const auto maxOffset = static_cast<unsigned long long>(_state->activePacketState().packetIndexEntry().effectiveTotalSize().bits() / div);
@@ -223,11 +222,20 @@ void PacketDataView::_setDataXAndRowSize()
         }
 
         if (dataWidth + offsetWidth + 1 > this->contentRect().w) {
-            bytesPerRow /= 2;
+            if (_isRowSizePowerOfTwo) {
+                bytesPerRow /= 2;
+            } else {
+                --bytesPerRow;
+            }
+
             break;
         }
 
-        bytesPerRow *= 2;
+        if (_isRowSizePowerOfTwo) {
+            bytesPerRow *= 2;
+        } else {
+            ++bytesPerRow;
+        }
     }
 
     if (bytesPerRow > _state->activePacketState().packetIndexEntry().effectiveTotalSize().bytes()) {
@@ -246,7 +254,6 @@ void PacketDataView::_drawSeparators() const
     }
 
     const auto endOffsetInPacketBits = _endOffsetInPacketBits + _rowSize.bits() - 1;
-
     const auto yEnd = (endOffsetInPacketBits - _baseOffsetInPacketBits) /
                       _rowSize.bits();
 
@@ -861,6 +868,18 @@ void PacketDataView::isOffsetInBytes(const bool isOffsetInBytes)
     }
 
     this->_setTitle();
+    this->_redrawContent();
+}
+
+void PacketDataView::isRowSizePowerOfTwo(const bool isPowerOfTwo)
+{
+    _isRowSizePowerOfTwo = isPowerOfTwo;
+    this->_setDataXAndRowSize();
+
+    if (_state->hasActivePacketState()) {
+        this->_setBaseAndEndOffsetInPacketBitsFromOffset(_curOffsetInPacketBits);
+    }
+
     this->_redrawContent();
 }
 

@@ -60,6 +60,7 @@ public:
     void isEventRecordFirstPacketRegionEmphasized(bool isEmphasized);
     void isOffsetInHex(bool isOffsetInHex);
     void isOffsetInBytes(bool isOffsetInBytes);
+    void isRowSizePowerOfTwo(bool isPowerOfTwo);
 
     bool isAsciiVisible() const noexcept
     {
@@ -89,6 +90,11 @@ public:
     bool isOffsetInBytes() const noexcept
     {
         return _isOffsetInBytes;
+    }
+
+    bool isRowSizePowerOfTwo() const noexcept
+    {
+        return _isRowSizePowerOfTwo;
     }
 
     const DataSize& rowSize() const noexcept
@@ -205,6 +211,7 @@ private:
     bool _isDataInHex = true;
     bool _isOffsetInHex = false;
     bool _isOffsetInBytes = true;
+    bool _isRowSizePowerOfTwo = true;
 };
 
 } // namespace jacques

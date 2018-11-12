@@ -392,6 +392,10 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         _pdView->isPrevNextVisible(!_pdView->isPrevNextVisible());
         break;
 
+    case 'w':
+        _pdView->isRowSizePowerOfTwo(!_pdView->isRowSizePowerOfTwo());
+        break;
+
     case 'x':
         _pdView->isDataInHex(!_pdView->isDataInHex());
         break;
