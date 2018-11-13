@@ -599,8 +599,11 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
                 // start from initial state
                 this->_restoreStateSnapshot(snapshot);
 
-                // this makes the appropriate views update and redraw
-                this->_state().search(query);
+                if (!dynamic_cast<const EventRecordTypeNameSearchQuery *>(&query) &&
+                        !dynamic_cast<const EventRecordTypeIdSearchQuery *>(&query)) {
+                    // this makes the appropriate views update and redraw
+                    this->_state().search(query);
+                }
 
                 // refresh background views
                 this->_refreshViews();
