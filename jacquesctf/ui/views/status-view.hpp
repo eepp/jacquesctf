@@ -29,6 +29,7 @@ private:
         Index packetCount;
         Index packetIndex;
         Index seqNum;
+        Index packetPercent;
         Index curOffsetInPacketBits;
         Index dsfPath;
     };

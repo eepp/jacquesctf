@@ -39,8 +39,8 @@ void StatusView::_createEndPositions()
         positions.packetCount = 0;
         positions.packetIndex = positions.packetCount + packetCountStr.size() + 1;
         positions.seqNum = positions.packetIndex + packetCountStr.size() + 5;
-        positions.curOffsetInPacketBits = positions.seqNum +
-                                          packetCountStr.size() + 6;
+        positions.packetPercent = positions.seqNum + packetCountStr.size() + 6;
+        positions.curOffsetInPacketBits = positions.packetPercent + 9;
 
         const auto maxEntryIt = std::max_element(std::begin(dsf.packetIndexEntries()),
                                                  std::end(dsf.packetIndexEntries()),
@@ -79,9 +79,21 @@ void StatusView::_drawOffset()
     this->_stylist().statusViewStd(*this);
 
     for (auto x = this->contentRect().w - _curEndPositions->dsfPath;
-            x < this->contentRect().w - _curEndPositions->curOffsetInPacketBits; ++x) {
+            x < this->contentRect().w - _curEndPositions->packetPercent; ++x) {
         this->_putChar({x, 0}, ' ');
     }
+
+    // draw percentage
+    this->_stylist().statusViewStd(*this, true);
+
+    const auto percent = _state->activePacketState().curOffsetInPacketBits() * 100 /
+                         _state->activePacketState().packet().indexEntry().effectiveTotalSize().bits();
+
+    this->_moveAndPrint({this->contentRect().w -
+                         _curEndPositions->packetPercent - 5, 0},
+                         "%3u", static_cast<unsigned int>(percent));
+    this->_stylist().statusViewStd(*this);
+    this->_print(" %%");
 
     // draw new
     this->_stylist().statusViewStd(*this, true);
