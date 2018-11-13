@@ -28,6 +28,11 @@ InputView::~InputView()
 void InputView::_redrawContent()
 {
     this->_clearContent();
+    this->_drawBorder();
+}
+
+void InputView::_drawBorder() const
+{
     this->_stylist().simpleInputViewBorder(*this);
     wborder(this->_window(), ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
 }

@@ -28,6 +28,7 @@ public:
 
 protected:
     virtual void _drawCurrentText(const std::string& text) = 0;
+    void _drawBorder() const;
 
 private:
     void _redrawContent() override;

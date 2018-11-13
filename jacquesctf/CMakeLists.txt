@@ -34,6 +34,9 @@ else ()
     message (STATUS "yactfr include directory: ${YACTFR_INCLUDE_DIR}")
 endif ()
 
+# threading
+find_package (Threads REQUIRED)
+
 # Jacques CTF program
 add_executable (
     jacquesctf
@@ -117,6 +120,7 @@ target_link_libraries (
     Boost::boost
     Boost::program_options
     Boost::filesystem
+    Threads::Threads
     ${YACTFR_LIB}
 )
 target_compile_definitions (

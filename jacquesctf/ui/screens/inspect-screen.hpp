@@ -86,6 +86,7 @@ private:
     void _gotoBookmark(unsigned int id);
     void _refreshViews();
     void _setLastOffsetInRowBits();
+    void _search(const SearchQuery& query, bool animate = true);
 
 private:
     std::unique_ptr<EventRecordTableView> _ertView;

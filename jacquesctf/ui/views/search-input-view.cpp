@@ -177,4 +177,56 @@ void SearchInputView::_drawNumber(std::string::const_iterator it,
     }
 }
 
+void SearchInputView::animateBorder(const Index index)
+{
+    const auto borderChCount = (this->contentRect().h - 2) * 2 +
+                               this->contentRect().w * 2;
+    const auto altChCount = index % (borderChCount + 1);
+
+    this->_drawBorder();
+    this->_stylist().simpleInputViewBorder(*this);
+
+    Point pt {0, 0};
+    enum class Direction {
+        RIGHT,
+        DOWN,
+        LEFT,
+        UP,
+    } direction = Direction::RIGHT;
+
+    for (Index i = 0; i < altChCount; ++i) {
+        this->_putChar(pt, ACS_BULLET);
+
+        switch (direction) {
+        case Direction::RIGHT:
+            ++pt.x;
+            break;
+
+        case Direction::DOWN:
+            ++pt.y;
+            break;
+
+        case Direction::LEFT:
+            --pt.x;
+            break;
+
+        case Direction::UP:
+            --pt.y;
+            break;
+        }
+
+        if (pt.x == 0) {
+            if (pt.y == this->contentRect().h - 1) {
+                direction = Direction::UP;
+            }
+        } else if (pt.x == this->contentRect().w - 1) {
+            if (pt.y == 0) {
+                direction = Direction::DOWN;
+            } else if (pt.y == this->contentRect().h - 1) {
+                direction = Direction::LEFT;
+            }
+        }
+    }
+}
+
 } // namespace jacques

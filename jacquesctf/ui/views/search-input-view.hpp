@@ -22,6 +22,7 @@ class SearchInputView :
 public:
     explicit SearchInputView(const Rectangle& rect,
                              const Stylist& stylist);
+    void animateBorder(Index index);
 
 private:
     void _drawFormatText(const std::string& text);

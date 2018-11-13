@@ -7,6 +7,8 @@
 
 #include <cassert>
 #include <iostream>
+#include <thread>
+#include <atomic>
 #include <curses.h>
 #include <signal.h>
 #include <unistd.h>
@@ -328,6 +330,26 @@ void InspectScreen::_setLastOffsetInRowBits()
     }
 }
 
+void InspectScreen::_search(const SearchQuery& query, const bool animate)
+{
+    if (dynamic_cast<const EventRecordTypeNameSearchQuery *>(&query) ||
+            dynamic_cast<const EventRecordTypeIdSearchQuery *>(&query)) {
+        std::atomic_bool stop {false};
+        std::thread t {[this, &stop, &query]() {
+            this->_state().search(query);
+            stop = true;
+        }};
+
+        if (animate) {
+            _searchController.animate(stop);
+        }
+
+        t.join();
+    } else {
+        this->_state().search(query);
+    }
+}
+
 KeyHandlingReaction InspectScreen::_handleKey(const int key)
 {
     const auto goingToBookmark = _goingToBookmark;
@@ -624,7 +646,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
             break;
         }
 
-        this->_state().search(*query);
+        this->_search(*query);
 
         /*
          * If we didn't move, the state snapshot will be identical and
@@ -643,7 +665,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
             break;
         }
 
-        this->_state().search(*_lastQuery);
+        this->_search(*_lastQuery, false);
         this->_snapshotState();
         this->_tryShowDecodingError();
         break;

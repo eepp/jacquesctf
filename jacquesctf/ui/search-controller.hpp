@@ -9,6 +9,7 @@
 #define _JACQUES_SEARCH_CONTROLLER_HPP
 
 #include <memory>
+#include <atomic>
 
 #include "search-input-view.hpp"
 #include "screen.hpp"
@@ -27,6 +28,7 @@ public:
     std::unique_ptr<const SearchQuery> startLive(const std::string& init,
                                                  const LiveUpdateFunc& liveUpdateFunc);
     void parentScreenResized(const Screen& parentScreen);
+    void animate(std::atomic_bool& stop) const;
 
     std::unique_ptr<const SearchQuery> start(const std::string& init)
     {

@@ -6,6 +6,8 @@
  */
 
 #include <cassert>
+#include <chrono>
+#include <thread>
 #include <curses.h>
 
 #include "search-controller.hpp"
@@ -94,6 +96,29 @@ std::unique_ptr<const SearchQuery> SearchController::startLive(const std::string
 void SearchController::parentScreenResized(const Screen& parentScreen)
 {
     _searchView->moveAndResize(SearchController::_viewRect(parentScreen));
+}
+
+void SearchController::animate(std::atomic_bool& stop) const
+{
+    using namespace std::chrono_literals;
+
+    Index animIndex = 0;
+
+    _searchView->isVisible(true);
+
+    while (true) {
+        if (stop) {
+            return;
+        }
+
+        _searchView->animateBorder(animIndex);
+        ++animIndex;
+        _searchView->refresh(true);
+        doupdate();
+        std::this_thread::sleep_for(50ms);
+    }
+
+    _searchView->isVisible(false);
 }
 
 } // namespace jacques
