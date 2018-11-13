@@ -226,7 +226,7 @@ void HelpView::_buildRows()
         _SearchSyntaxRow {"Event record with timestamp X (cycles)", "**X"},
         _SearchSyntaxRow {"Event record with relative timestamp X (cycles)", "+**X  -**X"},
         _EmptyRow {},
-        _SearchSyntaxRow {"Next event record with type name NAME", "/NAME"},
+        _SearchSyntaxRow {"Next event record with type name Z", "/Z"},
         _SearchSyntaxRow {"Next event record with type ID X", "%X"},
     };
 
@@ -317,7 +317,7 @@ void HelpView::_drawRows()
             this->_moveCursor({startX + 2, y});
 
             for (const auto& ch : ssRow->descr) {
-                if (ch == 'X') {
+                if (ch == 'X' || ch == 'Z') {
                     this->_stylist().helpViewKey(*this);
                 } else {
                     this->_stylist().std(*this);
@@ -330,7 +330,7 @@ void HelpView::_drawRows()
             this->_stylist().helpViewKey(*this);
 
             for (const auto& ch : ssRow->format) {
-                if (ch == 'X') {
+                if (ch == 'X' || ch == 'Z') {
                     this->_stylist().helpViewKey(*this);
                 } else {
                     this->_stylist().std(*this);
