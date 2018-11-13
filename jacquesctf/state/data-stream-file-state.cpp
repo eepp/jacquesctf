@@ -62,7 +62,9 @@ PacketState& DataStreamFileState::_packetState(const Index index)
         auto& packet = _dataStreamFile->packetAtIndex(index,
                                                       *_packetCheckpointsBuildListener);
 
-        _packetStates[index] = std::make_unique<PacketState>(*_state, packet);
+        _packetStates[index] = std::make_unique<PacketState>(*_state,
+                                                             _dataStreamFile->metadata(),
+                                                             packet);
     }
 
     return *_packetStates[index];

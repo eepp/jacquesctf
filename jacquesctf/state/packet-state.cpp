@@ -14,8 +14,10 @@
 
 namespace jacques {
 
-PacketState::PacketState(State& state, Packet& packet) :
+PacketState::PacketState(State& state, const Metadata& metadata,
+                         Packet& packet) :
     _state {&state},
+    _metadata {&metadata},
     _packet {&packet}
 {
 }
@@ -162,5 +164,40 @@ void PacketState::gotoPacketRegionAtOffsetInPacketBits(const Index offsetInPacke
     _state->_notify(Message::CUR_OFFSET_IN_PACKET_CHANGED);
 }
 
+void PacketState::gotoPacketRegionNextParent()
+{
+    if (!_packet->hasData()) {
+        return;
+    }
+
+    auto packetRegion = &this->currentPacketRegion();
+    const yactfr::DataType *origParentDt = nullptr;
+
+    if (const auto cRegion = dynamic_cast<const ContentPacketRegion *>(packetRegion)) {
+        origParentDt = _metadata->dataTypeParent(cRegion->dataType());
+    } else {
+        return;
+    }
+
+    assert(origParentDt);
+
+    while (*packetRegion->segment().endOffsetInPacketBits() <=
+            _packet->indexEntry().effectiveContentSize().bits()) {
+        if (const auto cRegion = dynamic_cast<const ContentPacketRegion *>(packetRegion)) {
+            const auto thisParentDt = _metadata->dataTypeParent(cRegion->dataType());
+
+            assert(thisParentDt);
+
+            if (thisParentDt != origParentDt) {
+                break;
+            }
+        }
+
+        packetRegion = &_packet->regionAtOffsetInPacketBits(*packetRegion->segment().endOffsetInPacketBits());
+    }
+
+    assert(packetRegion);
+    this->gotoPacketRegionAtOffsetInPacketBits(packetRegion->segment().offsetInPacketBits());
+}
 
 } // namespace jacques

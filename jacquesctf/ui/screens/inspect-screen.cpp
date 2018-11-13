@@ -429,6 +429,15 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         this->_snapshotState();
         break;
 
+    case 'z':
+        if (!this->_state().hasActivePacketState()) {
+            break;
+        }
+
+        this->_state().activePacketState().gotoPacketRegionNextParent();
+        this->_snapshotState();
+        break;
+
     case '1':
     case '2':
     case '3':

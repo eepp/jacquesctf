@@ -367,6 +367,14 @@ protected:
         this->_decorate();
     }
 
+    /*
+     * Beeps/flashes the screen.
+     */
+    void _alert() const noexcept
+    {
+        beep();
+    }
+
 private:
     void _setContentRect();
 

@@ -22,13 +22,15 @@ class State;
 class PacketState
 {
 public:
-    explicit PacketState(State& state, Packet& packet);
+    explicit PacketState(State& state, const Metadata& metadata,
+                         Packet& packet);
     void gotoPreviousEventRecord(Size count = 1);
     void gotoNextEventRecord(Size count = 1);
     void gotoPreviousPacketRegion();
     void gotoNextPacketRegion();
     void gotoPacketContext();
     void gotoLastPacketRegion();
+    void gotoPacketRegionNextParent();
     void gotoPacketRegionAtOffsetInPacketBits(Index offsetBits);
 
     void gotoPacketRegionAtOffsetInPacketBits(const PacketRegion& region)
@@ -81,6 +83,7 @@ public:
 
 private:
     State * const _state;
+    const Metadata * const _metadata;
     Packet * const _packet;
     Index _curOffsetInPacketBits = 0;
 };
