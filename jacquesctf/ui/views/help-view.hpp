@@ -33,6 +33,11 @@ private:
         std::string title;
     };
 
+    struct _SubSectionRow
+    {
+        std::string title;
+    };
+
     struct _EmptyRow
     {
     };
@@ -56,7 +61,7 @@ private:
     };
 
 private:
-    std::vector<boost::variant<_SectionRow, _EmptyRow, _TextRow,
+    std::vector<boost::variant<_SectionRow, _SubSectionRow, _EmptyRow, _TextRow,
                                _KeyRow, _SearchSyntaxRow>> _rows;
     Size _longestRowWidth;
     Size _ssRowFmtPos;

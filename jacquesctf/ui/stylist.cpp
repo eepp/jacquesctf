@@ -34,6 +34,7 @@ Stylist::Stylist()
     this->_initColor(_COLOR_ID_TEXT_MORE, COLOR_MAGENTA, -1);
     this->_initColor(_COLOR_ID_TABLE_VIEW_SEP, COLOR_GREEN, -1);
     this->_initColor(_COLOR_ID_HELP_VIEW_SECTION, COLOR_GREEN, -1);
+    this->_initColor(_COLOR_ID_HELP_VIEW_SUB_SECTION, COLOR_CYAN, -1);
     this->_initColor(_COLOR_ID_HELP_VIEW_KEY, COLOR_CYAN, -1);
     this->_initColor(_COLOR_ID_STATUS_VIEW_STD, COLOR_WHITE, COLOR_BLUE);
     this->_initColor(_COLOR_ID_PACKET_REGION_INFO_VIEW_STD, COLOR_WHITE, COLOR_MAGENTA);
@@ -252,6 +253,14 @@ void Stylist::helpViewSection(const View& view) const
 {
     this->_attrsReset(view);
     this->_color(view, _COLOR_ID_HELP_VIEW_SECTION);
+    this->_attrs(view, A_UNDERLINE);
+}
+
+void Stylist::helpViewSubSection(const View& view) const
+{
+    this->_attrsReset(view);
+    this->_color(view, _COLOR_ID_HELP_VIEW_SUB_SECTION);
+    this->_attrs(view, A_UNDERLINE | A_BOLD);
 }
 
 void Stylist::helpViewKey(const View& view) const

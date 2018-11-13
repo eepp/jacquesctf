@@ -60,6 +60,7 @@ public:
     }
 
     void helpViewSection(const View& view) const;
+    void helpViewSubSection(const View& view) const;
     void helpViewKey(const View& view) const;
     void statusViewStd(const View& view, bool emphasized = false) const;
     void statusViewFilename(const View& view) const;
@@ -149,6 +150,7 @@ private:
         _COLOR_ID_TABLE_VIEW_TEXT_CELL_EMPHASIZED,
         _COLOR_ID_TABLE_VIEW_TS_CELL_NS_PART,
         _COLOR_ID_HELP_VIEW_SECTION,
+        _COLOR_ID_HELP_VIEW_SUB_SECTION,
         _COLOR_ID_HELP_VIEW_KEY,
         _COLOR_ID_STATUS_VIEW_STD,
         _COLOR_ID_PACKET_REGION_INFO_VIEW_STD,
