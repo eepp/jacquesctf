@@ -23,7 +23,8 @@ DataTypeExplorerView::DataTypeExplorerView(const Rectangle& rect,
 {
 }
 
-void DataTypeExplorerView::dataStreamType(const yactfr::DataStreamType& dataStreamType)
+void DataTypeExplorerView::dataStreamType(const yactfr::DataStreamType& dataStreamType,
+                                          const bool showEventRecordTypes)
 {
     _details.pktHeader.clear();
     _details.pktContext.clear();
@@ -49,18 +50,20 @@ void DataTypeExplorerView::dataStreamType(const yactfr::DataStreamType& dataStre
         _rows.push_back(_EmptyRow {});
     }
 
-    if (dataStreamType.eventRecordHeaderType()) {
-        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EVENT_RECORD_HEADER});
-        this->_appendDetailsRow(*dataStreamType.eventRecordHeaderType(),
-                                _details.ertHeader);
-        _rows.push_back(_EmptyRow {});
-    }
+    if (showEventRecordTypes) {
+        if (dataStreamType.eventRecordHeaderType()) {
+            _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EVENT_RECORD_HEADER});
+            this->_appendDetailsRow(*dataStreamType.eventRecordHeaderType(),
+                                    _details.ertHeader);
+            _rows.push_back(_EmptyRow {});
+        }
 
-    if (dataStreamType.eventRecordFirstContextType()) {
-        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EVENT_RECORD_FIRST_CONTEXT});
-        this->_appendDetailsRow(*dataStreamType.eventRecordFirstContextType(),
-                                _details.ertFirstCtx);
-        _rows.push_back(_EmptyRow {});
+        if (dataStreamType.eventRecordFirstContextType()) {
+            _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EVENT_RECORD_FIRST_CONTEXT});
+            this->_appendDetailsRow(*dataStreamType.eventRecordFirstContextType(),
+                                    _details.ertFirstCtx);
+            _rows.push_back(_EmptyRow {});
+        }
     }
 
     if (!_rows.empty()) {

@@ -38,6 +38,16 @@ void SubDataTypeExplorerView::_stateChanged(const Message)
     if (packetRegion->scope()->eventRecord() &&
             packetRegion->scope()->eventRecord()->type()) {
         this->eventRecordType(*packetRegion->scope()->eventRecord()->type());
+    } else if (packetRegion->scope()->scope() == yactfr::Scope::PACKET_HEADER ||
+            packetRegion->scope()->scope() == yactfr::Scope::PACKET_CONTEXT) {
+        const auto dst = _state->activePacketState().packet().indexEntry().dataStreamType();
+
+        if (dst) {
+            this->dataStreamType(*dst, false);
+        } else {
+            this->singleDataType(*packetRegion->scope()->dataType(),
+                                 packetRegion->scope()->scope());
+        }
     } else {
         this->singleDataType(*packetRegion->scope()->dataType(),
                              packetRegion->scope()->scope());

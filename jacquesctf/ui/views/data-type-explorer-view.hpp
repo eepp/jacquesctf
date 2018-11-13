@@ -23,7 +23,8 @@ class DataTypeExplorerView :
 public:
     explicit DataTypeExplorerView(const Rectangle& rect,
                                   const Stylist& stylist);
-    void dataStreamType(const yactfr::DataStreamType& dataStreamType);
+    void dataStreamType(const yactfr::DataStreamType& dataStreamType,
+                        bool showEventRecordTypes = true);
     void eventRecordType(const yactfr::EventRecordType& eventRecordType);
     void singleDataType(const yactfr::DataType& dataType, yactfr::Scope scope);
     void highlightDataType(const yactfr::DataType& dataType);
