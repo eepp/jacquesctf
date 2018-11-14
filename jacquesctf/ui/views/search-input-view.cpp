@@ -82,11 +82,6 @@ void SearchInputView::_drawFormatText(const std::string& text)
         if (it != endIt && *it == '#') {
             this->_appendChar(*it);
             ++it;
-
-            if (it != endIt && *it == '#') {
-                this->_appendChar(*it);
-                ++it;
-            }
         }
     } else if (*it == ':') {
         this->_appendChar(*it);
