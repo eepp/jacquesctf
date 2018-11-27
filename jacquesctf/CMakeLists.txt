@@ -117,7 +117,6 @@ target_include_directories (
 target_link_libraries (
     jacquesctf
     ${CURSES_LIBRARIES}
-    Boost::boost
     Boost::program_options
     Boost::filesystem
     Threads::Threads
