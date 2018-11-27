@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <numeric>
 #include <unordered_set>
+#include <boost/type_traits/remove_cv.hpp>
 #include <boost/variant/get.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <yactfr/metadata/trace-type.hpp>

@@ -7,6 +7,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <boost/type_traits/remove_cv.hpp>
 #include <boost/variant/get.hpp>
 
 #include "help-view.hpp"

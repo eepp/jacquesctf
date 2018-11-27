@@ -60,7 +60,8 @@ std::tuple<Rectangle, Rectangle, Rectangle> DataTypesScreen::_viewRects() const
     const auto dtExplorerViewRect = Rectangle {{detailsX, rect.pos.y},
                                                detailsWidth, rect.h};
 
-    return {dstTableViewRect, ertTableViewRect, dtExplorerViewRect};
+    return std::make_tuple(dstTableViewRect, ertTableViewRect,
+                           dtExplorerViewRect);
 }
 
 void DataTypesScreen::_updateViews()

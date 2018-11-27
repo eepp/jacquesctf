@@ -38,7 +38,6 @@ public:
                               boost::optional<Size> discardedEventRecordCounter,
                               bool isInvalid);
     PacketIndexEntry(const PacketIndexEntry&) = default;
-    PacketIndexEntry& operator=(const PacketIndexEntry&) = default;
 
     Index offsetInDataStreamBytes() const noexcept
     {
