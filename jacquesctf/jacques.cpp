@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <stdexcept>
 #include <yactfr/metadata/invalid-metadata.hpp>
