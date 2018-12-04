@@ -12,7 +12,7 @@
 #include <functional>
 #include <boost/filesystem.hpp>
 #include <boost/core/noncopyable.hpp>
-#include <yactfr/packet-sequence.hpp>
+#include <yactfr/element-sequence.hpp>
 #include <yactfr/metadata/fwd.hpp>
 #include <yactfr/memory-mapped-file-view-factory.hpp>
 
@@ -175,7 +175,7 @@ private:
     const boost::filesystem::path _path;
     const Metadata * const _metadata;
     std::shared_ptr<yactfr::MemoryMappedFileViewFactory> _factory;
-    yactfr::PacketSequence _seq;
+    yactfr::ElementSequence _seq;
     DataSize _fileSize;
     std::vector<PacketIndexEntry> _index;
     std::vector<std::unique_ptr<Packet>> _packets;

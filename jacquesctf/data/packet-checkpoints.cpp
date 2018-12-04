@@ -19,7 +19,7 @@ PacketDecodingError::PacketDecodingError(const yactfr::DecodingError& decodingEr
 {
 }
 
-PacketCheckpoints::PacketCheckpoints(yactfr::PacketSequence& seq,
+PacketCheckpoints::PacketCheckpoints(yactfr::ElementSequence& seq,
                                      const Metadata& metadata,
                                      const PacketIndexEntry& packetIndexEntry,
                                      const Size step,
@@ -29,7 +29,7 @@ PacketCheckpoints::PacketCheckpoints(yactfr::PacketSequence& seq,
                                 step, packetCheckpointsBuildListener);
 }
 
-void PacketCheckpoints::_tryCreateCheckpoints(yactfr::PacketSequence& seq,
+void PacketCheckpoints::_tryCreateCheckpoints(yactfr::ElementSequence& seq,
                                               const Metadata& metadata,
                                               const PacketIndexEntry& packetIndexEntry,
                                               const Size step,
@@ -60,8 +60,8 @@ void PacketCheckpoints::_tryCreateCheckpoints(yactfr::PacketSequence& seq,
      * Also _lastEventRecordPositions() does not catch any exception
      * because we want to do it here.
      */
-    yactfr::PacketSequenceIteratorPosition lastPos;
-    yactfr::PacketSequenceIteratorPosition penultimatePos;
+    yactfr::ElementSequenceIteratorPosition lastPos;
+    yactfr::ElementSequenceIteratorPosition penultimatePos;
     Index lastIndex = 0;
     Index penultimateIndex = 0;
 
@@ -98,7 +98,7 @@ void PacketCheckpoints::_tryCreateCheckpoints(yactfr::PacketSequence& seq,
     }
 }
 
-void PacketCheckpoints::_createCheckpoints(yactfr::PacketSequenceIterator& it,
+void PacketCheckpoints::_createCheckpoints(yactfr::ElementSequenceIterator& it,
                                            const Metadata& metadata,
                                            const PacketIndexEntry& packetIndexEntry,
                                            const Size step,
@@ -126,11 +126,11 @@ void PacketCheckpoints::_createCheckpoints(yactfr::PacketSequenceIterator& it,
     }
 }
 
-void PacketCheckpoints::_lastEventRecordPositions(yactfr::PacketSequenceIteratorPosition& lastPos,
-                                                  yactfr::PacketSequenceIteratorPosition& penultimatePos,
+void PacketCheckpoints::_lastEventRecordPositions(yactfr::ElementSequenceIteratorPosition& lastPos,
+                                                  yactfr::ElementSequenceIteratorPosition& penultimatePos,
                                                   Index& lastIndexInPacket,
                                                   Index& penultimateIndexInPacket,
-                                                  yactfr::PacketSequenceIterator& it)
+                                                  yactfr::ElementSequenceIterator& it)
 {
     // find last event record and create a checkpoint if not already done
     if (_checkpoints.empty()) {
@@ -155,18 +155,18 @@ void PacketCheckpoints::_lastEventRecordPositions(yactfr::PacketSequenceIterator
     }
 }
 
-void PacketCheckpoints::_createCheckpoint(yactfr::PacketSequenceIterator& it,
+void PacketCheckpoints::_createCheckpoint(yactfr::ElementSequenceIterator& it,
                                           const Metadata& metadata,
                                           const PacketIndexEntry& packetIndexEntry,
                                           const Index indexInPacket,
                                           PacketCheckpointsBuildListener& packetCheckpointsBuildListener)
 {
-    yactfr::PacketSequenceIteratorPosition pos;
+    yactfr::ElementSequenceIteratorPosition pos;
 
     assert(it->kind() == yactfr::Element::Kind::EVENT_RECORD_BEGINNING);
     it.savePosition(pos);
 
-    auto eventRecord = EventRecord::createFromPacketSequenceIterator(it,
+    auto eventRecord = EventRecord::createFromElementSequenceIterator(it,
                                                                      metadata,
                                                                      packetIndexEntry.offsetInDataStreamBytes(),
                                                                      indexInPacket);

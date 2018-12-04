@@ -28,7 +28,7 @@ EventRecord::EventRecord(Index indexInPacket) :
 {
 }
 
-EventRecord::SP EventRecord::createFromPacketSequenceIterator(yactfr::PacketSequenceIterator& it,
+EventRecord::SP EventRecord::createFromElementSequenceIterator(yactfr::ElementSequenceIterator& it,
                                                               const Metadata& metadata,
                                                               const Index packetOffsetInDataStreamBytes,
                                                               const Index indexInPacket)

@@ -11,8 +11,8 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
-#include <yactfr/packet-sequence.hpp>
-#include <yactfr/packet-sequence-iterator.hpp>
+#include <yactfr/element-sequence.hpp>
+#include <yactfr/element-sequence-iterator.hpp>
 #include <yactfr/data-source.hpp>
 #include <yactfr/metadata/float-type.hpp>
 #include <yactfr/metadata/int-type.hpp>
@@ -128,7 +128,7 @@ public:
 
 public:
     explicit Packet(const PacketIndexEntry& indexEntry,
-                    yactfr::PacketSequence& seq,
+                    yactfr::ElementSequence& seq,
                     const Metadata& metadata,
                     yactfr::DataSource::UP dataSrc,
                     std::unique_ptr<MemoryMappedFile> mmapFile,
@@ -624,8 +624,8 @@ private:
     const Metadata * const _metadata;
     yactfr::DataSource::UP _dataSrc;
     std::unique_ptr<MemoryMappedFile> _mmapFile;
-    yactfr::PacketSequenceIterator _it;
-    yactfr::PacketSequenceIterator _endIt;
+    yactfr::ElementSequenceIterator _it;
+    yactfr::ElementSequenceIterator _endIt;
     PacketCheckpoints _checkpoints;
     RegionCache _regionCache;
     RegionCache _preambleRegionCache;

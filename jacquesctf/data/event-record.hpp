@@ -13,7 +13,7 @@
 #include <boost/operators.hpp>
 #include <boost/core/noncopyable.hpp>
 #include <yactfr/metadata/fwd.hpp>
-#include <yactfr/packet-sequence-iterator.hpp>
+#include <yactfr/element-sequence-iterator.hpp>
 
 #include "aliases.hpp"
 #include "packet-segment.hpp"
@@ -31,7 +31,7 @@ public:
     using SPC = std::shared_ptr<const EventRecord>;
 
 public:
-    static SP createFromPacketSequenceIterator(yactfr::PacketSequenceIterator& it,
+    static SP createFromElementSequenceIterator(yactfr::ElementSequenceIterator& it,
                                                const Metadata& metadata,
                                                Index packetOffsetInDataStreamBytes,
                                                Index indexInPacket);

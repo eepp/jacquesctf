@@ -14,9 +14,9 @@
 #include <vector>
 #include <utility>
 #include <boost/optional.hpp>
-#include <yactfr/packet-sequence.hpp>
-#include <yactfr/packet-sequence-iterator.hpp>
-#include <yactfr/packet-sequence-iterator-position.hpp>
+#include <yactfr/element-sequence.hpp>
+#include <yactfr/element-sequence-iterator.hpp>
+#include <yactfr/element-sequence-iterator-position.hpp>
 #include <yactfr/decoding-errors.hpp>
 
 #include "aliases.hpp"
@@ -53,11 +53,11 @@ class PacketCheckpoints
 {
 public:
     using Checkpoint = std::pair<EventRecord::SP,
-                                 yactfr::PacketSequenceIteratorPosition>;
+                                 yactfr::ElementSequenceIteratorPosition>;
     using Checkpoints = std::vector<Checkpoint>;
 
 public:
-    explicit PacketCheckpoints(yactfr::PacketSequence& seq,
+    explicit PacketCheckpoints(yactfr::ElementSequence& seq,
                                const Metadata& metadata,
                                const PacketIndexEntry& packetIndexEntry, Size step,
                                PacketCheckpointsBuildListener& packetCheckpointsBuildListener);
@@ -265,26 +265,26 @@ public:
     }
 
 private:
-    void _createCheckpoint(yactfr::PacketSequenceIterator& it,
+    void _createCheckpoint(yactfr::ElementSequenceIterator& it,
                            const Metadata& metadata,
                            const PacketIndexEntry& packetIndexEntry,
                            Index indexInPacket,
                            PacketCheckpointsBuildListener& packetCheckpointsBuildListener);
-    void _createCheckpoints(yactfr::PacketSequenceIterator& it,
+    void _createCheckpoints(yactfr::ElementSequenceIterator& it,
                             const Metadata& metadata,
                             const PacketIndexEntry& packetIndexEntry,
                             Size step,
                             PacketCheckpointsBuildListener& packetCheckpointsBuildListener);
-    void _tryCreateCheckpoints(yactfr::PacketSequence& seq,
+    void _tryCreateCheckpoints(yactfr::ElementSequence& seq,
                                const Metadata& metadata,
                                const PacketIndexEntry& packetIndexEntry,
                                Size step,
                                PacketCheckpointsBuildListener& packetCheckpointsBuildListener);
-    void _lastEventRecordPositions(yactfr::PacketSequenceIteratorPosition& lastPos,
-                                   yactfr::PacketSequenceIteratorPosition& penultimatePos,
+    void _lastEventRecordPositions(yactfr::ElementSequenceIteratorPosition& lastPos,
+                                   yactfr::ElementSequenceIteratorPosition& penultimatePos,
                                    Index& lastIndexInPacket,
                                    Index& penultimateIndexInPacket,
-                                   yactfr::PacketSequenceIterator& it);
+                                   yactfr::ElementSequenceIterator& it);
 
     template <typename PropT, typename LessThanFuncT>
     const Checkpoint *_nearestCheckpointAfter(const PropT& prop,

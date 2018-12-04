@@ -17,7 +17,7 @@
 namespace jacques {
 
 Packet::Packet(const PacketIndexEntry& indexEntry,
-               yactfr::PacketSequence& seq, const Metadata& metadata,
+               yactfr::ElementSequence& seq, const Metadata& metadata,
                yactfr::DataSource::UP dataSrc,
                std::unique_ptr<MemoryMappedFile> mmapFile,
                PacketCheckpointsBuildListener& packetCheckpointsBuildListener) :
