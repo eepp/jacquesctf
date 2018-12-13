@@ -52,11 +52,11 @@ public:
         this->std(view._window(), emphasized);
     }
 
-    void stdHighlight(WINDOW *window) const;
+    void stdSelection(WINDOW *window) const;
 
-    void stdHighlight(const View& view) const
+    void stdSelection(const View& view) const
     {
-        this->stdHighlight(view._window());
+        this->stdSelection(view._window());
     }
 
     void helpViewSection(const View& view) const;
@@ -106,7 +106,84 @@ public:
                                     const PacketDataViewSelectionType& selectionType) const;
 
 private:
+    struct _Style {
+        int colorPair;
+        bool fgIsBright;
+    };
+
+private:
+    enum class _StyleId {
+        VIEW_BORDER_FOCUSED = 1,
+        VIEW_BORDER_EMPHASIZED,
+        VIEW_BORDER_BLURRED,
+        VIEW_TITLE_FOCUSED,
+        VIEW_TITLE_EMPHASIZED,
+        VIEW_TITLE_BLURRED,
+        VIEW_HAS_MORE,
+        STD,
+        STD_DIM,
+        STD_SELECTION,
+        TABLE_VIEW_HEADER,
+        BOOL_YES,
+        BOOL_NO,
+        TABLE_VIEW_SELECTION_ERROR,
+        TEXT_MORE,
+        TABLE_VIEW_SEP,
+        TABLE_VIEW_WARNING_CELL,
+        TABLE_VIEW_ERROR_CELL,
+        TABLE_VIEW_TEXT_CELL_EMPHASIZED,
+        TABLE_VIEW_TS_CELL_NS_PART,
+        HELP_VIEW_SECTION,
+        HELP_VIEW_SUB_SECTION,
+        HELP_VIEW_KEY,
+        STATUS_VIEW_STD,
+        PACKET_REGION_INFO_VIEW_STD,
+        PACKET_REGION_INFO_VIEW_VALUE,
+        PACKET_REGION_INFO_VIEW_ERROR,
+        SIMPLE_INPUT_VIEW_BORDER,
+        PACKET_INDEX_BUILD_PROGRESS_VIEW_PATH,
+        DETAILS_VIEW_SUBTITLE,
+        DETAILS_VIEW_TYPE_INFO,
+        DETAILS_VIEW_DATA_TYPE_NAME,
+        DETAILS_VIEW_ENUM_DATA_TYPE_MEMBER_NAME,
+        DETAILS_VIEW_ENUM_DATA_TYPE_MEMBER_RANGE,
+        DETAILS_VIEW_PROP_KEY,
+        DETAILS_VIEW_PROP_VALUE,
+        TRACE_INFO_VIEW_PROP_VALUE,
+        PACKET_DECODING_ERROR_DETAILS_VIEW,
+        SEARCH_INPUT_VIEW_PREFIX,
+        SEARCH_INPUT_VIEW_ADD_SUB,
+        SEARCH_INPUT_VIEW_WILDCARD,
+        SEARCH_INPUT_VIEW_ESCAPE,
+        SEARCH_INPUT_VIEW_NUMBER,
+        SEARCH_INPUT_VIEW_ERROR,
+        PACKET_DATA_VIEW_SELECTION_PREVIOUS,
+        PACKET_DATA_VIEW_SELECTION_NEXT,
+        PACKET_DATA_VIEW_OFFSET,
+        PACKET_DATA_VIEW_OFFSET_CURRENT,
+        PACKET_DATA_VIEW_PADDING,
+        PACKET_DATA_VIEW_EVENT_RECORD_FIRST_PACKET_REGION,
+        PACKET_DATA_VIEW_BOOKMARK_1,
+        PACKET_DATA_VIEW_BOOKMARK_2,
+        PACKET_DATA_VIEW_BOOKMARK_3,
+        PACKET_DATA_VIEW_BOOKMARK_4,
+    };
+
+private:
+    bool _supportsBrightColors() const
+    {
+        return COLORS >= 16;
+    }
+
     void _initColor(int id, int fg, int bg) const;
+    void _registerStyle(_StyleId id, int fg, bool fgIsBright, int bg);
+    void _applyStyle(WINDOW *window, _StyleId id, int extraAttrs = 0) const;
+
+    void _applyStyle(const View& view, _StyleId id, int extraAttrs = 0) const
+    {
+        this->_applyStyle(view._window(), id, extraAttrs);
+    }
+
     void _color(WINDOW *window, int pair) const;
 
     void _color(const View& view, const int pair) const
@@ -114,75 +191,8 @@ private:
         this->_color(view._window(), pair);
     }
 
-    void _attrs(WINDOW *window, int attrs) const;
-
-    void _attrs(const View& view, const int attrs) const
-    {
-        this->_attrs(view._window(), attrs);
-    }
-
-    void _attrsReset(WINDOW *window) const;
-
-    void _attrsReset(const View& view) const
-    {
-        this->_attrsReset(view._window());
-    }
-
 private:
-    enum {
-        _COLOR_ID_VIEW_BORDER_FOCUSED = 1,
-        _COLOR_ID_VIEW_BORDER_EMPHASIZED,
-        _COLOR_ID_VIEW_BORDER_BLURRED,
-        _COLOR_ID_VIEW_TITLE_FOCUSED,
-        _COLOR_ID_VIEW_TITLE_EMPHASIZED,
-        _COLOR_ID_VIEW_TITLE_BLURRED,
-        _COLOR_ID_VIEW_HAS_MORE,
-        _COLOR_ID_STD,
-        _COLOR_ID_TABLE_VIEW_HEADER,
-        _COLOR_ID_BOOL_YES,
-        _COLOR_ID_BOOL_NO,
-        _COLOR_ID_TABLE_VIEW_SELECTION,
-        _COLOR_ID_TABLE_VIEW_SELECTION_ERROR,
-        _COLOR_ID_TEXT_MORE,
-        _COLOR_ID_TABLE_VIEW_SEP,
-        _COLOR_ID_TABLE_VIEW_WARNING_CELL,
-        _COLOR_ID_TABLE_VIEW_ERROR_CELL,
-        _COLOR_ID_TABLE_VIEW_TEXT_CELL_EMPHASIZED,
-        _COLOR_ID_TABLE_VIEW_TS_CELL_NS_PART,
-        _COLOR_ID_HELP_VIEW_SECTION,
-        _COLOR_ID_HELP_VIEW_SUB_SECTION,
-        _COLOR_ID_HELP_VIEW_KEY,
-        _COLOR_ID_STATUS_VIEW_STD,
-        _COLOR_ID_PACKET_REGION_INFO_VIEW_STD,
-        _COLOR_ID_PACKET_REGION_INFO_VIEW_VALUE,
-        _COLOR_ID_PACKET_REGION_INFO_VIEW_ERROR,
-        _COLOR_ID_SIMPLE_INPUT_VIEW_BORDER,
-        _COLOR_ID_PACKET_INDEX_BUILD_PROGRESS_VIEW_PATH,
-        _COLOR_ID_DETAILS_VIEW_SUBTITLE,
-        _COLOR_ID_DETAILS_VIEW_TYPE_INFO,
-        _COLOR_ID_DETAILS_VIEW_DATA_TYPE_NAME,
-        _COLOR_ID_DETAILS_VIEW_ENUM_DATA_TYPE_MEMBER_NAME,
-        _COLOR_ID_DETAILS_VIEW_ENUM_DATA_TYPE_MEMBER_RANGE,
-        _COLOR_ID_DETAILS_VIEW_PROP_KEY,
-        _COLOR_ID_DETAILS_VIEW_PROP_VALUE,
-        _COLOR_ID_TRACE_INFO_VIEW_PROP_VALUE,
-        _COLOR_ID_PACKET_DECODING_ERROR_DETAILS_VIEW,
-        _COLOR_ID_SEARCH_INPUT_VIEW_PREFIX,
-        _COLOR_ID_SEARCH_INPUT_VIEW_ADD_SUB,
-        _COLOR_ID_SEARCH_INPUT_VIEW_WILDCARD,
-        _COLOR_ID_SEARCH_INPUT_VIEW_ESCAPE,
-        _COLOR_ID_SEARCH_INPUT_VIEW_NUMBER,
-        _COLOR_ID_SEARCH_INPUT_VIEW_ERROR,
-        _COLOR_ID_PACKET_DATA_VIEW_SELECTION_PREVIOUS,
-        _COLOR_ID_PACKET_DATA_VIEW_SELECTION_NEXT,
-        _COLOR_ID_PACKET_DATA_VIEW_OFFSET,
-        _COLOR_ID_PACKET_DATA_VIEW_PADDING,
-        _COLOR_ID_PACKET_DATA_VIEW_EVENT_RECORD_FIRST_PACKET_REGION,
-        _COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_1,
-        _COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_2,
-        _COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_3,
-        _COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_4,
-    };
+    std::vector<_Style> _styles;
 };
 
 } // namespace jacques

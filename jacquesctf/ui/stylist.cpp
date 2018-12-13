@@ -16,105 +16,139 @@ namespace jacques {
 
 Stylist::Stylist()
 {
-    this->_initColor(_COLOR_ID_VIEW_BORDER_FOCUSED, -1, -1);
-    this->_initColor(_COLOR_ID_VIEW_BORDER_BLURRED, -1, -1);
-    this->_initColor(_COLOR_ID_VIEW_BORDER_EMPHASIZED, COLOR_YELLOW, -1);
-    this->_initColor(_COLOR_ID_VIEW_TITLE_FOCUSED, -1, -1);
-    this->_initColor(_COLOR_ID_VIEW_TITLE_BLURRED, -1, -1);
-    this->_initColor(_COLOR_ID_VIEW_TITLE_EMPHASIZED, COLOR_YELLOW, -1);
-    this->_initColor(_COLOR_ID_VIEW_HAS_MORE, COLOR_YELLOW, -1);
-    this->_initColor(_COLOR_ID_STD, -1, -1);
-    this->_initColor(_COLOR_ID_TABLE_VIEW_HEADER, COLOR_BLACK, COLOR_GREEN);
-    this->_initColor(_COLOR_ID_BOOL_YES, COLOR_GREEN, -1);
-    this->_initColor(_COLOR_ID_BOOL_NO, COLOR_MAGENTA, -1);
-    this->_initColor(_COLOR_ID_TABLE_VIEW_SELECTION, COLOR_BLACK, COLOR_CYAN);
-    this->_initColor(_COLOR_ID_TABLE_VIEW_SELECTION_ERROR, COLOR_WHITE, COLOR_RED);
-    this->_initColor(_COLOR_ID_TABLE_VIEW_TEXT_CELL_EMPHASIZED, COLOR_YELLOW, -1);
-    this->_initColor(_COLOR_ID_TABLE_VIEW_TS_CELL_NS_PART, COLOR_CYAN, -1);
-    this->_initColor(_COLOR_ID_TEXT_MORE, COLOR_MAGENTA, -1);
-    this->_initColor(_COLOR_ID_TABLE_VIEW_SEP, COLOR_GREEN, -1);
-    this->_initColor(_COLOR_ID_HELP_VIEW_SECTION, COLOR_GREEN, -1);
-    this->_initColor(_COLOR_ID_HELP_VIEW_SUB_SECTION, COLOR_CYAN, -1);
-    this->_initColor(_COLOR_ID_HELP_VIEW_KEY, COLOR_CYAN, -1);
-    this->_initColor(_COLOR_ID_STATUS_VIEW_STD, COLOR_WHITE, COLOR_BLUE);
-    this->_initColor(_COLOR_ID_PACKET_REGION_INFO_VIEW_STD, COLOR_WHITE, COLOR_MAGENTA);
-    this->_initColor(_COLOR_ID_PACKET_REGION_INFO_VIEW_VALUE, COLOR_YELLOW, COLOR_MAGENTA);
-    this->_initColor(_COLOR_ID_PACKET_REGION_INFO_VIEW_ERROR, COLOR_RED, COLOR_WHITE);
-    this->_initColor(_COLOR_ID_TABLE_VIEW_WARNING_CELL, COLOR_WHITE, COLOR_YELLOW);
-    this->_initColor(_COLOR_ID_TABLE_VIEW_ERROR_CELL, COLOR_RED, -1);
-    this->_initColor(_COLOR_ID_SIMPLE_INPUT_VIEW_BORDER, COLOR_BLACK, COLOR_GREEN);
-    this->_initColor(_COLOR_ID_PACKET_INDEX_BUILD_PROGRESS_VIEW_PATH, COLOR_BLUE, -1);
-    this->_initColor(_COLOR_ID_DETAILS_VIEW_SUBTITLE, COLOR_CYAN, -1);
-    this->_initColor(_COLOR_ID_DETAILS_VIEW_TYPE_INFO, COLOR_MAGENTA, -1);
-    this->_initColor(_COLOR_ID_DETAILS_VIEW_DATA_TYPE_NAME, COLOR_WHITE, COLOR_BLUE);
-    this->_initColor(_COLOR_ID_DETAILS_VIEW_ENUM_DATA_TYPE_MEMBER_NAME, COLOR_YELLOW, -1);
-    this->_initColor(_COLOR_ID_DETAILS_VIEW_ENUM_DATA_TYPE_MEMBER_RANGE, COLOR_CYAN, -1);
-    this->_initColor(_COLOR_ID_DETAILS_VIEW_PROP_KEY, COLOR_GREEN, -1);
-    this->_initColor(_COLOR_ID_DETAILS_VIEW_PROP_VALUE, COLOR_GREEN, -1);
-    this->_initColor(_COLOR_ID_TRACE_INFO_VIEW_PROP_VALUE, COLOR_GREEN, -1);
-    this->_initColor(_COLOR_ID_PACKET_DECODING_ERROR_DETAILS_VIEW, COLOR_WHITE, COLOR_RED);
-    this->_initColor(_COLOR_ID_SEARCH_INPUT_VIEW_PREFIX, COLOR_CYAN, -1);
-    this->_initColor(_COLOR_ID_SEARCH_INPUT_VIEW_ADD_SUB, COLOR_GREEN, -1);
-    this->_initColor(_COLOR_ID_SEARCH_INPUT_VIEW_WILDCARD, COLOR_MAGENTA, -1);
-    this->_initColor(_COLOR_ID_SEARCH_INPUT_VIEW_ESCAPE, -1, -1);
-    this->_initColor(_COLOR_ID_SEARCH_INPUT_VIEW_NUMBER, COLOR_BLUE, -1);
-    this->_initColor(_COLOR_ID_SEARCH_INPUT_VIEW_ERROR, COLOR_WHITE, COLOR_RED);
-    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_SELECTION_PREVIOUS, COLOR_MAGENTA, -1);
-    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_SELECTION_NEXT, COLOR_GREEN, -1);
-    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_OFFSET, COLOR_YELLOW, -1);
-    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_PADDING, COLOR_BLUE, -1);
-    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_EVENT_RECORD_FIRST_PACKET_REGION, COLOR_YELLOW, -1);
-    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_1, COLOR_BLACK, COLOR_YELLOW);
-    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_2, COLOR_BLACK, COLOR_GREEN);
-    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_3, COLOR_BLACK, COLOR_BLUE);
-    this->_initColor(_COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_4, COLOR_BLACK, COLOR_MAGENTA);
+    this->_registerStyle(_StyleId::VIEW_BORDER_FOCUSED, -1, false, -1);
+    this->_registerStyle(_StyleId::VIEW_BORDER_BLURRED, COLOR_BLACK, true, -1);
+    this->_registerStyle(_StyleId::VIEW_BORDER_EMPHASIZED, COLOR_YELLOW, false, -1);
+    this->_registerStyle(_StyleId::VIEW_TITLE_FOCUSED, -1, false, -1);
+    this->_registerStyle(_StyleId::VIEW_TITLE_BLURRED, -1, false, -1);
+    this->_registerStyle(_StyleId::VIEW_TITLE_EMPHASIZED, COLOR_YELLOW, false, -1);
+    this->_registerStyle(_StyleId::VIEW_HAS_MORE, COLOR_YELLOW, false, -1);
+    this->_registerStyle(_StyleId::STD, -1, false, -1);
+    this->_registerStyle(_StyleId::STD_DIM, COLOR_BLACK, true, -1);
+    this->_registerStyle(_StyleId::STD_SELECTION, COLOR_CYAN, false, -1);
+    this->_registerStyle(_StyleId::TABLE_VIEW_HEADER, COLOR_BLACK, false, COLOR_GREEN);
+    this->_registerStyle(_StyleId::BOOL_YES, COLOR_GREEN, false, -1);
+    this->_registerStyle(_StyleId::BOOL_NO, COLOR_MAGENTA, false, -1);
+    this->_registerStyle(_StyleId::TABLE_VIEW_SELECTION_ERROR, COLOR_WHITE, false, COLOR_RED);
+    this->_registerStyle(_StyleId::TABLE_VIEW_TEXT_CELL_EMPHASIZED, COLOR_YELLOW, false, -1);
+    this->_registerStyle(_StyleId::TABLE_VIEW_TS_CELL_NS_PART, COLOR_CYAN, false, -1);
+    this->_registerStyle(_StyleId::TEXT_MORE, COLOR_MAGENTA, true, -1);
+    this->_registerStyle(_StyleId::TABLE_VIEW_SEP, COLOR_WHITE, false, -1);
+    this->_registerStyle(_StyleId::HELP_VIEW_SECTION, COLOR_GREEN, false, -1);
+    this->_registerStyle(_StyleId::HELP_VIEW_SUB_SECTION, COLOR_CYAN, true, -1);
+    this->_registerStyle(_StyleId::HELP_VIEW_KEY, COLOR_CYAN, false, -1);
+    this->_registerStyle(_StyleId::STATUS_VIEW_STD, COLOR_WHITE, false, COLOR_BLUE);
+    this->_registerStyle(_StyleId::PACKET_REGION_INFO_VIEW_STD, COLOR_WHITE, false, COLOR_MAGENTA);
+    this->_registerStyle(_StyleId::PACKET_REGION_INFO_VIEW_VALUE, COLOR_YELLOW, true, COLOR_MAGENTA);
+    this->_registerStyle(_StyleId::PACKET_REGION_INFO_VIEW_ERROR, COLOR_RED, false, COLOR_WHITE);
+    this->_registerStyle(_StyleId::TABLE_VIEW_WARNING_CELL, COLOR_WHITE, false, COLOR_YELLOW);
+    this->_registerStyle(_StyleId::TABLE_VIEW_ERROR_CELL, COLOR_RED, false, -1);
+    this->_registerStyle(_StyleId::SIMPLE_INPUT_VIEW_BORDER, COLOR_BLACK, false, COLOR_GREEN);
+    this->_registerStyle(_StyleId::PACKET_INDEX_BUILD_PROGRESS_VIEW_PATH, COLOR_BLUE, false, -1);
+    this->_registerStyle(_StyleId::DETAILS_VIEW_SUBTITLE, COLOR_CYAN, true, -1);
+    this->_registerStyle(_StyleId::DETAILS_VIEW_TYPE_INFO, COLOR_MAGENTA, true, -1);
+    this->_registerStyle(_StyleId::DETAILS_VIEW_DATA_TYPE_NAME, COLOR_WHITE, false, COLOR_BLUE);
+    this->_registerStyle(_StyleId::DETAILS_VIEW_ENUM_DATA_TYPE_MEMBER_NAME, COLOR_YELLOW, false, -1);
+    this->_registerStyle(_StyleId::DETAILS_VIEW_ENUM_DATA_TYPE_MEMBER_RANGE, COLOR_CYAN, false, -1);
+    this->_registerStyle(_StyleId::DETAILS_VIEW_PROP_KEY, COLOR_GREEN, false, -1);
+    this->_registerStyle(_StyleId::DETAILS_VIEW_PROP_VALUE, COLOR_GREEN, false, -1);
+    this->_registerStyle(_StyleId::TRACE_INFO_VIEW_PROP_VALUE, COLOR_GREEN, false, -1);
+    this->_registerStyle(_StyleId::PACKET_DECODING_ERROR_DETAILS_VIEW, COLOR_WHITE, false, COLOR_RED);
+    this->_registerStyle(_StyleId::SEARCH_INPUT_VIEW_PREFIX, COLOR_CYAN, false, -1);
+    this->_registerStyle(_StyleId::SEARCH_INPUT_VIEW_ADD_SUB, COLOR_GREEN, false, -1);
+    this->_registerStyle(_StyleId::SEARCH_INPUT_VIEW_WILDCARD, COLOR_MAGENTA, true, -1);
+    this->_registerStyle(_StyleId::SEARCH_INPUT_VIEW_ESCAPE, -1, false, -1);
+    this->_registerStyle(_StyleId::SEARCH_INPUT_VIEW_NUMBER, COLOR_BLUE, false, -1);
+    this->_registerStyle(_StyleId::SEARCH_INPUT_VIEW_ERROR, COLOR_WHITE, false, COLOR_RED);
+    this->_registerStyle(_StyleId::PACKET_DATA_VIEW_SELECTION_PREVIOUS, COLOR_MAGENTA, true, -1);
+    this->_registerStyle(_StyleId::PACKET_DATA_VIEW_SELECTION_NEXT, COLOR_GREEN, false, -1);
+    this->_registerStyle(_StyleId::PACKET_DATA_VIEW_OFFSET, COLOR_YELLOW, false, -1);
+    this->_registerStyle(_StyleId::PACKET_DATA_VIEW_OFFSET_CURRENT, COLOR_YELLOW, true, -1);
+    this->_registerStyle(_StyleId::PACKET_DATA_VIEW_PADDING, COLOR_BLUE, false, -1);
+    this->_registerStyle(_StyleId::PACKET_DATA_VIEW_EVENT_RECORD_FIRST_PACKET_REGION, COLOR_YELLOW, false, -1);
+    this->_registerStyle(_StyleId::PACKET_DATA_VIEW_BOOKMARK_1, COLOR_BLACK, false, COLOR_YELLOW);
+    this->_registerStyle(_StyleId::PACKET_DATA_VIEW_BOOKMARK_2, COLOR_BLACK, false, COLOR_GREEN);
+    this->_registerStyle(_StyleId::PACKET_DATA_VIEW_BOOKMARK_3, COLOR_BLACK, false, COLOR_BLUE);
+    this->_registerStyle(_StyleId::PACKET_DATA_VIEW_BOOKMARK_4, COLOR_BLACK, false, COLOR_MAGENTA);
 }
 
-void Stylist::_initColor(const int id, const int fg, const int bg) const
+void Stylist::_registerStyle(const _StyleId id, int fg, const bool fgIsBright,
+                             const int bg)
 {
-    const auto ret = init_pair(id, fg, bg);
+    const auto intId = static_cast<unsigned int>(id);
+
+    assert(fg < 8);
+
+    if (fgIsBright && this->_supportsBrightColors()) {
+        fg += 8;
+    }
+
+    assert(bg < 8);
+
+    const auto ret = init_pair(intId, fg, bg);
 
     assert(ret == OK);
     JACQUES_UNUSED(ret);
+
+    if (_styles.size() <= intId) {
+        _styles.resize(intId + 1);
+    }
+
+    auto& style = _styles[intId];
+
+    style.colorPair = intId;
+    style.fgIsBright = fgIsBright;
 }
 
-void Stylist::_attrsReset(WINDOW *window) const
+void Stylist::_applyStyle(WINDOW *window, const _StyleId id,
+                          const int extraAttrs) const
 {
-    wattrset(window, 0);
-}
+    const auto intId = static_cast<unsigned int>(id);
 
-void Stylist::_color(WINDOW *window, const int pair) const
-{
-    int ret = wcolor_set(window, pair, NULL);
+    assert(intId < _styles.size());
+
+    auto ret = wattrset(window, 0);
 
     assert(ret == OK);
     JACQUES_UNUSED(ret);
-}
 
-void Stylist::_attrs(WINDOW *window, const int attrs) const
-{
-    int ret = wattron(window, attrs);
+    const auto& style = _styles[intId];
 
+    ret = wcolor_set(window, style.colorPair, NULL);
     assert(ret == OK);
     JACQUES_UNUSED(ret);
+
+    auto attrs = extraAttrs;
+
+    if (style.fgIsBright && !this->_supportsBrightColors()) {
+        /*
+         * Most terminals which do not support SGR colors 8-15 (bright)
+         * will still show bright colors with the bold attribute,
+         * although with a bold-supporting font, it might be bright AND
+         * bold. It's a trade-off.
+         */
+        attrs |= A_BOLD;
+    }
+
+    if (attrs != 0) {
+        ret = wattron(window, attrs);
+        assert(ret == OK);
+        JACQUES_UNUSED(ret);
+    }
 }
 
 void Stylist::viewBorder(const View& view, const bool focused,
                          const bool emphasized) const
 {
-    this->_attrsReset(view);
-
     if (!focused) {
-        this->_color(view, _COLOR_ID_VIEW_BORDER_BLURRED);
+        this->_applyStyle(view, _StyleId::VIEW_BORDER_BLURRED);
     } else {
         if (emphasized) {
-            this->_color(view, _COLOR_ID_VIEW_BORDER_EMPHASIZED);
+            this->_applyStyle(view, _StyleId::VIEW_BORDER_EMPHASIZED, A_BOLD);
         } else {
-            this->_color(view, _COLOR_ID_VIEW_BORDER_FOCUSED);
+            this->_applyStyle(view, _StyleId::VIEW_BORDER_FOCUSED);
         }
     }
-
-    this->_attrs(view, focused ? A_BOLD : A_DIM);
 }
 
 void Stylist::viewTitle(const View& view, const bool focused,
@@ -125,61 +159,43 @@ void Stylist::viewTitle(const View& view, const bool focused,
 
 void Stylist::viewHasMore(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_VIEW_HAS_MORE);
+    this->_applyStyle(view, _StyleId::VIEW_HAS_MORE);
 }
 
 void Stylist::tableViewTextCell(const View& view,
                                 const bool emphasized) const
 {
-    this->_attrsReset(view);
-
     if (emphasized) {
-        this->_color(view, _COLOR_ID_TABLE_VIEW_TEXT_CELL_EMPHASIZED);
+        this->_applyStyle(view, _StyleId::TABLE_VIEW_TEXT_CELL_EMPHASIZED,
+                          A_BOLD);
     } else {
-        this->_color(view, _COLOR_ID_STD);
+        this->_applyStyle(view, _StyleId::STD);
     }
 }
 
 void Stylist::tableViewTsCellNsPart(const View& view,
                                     const bool emphasized) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_TABLE_VIEW_TS_CELL_NS_PART);
-
-    if (emphasized) {
-        this->_attrs(view, A_BOLD);
-    }
+    this->_applyStyle(view, _StyleId::TABLE_VIEW_TS_CELL_NS_PART,
+                      emphasized ? A_BOLD : 0);
 }
 
 void Stylist::tableViewNaCell(const View& view,
                               const bool emphasized) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_STD);
-    this->_attrs(view, A_DIM);
-
-    if (emphasized) {
-        this->_attrs(view, A_BOLD);
-    }
+    this->_applyStyle(view, _StyleId::STD_DIM, emphasized ? A_BOLD : 0);
 }
 
 void Stylist::tableViewBoolCell(const View& view, const bool value,
                                 const bool emphasized) const
 {
-    this->_attrsReset(view);
-    this->_color(view, value ? _COLOR_ID_BOOL_YES : _COLOR_ID_BOOL_NO);
-
-    if (emphasized) {
-        this->_attrs(view, A_BOLD);
-    }
+    this->_applyStyle(view, value ? _StyleId::BOOL_YES : _StyleId::BOOL_NO,
+                      emphasized ? A_BOLD : 0);
 }
 
 void Stylist::tableViewHeader(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_STD);
-    this->_attrs(view, A_REVERSE);
+    this->_applyStyle(view, _StyleId::STD, A_REVERSE);
 }
 
 void Stylist::tableViewSelection(const View& view, const bool error) const
@@ -189,200 +205,150 @@ void Stylist::tableViewSelection(const View& view, const bool error) const
 
 void Stylist::tableViewSelectionSep(const View& view, const bool error) const
 {
-    this->_attrsReset(view);
-
     if (error) {
-        this->_color(view, _COLOR_ID_TABLE_VIEW_SELECTION_ERROR);
+        this->_applyStyle(view, _StyleId::TABLE_VIEW_SELECTION_ERROR, A_BOLD);
     } else {
-        this->_color(view, _COLOR_ID_TABLE_VIEW_SELECTION);
+        this->stdSelection(view);
     }
 }
 
 void Stylist::tableViewSep(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_STD);
-    this->_attrs(view, A_DIM);
+    this->_applyStyle(view, _StyleId::TABLE_VIEW_SEP);
 }
 
 void Stylist::textMore(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_TEXT_MORE);
-    this->_attrs(view, A_BOLD);
+    this->_applyStyle(view, _StyleId::TEXT_MORE, A_BOLD);
 }
 
 void Stylist::tableViewWarningCell(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_TABLE_VIEW_WARNING_CELL);
-    this->_attrs(view, A_BOLD);
+    this->_applyStyle(view, _StyleId::TABLE_VIEW_WARNING_CELL, A_BOLD);
 }
 
 void Stylist::tableViewErrorCell(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_TABLE_VIEW_ERROR_CELL);
-    this->_attrs(view, A_BOLD);
+    this->_applyStyle(view, _StyleId::TABLE_VIEW_ERROR_CELL, A_BOLD);
 }
 
 void Stylist::std(WINDOW *window, const bool emphasized) const
 {
-    this->_attrsReset(window);
-    this->_color(window, _COLOR_ID_STD);
-
-    if (emphasized) {
-        this->_attrs(window, A_BOLD);
-    }
+    this->_applyStyle(window, _StyleId::STD, emphasized ? A_BOLD : 0);
 }
 
 void Stylist::stdDim(const View& view) const
 {
-    this->std(view);
-    this->_attrs(view, A_DIM);
+    this->_applyStyle(view, _StyleId::STD_DIM);
 }
 
-void Stylist::stdHighlight(WINDOW *window) const
+void Stylist::stdSelection(WINDOW *window) const
 {
-    this->_attrsReset(window);
-    this->std(window);
-    this->_attrs(window, A_REVERSE);
+    this->_applyStyle(window, _StyleId::STD_SELECTION, A_BOLD | A_REVERSE);
 }
 
 void Stylist::helpViewSection(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_HELP_VIEW_SECTION);
-    this->_attrs(view, A_UNDERLINE);
+    this->_applyStyle(view, _StyleId::HELP_VIEW_SECTION, A_UNDERLINE);
 }
 
 void Stylist::helpViewSubSection(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_HELP_VIEW_SUB_SECTION);
-    this->_attrs(view, A_UNDERLINE | A_BOLD);
+    this->_applyStyle(view, _StyleId::HELP_VIEW_SUB_SECTION,
+                      A_UNDERLINE | A_BOLD);
 }
 
 void Stylist::helpViewKey(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_HELP_VIEW_KEY);
+    this->_applyStyle(view, _StyleId::HELP_VIEW_KEY);
 }
 
 void Stylist::statusViewStd(const View& view, const bool emphasized) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_STATUS_VIEW_STD);
-
-    if (emphasized) {
-        this->_attrs(view, A_BOLD);
-    }
+    this->_applyStyle(view, _StyleId::STATUS_VIEW_STD, emphasized ? A_BOLD : 0);
 }
 
 void Stylist::statusViewFilename(const View& view) const
 {
-    this->statusViewStd(view);
-    this->_attrs(view, A_BOLD);
+    this->_applyStyle(view, _StyleId::STATUS_VIEW_STD, A_BOLD);
 }
 
-void Stylist::packetRegionInfoViewStd(const View& view, const bool emphasized) const
+void Stylist::packetRegionInfoViewStd(const View& view,
+                                      const bool emphasized) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_PACKET_REGION_INFO_VIEW_STD);
-
-    if (emphasized) {
-        this->_attrs(view, A_BOLD);
-    }
+    this->_applyStyle(view, _StyleId::PACKET_REGION_INFO_VIEW_STD,
+                      emphasized ? A_BOLD : 0);
 }
 
 void Stylist::packetRegionInfoViewValue(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_attrs(view, A_BOLD);
-    this->_color(view, _COLOR_ID_PACKET_REGION_INFO_VIEW_VALUE);
+    this->_applyStyle(view, _StyleId::PACKET_REGION_INFO_VIEW_VALUE, A_BOLD);
 }
 
 void Stylist::packetRegionInfoViewError(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_attrs(view, A_BOLD);
-    this->_color(view, _COLOR_ID_PACKET_REGION_INFO_VIEW_ERROR);
+    this->_applyStyle(view, _StyleId::PACKET_REGION_INFO_VIEW_ERROR, A_BOLD);
 }
 
 void Stylist::simpleInputViewBorder(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_SIMPLE_INPUT_VIEW_BORDER);
+    this->_applyStyle(view, _StyleId::SIMPLE_INPUT_VIEW_BORDER);
 }
 
 void Stylist::packetIndexBuildProgressViewPath(const View& view,
                                                const bool filename) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_PACKET_INDEX_BUILD_PROGRESS_VIEW_PATH);
-
-    if (filename) {
-        this->_attrs(view, A_BOLD);
-    }
+    this->_applyStyle(view, _StyleId::PACKET_INDEX_BUILD_PROGRESS_VIEW_PATH,
+                      filename ? A_BOLD : 0);
 }
 
 void Stylist::packetIndexBuildProgressViewBar(const View& view,
                                               const bool on) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_STD);
-
     if (on) {
-        this->_attrs(view, A_REVERSE | A_BOLD);
+        this->_applyStyle(view, _StyleId::STD, A_REVERSE | A_BOLD);
     } else {
-        this->_attrs(view, A_DIM);
+        this->stdDim(view);
     }
 }
 
 void Stylist::error() const
 {
     attrset(A_BOLD);
-    color_set(_COLOR_ID_TABLE_VIEW_ERROR_CELL, NULL);
+    color_set(static_cast<int>(_StyleId::TABLE_VIEW_ERROR_CELL), NULL);
 }
 
 void Stylist::error(WINDOW *window) const
 {
-    this->_attrsReset(window);
-    this->_color(window, _COLOR_ID_TABLE_VIEW_ERROR_CELL);
-    this->_attrs(window, A_BOLD);
+    this->_applyStyle(window, _StyleId::TABLE_VIEW_ERROR_CELL, A_BOLD);
 }
 
 void Stylist::detailsViewSubtitle(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_DETAILS_VIEW_SUBTITLE);
-    this->_attrs(view, A_BOLD);
+    this->_applyStyle(view, _StyleId::DETAILS_VIEW_SUBTITLE,
+                      A_BOLD | A_UNDERLINE);
 }
 
 void Stylist::detailsViewTypeInfo(WINDOW *window) const
 {
-    this->_attrsReset(window);
-    this->_color(window, _COLOR_ID_DETAILS_VIEW_TYPE_INFO);
-    this->_attrs(window, A_BOLD);
+    this->_applyStyle(window, _StyleId::DETAILS_VIEW_TYPE_INFO);
 }
 
 void Stylist::detailsViewDataTypeName(WINDOW *window) const
 {
-    this->_attrsReset(window);
-    this->_color(window, _COLOR_ID_DETAILS_VIEW_DATA_TYPE_NAME);
-    this->_attrs(window, A_BOLD);
+    this->_applyStyle(window, _StyleId::DETAILS_VIEW_DATA_TYPE_NAME, A_BOLD);
 }
 
 void Stylist::detailsViewEnumDataTypeMemberName(WINDOW *window) const
 {
-    this->_attrsReset(window);
-    this->_color(window, _COLOR_ID_DETAILS_VIEW_ENUM_DATA_TYPE_MEMBER_NAME);
+    this->_applyStyle(window,
+                      _StyleId::DETAILS_VIEW_ENUM_DATA_TYPE_MEMBER_NAME);
 }
 
 void Stylist::detailsViewEnumDataTypeMemberRange(WINDOW *window) const
 {
-    this->_attrsReset(window);
-    this->_color(window, _COLOR_ID_DETAILS_VIEW_ENUM_DATA_TYPE_MEMBER_RANGE);
+    this->_applyStyle(window,
+                      _StyleId::DETAILS_VIEW_ENUM_DATA_TYPE_MEMBER_RANGE);
 }
 
 void Stylist::detailsViewPropKey(WINDOW *window) const
@@ -392,21 +358,17 @@ void Stylist::detailsViewPropKey(WINDOW *window) const
 
 void Stylist::detailsViewPropValue(WINDOW *window) const
 {
-    this->_attrsReset(window);
-    this->_color(window, _COLOR_ID_DETAILS_VIEW_PROP_VALUE);
+    this->_applyStyle(window, _StyleId::DETAILS_VIEW_PROP_VALUE);
 }
 
 void Stylist::traceInfoViewSection(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_DETAILS_VIEW_SUBTITLE);
-    this->_attrs(view, A_BOLD);
+    this->_applyStyle(view, _StyleId::DETAILS_VIEW_SUBTITLE, A_BOLD);
 }
 
 void Stylist::traceInfoViewPropKey(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_TRACE_INFO_VIEW_PROP_VALUE);
+    this->_applyStyle(view, _StyleId::TRACE_INFO_VIEW_PROP_VALUE);
 }
 
 void Stylist::traceInfoViewPropValue(const View& view) const
@@ -417,137 +379,116 @@ void Stylist::traceInfoViewPropValue(const View& view) const
 void Stylist::packetDecodingErrorDetailsView(const View& view,
                                              const bool emphasized) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_PACKET_DECODING_ERROR_DETAILS_VIEW);
-
-    if (emphasized) {
-        this->_attrs(view, A_BOLD);
-    }
+    this->_applyStyle(view, _StyleId::PACKET_DECODING_ERROR_DETAILS_VIEW,
+                      emphasized ? A_BOLD : 0);
 }
 
 void Stylist::searchInputViewPrefix(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_SEARCH_INPUT_VIEW_PREFIX);
-    this->_attrs(view, A_BOLD);
+    this->_applyStyle(view, _StyleId::SEARCH_INPUT_VIEW_PREFIX, A_BOLD);
 }
 
 void Stylist::searchInputViewAddSub(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_SEARCH_INPUT_VIEW_ADD_SUB);
-    this->_attrs(view, A_BOLD);
+    this->_applyStyle(view, _StyleId::SEARCH_INPUT_VIEW_ADD_SUB, A_BOLD);
 }
 
 void Stylist::searchInputViewWildcard(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_SEARCH_INPUT_VIEW_WILDCARD);
-    this->_attrs(view, A_BOLD);
+    this->_applyStyle(view, _StyleId::SEARCH_INPUT_VIEW_WILDCARD, A_BOLD);
 }
 
 void Stylist::searchInputViewEscape(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_SEARCH_INPUT_VIEW_ESCAPE);
-    this->_attrs(view, A_BOLD);
+    this->_applyStyle(view, _StyleId::SEARCH_INPUT_VIEW_ESCAPE, A_BOLD);
 }
 
 void Stylist::searchInputViewNumber(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_SEARCH_INPUT_VIEW_NUMBER);
+    this->_applyStyle(view, _StyleId::SEARCH_INPUT_VIEW_NUMBER);
 }
 
 void Stylist::searchInputViewError(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_SEARCH_INPUT_VIEW_ERROR);
-    this->_attrs(view, A_BOLD);
+    this->_applyStyle(view, _StyleId::SEARCH_INPUT_VIEW_ERROR, A_BOLD);
 }
 
 void Stylist::packetDataViewSelection(const View& view,
                                       const PacketDataViewSelectionType& selectionType) const
 {
-    this->_attrsReset(view);
-
-    int colorPair = 0;
+    _StyleId styleId;
 
     switch (selectionType) {
     case PacketDataViewSelectionType::PREVIOUS:
-        colorPair = _COLOR_ID_PACKET_DATA_VIEW_SELECTION_PREVIOUS;
+        styleId = _StyleId::PACKET_DATA_VIEW_SELECTION_PREVIOUS;
         break;
 
     case PacketDataViewSelectionType::CURRENT:
-        colorPair = _COLOR_ID_TABLE_VIEW_SELECTION;
-        break;
+        this->stdSelection(view);
+        return;
 
     case PacketDataViewSelectionType::NEXT:
-        colorPair = _COLOR_ID_PACKET_DATA_VIEW_SELECTION_NEXT;
+        styleId = _StyleId::PACKET_DATA_VIEW_SELECTION_NEXT;
         break;
     }
 
-    this->_color(view, colorPair);
+    this->_applyStyle(view, styleId, A_BOLD);
 }
 
 void Stylist::packetDataViewAuxSelection(const View& view,
                                          const PacketDataViewSelectionType& selectionType) const
 {
-    this->std(view);
-    this->_attrs(view, A_REVERSE);
+    this->_applyStyle(view, _StyleId::STD, A_BOLD | A_REVERSE);
 }
 
 void Stylist::packetDataViewOffset(const View& view, const bool selected) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_PACKET_DATA_VIEW_OFFSET);
-
     if (selected) {
-        this->_attrs(view, A_BOLD);
+        this->_applyStyle(view, _StyleId::PACKET_DATA_VIEW_OFFSET_CURRENT,
+                          A_BOLD);
+    } else {
+        this->_applyStyle(view, _StyleId::PACKET_DATA_VIEW_OFFSET);
     }
 }
 
 void Stylist::packetDataViewPadding(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_PACKET_DATA_VIEW_PADDING);
+    this->_applyStyle(view, _StyleId::PACKET_DATA_VIEW_PADDING);
 }
 
 void Stylist::packetDataViewBookmark(const View& view, const unsigned int id) const
 {
     assert(id <= 3);
 
-    int colorPair;
+    _StyleId styleId;
 
     switch (id) {
     case 0:
-        colorPair = _COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_1;
+        styleId = _StyleId::PACKET_DATA_VIEW_BOOKMARK_1;
         break;
 
     case 1:
-        colorPair = _COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_2;
+        styleId = _StyleId::PACKET_DATA_VIEW_BOOKMARK_2;
         break;
 
     case 2:
-        colorPair = _COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_3;
+        styleId = _StyleId::PACKET_DATA_VIEW_BOOKMARK_3;
         break;
 
     case 3:
-        colorPair = _COLOR_ID_PACKET_DATA_VIEW_BOOKMARK_4;
+        styleId = _StyleId::PACKET_DATA_VIEW_BOOKMARK_4;
         break;
 
     default:
         std::abort();
     }
 
-    this->_attrsReset(view);
-    this->_color(view, colorPair);
+    this->_applyStyle(view, styleId);
 }
 
 void Stylist::packetDataViewEventRecordFirstPacketRegion(const View& view) const
 {
-    this->_attrsReset(view);
-    this->_color(view, _COLOR_ID_PACKET_DATA_VIEW_EVENT_RECORD_FIRST_PACKET_REGION);
+    this->_applyStyle(view, _StyleId::PACKET_DATA_VIEW_EVENT_RECORD_FIRST_PACKET_REGION);
 }
 
 } // namespace jacques

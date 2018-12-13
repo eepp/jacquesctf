@@ -344,7 +344,7 @@ void DataTypeExplorerView::_drawRows()
             if (const auto dtDetails = dynamic_cast<const DataTypeDetails *>(details)) {
                 if (&dtDetails->dataType() == _highlight) {
                     highlighted = true;
-                    this->_stylist().stdHighlight(*this);
+                    this->_stylist().stdSelection(*this);
 
                     for (Index x = 0; x < this->contentRect().w; ++x) {
                         this->_putChar({x, y}, ' ');
