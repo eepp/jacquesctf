@@ -183,6 +183,15 @@ void InspectScreen::_updateViews()
                                    this->rect().h - 14},
                                   this->rect().w - 8, 12});
     _ertView->centerSelectedRow(false);
+
+    // override visibility if screen is not visible
+    if (!this->isVisible()) {
+        _pdView->isVisible(false);
+        _ertView->isVisible(false);
+        _priView->isVisible(false);
+        _sdteView->isVisible(false);
+        _decErrorView->isVisible(false);
+    }
 }
 
 void InspectScreen::_redraw()
