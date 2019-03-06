@@ -53,6 +53,12 @@ bool globMatch(const std::string& pattern, const std::string& candidate);
 std::string wrapText(const std::string& text, Size lineLength);
 
 /*
+ * Escapes a string, replacing special characters by typical escape
+ * sequences.
+ */
+std::string escapeString(const std::string& str);
+
+/*
  * Creates a string which has "thousands separators" from a value,
  * like so:
  *

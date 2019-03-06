@@ -64,7 +64,8 @@ void AbstractDataTypeDetails::_renderString(WINDOW *window, Size& remWidth,
     const auto maxPrintSize = std::min(remWidth + 1,
                                        static_cast<Size>(buf.size()));
 
-    std::snprintf(buf.data(), maxPrintSize, "%s", str);
+    std::snprintf(buf.data(), maxPrintSize, "%s",
+                  utils::escapeString(str).c_str());
     remWidth -= std::strlen(buf.data());
     wprintw(window, "%s", buf.data());
 }

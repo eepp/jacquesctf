@@ -20,7 +20,7 @@ SimpleMessageView::SimpleMessageView(const Rectangle& rect,
 
 void SimpleMessageView::message(const std::string& msg)
 {
-    _msg = msg;
+    _msg = utils::escapeString(msg);
     this->_redrawContent();
 }
 

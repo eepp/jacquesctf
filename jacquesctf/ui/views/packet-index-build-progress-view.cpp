@@ -68,7 +68,7 @@ void PacketIndexBuildProgressView::_drawFile()
     this->_clearRow(y);
     std::string dirName, filename;
 
-    std::tie(dirName, filename) = utils::formatPath(_dsf->path(),
+    std::tie(dirName, filename) = utils::formatPath(utils::escapeString(_dsf->path().string()),
                                                     this->contentRect().w - 2);
 
     Index filenameX = 1;

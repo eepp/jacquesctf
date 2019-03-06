@@ -147,7 +147,7 @@ void StatusView::_redrawContent()
 
     this->_drawOffset();
 
-    const auto& path = _state->activeDataStreamFileState().dataStreamFile().path();
+    const auto& path = utils::escapeString(_state->activeDataStreamFileState().dataStreamFile().path().string());
     const auto pathMaxLen = this->contentRect().w - _curEndPositions->dsfPath;
     std::string dirNameStr, filenameStr;
 

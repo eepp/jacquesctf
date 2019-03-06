@@ -78,7 +78,7 @@ void PacketDecodingErrorDetailsView::_redrawContent()
     this->_print(" (%s %s)", sizeUnit.first.c_str(), sizeUnit.second.c_str());
 
     // message
-    const auto msg = utils::wrapText(error.decodingError().reason(),
+    const auto msg = utils::wrapText(utils::escapeString(error.decodingError().reason()),
                                      this->contentRect().w - 2);
     auto it = std::begin(msg);
     Index curY = 7;

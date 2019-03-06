@@ -211,7 +211,7 @@ protected:
      */
     void _title(const std::string& title) noexcept
     {
-        _myTitle = title;
+        _myTitle = utils::escapeString(title);
     }
 
     /*

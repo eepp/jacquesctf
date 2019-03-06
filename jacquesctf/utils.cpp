@@ -366,5 +366,67 @@ void printMetadataParseError(std::ostream& os, const std::string& path,
     }
 }
 
+std::string escapeString(const std::string& str)
+{
+    std::string outStr;
+
+    for (const auto ich : str) {
+        const auto uch = static_cast<std::uint8_t>(ich);
+
+        if (uch < 32) {
+            switch (ich) {
+            case '\a':
+                outStr += "\\a";
+                break;
+
+            case '\b':
+                outStr += "\\b";
+                break;
+
+            case '\e':
+                outStr += "\\e";
+                break;
+
+            case '\f':
+                outStr += "\\f";
+                break;
+
+            case '\n':
+                outStr += "\\n";
+                break;
+
+            case '\r':
+                outStr += "\\r";
+                break;
+
+            case '\t':
+                outStr += "\\t";
+                break;
+
+            case '\v':
+                outStr += "\\v";
+                break;
+
+            default:
+            {
+                std::array<char, 8> buf;
+
+                std::sprintf(buf.data(), "\\x%02x",
+                             static_cast<unsigned int>(uch));
+                outStr += buf.data();
+            }
+            }
+        } else if (ich == '\\') {
+            outStr += "\\\\";
+        } else if (std::isprint(ich)) {
+            outStr += ich;
+        } else {
+            outStr += '?';
+        }
+    }
+
+    return outStr;
+}
+
 } // namespace utils
 } // namespace jacques

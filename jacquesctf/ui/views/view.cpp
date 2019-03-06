@@ -19,7 +19,7 @@ namespace jacques {
 View::View(const Rectangle& rect, const std::string& title,
            const DecorationStyle decoStyle, const Stylist& stylist) :
     _rect {rect},
-    _myTitle {title},
+    _myTitle {utils::escapeString(title)},
     _decoStyle {decoStyle},
     _myStylist {&stylist},
     _lineBuf(2048)

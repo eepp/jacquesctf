@@ -123,7 +123,7 @@ public:
 
     void text(const std::string& text)
     {
-        _text = text;
+        _text = utils::escapeString(text);
     }
 
 private:
@@ -143,7 +143,7 @@ public:
 
     void path(const boost::filesystem::path& path)
     {
-        _path = path;
+        _path = utils::escapeString(path.string());
     }
 
 private:

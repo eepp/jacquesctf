@@ -103,7 +103,7 @@ void PacketRegionInfoView::_redrawContent()
                 this->_stylist().packetRegionInfoViewStd(*this, true);
             }
 
-            this->_safePrint("%s", it->c_str());
+            this->_safePrint("%s", utils::escapeString(*it).c_str());
         }
     } else if (const auto sPacketRegion = dynamic_cast<const PaddingPacketRegion *>(packetRegion)) {
         if (packetRegion->scope()) {
@@ -175,20 +175,7 @@ void PacketRegionInfoView::_redrawContent()
         } else if (const auto val = boost::get<double>(&varVal)) {
             this->_safePrint("%f", *val);
         } else if (const auto val = boost::get<std::string>(&varVal)) {
-            for (auto ch : *val) {
-                const auto isPrintable = std::isprint(ch);
-
-                if (!isPrintable) {
-                    this->_stylist().packetRegionInfoViewError(*this);
-                    ch = '?';
-                }
-
-                this->_safePrint("%c", ch);
-
-                if (!isPrintable) {
-                    this->_stylist().packetRegionInfoViewValue(*this);
-                }
-            }
+            this->_safePrint("%s", utils::escapeString(*val).c_str());
         }
     } else if (isError) {
         const auto& error = _state->activePacketState().packet().error();
@@ -196,7 +183,7 @@ void PacketRegionInfoView::_redrawContent()
         assert(error);
         this->_safePrint("    ");
         this->_stylist().packetRegionInfoViewError(*this);
-        this->_safePrint("%s", error->decodingError().what());
+        this->_safePrint("%s", utils::escapeString(error->decodingError().what()).c_str());
     }
 }
 

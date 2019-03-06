@@ -145,7 +145,8 @@ void PacketCheckpointsBuildProgressView::_drawProgress()
         this->_stylist().std(*this);
         this->_moveAndPrint({titleX, ertNameY}, "ERT name:");
         this->_stylist().std(*this, true);
-        this->_moveAndPrint({infoX, ertNameY}, "%s", ert->name()->c_str());
+        this->_moveAndPrint({infoX, ertNameY}, "%s",
+                             utils::escapeString(*ert->name()).c_str());
     }
 
     // ERT ID

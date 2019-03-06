@@ -126,7 +126,7 @@ private:
     {
         _StringPropRow(const std::string& key, const std::string value) :
             _PropRow {key},
-            value {value}
+            value {utils::escapeString(value)}
         {
         }
 
