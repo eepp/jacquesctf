@@ -59,8 +59,8 @@ public:
         this->stdSelection(view._window());
     }
 
-    void helpViewSection(const View& view) const;
-    void helpViewSubSection(const View& view) const;
+    void sectionTitle(const View& view) const;
+    void subsectionTitle(const View& view) const;
     void helpViewKey(const View& view) const;
     void statusViewStd(const View& view, bool emphasized = false) const;
     void statusViewFilename(const View& view) const;
@@ -70,14 +70,12 @@ public:
     void simpleInputViewBorder(const View& view) const;
     void packetIndexBuildProgressViewPath(const View& view, bool filename) const;
     void packetIndexBuildProgressViewBar(const View& view, bool on) const;
-    void detailsViewSubtitle(const View& view) const;
     void detailsViewTypeInfo(WINDOW *window) const;
     void detailsViewDataTypeName(WINDOW *window) const;
     void detailsViewEnumDataTypeMemberName(WINDOW *window) const;
     void detailsViewEnumDataTypeMemberRange(WINDOW *window) const;
     void detailsViewPropKey(WINDOW *window) const;
     void detailsViewPropValue(WINDOW *window) const;
-    void traceInfoViewSection(const View& view) const;
     void traceInfoViewPropKey(const View& view) const;
     void traceInfoViewPropValue(const View& view) const;
     void packetDecodingErrorDetailsView(const View& view,
@@ -133,8 +131,8 @@ private:
         TABLE_VIEW_ERROR_CELL,
         TABLE_VIEW_TEXT_CELL_EMPHASIZED,
         TABLE_VIEW_TS_CELL_NS_PART,
-        HELP_VIEW_SECTION,
-        HELP_VIEW_SUB_SECTION,
+        SECTION_TITLE,
+        SUBSECTION_TITLE,
         HELP_VIEW_KEY,
         STATUS_VIEW_STD,
         PACKET_REGION_INFO_VIEW_STD,
@@ -142,7 +140,6 @@ private:
         PACKET_REGION_INFO_VIEW_ERROR,
         SIMPLE_INPUT_VIEW_BORDER,
         PACKET_INDEX_BUILD_PROGRESS_VIEW_PATH,
-        DETAILS_VIEW_SUBTITLE,
         DETAILS_VIEW_TYPE_INFO,
         DETAILS_VIEW_DATA_TYPE_NAME,
         DETAILS_VIEW_ENUM_DATA_TYPE_MEMBER_NAME,

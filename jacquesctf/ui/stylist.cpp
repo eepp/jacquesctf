@@ -34,9 +34,9 @@ Stylist::Stylist()
     this->_registerStyle(_StyleId::TABLE_VIEW_TS_CELL_NS_PART, COLOR_CYAN, false, -1);
     this->_registerStyle(_StyleId::TEXT_MORE, COLOR_MAGENTA, true, -1);
     this->_registerStyle(_StyleId::TABLE_VIEW_SEP, COLOR_WHITE, false, -1);
-    this->_registerStyle(_StyleId::HELP_VIEW_SECTION, COLOR_GREEN, false, -1);
-    this->_registerStyle(_StyleId::HELP_VIEW_SUB_SECTION, COLOR_CYAN, true, -1);
-    this->_registerStyle(_StyleId::HELP_VIEW_KEY, COLOR_CYAN, false, -1);
+    this->_registerStyle(_StyleId::SECTION_TITLE, COLOR_CYAN, true, -1);
+    this->_registerStyle(_StyleId::SUBSECTION_TITLE, COLOR_GREEN, false, -1);
+    this->_registerStyle(_StyleId::HELP_VIEW_KEY, COLOR_MAGENTA, true, -1);
     this->_registerStyle(_StyleId::STATUS_VIEW_STD, COLOR_WHITE, false, COLOR_BLUE);
     this->_registerStyle(_StyleId::PACKET_REGION_INFO_VIEW_STD, COLOR_WHITE, false, COLOR_MAGENTA);
     this->_registerStyle(_StyleId::PACKET_REGION_INFO_VIEW_VALUE, COLOR_YELLOW, true, COLOR_MAGENTA);
@@ -45,7 +45,6 @@ Stylist::Stylist()
     this->_registerStyle(_StyleId::TABLE_VIEW_ERROR_CELL, COLOR_RED, false, -1);
     this->_registerStyle(_StyleId::SIMPLE_INPUT_VIEW_BORDER, COLOR_BLACK, false, COLOR_GREEN);
     this->_registerStyle(_StyleId::PACKET_INDEX_BUILD_PROGRESS_VIEW_PATH, COLOR_BLUE, false, -1);
-    this->_registerStyle(_StyleId::DETAILS_VIEW_SUBTITLE, COLOR_CYAN, true, -1);
     this->_registerStyle(_StyleId::DETAILS_VIEW_TYPE_INFO, COLOR_MAGENTA, true, -1);
     this->_registerStyle(_StyleId::DETAILS_VIEW_DATA_TYPE_NAME, COLOR_WHITE, false, COLOR_BLUE);
     this->_registerStyle(_StyleId::DETAILS_VIEW_ENUM_DATA_TYPE_MEMBER_NAME, COLOR_YELLOW, false, -1);
@@ -247,15 +246,14 @@ void Stylist::stdSelection(WINDOW *window) const
     this->_applyStyle(window, _StyleId::STD_SELECTION, A_BOLD | A_REVERSE);
 }
 
-void Stylist::helpViewSection(const View& view) const
+void Stylist::sectionTitle(const View& view) const
 {
-    this->_applyStyle(view, _StyleId::HELP_VIEW_SECTION, A_UNDERLINE);
+    this->_applyStyle(view, _StyleId::SECTION_TITLE, A_UNDERLINE | A_BOLD);
 }
 
-void Stylist::helpViewSubSection(const View& view) const
+void Stylist::subsectionTitle(const View& view) const
 {
-    this->_applyStyle(view, _StyleId::HELP_VIEW_SUB_SECTION,
-                      A_UNDERLINE | A_BOLD);
+    this->_applyStyle(view, _StyleId::SUBSECTION_TITLE, A_UNDERLINE);
 }
 
 void Stylist::helpViewKey(const View& view) const
@@ -323,12 +321,6 @@ void Stylist::error(WINDOW *window) const
     this->_applyStyle(window, _StyleId::TABLE_VIEW_ERROR_CELL, A_BOLD);
 }
 
-void Stylist::detailsViewSubtitle(const View& view) const
-{
-    this->_applyStyle(view, _StyleId::DETAILS_VIEW_SUBTITLE,
-                      A_BOLD | A_UNDERLINE);
-}
-
 void Stylist::detailsViewTypeInfo(WINDOW *window) const
 {
     this->_applyStyle(window, _StyleId::DETAILS_VIEW_TYPE_INFO);
@@ -359,11 +351,6 @@ void Stylist::detailsViewPropKey(WINDOW *window) const
 void Stylist::detailsViewPropValue(WINDOW *window) const
 {
     this->_applyStyle(window, _StyleId::DETAILS_VIEW_PROP_VALUE);
-}
-
-void Stylist::traceInfoViewSection(const View& view) const
-{
-    this->_applyStyle(view, _StyleId::DETAILS_VIEW_SUBTITLE, A_BOLD);
 }
 
 void Stylist::traceInfoViewPropKey(const View& view) const

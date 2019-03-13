@@ -308,7 +308,7 @@ void DataTypeExplorerView::_drawRows()
 
         if (const auto subRow = boost::get<_ScopeSubtitleRow>(&row)) {
             this->_moveCursor({0, y});
-            this->_stylist().detailsViewSubtitle(*this);
+            this->_stylist().sectionTitle(*this);
 
             switch (subRow->scope) {
             case yactfr::Scope::PACKET_HEADER:

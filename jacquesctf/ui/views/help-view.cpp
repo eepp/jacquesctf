@@ -279,10 +279,10 @@ void HelpView::_drawRows()
         const auto& row = _rows[rowIdx];
 
         if (auto sectRow = boost::get<_SectionRow>(&row)) {
-            this->_stylist().helpViewSection(*this);
+            this->_stylist().sectionTitle(*this);
             this->_moveAndPrint({startX, y}, "%s", sectRow->title.c_str());
         } else if (auto sectRow = boost::get<_SubSectionRow>(&row)) {
-            this->_stylist().helpViewSubSection(*this);
+            this->_stylist().subsectionTitle(*this);
             this->_moveAndPrint({startX + 2, y}, "%s", sectRow->title.c_str());
         } else if (auto keyRow = boost::get<_KeyRow>(&row)) {
             this->_moveCursor({startX + 2, y});

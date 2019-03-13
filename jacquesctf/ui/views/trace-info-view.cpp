@@ -405,7 +405,7 @@ void TraceInfoView::_drawRows()
 
         if (const auto sRow = dynamic_cast<const _SectionRow *>(row.get())) {
             this->_moveCursor({0, y});
-            this->_stylist().traceInfoViewSection(*this);
+            this->_stylist().sectionTitle(*this);
             this->_safePrint("%s:", sRow->title.c_str());
         } else if (const auto sRow = dynamic_cast<const _PropRow *>(row.get())) {
             this->_moveCursor({2, y});
