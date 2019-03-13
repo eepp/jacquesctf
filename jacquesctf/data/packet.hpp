@@ -107,10 +107,17 @@ namespace jacques {
  * intrinsically ordered properties (index, offset in packet,
  * timestamp).
  *
- * As of this version, there's a single packet region cache at a given
- * time. To help with the scenario where the user inspects the same
- * distant offsets often, we could create an LRU cache of packet region
- * caches.
+ * As of this version, when setting the preamble region cache as the
+ * current cache, we move the current region cache (and current event
+ * record cache) to temporary members from which the current caches can
+ * be restored. This can be viewed as a double buffer, where you can
+ * simultaneously have the preamble region cache and the last region
+ * cache available. This helps in scenarios where the non-preamble
+ * region cache is huge (contains a single, incomplete event with a
+ * somewhat huge total packet size, for example) to avoid creating this
+ * huge cache everytime the requests alternate between the preamble
+ * region cache and the non-preamble region cache. This could be
+ * generalized with an LRU cache of packet region caches.
  *
  * There's also an LRU cache (offset in packet to packet region) for
  * frequently accessed packet regions by offset (with
@@ -157,7 +164,7 @@ public:
             curOffsetInPacketBits = (*it)->segment().offsetInPacketBits();
 
             while (true) {
-                if (it == std::end(_regionCache)) {
+                if (it == std::end(_curRegionCache)) {
                     // need to cache more
                     break;
                 }
@@ -418,8 +425,8 @@ private:
      */
     RegionCache::const_iterator _regionCacheItBeforeOrAtOffsetInPacketBits(const Index offsetInPacketBits)
     {
-        assert(!_regionCache.empty());
-        assert(this->_regionCacheContainsOffsetInPacketBits(_regionCache,
+        assert(!_curRegionCache.empty());
+        assert(this->_regionCacheContainsOffsetInPacketBits(_curRegionCache,
                                                             offsetInPacketBits));
 
         const auto lessThanFunc = [](const auto& offsetInPacketBits,
@@ -427,11 +434,11 @@ private:
             return offsetInPacketBits <
                    region->segment().offsetInPacketBits();
         };
-        auto it = std::upper_bound(std::begin(_regionCache),
-                                   std::end(_regionCache),
+        auto it = std::upper_bound(std::begin(_curRegionCache),
+                                   std::end(_curRegionCache),
                                    offsetInPacketBits, lessThanFunc);
 
-        assert(it != std::begin(_regionCache));
+        assert(it != std::begin(_curRegionCache));
 
         // we found one that is greater than, decrement once to find <=
         --it;
@@ -445,12 +452,12 @@ private:
      */
     EventRecordCache::const_iterator _eventRecordCacheItFromIndexInPacket(const Index indexInPacket)
     {
-        assert(!_eventRecordCache.empty());
+        assert(!_curEventRecordCache.empty());
 
-        auto it = std::begin(_eventRecordCache);
+        auto it = std::begin(_curEventRecordCache);
 
         assert(indexInPacket >= (*it)->indexInPacket() &&
-               indexInPacket < (*it)->indexInPacket() + _eventRecordCache.size());
+               indexInPacket < (*it)->indexInPacket() + _curEventRecordCache.size());
         it += (indexInPacket - (*it)->indexInPacket());
         return it;
     }
@@ -459,14 +466,15 @@ private:
      * Returns whether or not the event record having the index
      * `indexInPacket` exists in the caches.
      */
-    bool _eventRecordIsCached(const Index indexInPacket) const
+    bool _eventRecordIsCached(const EventRecordCache& eventRecordCache,
+                              const Index indexInPacket) const
     {
-        if (_eventRecordCache.empty()) {
+        if (eventRecordCache.empty()) {
             return false;
         }
 
-        auto& firstEr = *_eventRecordCache.front();
-        auto& lastEr = *_eventRecordCache.back();
+        auto& firstEr = *eventRecordCache.front();
+        auto& lastEr = *eventRecordCache.back();
 
         return indexInPacket >= firstEr.indexInPacket() &&
                indexInPacket <= lastEr.indexInPacket();
@@ -510,11 +518,11 @@ private:
 
     void _trySetPreviousRegionOffsetInPacketBits(PacketRegion& region) const
     {
-        if (_regionCache.empty()) {
+        if (_curRegionCache.empty()) {
             return;
         }
 
-        region.previousRegionOffsetInPacketBits(_regionCache.back()->segment().offsetInPacketBits());
+        region.previousRegionOffsetInPacketBits(_curRegionCache.back()->segment().offsetInPacketBits());
     }
 
     template <typename ContainerT, typename IterT>
@@ -627,9 +635,11 @@ private:
     yactfr::ElementSequenceIterator _it;
     yactfr::ElementSequenceIterator _endIt;
     PacketCheckpoints _checkpoints;
-    RegionCache _regionCache;
     RegionCache _preambleRegionCache;
-    EventRecordCache _eventRecordCache;
+    RegionCache _curRegionCache;
+    EventRecordCache _curEventRecordCache;
+    RegionCache _lastRegionCache;
+    EventRecordCache _lastEventRecordCache;
     LruCache<Index, PacketRegion::SP> _lruRegionCache;
     const Size _eventRecordCacheMaxSize = 500;
     const DataSize _preambleSize;
