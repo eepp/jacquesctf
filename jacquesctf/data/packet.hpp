@@ -326,8 +326,8 @@ public:
     }
 
 private:
-    using RegionCache = std::vector<PacketRegion::SP>;
-    using EventRecordCache = std::vector<EventRecord::SP>;
+    using _RegionCache = std::vector<PacketRegion::SP>;
+    using _EventRecordCache = std::vector<EventRecord::SP>;
 
 private:
     /*
@@ -408,7 +408,7 @@ private:
      * Returns whether or not the packet region cache `cache` contains
      * the bit `offsetInPacketBits`.
      */
-    bool _regionCacheContainsOffsetInPacketBits(const RegionCache& cache,
+    bool _regionCacheContainsOffsetInPacketBits(const _RegionCache& cache,
                                                 const Index offsetInPacketBits) const
     {
         if (cache.empty()) {
@@ -423,7 +423,7 @@ private:
      * Returns the packet region, within the current cache, of which the
      * offset is less than or equal to `offsetInPacketBits`.
      */
-    RegionCache::const_iterator _regionCacheItBeforeOrAtOffsetInPacketBits(const Index offsetInPacketBits)
+    _RegionCache::const_iterator _regionCacheItBeforeOrAtOffsetInPacketBits(const Index offsetInPacketBits)
     {
         assert(!_curRegionCache.empty());
         assert(this->_regionCacheContainsOffsetInPacketBits(_curRegionCache,
@@ -450,7 +450,7 @@ private:
      * Returns the event record cache iterator containing the event
      * record having the index `indexInPacket`.
      */
-    EventRecordCache::const_iterator _eventRecordCacheItFromIndexInPacket(const Index indexInPacket)
+    _EventRecordCache::const_iterator _eventRecordCacheItFromIndexInPacket(const Index indexInPacket)
     {
         assert(!_curEventRecordCache.empty());
 
@@ -466,7 +466,7 @@ private:
      * Returns whether or not the event record having the index
      * `indexInPacket` exists in the caches.
      */
-    bool _eventRecordIsCached(const EventRecordCache& eventRecordCache,
+    bool _eventRecordIsCached(const _EventRecordCache& eventRecordCache,
                               const Index indexInPacket) const
     {
         if (eventRecordCache.empty()) {
@@ -635,11 +635,11 @@ private:
     yactfr::ElementSequenceIterator _it;
     yactfr::ElementSequenceIterator _endIt;
     PacketCheckpoints _checkpoints;
-    RegionCache _preambleRegionCache;
-    RegionCache _curRegionCache;
-    EventRecordCache _curEventRecordCache;
-    RegionCache _lastRegionCache;
-    EventRecordCache _lastEventRecordCache;
+    _RegionCache _preambleRegionCache;
+    _RegionCache _curRegionCache;
+    _EventRecordCache _curEventRecordCache;
+    _RegionCache _lastRegionCache;
+    _EventRecordCache _lastEventRecordCache;
     LruCache<Index, PacketRegion::SP> _lruRegionCache;
     const Size _eventRecordCacheMaxSize = 500;
     const DataSize _preambleSize;
