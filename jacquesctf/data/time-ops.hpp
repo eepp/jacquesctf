@@ -23,10 +23,19 @@ namespace jacques {
 static inline
 Duration operator-(const Timestamp& left, const Timestamp& right)
 {
-    const auto diff = left.nsFromOrigin() - right.nsFromOrigin();
+    assert(left >= right);
 
-    assert(diff >= 0);
-    return Duration {static_cast<unsigned long long>(diff)};
+    unsigned long long diff;
+
+    if (left.nsFromOrigin() >= 0 && right.nsFromOrigin() < 0) {
+        diff = static_cast<unsigned long long>(left.nsFromOrigin()) +
+               static_cast<unsigned long long>(-right.nsFromOrigin());
+    } else {
+        diff = static_cast<unsigned long long>(left.nsFromOrigin() -
+                                               right.nsFromOrigin());
+    }
+
+    return Duration {diff};
 }
 
 } // namespace jacques
