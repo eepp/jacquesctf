@@ -417,6 +417,9 @@ void Stylist::packetDataViewSelection(const View& view,
     case PacketDataViewSelectionType::NEXT:
         styleId = _StyleId::PACKET_DATA_VIEW_SELECTION_NEXT;
         break;
+
+    default:
+        std::abort();
     }
 
     this->_applyStyle(view, styleId, A_BOLD);
