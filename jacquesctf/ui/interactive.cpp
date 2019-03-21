@@ -357,15 +357,34 @@ static bool tryStartInteractive(const Config& cfg)
         curScreen = dsfScreen.get();
     }
 
-    Screen *prevScreen = nullptr;
-    bool done = false;
-
     curScreen->isVisible(true);
     doupdate();
+
+    Screen *prevScreen = nullptr;
+    bool done = false;
+    bool wantsToQuit = false;
 
     while (!done) {
         const auto ch = getch();
         bool refreshStatus = true;
+
+        if (wantsToQuit) {
+            if (ch == 'y' || ch == 'Y') {
+                done = true;
+                continue;
+            } else {
+                wantsToQuit = false;
+                clear();
+                refresh();
+                statusView->isVisible(true);
+                curScreen->isVisible(true);
+                statusView->redraw();
+                curScreen->redraw();
+                doupdate();
+            }
+
+            continue;
+        }
 
         switch (ch) {
         case KEY_RESIZE:
@@ -466,7 +485,10 @@ static bool tryStartInteractive(const Config& cfg)
         case 'q':
         case 27:
             if (curScreen == inspectScreen.get()) {
-                break;
+                curScreen->isVisible(false);
+                statusView->isVisible(false);
+                showFullScreenMessage("Press Y to quit, or any other key to stay.", *stylist);
+                wantsToQuit = true;
             } else if (curScreen == helpScreen.get()) {
                 curScreen->isVisible(false);
                 curScreen = prevScreen;
