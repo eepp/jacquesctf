@@ -636,7 +636,7 @@ void Packet::_cacheRegionsFromErsAtCurIt(const Index erIndexInPacket,
 
     assert(erIndexInPacket <= endErIndexInPacketBeforeLast);
 
-    for (Index index = erIndexInPacket;
+    for (auto index = erIndexInPacket;
             index < endErIndexInPacketBeforeLast; ++index) {
         while (_it->kind() != ElemKind::EVENT_RECORD_BEGINNING) {
             assert(_it->kind() != ElemKind::PACKET_CONTENT_END);

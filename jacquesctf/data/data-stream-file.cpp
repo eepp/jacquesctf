@@ -75,7 +75,11 @@ void DataStreamFile::_addPacketIndexEntry(const Index offsetInDataStreamBytes,
     DataSize effectiveContentSize;
 
     if (!expectedTotalSize) {
-        expectedTotalSize = _fileSize;
+        if (expectedContentSize) {
+            expectedTotalSize = expectedContentSize;
+        } else {
+            expectedTotalSize = _fileSize;
+        }
     }
 
     if (!expectedContentSize) {
