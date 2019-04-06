@@ -181,7 +181,7 @@ void PacketState::gotoPacketRegionNextParent()
 
     assert(origParentDt);
 
-    while (*packetRegion->segment().endOffsetInPacketBits() <=
+    while (*packetRegion->segment().endOffsetInPacketBits() <
             _packet->indexEntry().effectiveContentSize().bits()) {
         if (const auto cRegion = dynamic_cast<const ContentPacketRegion *>(packetRegion)) {
             const auto thisParentDt = _metadata->dataTypeParent(cRegion->dataType());
