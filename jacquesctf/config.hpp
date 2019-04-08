@@ -55,7 +55,9 @@ public:
 
 private:
     void _parseArgs(int argc, const char *argv[]);
-    void _expandPaths();
+    void _expandDir(std::list<boost::filesystem::path>& tmpFilePaths,
+                    const boost::filesystem::path& path);
+    void _expandPaths(const std::vector<boost::filesystem::path>& origFilePaths);
 
 private:
     Command _cmd = Command::INSPECT_FILES;

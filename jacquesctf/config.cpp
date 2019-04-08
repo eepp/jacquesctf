@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <unordered_set>
 #include <iostream>
+#include <cassert>
 
 #include "config.hpp"
 #include "utils.hpp"
@@ -30,15 +31,60 @@ Config::Config(const int argc, const char *argv[])
     this->_parseArgs(argc, argv);
 }
 
-void Config::_expandPaths()
+void Config::_expandDir(std::list<boost::filesystem::path>& tmpFilePaths,
+                        const boost::filesystem::path& path)
 {
     namespace bfs = boost::filesystem;
 
-    auto it = std::begin(_filePaths);
+    assert(bfs::is_directory(path));
 
-    while (it != std::end(_filePaths)) {
-        const auto& path = *it;
+    const bool hasMetadata = bfs::exists(path / "metadata");
+    std::vector<bfs::path> thisDirStreamFilePaths;
 
+    for (const auto& entry : boost::make_iterator_range(bfs::directory_iterator(path), {})) {
+        const auto& entryPath = entry.path();
+
+        if (!entryPath.has_filename()) {
+            continue;
+        }
+
+        if (entryPath.filename() == "metadata") {
+            // skip `metadata` file
+            continue;
+        }
+
+        if (bfs::is_directory(entryPath)) {
+            // expand subdirectory
+            this->_expandDir(tmpFilePaths, entryPath);
+            continue;
+        }
+
+        if (!entryPath.filename().string().empty() &&
+                entryPath.filename().string()[0] == '.') {
+            // hidden file
+            continue;
+        }
+
+        if (hasMetadata) {
+            // it's a CTF directory!
+            thisDirStreamFilePaths.push_back(entryPath);
+        }
+    }
+
+    std::sort(std::begin(thisDirStreamFilePaths),
+              std::end(thisDirStreamFilePaths));
+    tmpFilePaths.insert(std::end(tmpFilePaths),
+                        std::begin(thisDirStreamFilePaths),
+                        std::end(thisDirStreamFilePaths));
+}
+
+void Config::_expandPaths(const std::vector<boost::filesystem::path>& origFilePaths)
+{
+    namespace bfs = boost::filesystem;
+
+    std::list<bfs::path> tmpFilePaths;
+
+    for (const auto& path : origFilePaths) {
         if (!bfs::exists(path)) {
             std::ostringstream ss;
 
@@ -56,48 +102,7 @@ void Config::_expandPaths()
         }
 
         if (bfs::is_directory(path)) {
-            bfs::path metadataPath {path};
-
-            metadataPath /= "metadata";
-
-            if (!bfs::exists(metadataPath)) {
-                std::ostringstream ss;
-
-                ss << "Directory `" << path.string() <<
-                      "` is not a CTF trace (missing `metadata` file).";
-                throw CliError {ss.str()};
-            }
-
-            std::vector<bfs::path> traceFilePaths;
-
-            for (const auto& entry : boost::make_iterator_range(bfs::directory_iterator(path), {})) {
-                const auto& entryPath = entry.path();
-
-                if (!entryPath.has_filename()) {
-                    continue;
-                }
-
-                if (entryPath.filename() == "metadata") {
-                    continue;
-                }
-
-                if (bfs::is_directory(entryPath)) {
-                    continue;
-                }
-
-                if (!entryPath.filename().string().empty() &&
-                        entryPath.filename().string()[0] == '.') {
-                    // hidden file
-                    continue;
-                }
-
-                traceFilePaths.push_back(entryPath);
-            }
-
-            std::sort(std::begin(traceFilePaths), std::end(traceFilePaths));
-            it = _filePaths.erase(it);
-            _filePaths.insert(it, std::begin(traceFilePaths),
-                              std::end(traceFilePaths));
+            this->_expandDir(tmpFilePaths, path);
         } else {
             const auto metadataPath = path.parent_path() / "metadata";
 
@@ -109,31 +114,33 @@ void Config::_expandPaths()
                 throw CliError {ss.str()};
             }
 
-            ++it;
+            tmpFilePaths.push_back(path);
         }
     }
 
-    if (_filePaths.empty()) {
+    if (tmpFilePaths.empty()) {
         throw CliError {"No file paths to use."};
     }
 
     std::unordered_set<std::string> pathSet;
-    it = std::begin(_filePaths);
+    auto it = std::begin(tmpFilePaths);
 
-    while (it != std::end(_filePaths)) {
+    while (it != std::end(tmpFilePaths)) {
         auto nextIt = it;
 
         ++nextIt;
 
         if (pathSet.count(it->string()) > 0) {
             // remove duplicate
-            _filePaths.erase(it);
+            tmpFilePaths.erase(it);
         } else {
             pathSet.insert(it->string());
         }
 
         it = nextIt;
     }
+
+    _filePaths = std::move(tmpFilePaths);
 }
 
 void Config::_parseArgs(const int argc, const char *argv[])
@@ -177,10 +184,11 @@ void Config::_parseArgs(const int argc, const char *argv[])
     }
 
     const auto pathArgs = vm["paths"].as<std::vector<std::string>>();
+    std::vector<boost::filesystem::path> origFilePaths;
 
     std::copy(std::begin(pathArgs), std::end(pathArgs),
-              std::back_inserter(_filePaths));
-    this->_expandPaths();
+              std::back_inserter(origFilePaths));
+    this->_expandPaths(origFilePaths);
 }
 
 } // namespace jacques

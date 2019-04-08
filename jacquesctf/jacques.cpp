@@ -62,7 +62,7 @@ static void printCliUsage(const char *cmdName)
                  std::endl <<
                  "If PATH is a CTF metadata file, print its text content and exit." << std::endl <<
                  "If PATH is a CTF data stream file, inspect this file." << std::endl <<
-                 "If PATH is a CTF trace directory, inspect all its data stream files." << std::endl;
+                 "If PATH is a directory, inspect all CTF data stream files found recursively." << std::endl;
 }
 
 static void printVersion()
