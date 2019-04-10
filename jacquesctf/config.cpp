@@ -93,10 +93,11 @@ void Config::_expandPaths(const std::vector<boost::filesystem::path>& origFilePa
         }
 
         if (!bfs::is_directory(path) && path.filename() == "metadata") {
-            if (_filePaths.size() > 1) {
+            if (origFilePaths.size() > 1) {
                 throw CliError {"Can only specify a single CTF metadata file."};
             }
 
+            _filePaths.push_back(path);
             _cmd = Command::PRINT_METADATA_TEXT;
             return;
         }
