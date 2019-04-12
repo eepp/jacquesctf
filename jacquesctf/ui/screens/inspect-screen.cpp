@@ -431,6 +431,10 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         _pdView->isDataInHex(!_pdView->isDataInHex());
         break;
 
+    case 'D':
+        _pdView->isOffsetInPacket(!_pdView->isOffsetInPacket());
+        break;
+
     case 'o':
         _pdView->isOffsetInHex(!_pdView->isOffsetInHex());
         break;

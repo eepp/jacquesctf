@@ -58,6 +58,7 @@ void HelpView::_buildRows()
         _KeyRow {"a", "Packet data: show/hide ASCII characters"},
         _KeyRow {"o", "Packet data: show offsets in bytes or bits"},
         _KeyRow {"O", "Packet data: show offsets in decimal or hexadecimal"},
+        _KeyRow {"D", "Packet data: show offsets in packet or data stream file"},
         _KeyRow {"x", "Packet data: show bytes in hexadecimal or binary"},
         _KeyRow {"E", "Packet data: emphasize or not event record's first region"},
         _KeyRow {"s", "Event records: cycle size columns's format"},

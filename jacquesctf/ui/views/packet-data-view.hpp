@@ -61,6 +61,7 @@ public:
     void isOffsetInHex(bool isOffsetInHex);
     void isOffsetInBytes(bool isOffsetInBytes);
     void isRowSizePowerOfTwo(bool isPowerOfTwo);
+    void isOffsetInPacket(bool isOffsetInPacket);
 
     bool isAsciiVisible() const noexcept
     {
@@ -95,6 +96,11 @@ public:
     bool isRowSizePowerOfTwo() const noexcept
     {
         return _isRowSizePowerOfTwo;
+    }
+
+    bool isOffsetInPacket() const noexcept
+    {
+        return _isOffsetInPacket;
     }
 
     const DataSize& rowSize() const noexcept
@@ -212,6 +218,7 @@ private:
     bool _isOffsetInHex = false;
     bool _isOffsetInBytes = true;
     bool _isRowSizePowerOfTwo = true;
+    bool _isOffsetInPacket = true;
 };
 
 } // namespace jacques

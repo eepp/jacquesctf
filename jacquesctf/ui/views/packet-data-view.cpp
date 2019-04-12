@@ -200,7 +200,13 @@ void PacketDataView::_setDataXAndRowSize()
 
     std::array<char, 32> buf;
     const Size div = _isOffsetInBytes ? 8 : 1;
-    const auto maxOffset = static_cast<unsigned long long>(_state->activePacketState().packetIndexEntry().effectiveTotalSize().bits() / div);
+    auto totalSizeBits = _state->activePacketState().packetIndexEntry().effectiveTotalSize().bits();
+
+    if (!_isOffsetInPacket) {
+        totalSizeBits += _state->activePacketState().packetIndexEntry().offsetInDataStreamBits();
+    }
+
+    const auto maxOffset = static_cast<unsigned long long>(totalSizeBits) / div;
 
     if (_isOffsetInHex) {
         std::sprintf(buf.data(), "%llx", maxOffset);
@@ -293,7 +299,13 @@ void PacketDataView::_drawOffsets() const
             }
         } else {
             std::array<char, 32> buf;
-            const auto dispOffsetInPacketBits = offsetInPacketBits / div;
+            Index dispOffsetInPacketBits = offsetInPacketBits;
+
+            if (!_isOffsetInPacket) {
+                dispOffsetInPacketBits += _state->activePacketState().packetIndexEntry().offsetInDataStreamBits();
+            }
+
+            dispOffsetInPacketBits /= div;
 
             if (_isOffsetInHex) {
                 std::sprintf(buf.data(), "%llx", dispOffsetInPacketBits);
@@ -337,6 +349,14 @@ void PacketDataView::_setTitle()
         title += "bytes";
     } else {
         title += "bits";
+    }
+
+    title += ", in ";
+
+    if (_isOffsetInPacket) {
+        title += "packet";
+    } else {
+        title += "DSF";
     }
 
     title += ")";
@@ -880,6 +900,19 @@ void PacketDataView::isRowSizePowerOfTwo(const bool isPowerOfTwo)
         this->_setBaseAndEndOffsetInPacketBitsFromOffset(_curOffsetInPacketBits);
     }
 
+    this->_redrawContent();
+}
+
+void PacketDataView::isOffsetInPacket(const bool isOffsetInPacket)
+{
+    _isOffsetInPacket = isOffsetInPacket;
+    this->_setDataXAndRowSize();
+
+    if (_state->hasActivePacketState()) {
+        this->_setBaseAndEndOffsetInPacketBitsFromOffset(_curOffsetInPacketBits);
+    }
+
+    this->_setTitle();
     this->_redrawContent();
 }
 
