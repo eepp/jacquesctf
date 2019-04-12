@@ -134,7 +134,7 @@ void StatusView::_redrawContent()
         // packet index and count
         const auto count = _state->activeDataStreamFileState().dataStreamFile().packetCount();
         const auto countStr = utils::sepNumber(count, ',');
-        const auto index = _state->activePacketState().packetIndexEntry().natIndexInDataStream();
+        const auto index = _state->activePacketState().packetIndexEntry().natIndexInDataStreamFile();
         const auto indexStr = utils::sepNumber(index, ',');
 
         this->_putChar({this->contentRect().w - _curEndPositions->packetIndex -

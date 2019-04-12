@@ -60,7 +60,7 @@ void PacketCheckpointsBuildProgressView::_drawPacketIndexEntry()
     this->_clearRow(1);
     this->_stylist().packetIndexBuildProgressViewPath(*this, false);
     this->_moveAndPrint({1, 1}, "Packet #%llu",
-                        _packetIndexEntry->natIndexInDataStream());
+                        _packetIndexEntry->natIndexInDataStreamFile());
 }
 
 void PacketCheckpointsBuildProgressView::_drawProgress()

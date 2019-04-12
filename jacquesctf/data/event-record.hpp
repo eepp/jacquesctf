@@ -33,7 +33,7 @@ public:
 public:
     static SP createFromElementSequenceIterator(yactfr::ElementSequenceIterator& it,
                                                const Metadata& metadata,
-                                               Index packetOffsetInDataStreamBytes,
+                                               Index packetOffsetInDataStreamFileBytes,
                                                Index indexInPacket);
 
 public:

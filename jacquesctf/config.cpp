@@ -181,7 +181,7 @@ void Config::_parseArgs(const int argc, const char *argv[])
     }
 
     if (!vm.count("paths")) {
-        throw CliError {"Missing trace, data stream, or metadata stream path."};
+        throw CliError {"Missing trace, data stream file, or metadata stream file path."};
     }
 
     const auto pathArgs = vm["paths"].as<std::vector<std::string>>();

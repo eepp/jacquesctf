@@ -203,7 +203,7 @@ void PacketDataView::_setDataXAndRowSize()
     auto totalSizeBits = _state->activePacketState().packetIndexEntry().effectiveTotalSize().bits();
 
     if (!_isOffsetInPacket) {
-        totalSizeBits += _state->activePacketState().packetIndexEntry().offsetInDataStreamBits();
+        totalSizeBits += _state->activePacketState().packetIndexEntry().offsetInDataStreamFileBits();
     }
 
     const auto maxOffset = static_cast<unsigned long long>(totalSizeBits) / div;
@@ -302,7 +302,7 @@ void PacketDataView::_drawOffsets() const
             Index dispOffsetInPacketBits = offsetInPacketBits;
 
             if (!_isOffsetInPacket) {
-                dispOffsetInPacketBits += _state->activePacketState().packetIndexEntry().offsetInDataStreamBits();
+                dispOffsetInPacketBits += _state->activePacketState().packetIndexEntry().offsetInDataStreamFileBits();
             }
 
             dispOffsetInPacketBits /= div;

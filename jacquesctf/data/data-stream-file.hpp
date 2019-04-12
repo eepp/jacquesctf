@@ -115,8 +115,8 @@ private:
 private:
     void _buildIndex(const BuildIndexProgressFunc& progressFunc,
                      Size step);
-    void _addPacketIndexEntry(Index offsetInDataStreamBytes,
-                              Index offsetInDataStreamBits,
+    void _addPacketIndexEntry(Index offsetInDataStreamFileBytes,
+                              Index offsetInDataStreamFileBits,
                               const _IndexBuildingState& state,
                               bool isInvalid);
 

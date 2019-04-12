@@ -30,10 +30,10 @@ EventRecord::EventRecord(Index indexInPacket) :
 
 EventRecord::SP EventRecord::createFromElementSequenceIterator(yactfr::ElementSequenceIterator& it,
                                                               const Metadata& metadata,
-                                                              const Index packetOffsetInDataStreamBytes,
+                                                              const Index packetOffsetInDataStreamFileBytes,
                                                               const Index indexInPacket)
 {
-    const auto packetOffsetInDataStreamBits = packetOffsetInDataStreamBytes * 8;
+    const auto packetOffsetInDataStreamFileBits = packetOffsetInDataStreamFileBytes * 8;
     EventRecord::SP eventRecord;
 
     try {
@@ -42,7 +42,7 @@ EventRecord::SP EventRecord::createFromElementSequenceIterator(yactfr::ElementSe
             switch (it->kind()) {
             case yactfr::Element::Kind::EVENT_RECORD_BEGINNING:
                 eventRecord = std::make_shared<EventRecord>(indexInPacket);
-                eventRecord->segment().offsetInPacketBits(it.offset() - packetOffsetInDataStreamBits);
+                eventRecord->segment().offsetInPacketBits(it.offset() - packetOffsetInDataStreamFileBits);
                 break;
 
             case yactfr::Element::Kind::EVENT_RECORD_TYPE:
@@ -67,7 +67,7 @@ EventRecord::SP EventRecord::createFromElementSequenceIterator(yactfr::ElementSe
 
             case yactfr::Element::Kind::EVENT_RECORD_END:
             {
-                eventRecord->segment().size(it.offset() - packetOffsetInDataStreamBits -
+                eventRecord->segment().size(it.offset() - packetOffsetInDataStreamFileBits -
                                             eventRecord->segment().offsetInPacketBits());
                 return eventRecord;
             }

@@ -35,7 +35,7 @@ void PacketCheckpoints::_tryCreateCheckpoints(yactfr::ElementSequence& seq,
                                               const Size step,
                                               PacketCheckpointsBuildListener& packetCheckpointsBuildListener)
 {
-    auto it = seq.at(packetIndexEntry.offsetInDataStreamBytes());
+    auto it = seq.at(packetIndexEntry.offsetInDataStreamFileBytes());
 
     // we consider other errors (e.g., I/O) unrecoverable: do not catch them
     try {
@@ -168,7 +168,7 @@ void PacketCheckpoints::_createCheckpoint(yactfr::ElementSequenceIterator& it,
 
     auto eventRecord = EventRecord::createFromElementSequenceIterator(it,
                                                                      metadata,
-                                                                     packetIndexEntry.offsetInDataStreamBytes(),
+                                                                     packetIndexEntry.offsetInDataStreamFileBytes(),
                                                                      indexInPacket);
     _checkpoints.push_back({eventRecord, std::move(pos)});
     packetCheckpointsBuildListener.update(*eventRecord);

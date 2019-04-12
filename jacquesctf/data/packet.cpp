@@ -36,7 +36,7 @@ Packet::Packet(const PacketIndexEntry& indexEntry,
         indexEntry.effectiveContentSize()
     }
 {
-    _mmapFile->map(_indexEntry->offsetInDataStreamBytes(),
+    _mmapFile->map(_indexEntry->offsetInDataStreamFileBytes(),
                    _indexEntry->effectiveTotalSize());
     this->_cachePreambleRegions();
 }
@@ -333,7 +333,7 @@ void Packet::_cachePreambleRegions()
     assert(_curRegionCache.empty());
 
     // go to beginning of packet
-    _it.seekPacket(_indexEntry->offsetInDataStreamBytes());
+    _it.seekPacket(_indexEntry->offsetInDataStreamFileBytes());
 
     // special case: no event records and an error: cache everything now
     if (_checkpoints.error() && _checkpoints.eventRecordCount() == 0) {

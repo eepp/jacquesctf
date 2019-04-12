@@ -485,7 +485,7 @@ private:
      */
     Index _itOffsetInPacketBits() const noexcept
     {
-        return _it.offset() - _indexEntry->offsetInDataStreamBits();
+        return _it.offset() - _indexEntry->offsetInDataStreamFileBits();
     }
 
     /*

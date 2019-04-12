@@ -51,8 +51,8 @@ void PacketIndexBuildProgressView::dataStreamFile(const DataStreamFile& dsf)
 
 void PacketIndexBuildProgressView::packetIndexEntry(const PacketIndexEntry& entry)
 {
-    _index = entry.indexInDataStream();
-    _offsetBytes = entry.offsetInDataStreamBytes();
+    _index = entry.indexInDataStreamFile();
+    _offsetBytes = entry.offsetInDataStreamFileBytes();
     _seqNum = entry.seqNum();
     this->_drawProgress();
 }

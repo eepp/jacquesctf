@@ -64,8 +64,8 @@ void DataStreamFile::buildIndex(const BuildIndexProgressFunc& progressFunc,
     _packets.resize(_index.size());
 }
 
-void DataStreamFile::_addPacketIndexEntry(const Index offsetInDataStreamBytes,
-                                          const Index offsetInDataStreamBits,
+void DataStreamFile::_addPacketIndexEntry(const Index offsetInDataStreamFileBytes,
+                                          const Index offsetInDataStreamFileBits,
                                           const _IndexBuildingState& state,
                                           bool isInvalid)
 {
@@ -87,11 +87,11 @@ void DataStreamFile::_addPacketIndexEntry(const Index offsetInDataStreamBytes,
     }
 
     const auto availSize = DataSize::fromBytes(_fileSize.bytes() -
-                                               offsetInDataStreamBytes);
+                                               offsetInDataStreamFileBytes);
 
     if (isInvalid) {
-        effectiveContentSize = offsetInDataStreamBits -
-                               offsetInDataStreamBytes * 8;
+        effectiveContentSize = offsetInDataStreamFileBits -
+                               offsetInDataStreamFileBytes * 8;
 
         if (state.expectedTotalSize &&
                 *state.expectedTotalSize <= availSize) {
@@ -120,7 +120,7 @@ void DataStreamFile::_addPacketIndexEntry(const Index offsetInDataStreamBytes,
     }
 
     _index.push_back(PacketIndexEntry {
-        _index.size(), offsetInDataStreamBytes,
+        _index.size(), offsetInDataStreamFileBytes,
         state.packetContextOffsetInPacketBits,
         state.preambleSize,
         expectedTotalSize, expectedContentSize,
@@ -315,7 +315,7 @@ bool DataStreamFile::hasOffsetBits(const Index offsetBits)
 
     assert(!_index.empty());
 
-    return offsetBits < _index.back().endOffsetInDataStreamBits();
+    return offsetBits < _index.back().endOffsetInDataStreamFileBits();
 }
 
 const PacketIndexEntry& DataStreamFile::packetIndexEntryContainingOffsetBits(const Index offsetBits)
@@ -326,12 +326,12 @@ const PacketIndexEntry& DataStreamFile::packetIndexEntryContainingOffsetBits(con
                                offsetBits, [](const auto offsetBits,
                                               const auto& entry) {
         return offsetBits <
-               entry.offsetInDataStreamBits() + entry.effectiveTotalSize();
+               entry.offsetInDataStreamFileBits() + entry.effectiveTotalSize();
     });
 
     assert(it != std::end(_index));
-    assert(offsetBits >= it->offsetInDataStreamBits() &&
-           offsetBits < it->offsetInDataStreamBits() +
+    assert(offsetBits >= it->offsetInDataStreamFileBits() &&
+           offsetBits < it->offsetInDataStreamFileBits() +
                         it->effectiveTotalSize());
 
 

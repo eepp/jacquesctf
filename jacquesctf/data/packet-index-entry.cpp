@@ -9,22 +9,23 @@
 
 namespace jacques {
 
-PacketIndexEntry::PacketIndexEntry(const Index indexInDataStream,
-                                   const Index offsetInDataStreamBytes,
+PacketIndexEntry::PacketIndexEntry(const Index indexInDataStreamFile,
+                                   const Index offsetInDataStreamFileBytes,
                                    const boost::optional<Size> packetContextOffsetInPacketBits,
                                    const boost::optional<DataSize>& preambleSize,
                                    const boost::optional<DataSize>& expectedTotalSize,
                                    const boost::optional<DataSize>& expectedContentSize,
                                    const DataSize& effectiveTotalSize,
-                                   const DataSize& effectiveContentSize,                                   const yactfr::DataStreamType *dst,
+                                   const DataSize& effectiveContentSize,
+                                   const yactfr::DataStreamType *dst,
                                    const boost::optional<Index> dataStreamId,
                                    const boost::optional<Timestamp> beginningTimestamp,
                                    const boost::optional<Timestamp> endTimestamp,
                                    const boost::optional<Index> seqNum,
                                    const boost::optional<Size> discardedEventRecordCounter,
                                    const bool isInvalid) :
-    _indexInDataStream {indexInDataStream},
-    _offsetInDataStreamBytes {offsetInDataStreamBytes},
+    _indexInDataStreamFile {indexInDataStreamFile},
+    _offsetInDataStreamFileBytes {offsetInDataStreamFileBytes},
     _packetContextOffsetInPacketBits {packetContextOffsetInPacketBits},
     _preambleSize {preambleSize},
     _expectedTotalSize {expectedTotalSize},

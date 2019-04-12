@@ -127,8 +127,8 @@ void PacketTableView::_drawRow(const Index index)
     const auto& entry = dsf.packetIndexEntry(index);
     const auto prevEntry = (index == 0) ? nullptr : &dsf.packetIndexEntry(index - 1);
 
-    static_cast<UnsignedIntTableViewCell&>(*_row[0]).value(entry.natIndexInDataStream());
-    static_cast<DataSizeTableViewCell&>(*_row[1]).size(entry.offsetInDataStreamBits());
+    static_cast<UnsignedIntTableViewCell&>(*_row[0]).value(entry.natIndexInDataStreamFile());
+    static_cast<DataSizeTableViewCell&>(*_row[1]).size(entry.offsetInDataStreamFileBits());
     static_cast<DataSizeTableViewCell&>(*_row[2]).size(entry.effectiveTotalSize());
     static_cast<DataSizeTableViewCell&>(*_row[3]).size(entry.effectiveContentSize());
 

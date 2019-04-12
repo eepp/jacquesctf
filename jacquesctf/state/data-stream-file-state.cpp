@@ -36,10 +36,10 @@ void DataStreamFileState::gotoOffsetBits(const Index offsetBits)
 
     const auto& packetIndexEntry = _dataStreamFile->packetIndexEntryContainingOffsetBits(offsetBits);
 
-    this->gotoPacket(packetIndexEntry.indexInDataStream());
+    this->gotoPacket(packetIndexEntry.indexInDataStreamFile());
 
     const auto offsetInPacketBits = offsetBits -
-                                    packetIndexEntry.offsetInDataStreamBits();
+                                    packetIndexEntry.offsetInDataStreamFileBits();
 
     if (offsetInPacketBits > packetIndexEntry.effectiveTotalSize()) {
         // uh oh, that's outside the data we have for this invalid packet
@@ -298,7 +298,7 @@ bool DataStreamFileState::search(const SearchQuery& query)
             return false;
         }
 
-        this->gotoPacket(indexEntry->indexInDataStream());
+        this->gotoPacket(indexEntry->indexInDataStreamFile());
         return true;
     } else if (const auto sQuery = dynamic_cast<const EventRecordIndexSearchQuery *>(&query)) {
         if (!_activePacketState) {
@@ -351,9 +351,9 @@ bool DataStreamFileState::search(const SearchQuery& query)
 
             case OffsetSearchQuery::Target::DATA_STREAM_FILE:
             {
-                const auto curPacketOffsetBitsInDataStream = _activePacketState->packetIndexEntry().offsetInDataStreamBits();
+                const auto curPacketOffsetBitsInDataStreamFile = _activePacketState->packetIndexEntry().offsetInDataStreamFileBits();
 
-                reqOffsetBits += static_cast<long long>(curPacketOffsetBitsInDataStream +
+                reqOffsetBits += static_cast<long long>(curPacketOffsetBitsInDataStreamFile +
                                                         _activePacketState->curOffsetInPacketBits());
                 break;
             }
@@ -459,7 +459,7 @@ bool DataStreamFileState::search(const SearchQuery& query)
             return false;
         }
 
-        auto& packet = _dataStreamFile->packetAtIndex(indexEntry->indexInDataStream(),
+        auto& packet = _dataStreamFile->packetAtIndex(indexEntry->indexInDataStreamFile(),
                                                       *_packetCheckpointsBuildListener);
 
         if (packet.eventRecordCount() == 0) {
@@ -487,7 +487,7 @@ bool DataStreamFileState::search(const SearchQuery& query)
 
         if (_activePacketState->packet().indexEntry() != *indexEntry) {
             // change packet
-            this->gotoPacket(indexEntry->indexInDataStream());
+            this->gotoPacket(indexEntry->indexInDataStreamFile());
         }
 
         _activePacketState->gotoPacketRegionAtOffsetInPacketBits(offsetInPacketBits);
@@ -505,7 +505,7 @@ void DataStreamFileState::analyzeAllPackets(PacketCheckpointsBuildListener& buil
         }
 
         // this creates checkpoints and shows progress
-        _dataStreamFile->packetAtIndex(pktIndexEntry.indexInDataStream(),
+        _dataStreamFile->packetAtIndex(pktIndexEntry.indexInDataStreamFile(),
                                        buildListener);
     }
 }

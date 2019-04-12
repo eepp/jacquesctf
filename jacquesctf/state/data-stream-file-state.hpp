@@ -92,7 +92,7 @@ public:
             return 0;
         }
 
-        return _activePacketState->packetIndexEntry().offsetInDataStreamBits() +
+        return _activePacketState->packetIndexEntry().offsetInDataStreamFileBits() +
                _activePacketState->curOffsetInPacketBits();
     }
 

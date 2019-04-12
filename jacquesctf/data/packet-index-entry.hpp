@@ -22,8 +22,8 @@ class PacketIndexEntry :
     public boost::totally_ordered<PacketIndexEntry>
 {
 public:
-    explicit PacketIndexEntry(Index indexInDataStream,
-                              Index offsetInDataStreamBytes,
+    explicit PacketIndexEntry(Index indexInDataStreamFile,
+                              Index offsetInDataStreamFileBytes,
                               boost::optional<Index> packetContextOffsetInPacketBits,
                               const boost::optional<DataSize>& preambleSize,
                               const boost::optional<DataSize>& expectedTotalSize,
@@ -39,24 +39,24 @@ public:
                               bool isInvalid);
     PacketIndexEntry(const PacketIndexEntry&) = default;
 
-    Index offsetInDataStreamBytes() const noexcept
+    Index offsetInDataStreamFileBytes() const noexcept
     {
-        return _offsetInDataStreamBytes;
+        return _offsetInDataStreamFileBytes;
     }
 
-    Index offsetInDataStreamBits() const noexcept
+    Index offsetInDataStreamFileBits() const noexcept
     {
-        return _offsetInDataStreamBytes * 8;
+        return _offsetInDataStreamFileBytes * 8;
     }
 
-    Index endOffsetInDataStreamBytes() const noexcept
+    Index endOffsetInDataStreamFileBytes() const noexcept
     {
-        return _offsetInDataStreamBytes + _effectiveTotalSize.bytes();
+        return _offsetInDataStreamFileBytes + _effectiveTotalSize.bytes();
     }
 
-    Index endOffsetInDataStreamBits() const noexcept
+    Index endOffsetInDataStreamFileBits() const noexcept
     {
-        return this->endOffsetInDataStreamBytes() * 8;
+        return this->endOffsetInDataStreamFileBytes() * 8;
     }
 
     const boost::optional<DataSize>& preambleSize() const noexcept
@@ -114,14 +114,14 @@ public:
         return _discardedEventRecordCounter;
     }
 
-    Index indexInDataStream() const noexcept
+    Index indexInDataStreamFile() const noexcept
     {
-        return _indexInDataStream;
+        return _indexInDataStreamFile;
     }
 
-    Index natIndexInDataStream() const noexcept
+    Index natIndexInDataStreamFile() const noexcept
     {
-        return _indexInDataStream + 1;
+        return _indexInDataStreamFile + 1;
     }
 
     // can be `nullptr` if this entry is invalid
@@ -152,17 +152,17 @@ public:
 
     bool operator<(const PacketIndexEntry& other) const noexcept
     {
-        return _indexInDataStream < other._indexInDataStream;
+        return _indexInDataStreamFile < other._indexInDataStreamFile;
     }
 
     bool operator==(const PacketIndexEntry& other) const noexcept
     {
-        return _indexInDataStream == other._indexInDataStream;
+        return _indexInDataStreamFile == other._indexInDataStreamFile;
     }
 
 private:
-    const Index _indexInDataStream;
-    const Size _offsetInDataStreamBytes;
+    const Index _indexInDataStreamFile;
+    const Size _offsetInDataStreamFileBytes;
     const boost::optional<Index> _packetContextOffsetInPacketBits;
     const boost::optional<DataSize> _preambleSize;
     const boost::optional<DataSize> _expectedTotalSize;

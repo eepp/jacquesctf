@@ -43,7 +43,7 @@ void PacketDecodingErrorDetailsView::_redrawContent()
     this->_stylist().packetDecodingErrorDetailsView(*this, false);
 
     auto& packetIndexEntry = error.packetIndexEntry();
-    auto str = utils::sepNumber(static_cast<long long>(packetIndexEntry.natIndexInDataStream()), ',');
+    auto str = utils::sepNumber(static_cast<long long>(packetIndexEntry.natIndexInDataStreamFile()), ',');
 
     this->_print("%s", str.c_str());
 
@@ -67,7 +67,7 @@ void PacketDecodingErrorDetailsView::_redrawContent()
     this->_stylist().packetDecodingErrorDetailsView(*this, false);
 
     const auto offsetInPacketBits = error.decodingError().offset() -
-                                    packetIndexEntry.offsetInDataStreamBits();
+                                    packetIndexEntry.offsetInDataStreamFileBits();
 
     sizeUnit = utils::formatSize(offsetInPacketBits,
                                  utils::SizeFormatMode::FULL_FLOOR_WITH_EXTRA_BITS,
