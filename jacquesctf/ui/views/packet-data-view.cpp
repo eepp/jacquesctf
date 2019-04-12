@@ -286,6 +286,7 @@ void PacketDataView::_drawOffsets() const
 
     assert(_dataX > 0 && _rowSize > 0);
 
+    const auto &curRegionSegment = _state->currentPacketRegion()->segment();
     const auto& packetTotalSize = _state->activePacketState().packetIndexEntry().effectiveTotalSize();
     const auto maxOffsetWidth = _dataX - 1;
     auto offsetInPacketBits = _baseOffsetInPacketBits;
@@ -318,8 +319,18 @@ void PacketDataView::_drawOffsets() const
 
             this->_moveCursor({0, y});
 
-            const auto selected = _curOffsetInPacketBits >= offsetInPacketBits &&
-                                  _curOffsetInPacketBits < offsetInPacketBits + _rowSize;
+            const auto curRegionBaseOffsetBits = curRegionSegment.offsetInPacketBits() -
+                                                 curRegionSegment.offsetInPacketBits() % _rowSize.bits();
+
+            assert(curRegionSegment.endOffsetInPacketBits());
+
+            const auto curRegionBaseEndOffsetBits = (*curRegionSegment.endOffsetInPacketBits() - 1) -
+                                                    (*curRegionSegment.endOffsetInPacketBits() - 1) % _rowSize.bits();
+
+            assert(curRegionBaseEndOffsetBits >= curRegionBaseOffsetBits);
+
+            const auto selected = offsetInPacketBits >= curRegionBaseOffsetBits &&
+                                  offsetInPacketBits <= curRegionBaseEndOffsetBits;
 
             this->_stylist().packetDataViewOffset(*this, selected);
 
