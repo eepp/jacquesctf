@@ -40,7 +40,8 @@ void StatusView::_createEndPositions()
         positions.packetIndex = positions.packetCount + packetCountStr.size() + 1;
         positions.seqNum = positions.packetIndex + packetCountStr.size() + 5;
         positions.packetPercent = positions.seqNum + packetCountStr.size() + 6;
-        positions.curOffsetInPacketBits = positions.packetPercent + 9;
+        positions.curOffsetInDataStreamFileBits = positions.packetPercent + 9;
+        positions.curOffsetInPacketBits = positions.curOffsetInDataStreamFileBits + 17;
 
         const auto maxEntryIt = std::max_element(std::begin(dsf.packetIndexEntries()),
                                                  std::end(dsf.packetIndexEntries()),
@@ -95,17 +96,28 @@ void StatusView::_drawOffset()
     this->_stylist().statusViewStd(*this);
     this->_print(" %%");
 
-    // draw new
+    // draw new offset in packet
     this->_stylist().statusViewStd(*this, true);
 
-    const auto str = utils::sepNumber(_state->activePacketState().curOffsetInPacketBits(),
-                                      ',');
+    auto str = utils::sepNumber(_state->activePacketState().curOffsetInPacketBits(),
+                                ',');
 
     this->_moveAndPrint({this->contentRect().w -
                          _curEndPositions->curOffsetInPacketBits - 2 - str.size(),
                          0}, "%s", str.c_str());
     this->_stylist().statusViewStd(*this);
     this->_print(" b");
+
+    // draw new offset in data stream file
+    str = utils::sepNumber(_state->activeDataStreamFileState().curOffsetInDataStreamFileBits(),
+                           ',');
+    this->_moveAndPrint({this->contentRect().w -
+                         _curEndPositions->curOffsetInDataStreamFileBits - str.size() - 3,
+                         0}, "(", str.c_str());
+    this->_stylist().statusViewStd(*this);
+    this->_print(str.c_str());
+    this->_stylist().statusViewStd(*this);
+    this->_print(" b)");
 }
 
 void StatusView::_redrawContent()

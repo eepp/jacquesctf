@@ -86,6 +86,16 @@ public:
         return _activePacketState->curOffsetInPacketBits();
     }
 
+    Index curOffsetInDataStreamFileBits() const noexcept
+    {
+        if (!_activePacketState) {
+            return 0;
+        }
+
+        return _activePacketState->packetIndexEntry().offsetInDataStreamBits() +
+               _activePacketState->curOffsetInPacketBits();
+    }
+
     void gotoPacketRegionAtOffsetInPacketBits(const Index offsetInPacketBits)
     {
         if (!_activePacketState) {
