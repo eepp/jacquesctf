@@ -41,6 +41,11 @@ packets.
 * Anywhere in the application, you can change the current timestamp
   format (full date and time, nanoseconds since origin, or cycles) or
   size format (B/KiB/MiB/GiB, bytes and extra bits, and bits) of tables.
+* Permanent status bar with:
+** Current data stream file path.
+** Current offset within current packet and current data stream file.
+** Current offset as a percentage within current packet.
+** Current packet index and sequence number.
 * Packet table with details:
 ** Index within data stream file.
 ** Offset within data stream file.
