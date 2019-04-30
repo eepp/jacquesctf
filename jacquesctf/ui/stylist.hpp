@@ -26,6 +26,13 @@ public:
         NEXT,
     };
 
+    enum class TableViewCellStyle
+    {
+        NORMAL,
+        WARNING,
+        ERROR,
+    };
+
 public:
     Stylist();
     void viewBorder(const View& view, bool focused, bool emphasized) const;
@@ -37,12 +44,13 @@ public:
     void tableViewBoolCell(const View& view, bool value,
                            bool emphasized) const;
     void tableViewHeader(const View& view) const;
-    void tableViewSelection(const View& view, bool error = false) const;
-    void tableViewSelectionSep(const View& view, bool error = false) const;
+    void tableViewSelection(const View& view,
+                            TableViewCellStyle style = TableViewCellStyle::NORMAL) const;
+    void tableViewSelectionSep(const View& view,
+                               TableViewCellStyle style = TableViewCellStyle::NORMAL) const;
     void tableViewSep(const View& view) const;
-    void tableViewWarningRow(const View& view) const;
-    void tableViewWarningCell(const View& view) const;
-    void tableViewErrorCell(const View& view) const;
+    void tableViewCell(const View& view,
+                       TableViewCellStyle style = TableViewCellStyle::NORMAL) const;
     void textMore(const View& view) const;
     void stdDim(const View& view) const;
     void std(WINDOW *window, bool emphasized = false) const;
@@ -124,6 +132,7 @@ private:
         TABLE_VIEW_HEADER,
         BOOL_YES,
         BOOL_NO,
+        TABLE_VIEW_SELECTION_WARNING,
         TABLE_VIEW_SELECTION_ERROR,
         TEXT_MORE,
         TABLE_VIEW_SEP,

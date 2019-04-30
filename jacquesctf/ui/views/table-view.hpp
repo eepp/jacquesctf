@@ -475,11 +475,12 @@ private:
     void _clearRow(Index y);
     void _clearCell(const Point& pos, Size cellWidth);
     void _drawCellAlignedText(const Point& pos, Size cellWidth,
-                              const char *text, Size textWidth, bool selected,
+                              const char *text, Size textWidth,
+                              bool customStyle,
                               TableViewCell::TextAlignment alignment);
     void _drawCell(const Point& pos,
                    const TableViewColumnDescription& descr,
-                   const TableViewCell& cell, bool selected);
+                   const TableViewCell& cell, bool customStyle);
     void _drawHeader();
     void _next(Size count);
     void _prev(Size count);

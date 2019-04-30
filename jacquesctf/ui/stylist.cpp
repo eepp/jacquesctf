@@ -29,7 +29,8 @@ Stylist::Stylist()
     this->_registerStyle(_StyleId::TABLE_VIEW_HEADER, COLOR_BLACK, false, COLOR_GREEN);
     this->_registerStyle(_StyleId::BOOL_YES, COLOR_GREEN, false, -1);
     this->_registerStyle(_StyleId::BOOL_NO, COLOR_MAGENTA, false, -1);
-    this->_registerStyle(_StyleId::TABLE_VIEW_SELECTION_ERROR, COLOR_WHITE, false, COLOR_RED);
+    this->_registerStyle(_StyleId::TABLE_VIEW_SELECTION_ERROR, COLOR_RED, true, COLOR_CYAN);
+    this->_registerStyle(_StyleId::TABLE_VIEW_SELECTION_WARNING, COLOR_YELLOW, true, COLOR_CYAN);
     this->_registerStyle(_StyleId::TABLE_VIEW_TEXT_CELL_EMPHASIZED, COLOR_YELLOW, false, -1);
     this->_registerStyle(_StyleId::TABLE_VIEW_TS_CELL_NS_PART, COLOR_CYAN, false, -1);
     this->_registerStyle(_StyleId::TEXT_MORE, COLOR_MAGENTA, true, -1);
@@ -41,8 +42,8 @@ Stylist::Stylist()
     this->_registerStyle(_StyleId::PACKET_REGION_INFO_VIEW_STD, COLOR_WHITE, false, COLOR_MAGENTA);
     this->_registerStyle(_StyleId::PACKET_REGION_INFO_VIEW_VALUE, COLOR_YELLOW, true, COLOR_MAGENTA);
     this->_registerStyle(_StyleId::PACKET_REGION_INFO_VIEW_ERROR, COLOR_RED, false, COLOR_WHITE);
-    this->_registerStyle(_StyleId::TABLE_VIEW_WARNING_CELL, COLOR_WHITE, false, COLOR_YELLOW);
-    this->_registerStyle(_StyleId::TABLE_VIEW_ERROR_CELL, COLOR_RED, false, -1);
+    this->_registerStyle(_StyleId::TABLE_VIEW_WARNING_CELL, COLOR_YELLOW, true, -1);
+    this->_registerStyle(_StyleId::TABLE_VIEW_ERROR_CELL, COLOR_RED, true, -1);
     this->_registerStyle(_StyleId::SIMPLE_INPUT_VIEW_BORDER, COLOR_BLACK, false, COLOR_GREEN);
     this->_registerStyle(_StyleId::PACKET_INDEX_BUILD_PROGRESS_VIEW_PATH, COLOR_BLUE, false, -1);
     this->_registerStyle(_StyleId::DETAILS_VIEW_TYPE_INFO, COLOR_MAGENTA, true, -1);
@@ -197,17 +198,27 @@ void Stylist::tableViewHeader(const View& view) const
     this->_applyStyle(view, _StyleId::STD, A_REVERSE);
 }
 
-void Stylist::tableViewSelection(const View& view, const bool error) const
+void Stylist::tableViewSelection(const View& view,
+                                 const TableViewCellStyle style) const
 {
-    this->tableViewSelectionSep(view, error);
+    this->tableViewSelectionSep(view, style);
 }
 
-void Stylist::tableViewSelectionSep(const View& view, const bool error) const
+void Stylist::tableViewSelectionSep(const View& view,
+                                    const TableViewCellStyle style) const
 {
-    if (error) {
-        this->_applyStyle(view, _StyleId::TABLE_VIEW_SELECTION_ERROR, A_BOLD);
-    } else {
+    switch (style) {
+    case TableViewCellStyle::NORMAL:
         this->stdSelection(view);
+        break;
+
+    case TableViewCellStyle::WARNING:
+        this->_applyStyle(view, _StyleId::TABLE_VIEW_SELECTION_WARNING, A_BOLD);
+        break;
+
+    case TableViewCellStyle::ERROR:
+        this->_applyStyle(view, _StyleId::TABLE_VIEW_SELECTION_ERROR, A_BOLD);
+        break;
     }
 }
 
@@ -221,14 +232,22 @@ void Stylist::textMore(const View& view) const
     this->_applyStyle(view, _StyleId::TEXT_MORE, A_BOLD);
 }
 
-void Stylist::tableViewWarningCell(const View& view) const
+void Stylist::tableViewCell(const View& view,
+                            const TableViewCellStyle style) const
 {
-    this->_applyStyle(view, _StyleId::TABLE_VIEW_WARNING_CELL, A_BOLD);
-}
+    switch (style) {
+    case TableViewCellStyle::NORMAL:
+        this->std(view);
+        break;
 
-void Stylist::tableViewErrorCell(const View& view) const
-{
-    this->_applyStyle(view, _StyleId::TABLE_VIEW_ERROR_CELL, A_BOLD);
+    case TableViewCellStyle::WARNING:
+        this->_applyStyle(view, _StyleId::TABLE_VIEW_WARNING_CELL, A_BOLD);
+        break;
+
+    case TableViewCellStyle::ERROR:
+        this->_applyStyle(view, _StyleId::TABLE_VIEW_ERROR_CELL, A_BOLD);
+        break;
+    }
 }
 
 void Stylist::std(WINDOW *window, const bool emphasized) const

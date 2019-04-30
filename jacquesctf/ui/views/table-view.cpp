@@ -199,7 +199,7 @@ void TableView::_clearCell(const Point& pos, Size cellWidth)
 void TableView::_drawCellAlignedText(const Point& contentPos,
                                      const Size cellWidth,
                                      const char * const text,
-                                     Size textWidth, const bool selected,
+                                     Size textWidth, const bool customStyle,
                                      const TableViewCell::TextAlignment alignment)
 {
     bool textMore = false;
@@ -224,7 +224,7 @@ void TableView::_drawCellAlignedText(const Point& contentPos,
     }
 
     if (textMore) {
-        if (!selected) {
+        if (customStyle) {
             this->_stylist().textMore(*this);
         }
 
@@ -234,26 +234,16 @@ void TableView::_drawCellAlignedText(const Point& contentPos,
 
 void TableView::_drawCell(const Point& contentPos,
                           const TableViewColumnDescription& descr,
-                          const TableViewCell& cell, const bool selected)
+                          const TableViewCell& cell,
+                          const bool customStyle)
 {
-    const auto customStyle = !selected &&
-                             cell.style() == TableViewCell::Style::NORMAL;
-
-    if (!selected) {
-        if (cell.style() == TableViewCell::Style::ERROR) {
-            this->_stylist().tableViewErrorCell(*this);
-        } else if (cell.style() == TableViewCell::Style::WARNING) {
-            this->_stylist().tableViewWarningCell(*this);
-        }
-    }
-
     if (cell.na()) {
         if (customStyle) {
             this->_stylist().tableViewNaCell(*this, cell.emphasized());
         }
 
         this->_drawCellAlignedText(contentPos, descr.contentWidth(), "N/A", 3,
-                                   selected, cell.textAlignment());
+                                   customStyle, cell.textAlignment());
         return;
     }
 
@@ -264,7 +254,7 @@ void TableView::_drawCell(const Point& contentPos,
 
         this->_drawCellAlignedText(contentPos, descr.contentWidth(),
                                    rCell->text().c_str(), rCell->text().size(),
-                                   selected, cell.textAlignment());
+                                   customStyle, cell.textAlignment());
     } else if (const auto rCell = dynamic_cast<const BoolTableViewCell *>(&cell)) {
         if (customStyle) {
             this->_stylist().tableViewBoolCell(*this, rCell->value(),
@@ -274,7 +264,7 @@ void TableView::_drawCell(const Point& contentPos,
         this->_drawCellAlignedText(contentPos, descr.contentWidth(),
                                    rCell->value() ? "Yes" : "No",
                                    rCell->value() ? 3 : 2,
-                                   selected, cell.textAlignment());
+                                   customStyle, cell.textAlignment());
     } else if (const auto dsCell = dynamic_cast<const DataSizeTableViewCell *>(&cell)) {
         const auto parts = dsCell->size().format(dsCell->formatMode(), ',');
         const char *fmt = "%s %s";
@@ -293,7 +283,7 @@ void TableView::_drawCell(const Point& contentPos,
         }
 
         this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(),
-                                   std::strlen(buf.data()), selected,
+                                   std::strlen(buf.data()), customStyle,
                                    cell.textAlignment());
     } else if (const auto rCell = dynamic_cast<const IntTableViewCell *>(&cell)) {
         std::array<char, 32> buf;
@@ -348,7 +338,7 @@ void TableView::_drawCell(const Point& contentPos,
         }
 
         this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(),
-                                   std::strlen(buf.data()), selected,
+                                   std::strlen(buf.data()), customStyle,
                                    cell.textAlignment());
     } else if (const auto rCell = dynamic_cast<const TimestampTableViewCell *>(&cell)) {
         std::array<char, 32> buf;
@@ -364,7 +354,7 @@ void TableView::_drawCell(const Point& contentPos,
 
             this->_drawCellAlignedText(contentPos, descr.contentWidth(),
                                        buf.data(), std::strlen(buf.data()),
-                                       selected, cell.textAlignment());
+                                       customStyle, cell.textAlignment());
             break;
 
         case TimestampFormatMode::NS_FROM_ORIGIN:
@@ -405,7 +395,7 @@ void TableView::_drawCell(const Point& contentPos,
             }
 
             this->_drawCellAlignedText(contentPos, descr.contentWidth(),
-                                       str.c_str(), str.size(), selected,
+                                       str.c_str(), str.size(), customStyle,
                                        cell.textAlignment());
             break;
         }
@@ -480,7 +470,7 @@ void TableView::_drawCell(const Point& contentPos,
                 }
 
                 this->_drawCellAlignedText(contentPos, descr.contentWidth(),
-                                           "N/A", 3, selected,
+                                           "N/A", 3, customStyle,
                                            cell.textAlignment());
                 break;
             }
@@ -496,7 +486,7 @@ void TableView::_drawCell(const Point& contentPos,
 
         if (std::strlen(buf.data()) > 0) {
             this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(),
-                                       std::strlen(buf.data()), selected,
+                                       std::strlen(buf.data()), customStyle,
                                        cell.textAlignment());
         }
     } else if (const auto pCell = dynamic_cast<const PathTableViewCell *>(&cell)) {
@@ -515,11 +505,11 @@ void TableView::_drawCell(const Point& contentPos,
 
             this->_drawCellAlignedText(curPos, descr.contentWidth(),
                                        dirName.c_str(), dirName.size(),
-                                       selected,
+                                       customStyle,
                                        TableViewCell::TextAlignment::LEFT);
             curPos.x += dirName.size();
             this->_drawCellAlignedText(curPos, descr.contentWidth(),
-                                       "/", 1, selected,
+                                       "/", 1, customStyle,
                                        TableViewCell::TextAlignment::LEFT);
             curPos.x += 1;
         }
@@ -529,10 +519,26 @@ void TableView::_drawCell(const Point& contentPos,
         }
 
         this->_drawCellAlignedText(curPos, descr.contentWidth(),
-                                   filename.c_str(), filename.size(), selected,
+                                   filename.c_str(), filename.size(),
+                                   customStyle,
                                    TableViewCell::TextAlignment::LEFT);
     } else {
         std::abort();
+    }
+}
+
+static inline
+Stylist::TableViewCellStyle stylistTvcStyleFromTvcStyle(const TableViewCell::Style style)
+{
+    switch (style) {
+    case TableViewCell::Style::NORMAL:
+        return Stylist::TableViewCellStyle::NORMAL;
+
+    case TableViewCell::Style::WARNING:
+        return Stylist::TableViewCellStyle::WARNING;
+
+    case TableViewCell::Style::ERROR:
+        return Stylist::TableViewCellStyle::ERROR;
     }
 }
 
@@ -545,40 +551,43 @@ void TableView::_drawCells(const Index index,
                           this->_indexIsSelected(index);
     Index x = 0;
     const auto y = _contentYFromIndex(index);
-    const bool error = cells.front()->style() == TableViewCell::Style::ERROR;
 
+    // set style to clear row initially
     if (selected) {
-        this->_stylist().tableViewSelection(*this, error);
+        this->_stylist().tableViewSelection(*this);
     } else {
-        this->_stylist().tableViewSep(*this);
+        this->_stylist().tableViewCell(*this);
     }
 
     this->_clearRow(y);
 
     for (Index column = 0; column < cells.size(); ++column) {
         const auto& descr = _columnDescrs[column];
+        const auto& cell = *cells[column];
+        auto cellStylistTvcStyle = stylistTvcStyleFromTvcStyle(cell.style());
 
-        this->_drawCell({x, y}, _columnDescrs[column], *cells[column], selected);
-        x += descr.contentWidth();
-
-        if (!selected) {
-            this->_stylist().tableViewSep(*this);
+        if (selected) {
+            this->_stylist().tableViewSelection(*this, cellStylistTvcStyle);
+        } else {
+            this->_stylist().tableViewCell(*this, cellStylistTvcStyle);
         }
+
+        this->_drawCell({x, y}, _columnDescrs[column], cell,
+                        !selected && cell.style() == TableViewCell::Style::NORMAL);
+        x += descr.contentWidth();
 
         if (column == cells.size() - 1) {
             break;
         }
 
         if (selected) {
-            this->_stylist().tableViewSelectionSep(*this, error);
+            this->_stylist().tableViewSelectionSep(*this,
+                                                   Stylist::TableViewCellStyle::NORMAL);
+        } else {
+            this->_stylist().tableViewSep(*this);
         }
 
         this->_putChar({x, y}, ACS_VLINE);
-
-        if (selected) {
-            this->_stylist().tableViewSelection(*this, error);
-        }
-
         x += 1;
     }
 }
@@ -590,9 +599,9 @@ void TableView::_drawWarningRow(const Index index, const std::string& msg)
     const auto y = _contentYFromIndex(index);
 
     if (selected) {
-        this->_stylist().tableViewSelection(*this);
+        this->_stylist().tableViewSelection(*this, Stylist::TableViewCellStyle::WARNING);
     } else {
-        this->_stylist().tableViewWarningCell(*this);
+        this->_stylist().tableViewCell(*this, Stylist::TableViewCellStyle::WARNING);
     }
 
     this->_clearRow(y);
