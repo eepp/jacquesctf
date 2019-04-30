@@ -126,6 +126,12 @@ void PacketTableView::_drawRow(const Index index)
 
     const auto& entry = dsf.packetIndexEntry(index);
     const auto prevEntry = (index == 0) ? nullptr : &dsf.packetIndexEntry(index - 1);
+    const auto nextEntry = (index >= dsf.packetCount() - 1) ? nullptr : &dsf.packetIndexEntry(index + 1);
+
+    // set all cell styles to normal initially
+    for (auto& cell : _row) {
+        cell->style(TableViewCell::Style::NORMAL);
+    }
 
     static_cast<UnsignedIntTableViewCell&>(*_row[0]).value(entry.natIndexInDataStreamFile());
     static_cast<DataSizeTableViewCell&>(*_row[1]).size(entry.offsetInDataStreamFileBits());
@@ -136,10 +142,20 @@ void PacketTableView::_drawRow(const Index index)
 
     if (_row.size() >= at + 1) {
         if (entry.beginningTimestamp()) {
-            _row[4]->na(false);
-            static_cast<TimestampTableViewCell&>(*_row[4]).ts(*entry.beginningTimestamp());
+            if (prevEntry && prevEntry->endTimestamp()) {
+                if (*entry.beginningTimestamp() < *prevEntry->endTimestamp()) {
+                    _row[at]->style(TableViewCell::Style::ERROR);
+                }
+            }
+
+            if (entry.endTimestamp() && *entry.beginningTimestamp() > *entry.endTimestamp()) {
+                _row[at]->style(TableViewCell::Style::ERROR);
+            }
+
+            _row[at]->na(false);
+            static_cast<TimestampTableViewCell&>(*_row[at]).ts(*entry.beginningTimestamp());
         } else {
-            _row[4]->na(true);
+            _row[at]->na(true);
         }
 
         ++at;
@@ -147,6 +163,16 @@ void PacketTableView::_drawRow(const Index index)
 
     if (_row.size() >= at + 1) {
         if (entry.endTimestamp()) {
+            if (entry.beginningTimestamp() && *entry.beginningTimestamp() > *entry.endTimestamp()) {
+                _row[at]->style(TableViewCell::Style::ERROR);
+            }
+
+            if (nextEntry && nextEntry->beginningTimestamp()) {
+                if (*entry.endTimestamp() < *nextEntry->beginningTimestamp()) {
+                    _row[at]->style(TableViewCell::Style::ERROR);
+                }
+            }
+
             _row[at]->na(false);
             static_cast<TimestampTableViewCell&>(*_row[at]).ts(*entry.endTimestamp());
         } else {
@@ -246,12 +272,8 @@ void PacketTableView::_drawRow(const Index index)
     }
 
     for (auto& cell : _row) {
-        if (entry.isInvalid()) {
+        if (entry.isInvalid() && cell->style() == TableViewCell::Style::NORMAL) {
             cell->style(TableViewCell::Style::ERROR);
-        } else {
-            if (cell->style() == TableViewCell::Style::ERROR) {
-                cell->style(TableViewCell::Style::NORMAL);
-            }
         }
     }
 
