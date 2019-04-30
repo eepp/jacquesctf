@@ -168,7 +168,7 @@ void PacketTableView::_drawRow(const Index index)
             }
 
             if (nextEntry && nextEntry->beginningTimestamp()) {
-                if (*entry.endTimestamp() < *nextEntry->beginningTimestamp()) {
+                if (*entry.endTimestamp() > *nextEntry->beginningTimestamp()) {
                     _row[at]->style(TableViewCell::Style::ERROR);
                 }
             }
