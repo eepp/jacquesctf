@@ -112,6 +112,8 @@ void DataStreamFileTableView::_drawRow(const Index index)
     const auto& dsf = _state->dataStreamFileState(index).dataStreamFile();
 
     static_cast<PathTableViewCell&>(*_row[0]).path(dsf.path());
+    _row[0]->style(dsf.hasError() ? TableViewCell::Style::ERROR :
+                                    TableViewCell::Style::NORMAL);
     static_cast<DataSizeTableViewCell&>(*_row[1]).size(dsf.fileSize());
     static_cast<UnsignedIntTableViewCell&>(*_row[2]).value(dsf.packetCount());
 
@@ -125,6 +127,10 @@ void DataStreamFileTableView::_drawRow(const Index index)
     }
 
     if (hasOnePacket && firstEntry->beginningTimestamp()) {
+        if (lastEntry->endTimestamp() && *firstEntry->beginningTimestamp() > *lastEntry->endTimestamp()) {
+            _row[3]->style(TableViewCell::Style::ERROR);
+        }
+
         _row[3]->na(false);
         static_cast<TimestampTableViewCell&>(*_row[3]).ts(*firstEntry->beginningTimestamp());
     } else {
@@ -135,6 +141,10 @@ void DataStreamFileTableView::_drawRow(const Index index)
 
     if (_row.size() >= at + 1) {
         if (hasOnePacket && lastEntry->endTimestamp()) {
+            if (firstEntry->beginningTimestamp() && *firstEntry->beginningTimestamp() > *lastEntry->endTimestamp()) {
+                _row[at]->style(TableViewCell::Style::ERROR);
+            }
+
             _row[at]->na(false);
             static_cast<TimestampTableViewCell&>(*_row[at]).ts(*lastEntry->endTimestamp());
         } else {
@@ -179,14 +189,6 @@ void DataStreamFileTableView::_drawRow(const Index index)
         }
 
         ++at;
-    }
-
-    for (auto& cell : _row) {
-        if (dsf.hasError()) {
-            cell->style(TableViewCell::Style::ERROR);
-        } else {
-            cell->style(TableViewCell::Style::NORMAL);
-        }
     }
 
     this->_drawCells(index, _row);
