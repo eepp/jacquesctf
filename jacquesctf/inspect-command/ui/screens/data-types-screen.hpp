@@ -18,7 +18,6 @@
 #include "data-stream-type-table-view.hpp"
 #include "data-type-explorer-view.hpp"
 #include "screen.hpp"
-#include "interactive.hpp"
 #include "search-controller.hpp"
 
 namespace jacques {

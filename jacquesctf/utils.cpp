@@ -16,6 +16,7 @@
 #include "utils.hpp"
 #include "metadata.hpp"
 #include "config.hpp"
+#include "inspect-command.hpp"
 
 namespace bfs = boost::filesystem;
 
@@ -475,6 +476,8 @@ boost::optional<std::string> tryFunc(const std::function<void ()>& func)
         ss << "Command-line error: " << ex.what();
     } catch (const bfs::filesystem_error& ex) {
         ss << "File system error: " << ex.what();
+    } catch (const InspectError& ex) {
+        ss << "Inspect command error: " << ex.what();
     } catch (const std::exception& ex) {
         ss << ex.what();
     } catch (...) {

@@ -9,7 +9,7 @@
 #include <cassert>
 
 #include "config.hpp"
-#include "list-packets.hpp"
+#include "list-packets-command.hpp"
 #include "metadata.hpp"
 #include "data-stream-file.hpp"
 #include "time-ops.hpp"
@@ -92,7 +92,7 @@ static void printRow(const PacketIndexEntry& indexEntry,
     std::cout << (indexEntry.isInvalid() ? "no" : "yes") << std::endl;
 }
 
-void listPackets(const ListPacketsConfig& cfg)
+void listPacketsCommand(const ListPacketsConfig& cfg)
 {
     const Metadata metadata {cfg.path().parent_path() / "metadata"};
     DataStreamFile dsf {cfg.path(), metadata};

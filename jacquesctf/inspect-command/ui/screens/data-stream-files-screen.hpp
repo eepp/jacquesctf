@@ -5,42 +5,39 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_PACKETS_SCREEN_HPP
-#define _JACQUES_PACKETS_SCREEN_HPP
+#ifndef _JACQUES_DATA_STREAM_FILES_SCREEN_HPP
+#define _JACQUES_DATA_STREAM_FILES_SCREEN_HPP
 
 #include "aliases.hpp"
 #include "stylist.hpp"
 #include "state.hpp"
-#include "packet-table-view.hpp"
-#include "search-controller.hpp"
+#include "data-stream-file-table-view.hpp"
 #include "screen.hpp"
-#include "interactive.hpp"
 #include "cycle-wheel.hpp"
 #include "data-size.hpp"
 
 namespace jacques {
 
-class PacketsScreen :
+class DataStreamFilesScreen :
     public Screen
 {
 public:
-    explicit PacketsScreen(const Rectangle& rect, const InspectConfig& cfg,
-                           const Stylist& stylist, State& state);
+    explicit DataStreamFilesScreen(const Rectangle& rect,
+                                   const InspectConfig& cfg,
+                     		       const Stylist& stylist, State& state);
 
-protected:
+private:
     void _redraw() override;
     void _resized() override;
     KeyHandlingReaction _handleKey(int key) override;
     void _visibilityChanged() override;
 
 private:
-    std::unique_ptr<PacketTableView> _ptView;
-    SearchController _searchController;
-    std::unique_ptr<const SearchQuery> _lastQuery;
+    std::unique_ptr<DataStreamFileTableView> _view;
     CycleWheel<TimestampFormatMode> _tsFormatModeWheel;
     CycleWheel<utils::SizeFormatMode> _dsFormatModeWheel;
 };
 
 } // namespace jacques
 
-#endif // _JACQUES_PACKETS_SCREEN_HPP
+#endif // _JACQUES_DATA_STREAM_FILES_SCREEN_HPP

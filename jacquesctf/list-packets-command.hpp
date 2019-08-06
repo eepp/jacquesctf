@@ -5,15 +5,15 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_LIST_PACKETS_HPP
-#define _JACQUES_LIST_PACKETS_HPP
+#ifndef _JACQUES_LIST_PACKETS_COMMAND_HPP
+#define _JACQUES_LIST_PACKETS_COMMAND_HPP
 
 #include "config.hpp"
 
 namespace jacques {
 
-void listPackets(const ListPacketsConfig& cfg);
+void listPacketsCommand(const ListPacketsConfig& cfg);
 
 } // namespace jacques
 
-#endif // _JACQUES_LIST_PACKETS_HPP
+#endif // _JACQUES_LIST_PACKETS_COMMAND_HPP

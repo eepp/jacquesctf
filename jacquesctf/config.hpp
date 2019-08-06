@@ -20,7 +20,7 @@ class CliError :
     public std::runtime_error
 {
 public:
-    CliError(const std::string& msg);
+    explicit CliError(const std::string& msg);
 };
 
 /*

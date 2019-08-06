@@ -60,56 +60,56 @@ add_executable (
     data/scope.cpp
     data/timestamp.cpp
     data/trace.cpp
+    inspect-command/state/data-stream-file-state.cpp
+    inspect-command/state/packet-state.cpp
+    inspect-command/state/search-parser.cpp
+    inspect-command/state/state.cpp
+    inspect-command/ui/inspect-command.cpp
+    inspect-command/ui/screens/data-stream-files-screen.cpp
+    inspect-command/ui/screens/data-types-screen.cpp
+    inspect-command/ui/screens/help-screen.cpp
+    inspect-command/ui/screens/inspect-screen.cpp
+    inspect-command/ui/screens/packets-screen.cpp
+    inspect-command/ui/screens/screen.cpp
+    inspect-command/ui/screens/trace-info-screen.cpp
+    inspect-command/ui/search-controller.cpp
+    inspect-command/ui/stylist.cpp
+    inspect-command/ui/views/abstract-data-type-details.cpp
+    inspect-command/ui/views/data-stream-file-table-view.cpp
+    inspect-command/ui/views/data-stream-type-table-view.cpp
+    inspect-command/ui/views/data-type-details.cpp
+    inspect-command/ui/views/data-type-explorer-view.cpp
+    inspect-command/ui/views/event-record-table-view.cpp
+    inspect-command/ui/views/event-record-type-table-view.cpp
+    inspect-command/ui/views/help-view.cpp
+    inspect-command/ui/views/input-view.cpp
+    inspect-command/ui/views/packet-checkpoints-build-progress-view.cpp
+    inspect-command/ui/views/packet-data-view.cpp
+    inspect-command/ui/views/packet-decoding-error-details-view.cpp
+    inspect-command/ui/views/packet-index-build-progress-view.cpp
+    inspect-command/ui/views/packet-region-info-view.cpp
+    inspect-command/ui/views/packet-table-view.cpp
+    inspect-command/ui/views/scroll-view.cpp
+    inspect-command/ui/views/search-input-view.cpp
+    inspect-command/ui/views/simple-message-view.cpp
+    inspect-command/ui/views/status-view.cpp
+    inspect-command/ui/views/sub-data-type-explorer-view.cpp
+    inspect-command/ui/views/table-view.cpp
+    inspect-command/ui/views/text-input-view.cpp
+    inspect-command/ui/views/trace-info-view.cpp
+    inspect-command/ui/views/view.cpp
     jacques.cpp
-    list-packets.cpp
-    print-metadata-text.cpp
-    state/data-stream-file-state.cpp
-    state/packet-state.cpp
-    state/search-parser.cpp
-    state/state.cpp
-    ui/interactive.cpp
-    ui/screens/data-stream-files-screen.cpp
-    ui/screens/data-types-screen.cpp
-    ui/screens/help-screen.cpp
-    ui/screens/inspect-screen.cpp
-    ui/screens/packets-screen.cpp
-    ui/screens/screen.cpp
-    ui/screens/trace-info-screen.cpp
-    ui/search-controller.cpp
-    ui/stylist.cpp
-    ui/views/abstract-data-type-details.cpp
-    ui/views/data-stream-file-table-view.cpp
-    ui/views/data-stream-type-table-view.cpp
-    ui/views/data-type-details.cpp
-    ui/views/data-type-explorer-view.cpp
-    ui/views/event-record-table-view.cpp
-    ui/views/event-record-type-table-view.cpp
-    ui/views/help-view.cpp
-    ui/views/input-view.cpp
-    ui/views/packet-checkpoints-build-progress-view.cpp
-    ui/views/packet-data-view.cpp
-    ui/views/packet-decoding-error-details-view.cpp
-    ui/views/packet-index-build-progress-view.cpp
-    ui/views/packet-region-info-view.cpp
-    ui/views/packet-table-view.cpp
-    ui/views/scroll-view.cpp
-    ui/views/search-input-view.cpp
-    ui/views/simple-message-view.cpp
-    ui/views/status-view.cpp
-    ui/views/sub-data-type-explorer-view.cpp
-    ui/views/table-view.cpp
-    ui/views/text-input-view.cpp
-    ui/views/trace-info-view.cpp
-    ui/views/view.cpp
+    list-packets-command.cpp
+    print-metadata-text-command.cpp
     utils.cpp
 )
 target_include_directories (
     jacquesctf PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/ui
-    ${CMAKE_CURRENT_SOURCE_DIR}/ui/views
-    ${CMAKE_CURRENT_SOURCE_DIR}/ui/screens
-    ${CMAKE_CURRENT_SOURCE_DIR}/state
+    ${CMAKE_CURRENT_SOURCE_DIR}/inspect-command/ui
+    ${CMAKE_CURRENT_SOURCE_DIR}/inspect-command/ui/views
+    ${CMAKE_CURRENT_SOURCE_DIR}/inspect-command/ui/screens
+    ${CMAKE_CURRENT_SOURCE_DIR}/inspect-command/state
     ${CMAKE_CURRENT_SOURCE_DIR}/data
     ${CMAKE_SOURCE_DIR}/logging
     ${CURSES_INCLUDE_DIR}

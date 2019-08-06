@@ -18,11 +18,10 @@
 #include <boost/filesystem.hpp>
 
 #include "config.hpp"
-#include "interactive.hpp"
 #include "utils.hpp"
-#include "metadata.hpp"
-#include "print-metadata-text.hpp"
-#include "list-packets.hpp"
+#include "print-metadata-text-command.hpp"
+#include "list-packets-command.hpp"
+#include "inspect-command.hpp"
 
 namespace bfs = boost::filesystem;
 
@@ -71,11 +70,11 @@ static bool jacques(const int argc, const char *argv[])
     } else if (dynamic_cast<const PrintVersionConfig *>(cfg.get())) {
         printVersion();
     } else if (const auto specCfg = dynamic_cast<const PrintMetadataTextConfig *>(cfg.get())) {
-        printMetadataText(*specCfg);
+        printMetadataTextCommand(*specCfg);
     } else if (const auto specCfg = dynamic_cast<const ListPacketsConfig *>(cfg.get())) {
-        listPackets(*specCfg);
+        listPacketsCommand(*specCfg);
     } else if (const auto specCfg = dynamic_cast<const InspectConfig *>(cfg.get())) {
-        return startInteractive(*specCfg);
+        inspectCommand(*specCfg);
     } else {
         std::abort();
     }

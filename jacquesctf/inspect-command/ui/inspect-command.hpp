@@ -5,8 +5,10 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_INTERACTIVE_HPP
-#define _JACQUES_INTERACTIVE_HPP
+#ifndef _JACQUES_INSPECT_COMMAND_HPP
+#define _JACQUES_INSPECT_COMMAND_HPP
+
+#include <stdexcept>
 
 namespace jacques {
 
@@ -19,6 +21,13 @@ enum class KeyHandlingReaction
 
 class InspectConfig;
 
+class InspectError :
+    public std::runtime_error
+{
+public:
+    InspectError(const std::string& msg);
+};
+
 /*
  * Stats the interactive (ncurses) part of Jacques CTF.
  *
@@ -26,8 +35,8 @@ class InspectConfig;
  * manually quits. The function eventually registers a handler for the
  * SIGINT signal so that the program quits immediately.
  */
-bool startInteractive(const InspectConfig& cfg);
+void inspectCommand(const InspectConfig& cfg);
 
 } // namespace jacques
 
-#endif // _JACQUES_INTERACTIVE_HPP
+#endif // _JACQUES_INSPECT_COMMAND_HPP

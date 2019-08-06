@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <boost/optional.hpp>
 
-#include "interactive.hpp"
+#include "inspect-command.hpp"
 #include "config.hpp"
 #include "stylist.hpp"
 #include "state.hpp"
@@ -39,6 +39,11 @@ namespace jacques {
 
 static bool screenInited = false;
 
+InspectError::InspectError(const std::string& msg) :
+    std::runtime_error {msg}
+{
+}
+
 /*
  * Releases the terminal.
  */
@@ -61,7 +66,7 @@ static bool termSizeOk()
 /*
  * Initializes and takes control of the terminal.
  */
-static bool initScreen()
+static void initScreen()
 {
     initscr();
     screenInited = true;
@@ -70,12 +75,14 @@ static bool initScreen()
         finiScreen();
 
         if (!has_colors()) {
-            utils::error() << "Cannot continue: your terminal does not support colors.\n";
+            throw InspectError {
+                "Cannot continue: your terminal does not support colors."
+            };
         } else if (!termSizeOk()) {
-            utils::error() << "Cannot continue: terminal size must be at least 80x16.\n";
+            throw InspectError {
+                "Cannot continue: terminal size must be at least 80x16."
+            };
         }
-
-        return false;
     }
 
     // do not print user keys
@@ -98,8 +105,6 @@ static bool initScreen()
 
     // support user's foreground/background colors
     use_default_colors();
-
-    return true;
 }
 
 static void sigHandler(const int signo)
@@ -122,10 +127,10 @@ static void registerSignals()
     JACQUES_UNUSED(ret);
 }
 
-static bool init()
+static void init()
 {
     registerSignals();
-    return initScreen();
+    initScreen();
 }
 
 static void buildIndexes(State& state, const Stylist& stylist)
@@ -241,7 +246,7 @@ public:
     }
 };
 
-static bool tryStartInteractive(const InspectConfig& cfg)
+static void startInteractive(const InspectConfig& cfg)
 {
     auto stylist = std::make_unique<const Stylist>();
 
@@ -255,9 +260,7 @@ static bool tryStartInteractive(const InspectConfig& cfg)
                                          packetCheckpointsBuildProgressUpdater);
 
     if (state->dataStreamFileStates().empty()) {
-        finiScreen();
-        utils::error() << "All data stream files to inspect are empty.\n";
-        return false;
+        throw InspectError {"All data stream files to inspect are empty."};
     }
 
     auto screenRect = Rectangle {{0, 0}, static_cast<Size>(COLS),
@@ -517,16 +520,11 @@ static bool tryStartInteractive(const InspectConfig& cfg)
 
         doupdate();
     }
-
-    return true;
 }
 
-bool startInteractive(const InspectConfig& cfg)
+void inspectCommand(const InspectConfig& cfg)
 {
-    if (!init()) {
-        utils::error() << "Cannot initialize screen and signal handling.\n";
-        return false;
-    }
+    init();
 
     /*
      * Initial refresh() because getch() implicitly calls refresh(),
@@ -535,17 +533,15 @@ bool startInteractive(const InspectConfig& cfg)
      */
     refresh();
 
-    bool res;
-
+    // release the terminal whatever the outcome
     try {
-        res = tryStartInteractive(cfg);
+        startInteractive(cfg);
     } catch (...) {
         finiScreen();
         throw;
     }
 
     finiScreen();
-    return res;
 }
 
 } // namespace jacques

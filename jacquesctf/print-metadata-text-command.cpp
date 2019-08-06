@@ -9,11 +9,11 @@
 
 #include "config.hpp"
 #include "metadata.hpp"
-#include "print-metadata-text.hpp"
+#include "print-metadata-text-command.hpp"
 
 namespace jacques {
 
-void printMetadataText(const PrintMetadataTextConfig& cfg)
+void printMetadataTextCommand(const PrintMetadataTextConfig& cfg)
 {
     const Metadata metadata {cfg.path()};
 

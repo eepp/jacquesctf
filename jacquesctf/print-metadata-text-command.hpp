@@ -5,15 +5,15 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_PRINT_METADATA_TEXT_HPP
-#define _JACQUES_PRINT_METADATA_TEXT_HPP
+#ifndef _JACQUES_PRINT_METADATA_TEXT_COMMAND_HPP
+#define _JACQUES_PRINT_METADATA_TEXT_COMMAND_HPP
 
 #include "config.hpp"
 
 namespace jacques {
 
-void printMetadataText(const PrintMetadataTextConfig& cfg);
+void printMetadataTextCommand(const PrintMetadataTextConfig& cfg);
 
 } // namespace jacques
 
-#endif // _JACQUES_PRINT_METADATA_TEXT_HPP
+#endif // _JACQUES_PRINT_METADATA_TEXT_COMMAND_HPP

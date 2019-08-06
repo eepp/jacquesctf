@@ -10,7 +10,7 @@
 
 #include <memory>
 
-#include "interactive.hpp"
+#include "inspect-command.hpp"
 #include "rectangle.hpp"
 #include "config.hpp"
 #include "stylist.hpp"
