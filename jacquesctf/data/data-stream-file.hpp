@@ -8,6 +8,7 @@
 #ifndef _JACQUES_DATA_STREAM_FILE_HPP
 #define _JACQUES_DATA_STREAM_FILE_HPP
 
+#include <cassert>
 #include <vector>
 #include <functional>
 #include <boost/filesystem.hpp>
@@ -66,11 +67,13 @@ public:
 
     const std::vector<PacketIndexEntry>& packetIndexEntries() const noexcept
     {
+        assert(_isIndexBuilt);
         return _index;
     }
 
     std::vector<PacketIndexEntry>& packetIndexEntries() noexcept
     {
+        assert(_isIndexBuilt);
         return _index;
     }
 
