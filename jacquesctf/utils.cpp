@@ -360,7 +360,7 @@ std::pair<std::string, std::string> formatNs(long long ns,
 static std::string formatMetadataParseError(const std::string& path,
                                             const yactfr::MetadataParseError& error)
 {
-    std::stringstream ss;
+    std::ostringstream ss;
 
     for (auto it = std::rbegin(error.errorMessages());
             it != std::rend(error.errorMessages()); ++it) {
@@ -459,7 +459,7 @@ static void maybeAppendPeriod(std::string& str)
 
 boost::optional<std::string> tryFunc(const std::function<void ()>& func)
 {
-    std::stringstream ss;
+    std::ostringstream ss;
 
     try {
         func();
