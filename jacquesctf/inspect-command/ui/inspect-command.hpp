@@ -21,13 +21,6 @@ enum class KeyHandlingReaction
 
 class InspectConfig;
 
-class InspectError :
-    public std::runtime_error
-{
-public:
-    InspectError(const std::string& msg);
-};
-
 /*
  * Stats the interactive (ncurses) part of Jacques CTF.
  *

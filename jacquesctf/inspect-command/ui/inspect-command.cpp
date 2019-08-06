@@ -29,7 +29,7 @@
 #include "utils.hpp"
 #include "packet-checkpoints-build-listener.hpp"
 #include "data-size.hpp"
-
+#include "command-error.hpp"
 #include "packet-region.hpp"
 #include "padding-packet-region.hpp"
 #include "content-packet-region.hpp"
@@ -38,11 +38,6 @@
 namespace jacques {
 
 static bool screenInited = false;
-
-InspectError::InspectError(const std::string& msg) :
-    std::runtime_error {msg}
-{
-}
 
 /*
  * Releases the terminal.
@@ -75,11 +70,11 @@ static void initScreen()
         finiScreen();
 
         if (!has_colors()) {
-            throw InspectError {
+            throw CommandError {
                 "Cannot continue: your terminal does not support colors."
             };
         } else if (!termSizeOk()) {
-            throw InspectError {
+            throw CommandError {
                 "Cannot continue: terminal size must be at least 80x16."
             };
         }
@@ -260,7 +255,7 @@ static void startInteractive(const InspectConfig& cfg)
                                          packetCheckpointsBuildProgressUpdater);
 
     if (state->dataStreamFileStates().empty()) {
-        throw InspectError {"All data stream files to inspect are empty."};
+        throw CommandError {"All data stream files to inspect are empty."};
     }
 
     auto screenRect = Rectangle {{0, 0}, static_cast<Size>(COLS),
