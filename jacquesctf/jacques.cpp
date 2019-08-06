@@ -21,6 +21,7 @@
 #include "interactive.hpp"
 #include "utils.hpp"
 #include "metadata.hpp"
+#include "print-metadata-text.hpp"
 
 namespace bfs = boost::filesystem;
 
@@ -45,15 +46,6 @@ static void printCliUsage(const char *cmdName)
 static void printVersion()
 {
     std::cout << "Jacques CTF " JACQUES_VERSION << std::endl;
-}
-
-static void printMetadataText(const PrintMetadataTextConfig& cfg)
-{
-    const Metadata metadata {cfg.path()};
-
-    // not appending any newline to print the exact text
-    std::cout << metadata.text();
-    std::cout.flush();
 }
 
 static bool jacques(const int argc, const char *argv[])
