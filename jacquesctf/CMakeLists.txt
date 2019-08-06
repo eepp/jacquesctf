@@ -41,6 +41,7 @@ find_package (Threads REQUIRED)
 add_executable (
     jacquesctf
     config.cpp
+    copy-packets-command.cpp
     data/content-packet-region.cpp
     data/data-size.cpp
     data/data-stream-file.cpp

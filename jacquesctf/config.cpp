@@ -52,11 +52,20 @@ PrintMetadataTextConfig::PrintMetadataTextConfig(const bfs::path& path) :
 {
 }
 
-ListPacketsConfig::ListPacketsConfig(const boost::filesystem::path& path,
+ListPacketsConfig::ListPacketsConfig(const bfs::path& path,
                                      Format format, bool withHeader) :
     SinglePathConfig {path},
     _format {format},
     _withHeader {withHeader}
+{
+}
+
+CopyPacketsConfig::CopyPacketsConfig(const bfs::path& srcPath,
+                                     const std::string& packetIndexes,
+                                     const bfs::path& dstPath) :
+    _srcPath {srcPath},
+    _packetIndexes {packetIndexes},
+    _dstPath {dstPath}
 {
 }
 
@@ -224,12 +233,26 @@ static std::unique_ptr<const Config> inspectConfigFromArgs(const std::vector<std
     return std::make_unique<InspectConfig>(std::move(expandedPaths));
 }
 
-static std::unique_ptr<const Config> listPacketsConfigFromArgs(const std::vector<std::string>& args)
+static void checkLooksLikeDataStreamFile(const bfs::path& path)
 {
-    if (args.empty()) {
-        throw CliError {"Missing data stream file path."};
+    if (!bfs::is_regular_file(path)) {
+        std::ostringstream ss;
+
+        ss << "`" << path.string() << "` is not a regular file.";
+        throw CliError {ss.str()};
     }
 
+    if (path.filename() == "metadata") {
+        std::ostringstream ss;
+
+        ss << "Cannot list the packets of a metadata file: `" <<
+              path.string() << "`.";
+        throw CliError {ss.str()};
+    }
+}
+
+static std::unique_ptr<const Config> listPacketsConfigFromArgs(const std::vector<std::string>& args)
+{
     bpo::options_description optDesc {""};
 
     optDesc.add_options()
@@ -264,24 +287,70 @@ static std::unique_ptr<const Config> listPacketsConfigFromArgs(const std::vector
 
     const auto path = bfs::path {vm["path"].as<std::string>()};
 
-    if (!bfs::is_regular_file(path)) {
-        std::ostringstream ss;
-
-        ss << "`" << path.string() << "` is not a regular file.";
-        throw CliError {ss.str()};
-    }
-
-    if (path.filename() == "metadata") {
-        std::ostringstream ss;
-
-        ss << "Cannot list the packets of a metadata file: `" <<
-              path.string() << "`.";
-        throw CliError {ss.str()};
-    }
-
+    checkLooksLikeDataStreamFile(path);
     return std::make_unique<ListPacketsConfig>(path,
                                                ListPacketsConfig::Format::MACHINE,
                                                vm.count("header") == 1);
+}
+
+static std::unique_ptr<const Config> copyPacketsConfigFromArgs(const std::vector<std::string>& args)
+{
+    bpo::options_description optDesc {""};
+
+    optDesc.add_options()
+        ("src-path", bpo::value<std::string>(), "")
+        ("packet-indexes", bpo::value<std::string>(), "")
+        ("dst-path", bpo::value<std::string>(), "");
+
+    bpo::positional_options_description posDesc;
+
+    posDesc.add("src-path", 1)
+           .add("packet-indexes", 1)
+           .add("dst-path", 1);
+
+    bpo::variables_map vm;
+
+    try {
+        bpo::store(bpo::command_line_parser(args).options(optDesc).
+                   positional(posDesc).run(), vm);
+    } catch (const bpo::error& ex) {
+        throw CliError {ex.what()};
+    } catch (...) {
+        std::abort();
+    }
+
+    if (vm.count("src-path") == 0) {
+        throw CliError {"Missing source data stream file path."};
+    }
+
+    if (vm.count("packet-indexes") == 0) {
+        throw CliError {"Missing packet indexes."};
+    }
+
+    if (vm.count("dst-path") == 0) {
+        throw CliError {"Missing destination data stream file path."};
+    }
+
+    const auto srcPath = bfs::path {vm["src-path"].as<std::string>()};
+    const auto dstPath = bfs::path {vm["dst-path"].as<std::string>()};
+
+    checkLooksLikeDataStreamFile(srcPath);
+
+    if (bfs::exists(dstPath)) {
+        checkLooksLikeDataStreamFile(dstPath);
+    }
+
+    if (srcPath == dstPath) {
+        std::ostringstream ss;
+
+        ss << "Source and destination data stream files are the same: `" <<
+              srcPath.string() << "`.";
+        throw CliError {ss.str()};
+    }
+
+    return std::make_unique<CopyPacketsConfig>(srcPath,
+                                               vm["packet-indexes"].as<std::string>(),
+                                               dstPath);
 }
 
 std::unique_ptr<const Config> configFromArgs(const int argc,
@@ -324,7 +393,8 @@ std::unique_ptr<const Config> configFromArgs(const int argc,
 
         bool removeCmdName = false;
 
-        if (args[0] == "inspect" || args[0] == "list-packets") {
+        if (args[0] == "inspect" || args[0] == "list-packets" ||
+                args[0] == "copy-packets") {
             removeCmdName = true;
         }
 
@@ -337,10 +407,12 @@ std::unique_ptr<const Config> configFromArgs(const int argc,
 
         if (args[0] == "list-packets") {
             return listPacketsConfigFromArgs(extraArgs);
+        } else if (args[0] == "copy-packets") {
+            return copyPacketsConfigFromArgs(extraArgs);
         }
 
+        // `inspect` command is the default
         return inspectConfigFromArgs(extraArgs);
-        throw;
     } catch (const bpo::error& ex) {
         throw CliError {ex.what()};
     } catch (...) {

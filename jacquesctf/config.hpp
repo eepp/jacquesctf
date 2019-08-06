@@ -104,6 +104,35 @@ private:
     bool _withHeader;
 };
 
+class CopyPacketsConfig :
+    public Config
+{
+public:
+    explicit CopyPacketsConfig(const boost::filesystem::path& srcPath,
+                               const std::string& packetIndexes,
+                               const boost::filesystem::path& dstPath);
+
+    const boost::filesystem::path& srcPath() const noexcept
+    {
+        return _srcPath;
+    }
+
+    const boost::filesystem::path& dstPath() const noexcept
+    {
+        return _dstPath;
+    }
+
+    const std::string& packetIndexes() const noexcept
+    {
+        return _packetIndexes;
+    }
+
+private:
+    boost::filesystem::path _srcPath;
+    std::string _packetIndexes;
+    boost::filesystem::path _dstPath;
+};
+
 class PrintCliUsageConfig :
     public Config
 {
