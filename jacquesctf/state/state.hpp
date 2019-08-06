@@ -48,7 +48,7 @@ public:
     using Observer = std::function<void (const Message)>;
 
 public:
-    explicit State(const std::list<boost::filesystem::path>& paths,
+    explicit State(const std::vector<boost::filesystem::path>& paths,
                    std::shared_ptr<PacketCheckpointsBuildListener> packetCheckpointsBuildListener);
     Index addObserver(const Observer& observer);
     void removeObserver(Index id);

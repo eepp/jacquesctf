@@ -21,7 +21,7 @@ class HelpScreen :
     public Screen
 {
 public:
-    explicit HelpScreen(const Rectangle& rect, const Config& cfg,
+    explicit HelpScreen(const Rectangle& rect, const InspectConfig& cfg,
                         const Stylist& stylist, State& state);
 
 private:

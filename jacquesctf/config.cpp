@@ -19,6 +19,8 @@
 #include "config.hpp"
 #include "utils.hpp"
 
+namespace bfs = boost::filesystem;
+
 namespace jacques {
 
 CliError::CliError(const std::string& msg) :
@@ -26,15 +28,36 @@ CliError::CliError(const std::string& msg) :
 {
 }
 
-Config::Config(const int argc, const char *argv[])
+Config::Config()
 {
-    this->_parseArgs(argc, argv);
 }
 
-void Config::_expandDir(std::list<boost::filesystem::path>& tmpFilePaths,
-                        const boost::filesystem::path& path)
+Config::~Config()
 {
-    namespace bfs = boost::filesystem;
+}
+
+InspectConfig::InspectConfig(std::vector<bfs::path>&& paths) :
+    _paths {std::move(paths)}
+{
+}
+
+PrintMetadataTextConfig::PrintMetadataTextConfig(const bfs::path& path) :
+    _path {path}
+{
+}
+
+PrintCliUsageConfig::PrintCliUsageConfig()
+{
+}
+
+PrintVersionConfig::PrintVersionConfig()
+{
+}
+
+static
+void expandDir(std::list<bfs::path>& tmpFilePaths, const bfs::path& path)
+{
+    namespace bfs = bfs;
 
     assert(bfs::is_directory(path));
 
@@ -55,7 +78,7 @@ void Config::_expandDir(std::list<boost::filesystem::path>& tmpFilePaths,
 
         if (bfs::is_directory(entryPath)) {
             // expand subdirectory
-            this->_expandDir(tmpFilePaths, entryPath);
+            expandDir(tmpFilePaths, entryPath);
             continue;
         }
 
@@ -78,9 +101,10 @@ void Config::_expandDir(std::list<boost::filesystem::path>& tmpFilePaths,
                         std::end(thisDirStreamFilePaths));
 }
 
-void Config::_expandPaths(const std::vector<boost::filesystem::path>& origFilePaths)
+static
+std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFilePaths)
 {
-    namespace bfs = boost::filesystem;
+    namespace bfs = bfs;
 
     std::list<bfs::path> tmpFilePaths;
 
@@ -97,13 +121,11 @@ void Config::_expandPaths(const std::vector<boost::filesystem::path>& origFilePa
                 throw CliError {"Can only specify a single CTF metadata file."};
             }
 
-            _filePaths.push_back(path);
-            _cmd = Command::PRINT_METADATA_TEXT;
-            return;
+            return {path};
         }
 
         if (bfs::is_directory(path)) {
-            this->_expandDir(tmpFilePaths, path);
+            expandDir(tmpFilePaths, path);
         } else {
             const auto metadataPath = path.parent_path() / "metadata";
 
@@ -141,10 +163,15 @@ void Config::_expandPaths(const std::vector<boost::filesystem::path>& origFilePa
         it = nextIt;
     }
 
-    _filePaths = std::move(tmpFilePaths);
+    std::vector<bfs::path> expandedPaths;
+
+    std::copy(std::begin(tmpFilePaths), std::end(tmpFilePaths),
+              std::back_inserter(expandedPaths));
+    return expandedPaths;
 }
 
-void Config::_parseArgs(const int argc, const char *argv[])
+std::unique_ptr<const Config> configFromArgs(const int argc,
+                                             const char *argv[])
 {
     namespace bpo = boost::program_options;
 
@@ -171,13 +198,11 @@ void Config::_parseArgs(const int argc, const char *argv[])
     }
 
     if (vm.count("help")) {
-        _cmd = Command::PRINT_CLI_USAGE;
-        return;
+        return std::make_unique<PrintCliUsageConfig>();
     }
 
     if (vm.count("version")) {
-        _cmd = Command::PRINT_VERSION;
-        return;
+        return std::make_unique<PrintVersionConfig>();
     }
 
     if (!vm.count("paths")) {
@@ -185,11 +210,18 @@ void Config::_parseArgs(const int argc, const char *argv[])
     }
 
     const auto pathArgs = vm["paths"].as<std::vector<std::string>>();
-    std::vector<boost::filesystem::path> origFilePaths;
+    std::vector<bfs::path> origFilePaths;
 
     std::copy(std::begin(pathArgs), std::end(pathArgs),
               std::back_inserter(origFilePaths));
-    this->_expandPaths(origFilePaths);
+
+    auto expandedPaths = expandPaths(origFilePaths);
+
+    if (expandedPaths.size() == 1 && expandedPaths.front().filename() == "metadata") {
+        return std::make_unique<PrintMetadataTextConfig>(expandedPaths.front());
+    }
+
+    return std::make_unique<InspectConfig>(std::move(expandedPaths));
 }
 
 } // namespace jacques

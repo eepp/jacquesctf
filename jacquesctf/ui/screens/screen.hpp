@@ -41,7 +41,7 @@ protected:
      *
      * `rect` is the screen's rectangle within the terminal screen.
      */
-    explicit Screen(const Rectangle& rect, const Config& cfg,
+    explicit Screen(const Rectangle& rect, const InspectConfig& cfg,
                     const Stylist& stylist, State& state);
 
 public:
@@ -140,7 +140,7 @@ protected:
      */
     virtual void _visibilityChanged();
 
-    const Config& _config() const noexcept
+    const InspectConfig& _config() const noexcept
     {
         return *_curCfg;
     }
@@ -162,7 +162,7 @@ protected:
 
 private:
     Rectangle _curRect;
-    const Config * const _curCfg;
+    const InspectConfig * const _curCfg;
     const Stylist * const _curStylist;
     State * const _curState;
     bool _visible = false;

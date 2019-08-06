@@ -36,7 +36,7 @@ public:
     using Bookmarks = std::unordered_map<Index, DataStreamFileBookmarks>;
 
 public:
-    explicit InspectScreen(const Rectangle& rect, const Config& cfg,
+    explicit InspectScreen(const Rectangle& rect, const InspectConfig& cfg,
                            const Stylist& stylist, State& state);
     ~InspectScreen();
 

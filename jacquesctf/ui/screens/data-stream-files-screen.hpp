@@ -23,7 +23,8 @@ class DataStreamFilesScreen :
     public Screen
 {
 public:
-    explicit DataStreamFilesScreen(const Rectangle& rect, const Config& cfg,
+    explicit DataStreamFilesScreen(const Rectangle& rect,
+                                   const InspectConfig& cfg,
                      		       const Stylist& stylist, State& state);
 
 private:

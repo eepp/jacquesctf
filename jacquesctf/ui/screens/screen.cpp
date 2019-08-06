@@ -9,7 +9,7 @@
 
 namespace jacques {
 
-Screen::Screen(const Rectangle& rect, const Config& cfg,
+Screen::Screen(const Rectangle& rect, const InspectConfig& cfg,
                const Stylist& stylist, State& state) :
     _curRect {rect},
     _curCfg {&cfg},

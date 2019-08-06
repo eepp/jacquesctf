@@ -37,7 +37,7 @@ static std::unique_ptr<const Config> createConfig(const int argc,
                                                   const char *argv[])
 {
     try {
-        return std::make_unique<const Config>(argc, argv);
+        return configFromArgs(argc, argv);
     } catch (const CliError& ex) {
         utils::error() << "Command-line error: " << ex.what();
         appendPeriod(std::cerr, ex.what());
@@ -70,13 +70,12 @@ static void printVersion()
     std::cout << "Jacques CTF " JACQUES_VERSION << std::endl;
 }
 
-static bool printMetadataText(const Config& cfg)
+static bool printMetadataText(const PrintMetadataTextConfig& cfg)
 {
     std::unique_ptr<const yactfr::MetadataStream> stream;
-    const auto& path = *std::begin(cfg.filePaths());
 
     try {
-        std::ifstream fileStream {path.string().c_str(),
+        std::ifstream fileStream {cfg.path().string().c_str(),
                                   std::ios::in | std::ios::binary};
         stream = yactfr::createMetadataStream(fileStream);
     } catch (const yactfr::InvalidMetadataStream& ex) {
@@ -86,7 +85,7 @@ static bool printMetadataText(const Config& cfg)
         utils::error() << "Invalid metadata: " << ex.what() << std::endl;
         return false;
     } catch (const yactfr::MetadataParseError& ex) {
-        utils::printMetadataParseError(std::cerr, path.string(), ex);
+        utils::printMetadataParseError(std::cerr, cfg.path().string(), ex);
         return false;
     }
 
@@ -106,21 +105,16 @@ static bool jacques(const int argc, const char *argv[])
         return false;
     }
 
-    switch (cfg->command()) {
-    case Config::Command::PRINT_CLI_USAGE:
+    if (dynamic_cast<const PrintCliUsageConfig *>(cfg.get())) {
         printCliUsage(argv[0]);
-        break;
-
-    case Config::Command::PRINT_VERSION:
+    } else if (dynamic_cast<const PrintVersionConfig *>(cfg.get())) {
         printVersion();
-        break;
-
-    case Config::Command::PRINT_METADATA_TEXT:
-        printMetadataText(*cfg);
-        break;
-
-    case Config::Command::INSPECT_FILES:
-        return startInteractive(*cfg);
+    } else if (const auto specCfg = dynamic_cast<const PrintMetadataTextConfig *>(cfg.get())) {
+        printMetadataText(*specCfg);
+    } else if (const auto specCfg = dynamic_cast<const InspectConfig *>(cfg.get())) {
+        return startInteractive(*specCfg);
+    } else {
+        std::abort();
     }
 
     return true;

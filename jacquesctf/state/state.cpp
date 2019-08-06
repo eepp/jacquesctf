@@ -18,7 +18,7 @@ namespace jacques {
 
 namespace bfs = boost::filesystem;
 
-State::State(const std::list<bfs::path>& paths,
+State::State(const std::vector<bfs::path>& paths,
              std::shared_ptr<PacketCheckpointsBuildListener> packetCheckpointsBuildListener)
 {
     assert(!paths.empty());

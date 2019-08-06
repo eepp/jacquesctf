@@ -21,7 +21,7 @@ class TraceInfoScreen :
     public Screen
 {
 public:
-    explicit TraceInfoScreen(const Rectangle& rect, const Config& cfg,
+    explicit TraceInfoScreen(const Rectangle& rect, const InspectConfig& cfg,
                              const Stylist& stylist, State& state);
 
 private:

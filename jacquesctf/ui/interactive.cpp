@@ -241,7 +241,7 @@ public:
     }
 };
 
-static bool tryStartInteractive(const Config& cfg)
+static bool tryStartInteractive(const InspectConfig& cfg)
 {
     auto stylist = std::make_unique<const Stylist>();
 
@@ -254,7 +254,7 @@ static bool tryStartInteractive(const Config& cfg)
     std::unique_ptr<State> state;
 
     try {
-        state = std::make_unique<State>(cfg.filePaths(),
+        state = std::make_unique<State>(cfg.paths(),
                                         packetCheckpointsBuildProgressUpdater);
     } catch (const MetadataError<yactfr::InvalidMetadataStream>& ex) {
         finiScreen();
@@ -542,7 +542,7 @@ static bool tryStartInteractive(const Config& cfg)
     return true;
 }
 
-bool startInteractive(const Config& cfg)
+bool startInteractive(const InspectConfig& cfg)
 {
     if (!init()) {
         utils::error() << "Cannot initialize screen and signal handling.\n";

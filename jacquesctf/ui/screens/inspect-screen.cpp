@@ -22,7 +22,7 @@
 
 namespace jacques {
 
-InspectScreen::InspectScreen(const Rectangle& rect, const Config& cfg,
+InspectScreen::InspectScreen(const Rectangle& rect, const InspectConfig& cfg,
                              const Stylist& stylist, State& state) :
     Screen {rect, cfg, stylist, state},
     _decErrorView {

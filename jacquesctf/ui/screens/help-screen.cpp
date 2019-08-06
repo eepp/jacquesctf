@@ -18,7 +18,7 @@
 
 namespace jacques {
 
-HelpScreen::HelpScreen(const Rectangle& rect, const Config& cfg,
+HelpScreen::HelpScreen(const Rectangle& rect, const InspectConfig& cfg,
                        const Stylist& stylist, State& state) :
     Screen {rect, cfg, stylist, state},
     _view {std::make_unique<HelpView>(rect, stylist)}

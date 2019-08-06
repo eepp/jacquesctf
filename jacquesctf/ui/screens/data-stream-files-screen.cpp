@@ -18,7 +18,8 @@
 
 namespace jacques {
 
-DataStreamFilesScreen::DataStreamFilesScreen(const Rectangle& rect, const Config& cfg,
+DataStreamFilesScreen::DataStreamFilesScreen(const Rectangle& rect,
+                                             const InspectConfig& cfg,
                                              const Stylist& stylist,
                                              State& state) :
     Screen {rect, cfg, stylist, state},

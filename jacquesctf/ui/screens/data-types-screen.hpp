@@ -27,7 +27,7 @@ class DataTypesScreen :
     public Screen
 {
 public:
-    explicit DataTypesScreen(const Rectangle& rect, const Config& cfg,
+    explicit DataTypesScreen(const Rectangle& rect, const InspectConfig& cfg,
                              const Stylist& stylist, State& state);
     void highlightCurrentDataType();
     void clearHighlight();

@@ -9,7 +9,8 @@
 #define _JACQUES_CONFIG_HPP
 
 #include <string>
-#include <list>
+#include <vector>
+#include <memory>
 #include <stdexcept>
 #include <boost/filesystem.hpp>
 
@@ -31,38 +32,58 @@ public:
  */
 class Config
 {
-public:
-    enum class Command
-    {
-        INSPECT_FILES,
-        PRINT_METADATA_TEXT,
-        PRINT_CLI_USAGE,
-        PRINT_VERSION,
-    };
+protected:
+    Config();
 
 public:
-    explicit Config(int argc, const char *argv[]);
-
-    Command command() const noexcept
-    {
-        return _cmd;
-    }
-
-    const std::list<boost::filesystem::path>& filePaths() const noexcept
-    {
-        return _filePaths;
-    }
-
-private:
-    void _parseArgs(int argc, const char *argv[]);
-    void _expandDir(std::list<boost::filesystem::path>& tmpFilePaths,
-                    const boost::filesystem::path& path);
-    void _expandPaths(const std::vector<boost::filesystem::path>& origFilePaths);
-
-private:
-    Command _cmd = Command::INSPECT_FILES;
-    std::list<boost::filesystem::path> _filePaths;
+    virtual ~Config();
 };
+
+class InspectConfig :
+    public Config
+{
+public:
+    explicit InspectConfig(std::vector<boost::filesystem::path>&& paths);
+
+    const std::vector<boost::filesystem::path>& paths() const noexcept
+    {
+        return _paths;
+    }
+
+private:
+    const std::vector<boost::filesystem::path> _paths;
+};
+
+class PrintMetadataTextConfig :
+    public Config
+{
+public:
+    explicit PrintMetadataTextConfig(const boost::filesystem::path& path);
+
+    const boost::filesystem::path& path() const noexcept
+    {
+        return _path;
+    }
+
+private:
+    const boost::filesystem::path _path;
+};
+
+class PrintCliUsageConfig :
+    public Config
+{
+public:
+    PrintCliUsageConfig();
+};
+
+class PrintVersionConfig :
+    public Config
+{
+public:
+    PrintVersionConfig();
+};
+
+std::unique_ptr<const Config> configFromArgs(int argc, const char *argv[]);
 
 } // namespace jacques
 

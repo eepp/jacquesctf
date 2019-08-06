@@ -24,7 +24,7 @@ class PacketsScreen :
     public Screen
 {
 public:
-    explicit PacketsScreen(const Rectangle& rect, const Config& cfg,
+    explicit PacketsScreen(const Rectangle& rect, const InspectConfig& cfg,
                            const Stylist& stylist, State& state);
 
 protected:

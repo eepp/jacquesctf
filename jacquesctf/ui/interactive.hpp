@@ -17,7 +17,7 @@ enum class KeyHandlingReaction
     RETURN_TO_PACKETS,
 };
 
-class Config;
+class InspectConfig;
 
 /*
  * Stats the interactive (ncurses) part of Jacques CTF.
@@ -26,7 +26,7 @@ class Config;
  * manually quits. The function eventually registers a handler for the
  * SIGINT signal so that the program quits immediately.
  */
-bool startInteractive(const Config& cfg);
+bool startInteractive(const InspectConfig& cfg);
 
 } // namespace jacques
 

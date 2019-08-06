@@ -18,7 +18,8 @@
 
 namespace jacques {
 
-TraceInfoScreen::TraceInfoScreen(const Rectangle& rect, const Config& cfg,
+TraceInfoScreen::TraceInfoScreen(const Rectangle& rect,
+                                 const InspectConfig& cfg,
                                  const Stylist& stylist, State& state) :
     Screen {rect, cfg, stylist, state},
     _view {std::make_unique<TraceInfoView>(rect, stylist, state)}
