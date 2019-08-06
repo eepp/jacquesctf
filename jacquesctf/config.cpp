@@ -20,6 +20,7 @@
 #include "utils.hpp"
 
 namespace bfs = boost::filesystem;
+namespace bpo = boost::program_options;
 
 namespace jacques {
 
@@ -170,16 +171,15 @@ std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFilePaths)
     return expandedPaths;
 }
 
-std::unique_ptr<const Config> configFromArgs(const int argc,
-                                             const char *argv[])
+std::unique_ptr<const Config> inspectConfigFromArgs(const std::vector<std::string>& args)
 {
-    namespace bpo = boost::program_options;
+    if (args.empty()) {
+        throw CliError {"Missing trace directory path, data stream file path, or metadata stream file path."};
+    }
 
-    bpo::options_description optDesc {"Options"};
+    bpo::options_description optDesc {""};
 
     optDesc.add_options()
-        ("help,h", "")
-        ("version,V", "")
         ("paths", bpo::value<std::vector<std::string>>(), "");
 
     bpo::positional_options_description posDesc;
@@ -189,30 +189,19 @@ std::unique_ptr<const Config> configFromArgs(const int argc,
     bpo::variables_map vm;
 
     try {
-        bpo::store(bpo::command_line_parser(argc, argv).options(optDesc).
-                   positional(posDesc).allow_unregistered().run(), vm);
+        bpo::store(bpo::command_line_parser(args).options(optDesc).
+                   positional(posDesc).run(), vm);
     } catch (const bpo::error& ex) {
         throw CliError {ex.what()};
     } catch (...) {
         std::abort();
     }
 
-    if (vm.count("help")) {
-        return std::make_unique<PrintCliUsageConfig>();
-    }
+    const auto paths = vm["paths"].as<std::vector<std::string>>();
 
-    if (vm.count("version")) {
-        return std::make_unique<PrintVersionConfig>();
-    }
-
-    if (!vm.count("paths")) {
-        throw CliError {"Missing trace, data stream file, or metadata stream file path."};
-    }
-
-    const auto pathArgs = vm["paths"].as<std::vector<std::string>>();
     std::vector<bfs::path> origFilePaths;
 
-    std::copy(std::begin(pathArgs), std::end(pathArgs),
+    std::copy(std::begin(paths), std::end(paths),
               std::back_inserter(origFilePaths));
 
     auto expandedPaths = expandPaths(origFilePaths);
@@ -222,6 +211,68 @@ std::unique_ptr<const Config> configFromArgs(const int argc,
     }
 
     return std::make_unique<InspectConfig>(std::move(expandedPaths));
+}
+
+std::unique_ptr<const Config> configFromArgs(const int argc,
+                                             const char *argv[])
+{
+    bpo::options_description optDesc {""};
+
+    optDesc.add_options()
+        ("help,h", "")
+        ("version,V", "")
+        ("args", bpo::value<std::vector<std::string>>(), "");
+
+    bpo::positional_options_description posDesc;
+
+    posDesc.add("args", -1);
+
+    bpo::variables_map vm;
+
+    try {
+        const auto parsedOpts = bpo::command_line_parser(argc, argv).options(optDesc).
+                                positional(posDesc).allow_unregistered().run();
+
+        bpo::store(parsedOpts, vm);
+
+        if (vm.count("help")) {
+            return std::make_unique<PrintCliUsageConfig>();
+        }
+
+        if (vm.count("version")) {
+            return std::make_unique<PrintVersionConfig>();
+        }
+
+        if (!vm.count("args")) {
+            throw CliError {"Missing command name, trace directory path, data stream file path, or metadata stream file path."};
+        }
+
+        const auto args = vm["args"].as<std::vector<std::string>>();
+
+        assert(!args.empty());
+
+        bool removeCmdName = true;
+
+        if (args[0] == "inspect") {
+        } else {
+            removeCmdName = false;
+        }
+
+        std::vector<std::string> extraArgs = bpo::collect_unrecognized(parsedOpts.options,
+                                                                       bpo::include_positional);
+
+        if (removeCmdName) {
+            extraArgs.erase(extraArgs.begin());
+        }
+
+        return inspectConfigFromArgs(extraArgs);
+    } catch (const CliError &ex) {
+        throw;
+    } catch (const bpo::error& ex) {
+        throw CliError {ex.what()};
+    } catch (...) {
+        std::abort();
+    }
 }
 
 } // namespace jacques

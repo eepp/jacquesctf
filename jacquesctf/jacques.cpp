@@ -53,16 +53,18 @@ static std::unique_ptr<const Config> createConfig(const int argc,
 
 static void printCliUsage(const char *cmdName)
 {
-    std::cout << "Usage: " << cmdName << " [OPTIONS] PATH..." << std::endl <<
-                 std::endl <<
-                 "Options:" << std::endl <<
-                 std::endl <<
-                 "  --help, -h     Print usage and exit" << std::endl <<
-                 "  --version, -V  Print version and exit" << std::endl <<
-                 std::endl <<
-                 "If PATH is a CTF metadata file, print its text content and exit." << std::endl <<
-                 "If PATH is a CTF data stream file, inspect this file." << std::endl <<
-                 "If PATH is a directory, inspect all CTF data stream files found recursively." << std::endl;
+    std::printf("Usage: %s [GEN OPTS] [CMD] ARG...\n", cmdName);
+    std::puts("");
+    std::puts("General options:");
+    std::puts("");
+    std::puts("  --help, -h     Print usage and exit");
+    std::puts("  --version, -V  Print version and exit");
+    std::puts("");
+    std::puts("`inspect` (default) command usage: PATH...");
+    std::puts("");
+    std::puts("  If PATH is a CTF metadata file, print its text content and exit.");
+    std::puts("  If PATH is a CTF data stream file, inspect this file.");
+    std::puts("  If PATH is a directory, inspect all CTF data stream files found recursively.");
 }
 
 static void printVersion()
