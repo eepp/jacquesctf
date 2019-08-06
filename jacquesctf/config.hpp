@@ -54,12 +54,13 @@ private:
     const std::vector<boost::filesystem::path> _paths;
 };
 
-class PrintMetadataTextConfig :
+class SinglePathConfig :
     public Config
 {
-public:
-    explicit PrintMetadataTextConfig(const boost::filesystem::path& path);
+protected:
+    explicit SinglePathConfig(const boost::filesystem::path& path);
 
+public:
     const boost::filesystem::path& path() const noexcept
     {
         return _path;
@@ -67,6 +68,40 @@ public:
 
 private:
     const boost::filesystem::path _path;
+};
+
+class PrintMetadataTextConfig :
+    public SinglePathConfig
+{
+public:
+    explicit PrintMetadataTextConfig(const boost::filesystem::path& path);
+};
+
+class ListPacketsConfig :
+    public SinglePathConfig
+{
+public:
+    enum class Format {
+        MACHINE,
+    };
+
+public:
+    explicit ListPacketsConfig(const boost::filesystem::path& path,
+                               Format format, bool withHeader);
+
+    Format format() const noexcept
+    {
+        return _format;
+    }
+
+    bool withHeader() const noexcept
+    {
+        return _withHeader;
+    }
+
+private:
+    Format _format;
+    bool _withHeader;
 };
 
 class PrintCliUsageConfig :

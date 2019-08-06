@@ -61,6 +61,7 @@ add_executable (
     data/timestamp.cpp
     data/trace.cpp
     jacques.cpp
+    list-packets.cpp
     print-metadata-text.cpp
     state/data-stream-file-state.cpp
     state/packet-state.cpp

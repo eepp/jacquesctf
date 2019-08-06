@@ -36,6 +36,7 @@ public:
     explicit DataStreamFile(const boost::filesystem::path& path,
                             const Metadata& metadata);
     ~DataStreamFile();
+    void buildIndex();
     void buildIndex(const BuildIndexProgressFunc& progressFunc,
                     Size step = 1);
     bool hasOffsetBits(Index offsetBits);

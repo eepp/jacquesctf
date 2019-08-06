@@ -7,6 +7,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <limits>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -41,6 +42,11 @@ DataStreamFile::~DataStreamFile()
     if (_fd >= 0) {
         (void) close(_fd);
     }
+}
+
+void DataStreamFile::buildIndex()
+{
+    this->buildIndex([](const auto&) {}, std::numeric_limits<Size>::max());
 }
 
 void DataStreamFile::buildIndex(const BuildIndexProgressFunc& progressFunc,

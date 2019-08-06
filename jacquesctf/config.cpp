@@ -37,13 +37,26 @@ Config::~Config()
 {
 }
 
+SinglePathConfig::SinglePathConfig(const bfs::path& path) :
+    _path {path}
+{
+}
+
 InspectConfig::InspectConfig(std::vector<bfs::path>&& paths) :
     _paths {std::move(paths)}
 {
 }
 
 PrintMetadataTextConfig::PrintMetadataTextConfig(const bfs::path& path) :
-    _path {path}
+    SinglePathConfig {path}
+{
+}
+
+ListPacketsConfig::ListPacketsConfig(const boost::filesystem::path& path,
+                                     Format format, bool withHeader) :
+    SinglePathConfig {path},
+    _format {format},
+    _withHeader {withHeader}
 {
 }
 
@@ -55,8 +68,7 @@ PrintVersionConfig::PrintVersionConfig()
 {
 }
 
-static
-void expandDir(std::list<bfs::path>& tmpFilePaths, const bfs::path& path)
+static void expandDir(std::list<bfs::path>& tmpFilePaths, const bfs::path& path)
 {
     namespace bfs = bfs;
 
@@ -102,8 +114,7 @@ void expandDir(std::list<bfs::path>& tmpFilePaths, const bfs::path& path)
                         std::end(thisDirStreamFilePaths));
 }
 
-static
-std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFilePaths)
+static std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFilePaths)
 {
     namespace bfs = bfs;
 
@@ -171,12 +182,8 @@ std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFilePaths)
     return expandedPaths;
 }
 
-std::unique_ptr<const Config> inspectConfigFromArgs(const std::vector<std::string>& args)
+static std::unique_ptr<const Config> inspectConfigFromArgs(const std::vector<std::string>& args)
 {
-    if (args.empty()) {
-        throw CliError {"Missing trace directory path, data stream file path, or metadata stream file path."};
-    }
-
     bpo::options_description optDesc {""};
 
     optDesc.add_options()
@@ -199,6 +206,10 @@ std::unique_ptr<const Config> inspectConfigFromArgs(const std::vector<std::strin
 
     const auto paths = vm["paths"].as<std::vector<std::string>>();
 
+    if (paths.empty()) {
+        throw CliError {"Missing trace directory path, data stream file path, or metadata stream file path."};
+    }
+
     std::vector<bfs::path> origFilePaths;
 
     std::copy(std::begin(paths), std::end(paths),
@@ -211,6 +222,66 @@ std::unique_ptr<const Config> inspectConfigFromArgs(const std::vector<std::strin
     }
 
     return std::make_unique<InspectConfig>(std::move(expandedPaths));
+}
+
+static std::unique_ptr<const Config> listPacketsConfigFromArgs(const std::vector<std::string>& args)
+{
+    if (args.empty()) {
+        throw CliError {"Missing data stream file path."};
+    }
+
+    bpo::options_description optDesc {""};
+
+    optDesc.add_options()
+        ("machine,m", "")
+        ("header", "")
+        ("path", bpo::value<std::string>(), "");
+
+    bpo::positional_options_description posDesc;
+
+    posDesc.add("path", 1);
+
+    bpo::variables_map vm;
+
+    try {
+        bpo::store(bpo::command_line_parser(args).options(optDesc).
+                   positional(posDesc).run(), vm);
+    } catch (const bpo::error& ex) {
+        throw CliError {ex.what()};
+    } catch (...) {
+        std::abort();
+    }
+
+    if (vm.count("machine") == 0) {
+        throw CliError {
+            "Missing --machine option (required by this version)."
+        };
+    }
+
+    if (vm.count("path") == 0) {
+        throw CliError {"Missing data stream file path."};
+    }
+
+    const auto path = bfs::path {vm["path"].as<std::string>()};
+
+    if (!bfs::is_regular_file(path)) {
+        std::ostringstream ss;
+
+        ss << "`" << path.string() << "` is not a regular file.";
+        throw CliError {ss.str()};
+    }
+
+    if (path.filename() == "metadata") {
+        std::ostringstream ss;
+
+        ss << "Cannot list the packets of a metadata file: `" <<
+              path.string() << "`.";
+        throw CliError {ss.str()};
+    }
+
+    return std::make_unique<ListPacketsConfig>(path,
+                                               ListPacketsConfig::Format::MACHINE,
+                                               vm.count("header") == 1);
 }
 
 std::unique_ptr<const Config> configFromArgs(const int argc,
@@ -235,15 +306,15 @@ std::unique_ptr<const Config> configFromArgs(const int argc,
 
         bpo::store(parsedOpts, vm);
 
-        if (vm.count("help")) {
+        if (vm.count("help") > 0) {
             return std::make_unique<PrintCliUsageConfig>();
         }
 
-        if (vm.count("version")) {
+        if (vm.count("version") > 0) {
             return std::make_unique<PrintVersionConfig>();
         }
 
-        if (!vm.count("args")) {
+        if (vm.count("args") == 0) {
             throw CliError {"Missing command name, trace directory path, data stream file path, or metadata stream file path."};
         }
 
@@ -251,11 +322,10 @@ std::unique_ptr<const Config> configFromArgs(const int argc,
 
         assert(!args.empty());
 
-        bool removeCmdName = true;
+        bool removeCmdName = false;
 
-        if (args[0] == "inspect") {
-        } else {
-            removeCmdName = false;
+        if (args[0] == "inspect" || args[0] == "list-packets") {
+            removeCmdName = true;
         }
 
         std::vector<std::string> extraArgs = bpo::collect_unrecognized(parsedOpts.options,
@@ -263,6 +333,10 @@ std::unique_ptr<const Config> configFromArgs(const int argc,
 
         if (removeCmdName) {
             extraArgs.erase(extraArgs.begin());
+        }
+
+        if (args[0] == "list-packets") {
+            return listPacketsConfigFromArgs(extraArgs);
         }
 
         return inspectConfigFromArgs(extraArgs);

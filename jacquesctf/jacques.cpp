@@ -22,6 +22,7 @@
 #include "utils.hpp"
 #include "metadata.hpp"
 #include "print-metadata-text.hpp"
+#include "list-packets.hpp"
 
 namespace bfs = boost::filesystem;
 
@@ -38,9 +39,18 @@ static void printCliUsage(const char *cmdName)
     std::puts("");
     std::puts("`inspect` (default) command usage: PATH...");
     std::puts("");
+    std::puts("  Interactively inspect traces, data stream files, or metadata stream file.");
+    std::puts("");
     std::puts("  If PATH is a CTF metadata file, print its text content and exit.");
     std::puts("  If PATH is a CTF data stream file, inspect this file.");
     std::puts("  If PATH is a directory, inspect all CTF data stream files found recursively.");
+    std::puts("");
+    std::puts("`list-packets` command usage: --machine [--header] PATH");
+    std::puts("");
+    std::puts("  Print the list of packets of data stream file PATH and their properties.");
+    std::puts("");
+    std::puts("  --header       Print table header");
+    std::puts("  --machine, -m  Print machine-readable data (CSV)");
 }
 
 static void printVersion()
@@ -62,6 +72,8 @@ static bool jacques(const int argc, const char *argv[])
         printVersion();
     } else if (const auto specCfg = dynamic_cast<const PrintMetadataTextConfig *>(cfg.get())) {
         printMetadataText(*specCfg);
+    } else if (const auto specCfg = dynamic_cast<const ListPacketsConfig *>(cfg.get())) {
+        listPackets(*specCfg);
     } else if (const auto specCfg = dynamic_cast<const InspectConfig *>(cfg.get())) {
         return startInteractive(*specCfg);
     } else {
