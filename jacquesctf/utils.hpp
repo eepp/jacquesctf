@@ -98,6 +98,8 @@ std::pair<std::string, std::string> formatNs(long long ns,
 void printMetadataParseError(std::ostream& os, const std::string& path,
                              const yactfr::MetadataParseError& error);
 
+boost::optional<std::string> tryFunc(const std::function<void ()>& func);
+
 } // namespace utils
 } // namespace jacques
 

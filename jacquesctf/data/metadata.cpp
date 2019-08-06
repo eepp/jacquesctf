@@ -42,8 +42,9 @@ Metadata::Metadata(const bfs::path& path) :
             _stream.uuid = pStream->uuid();
         }
 
-        _traceType = yactfr::traceTypeFromMetadataText(std::begin(stream->text()),
-                                                       std::end(stream->text()));
+        _text = stream->text();
+        _traceType = yactfr::traceTypeFromMetadataText(std::begin(_text),
+                                                       std::end(_text));
         this->_setDataTypeParents();
         this->_setIsCorrelatable();
     } catch (const yactfr::InvalidMetadataStream& ex) {

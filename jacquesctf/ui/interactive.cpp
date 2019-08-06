@@ -251,29 +251,8 @@ static bool tryStartInteractive(const InspectConfig& cfg)
     bool redrawCurScreen = false;
     auto packetCheckpointsBuildProgressUpdater = std::make_shared<PacketCheckpointsBuildProgressUpdater>(*stylist,
                                                                                                          redrawCurScreen);
-    std::unique_ptr<State> state;
-
-    try {
-        state = std::make_unique<State>(cfg.paths(),
-                                        packetCheckpointsBuildProgressUpdater);
-    } catch (const MetadataError<yactfr::InvalidMetadataStream>& ex) {
-        finiScreen();
-        utils::error() << "Metadata error: `" << ex.path().string() <<
-                          "`: invalid metadata stream: " << ex.what() <<
-                          std::endl;
-        return false;
-    } catch (const MetadataError<yactfr::InvalidMetadata>& ex) {
-        finiScreen();
-        utils::error() << "Metadata error: `" << ex.path().string() <<
-                          "`: invalid metadata: " << ex.what() <<
-                          std::endl;
-        return false;
-    } catch (const MetadataError<yactfr::MetadataParseError>& ex) {
-        finiScreen();
-        utils::printMetadataParseError(std::cerr, ex.path().string(),
-                                       ex.subError());
-        return false;
-    }
+    auto state = std::make_unique<State>(cfg.paths(),
+                                         packetCheckpointsBuildProgressUpdater);
 
     if (state->dataStreamFileStates().empty()) {
         finiScreen();
@@ -560,10 +539,9 @@ bool startInteractive(const InspectConfig& cfg)
 
     try {
         res = tryStartInteractive(cfg);
-    } catch (const std::exception& ex) {
+    } catch (...) {
         finiScreen();
-        utils::error() << "Unhandled exception: " << ex.what() << std::endl;
-        return false;
+        throw;
     }
 
     finiScreen();

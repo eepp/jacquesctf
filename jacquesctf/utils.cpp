@@ -14,11 +14,15 @@
 #include <boost/utility.hpp>
 
 #include "utils.hpp"
+#include "metadata.hpp"
+#include "config.hpp"
+
+namespace bfs = boost::filesystem;
 
 namespace jacques {
 namespace utils {
 
-std::pair<std::string, std::string> formatPath(const boost::filesystem::path& path,
+std::pair<std::string, std::string> formatPath(const bfs::path& path,
                                                const Size maxLen)
 {
     const auto filename = path.filename().string();
@@ -353,17 +357,31 @@ std::pair<std::string, std::string> formatNs(long long ns,
     return {sStr, nsStr};
 }
 
-void printMetadataParseError(std::ostream& os, const std::string& path,
-                             const yactfr::MetadataParseError& error)
+static std::string formatMetadataParseError(const std::string& path,
+                                            const yactfr::MetadataParseError& error)
 {
+    std::stringstream ss;
+
     for (auto it = std::rbegin(error.errorMessages());
             it != std::rend(error.errorMessages()); ++it) {
         const auto& msg = *it;
 
-        os << path << ":" << msg.location().natLineNumber() <<
+        ss << path << ":" << msg.location().natLineNumber() <<
               ":" << msg.location().natColNumber() <<
-              ": " << msg.message() << std::endl;
+              ": " << msg.message();
+
+        if (it < std::rend(error.errorMessages()) - 1) {
+            ss << std::endl;
+        }
     }
+
+    return ss.str();
+}
+
+void printMetadataParseError(std::ostream& os, const std::string& path,
+                             const yactfr::MetadataParseError& error)
+{
+    os << formatMetadataParseError(path, error);
 }
 
 std::string escapeString(const std::string& str)
@@ -426,6 +444,51 @@ std::string escapeString(const std::string& str)
     }
 
     return outStr;
+}
+
+static void maybeAppendPeriod(std::string& str)
+{
+    if (str.empty()) {
+        return;
+    }
+
+    if (str.back() != '.') {
+        str += '.';
+    }
+}
+
+boost::optional<std::string> tryFunc(const std::function<void ()>& func)
+{
+    std::stringstream ss;
+
+    try {
+        func();
+    } catch (const MetadataError<yactfr::InvalidMetadataStream>& ex) {
+        ss << "Metadata error: `" << ex.path().string() <<
+              "`: invalid metadata stream: " << ex.what();
+    } catch (const MetadataError<yactfr::InvalidMetadata>& ex) {
+        ss << "Metadata error: `" << ex.path().string() <<
+              "`: invalid metadata: " << ex.what();
+    } catch (const MetadataError<yactfr::MetadataParseError>& ex) {
+        ss << formatMetadataParseError(ex.path().string(), ex.subError());
+    } catch (const CliError& ex) {
+        ss << "Command-line error: " << ex.what();
+    } catch (const bfs::filesystem_error& ex) {
+        ss << "File system error: " << ex.what();
+    } catch (const std::exception& ex) {
+        ss << ex.what();
+    } catch (...) {
+        ss << "Unknown exception";
+    }
+
+    auto str = ss.str();
+
+    if (str.empty()) {
+        return boost::none;
+    }
+
+    maybeAppendPeriod(str);
+    return str;
 }
 
 } // namespace utils

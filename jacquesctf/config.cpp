@@ -266,12 +266,11 @@ std::unique_ptr<const Config> configFromArgs(const int argc,
         }
 
         return inspectConfigFromArgs(extraArgs);
-    } catch (const CliError &ex) {
         throw;
     } catch (const bpo::error& ex) {
         throw CliError {ex.what()};
     } catch (...) {
-        std::abort();
+        throw;
     }
 }
 

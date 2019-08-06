@@ -15,41 +15,16 @@
 #include <yactfr/metadata/invalid-metadata-stream.hpp>
 #include <yactfr/metadata/metadata-parse-error.hpp>
 #include <yactfr/metadata/metadata-stream.hpp>
+#include <boost/filesystem.hpp>
 
 #include "config.hpp"
 #include "interactive.hpp"
 #include "utils.hpp"
+#include "metadata.hpp"
+
+namespace bfs = boost::filesystem;
 
 namespace jacques {
-
-static void appendPeriod(std::ostream& stream, const char *what)
-{
-    assert(std::strlen(what) > 0);
-
-    // append period to exception message if there's none
-    if (what[std::strlen(what) - 1] != '.') {
-        stream << '.';
-    }
-}
-
-// creates a Jacques CTF configuration from command-line arguments
-static std::unique_ptr<const Config> createConfig(const int argc,
-                                                  const char *argv[])
-{
-    try {
-        return configFromArgs(argc, argv);
-    } catch (const CliError& ex) {
-        utils::error() << "Command-line error: " << ex.what();
-        appendPeriod(std::cerr, ex.what());
-        std::cerr << std::endl;
-        return nullptr;
-    } catch (const std::exception& ex) {
-        utils::error() << ex.what();
-        appendPeriod(std::cerr, ex.what());
-        std::cerr << std::endl;
-        return nullptr;
-    }
-}
 
 static void printCliUsage(const char *cmdName)
 {
@@ -72,36 +47,18 @@ static void printVersion()
     std::cout << "Jacques CTF " JACQUES_VERSION << std::endl;
 }
 
-static bool printMetadataText(const PrintMetadataTextConfig& cfg)
+static void printMetadataText(const PrintMetadataTextConfig& cfg)
 {
-    std::unique_ptr<const yactfr::MetadataStream> stream;
-
-    try {
-        std::ifstream fileStream {cfg.path().string().c_str(),
-                                  std::ios::in | std::ios::binary};
-        stream = yactfr::createMetadataStream(fileStream);
-    } catch (const yactfr::InvalidMetadataStream& ex) {
-        utils::error() << "Invalid metadata stream: " << ex.what() << std::endl;
-        return false;
-    } catch (const yactfr::InvalidMetadata& ex) {
-        utils::error() << "Invalid metadata: " << ex.what() << std::endl;
-        return false;
-    } catch (const yactfr::MetadataParseError& ex) {
-        utils::printMetadataParseError(std::cerr, cfg.path().string(), ex);
-        return false;
-    }
-
-    assert(stream);
+    const Metadata metadata {cfg.path()};
 
     // not appending any newline to print the exact text
-    std::cout << stream->text();
-    return true;
+    std::cout << metadata.text();
+    std::cout.flush();
 }
 
 static bool jacques(const int argc, const char *argv[])
 {
-
-    auto cfg = createConfig(argc, argv);
+    auto cfg = configFromArgs(argc, argv);
 
     if (!cfg) {
         return false;
@@ -126,5 +83,16 @@ static bool jacques(const int argc, const char *argv[])
 
 int main(const int argc, const char *argv[])
 {
-    return jacques::jacques(argc, argv) ? 0 : 1;
+    bool ret;
+
+    const auto exStr = jacques::utils::tryFunc([&]() {
+        ret = jacques::jacques(argc, argv) ? 0 : 1;
+    });
+
+    if (exStr) {
+        jacques::utils::error() << *exStr << std::endl;
+        return 1;
+    }
+
+    return ret ? 0 : 1;
 }

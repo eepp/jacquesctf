@@ -84,6 +84,11 @@ public:
     bool dataTypeIsScopeRoot(const yactfr::DataType& dataType) const;
     DataSize fileSize() const noexcept;
 
+    const std::string& text() const noexcept
+    {
+        return _text;
+    }
+
     const boost::filesystem::path& path() const noexcept
     {
         return _path;
@@ -131,6 +136,7 @@ private:
 
 private:
     const boost::filesystem::path _path;
+    std::string _text;
 
     struct {
         boost::optional<Size> packetCount;
