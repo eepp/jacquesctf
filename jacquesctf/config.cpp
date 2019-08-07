@@ -69,6 +69,11 @@ CopyPacketsConfig::CopyPacketsConfig(const bfs::path& srcPath,
 {
 }
 
+CreateLttngIndexConfig::CreateLttngIndexConfig(std::vector<bfs::path>&& paths) :
+    _paths {std::move(paths)}
+{
+}
+
 PrintCliUsageConfig::PrintCliUsageConfig()
 {
 }
@@ -123,7 +128,8 @@ static void expandDir(std::list<bfs::path>& tmpFilePaths, const bfs::path& path)
                         std::end(thisDirStreamFilePaths));
 }
 
-static std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFilePaths)
+static std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFilePaths,
+                                          const bool allowMetadata = true)
 {
     namespace bfs = bfs;
 
@@ -138,11 +144,15 @@ static std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFile
         }
 
         if (!bfs::is_directory(path) && path.filename() == "metadata") {
-            if (origFilePaths.size() > 1) {
-                throw CliError {"Can only specify a single CTF metadata file."};
+            if (allowMetadata) {
+                if (origFilePaths.size() > 1) {
+                    throw CliError {"Can only specify a single CTF metadata file."};
+                }
+
+                return {path};
             }
 
-            return {path};
+            throw CliError {"Cannot specify CTF metadata file."};
         }
 
         if (bfs::is_directory(path)) {
@@ -191,6 +201,20 @@ static std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFile
     return expandedPaths;
 }
 
+static std::vector<bfs::path> getExpandedPaths(const std::vector<std::string>& args)
+{
+    if (args.empty()) {
+        throw CliError {"Missing trace directory path, data stream file path, or metadata stream file path."};
+    }
+
+    std::vector<bfs::path> origFilePaths;
+
+    std::copy(std::begin(args), std::end(args),
+              std::back_inserter(origFilePaths));
+
+    return expandPaths(origFilePaths);
+}
+
 static std::unique_ptr<const Config> inspectConfigFromArgs(const std::vector<std::string>& args)
 {
     bpo::options_description optDesc {""};
@@ -213,24 +237,40 @@ static std::unique_ptr<const Config> inspectConfigFromArgs(const std::vector<std
         std::abort();
     }
 
-    const auto paths = vm["paths"].as<std::vector<std::string>>();
-
-    if (paths.empty()) {
-        throw CliError {"Missing trace directory path, data stream file path, or metadata stream file path."};
-    }
-
-    std::vector<bfs::path> origFilePaths;
-
-    std::copy(std::begin(paths), std::end(paths),
-              std::back_inserter(origFilePaths));
-
-    auto expandedPaths = expandPaths(origFilePaths);
+    auto expandedPaths = getExpandedPaths(vm["paths"].as<std::vector<std::string>>());
 
     if (expandedPaths.size() == 1 && expandedPaths.front().filename() == "metadata") {
         return std::make_unique<PrintMetadataTextConfig>(expandedPaths.front());
     }
 
     return std::make_unique<InspectConfig>(std::move(expandedPaths));
+}
+
+static std::unique_ptr<const Config> createLttngIndexConfigFromArgs(const std::vector<std::string>& args)
+{
+    bpo::options_description optDesc {""};
+
+    optDesc.add_options()
+        ("paths", bpo::value<std::vector<std::string>>(), "");
+
+    bpo::positional_options_description posDesc;
+
+    posDesc.add("paths", -1);
+
+    bpo::variables_map vm;
+
+    try {
+        bpo::store(bpo::command_line_parser(args).options(optDesc).
+                   positional(posDesc).run(), vm);
+    } catch (const bpo::error& ex) {
+        throw CliError {ex.what()};
+    } catch (...) {
+        std::abort();
+    }
+
+    auto expandedPaths = getExpandedPaths(vm["paths"].as<std::vector<std::string>>());
+
+    return std::make_unique<CreateLttngIndexConfig>(std::move(expandedPaths));
 }
 
 static void checkLooksLikeDataStreamFile(const bfs::path& path)
@@ -392,9 +432,13 @@ std::unique_ptr<const Config> configFromArgs(const int argc,
         assert(!args.empty());
 
         bool removeCmdName = false;
+        const static std::string listPacketsCmdName {"list-packets"};
+        const static std::string copyPacketsCmdName {"copy-packets"};
+        const static std::string createLttngIndexCmdName {"create-lttng-index"};
 
-        if (args[0] == "inspect" || args[0] == "list-packets" ||
-                args[0] == "copy-packets") {
+        if (args[0] == "inspect" || args[0] == listPacketsCmdName ||
+                args[0] == copyPacketsCmdName ||
+                args[0] == createLttngIndexCmdName) {
             removeCmdName = true;
         }
 
@@ -405,10 +449,12 @@ std::unique_ptr<const Config> configFromArgs(const int argc,
             extraArgs.erase(extraArgs.begin());
         }
 
-        if (args[0] == "list-packets") {
+        if (args[0] == listPacketsCmdName) {
             return listPacketsConfigFromArgs(extraArgs);
-        } else if (args[0] == "copy-packets") {
+        } else if (args[0] == copyPacketsCmdName) {
             return copyPacketsConfigFromArgs(extraArgs);
+        } else if (args[0] == createLttngIndexCmdName) {
+            return createLttngIndexConfigFromArgs(extraArgs);
         }
 
         // `inspect` command is the default

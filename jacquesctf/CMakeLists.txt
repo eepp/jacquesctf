@@ -42,6 +42,7 @@ add_executable (
     jacquesctf
     config.cpp
     copy-packets-command.cpp
+    create-lttng-index-command.cpp
     data/content-packet-region.cpp
     data/data-size.cpp
     data/data-stream-file.cpp

@@ -133,6 +133,21 @@ private:
     boost::filesystem::path _dstPath;
 };
 
+class CreateLttngIndexConfig :
+    public Config
+{
+public:
+    explicit CreateLttngIndexConfig(std::vector<boost::filesystem::path>&& paths);
+
+    const std::vector<boost::filesystem::path>& paths() const noexcept
+    {
+        return _paths;
+    }
+
+private:
+    const std::vector<boost::filesystem::path> _paths;
+};
+
 class PrintCliUsageConfig :
     public Config
 {
