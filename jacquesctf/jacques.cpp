@@ -103,13 +103,9 @@ static void printVersion()
     std::cout << "Jacques CTF " JACQUES_VERSION << std::endl;
 }
 
-static bool jacques(const int argc, const char *argv[])
+static void jacques(const int argc, const char *argv[])
 {
     auto cfg = configFromArgs(argc, argv);
-
-    if (!cfg) {
-        return false;
-    }
 
     if (dynamic_cast<const PrintCliUsageConfig *>(cfg.get())) {
         printCliUsage(argv[0]);
@@ -128,24 +124,18 @@ static bool jacques(const int argc, const char *argv[])
     } else {
         std::abort();
     }
-
-    return true;
 }
 
 } // namespace jacques
 
 int main(const int argc, const char *argv[])
 {
-    bool ret;
-
     const auto exStr = jacques::utils::tryFunc([&]() {
-        ret = jacques::jacques(argc, argv) ? 0 : 1;
+        jacques::jacques(argc, argv);
     });
 
     if (exStr) {
         jacques::utils::error() << *exStr << std::endl;
         return 1;
     }
-
-    return ret ? 0 : 1;
 }
