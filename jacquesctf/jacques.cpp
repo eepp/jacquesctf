@@ -105,7 +105,7 @@ static void printVersion()
 
 static void jacques(const int argc, const char *argv[])
 {
-    auto cfg = configFromArgs(argc, argv);
+    const auto cfg = configFromArgs(argc, argv);
 
     if (dynamic_cast<const PrintCliUsageConfig *>(cfg.get())) {
         printCliUsage(argv[0]);
