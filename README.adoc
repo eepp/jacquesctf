@@ -4,8 +4,9 @@
 v0.1
 Philippe Proulx
 
-**_Jacques{nbsp}CTF_** is a https://diamon.org/ctf/[CTF] trace inspection
-tool with a text (terminal) user interface.
+**_Jacques{nbsp}CTF_** is an interactive https://diamon.org/ctf/[CTF]
+trace inspection tool with a text (terminal) user interface and a
+command-line trace manipulation tool.
 
 Like Jacques Cartier, Jacques{nbsp}CTF can explore the sea of bits of a
 CTF data stream file and discover unsuspected lands of problems within
@@ -14,63 +15,71 @@ packets.
 
 == Features
 
-* Full hexadecimal and binary packet data inspection with:
-** Current data type or event record type (metadata) with highlight.
-** ASCII equivalent of data bytes (like your typical hex editor).
-** Packet data offsets in decimal or hexadecimal, bytes or bits.
-** Padding regions shown with a different color.
-** Decoding error region clearly shown, if any, with textual details.
-** Current datum path (metadata), size, byte order, and decoded value.
-** Current event record details:
-*** Index within packet.
-*** Offset within packet.
-*** Size.
-*** Type name.
-*** Type ID.
-*** Timestamp (first).
-*** Duration since last event record.
-** Custom bookmarks to mark regions and return to them.
-** Search or go to a region by:
-*** Packet index within its data stream file.
-*** Packet sequence number.
-*** Event record index within its packet.
-*** Offset within packet or data stream file.
-*** Timestamp (nanoseconds from origin or cycles).
-*** Event record with type name.
-*** Event record with type ID.
-* Anywhere in the application, you can change the current timestamp
-  format (full date and time, nanoseconds since origin, or cycles) or
-  size format (B/KiB/MiB/GiB, bytes and extra bits, and bits) of tables.
-* Permanent status bar with:
-** Current data stream file path.
-** Current offset within current packet and current data stream file.
-** Current offset as a percentage within current packet.
-** Current packet index and sequence number.
-* Packet table with details:
-** Index within data stream file.
-** Offset within data stream file.
-** Total size.
-** Content size.
-** Beginning and end timestamps, and duration.
-** Event record count.
-** Data stream type and data stream IDs.
-** Sequence number.
-** Discarded event record counter value.
-* Data stream file table with details:
-** Path.
-** File size.
-** Packet count.
-** Beginning and end timestamps, and duration.
-** Data stream type and data stream IDs.
-* Trace details:
-** Number of data stream files, data streams, and packets.
-** Effective and expected packet total and content sizes.
-** Intersection and disjoint set timestamps and durations.
-** Metadata stream information.
-* Data type (metadata) explorer:
-** Data stream types (packet header and context, event record header and
-   first context).
-** Event record types (event record header, contexts, and payload).
+* Interactive inspection tool
+** Full hexadecimal and binary packet data inspection with:
+*** Current data type or event record type (metadata) with highlight.
+*** ASCII equivalent of data bytes (like your typical hex editor).
+*** Packet data offsets in decimal or hexadecimal, bytes or bits.
+*** Padding regions shown with a different color.
+*** Decoding error region clearly shown, if any, with textual details.
+*** Current datum path (metadata), size, byte order, and decoded value.
+*** Current event record details:
+**** Index within packet.
+**** Offset within packet.
+**** Size.
+**** Type name.
+**** Type ID.
+**** Timestamp (first).
+**** Duration since last event record.
+*** Custom bookmarks to mark regions and return to them.
+*** Search or go to a region by:
+**** Packet index within its data stream file.
+**** Packet sequence number.
+**** Event record index within its packet.
+**** Offset within packet or data stream file.
+**** Timestamp (nanoseconds from origin or cycles).
+**** Event record with type name.
+**** Event record with type ID.
+** Anywhere in the application, you can change the current timestamp
+   format (full date and time, nanoseconds since origin, or cycles) or
+   size format (B/KiB/MiB/GiB, bytes and extra bits, and bits) of tables.
+** Permanent status bar with:
+*** Current data stream file path.
+*** Current offset within current packet and current data stream file.
+*** Current offset as a percentage within current packet.
+*** Current packet index and sequence number.
+** Packet table with details:
+*** Index within data stream file.
+*** Offset within data stream file.
+*** Total size.
+*** Content size.
+*** Beginning and end timestamps, and duration.
+*** Event record count.
+*** Data stream type and data stream IDs.
+*** Sequence number.
+*** Discarded event record counter value.
+** Data stream file table with details:
+*** Path.
+*** File size.
+*** Packet count.
+*** Beginning and end timestamps, and duration.
+*** Data stream type and data stream IDs.
+** Trace details:
+*** Number of data stream files, data streams, and packets.
+*** Effective and expected packet total and content sizes.
+*** Intersection and disjoint set timestamps and durations.
+*** Metadata stream information.
+** Data type (metadata) explorer:
+*** Data stream types (packet header and context, event record header and
+    first context).
+*** Event record types (event record header, contexts, and payload).
+
+* List the packets of a CTF data stream file with CSV output.
+
+* Copy specific packets from a CTF data stream file to another data
+  stream file.
+
+* Create an LTTng index file for one or more CTF data stream files.
 
 
 == Build and install
@@ -100,4 +109,3 @@ additional options with `CFLAGS` and `CXXFLAGS`.
 Specify `-DCMAKE_INSTALL_PREFIX=_PREFIX_` to `cmake` to install
 Jacques{nbsp}CTF to the `_PREFIX_` directory instead of the default
 `/usr/local` directory.
-
