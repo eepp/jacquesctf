@@ -97,7 +97,7 @@ void DataTypeDetails::_renderType(const yactfr::IntType& type,
         ss << "le";
     }
 
-    ss << " /" << type.alignment() << '}';
+    ss << " %" << type.alignment() << '}';
 
     Size remWidth = maxWidth;
 
@@ -154,7 +154,7 @@ void DataTypeDetails::_renderType(const yactfr::FloatType& type,
         ss << "le";
     }
 
-    ss << " /" << type.alignment() << '}';
+    ss << " %" << type.alignment() << '}';
 
     Size remWidth = maxWidth;
 
@@ -167,7 +167,7 @@ void DataTypeDetails::_renderType(const yactfr::StringType& type,
 {
     std::ostringstream ss;
 
-    ss << "{string /" << type.alignment() << '}';
+    ss << "{string %" << type.alignment() << '}';
 
     Size remWidth = maxWidth;
 
@@ -180,7 +180,7 @@ void DataTypeDetails::_renderType(const yactfr::StructType& type,
 {
     std::ostringstream ss;
 
-    ss << "{struct /" << type.alignment() << '}';
+    ss << "{struct %" << type.alignment() << '}';
 
     Size remWidth = maxWidth;
 
@@ -201,9 +201,9 @@ void DataTypeDetails::_renderType(const yactfr::StaticArrayType& type,
     std::ostringstream ss;
 
     if (type.isStaticTextArrayType()) {
-        ss << "{s-text-array /" << type.alignment() << '}';
+        ss << "{s-text-array %" << type.alignment() << '}';
     } else {
-        ss << "{s-array /" << type.alignment() << '}';
+        ss << "{s-array %" << type.alignment() << '}';
     }
 
     Size remWidth = maxWidth;
@@ -225,9 +225,9 @@ void DataTypeDetails::_renderType(const yactfr::DynamicArrayType& type,
     std::ostringstream ss;
 
     if (type.isDynamicTextArrayType()) {
-        ss << "{d-text-array /" << type.alignment() << '}';
+        ss << "{d-text-array %" << type.alignment() << '}';
     } else {
-        ss << "{d-array /" << type.alignment() << '}';
+        ss << "{d-array %" << type.alignment() << '}';
     }
 
     Size remWidth = maxWidth;
@@ -248,7 +248,7 @@ void DataTypeDetails::_renderType(const yactfr::VariantType& type,
 {
     std::ostringstream ss;
 
-    ss << "{var /" << type.alignment() << '}';
+    ss << "{var %" << type.alignment() << '}';
 
     Size remWidth = maxWidth;
 
