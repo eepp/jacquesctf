@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <cassert>
+#include <map>
 #include <boost/endian/buffers.hpp>
 
 #include "config.hpp"
