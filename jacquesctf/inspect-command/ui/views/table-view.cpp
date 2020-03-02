@@ -539,6 +539,9 @@ Stylist::TableViewCellStyle stylistTvcStyleFromTvcStyle(const TableViewCell::Sty
 
     case TableViewCell::Style::ERROR:
         return Stylist::TableViewCellStyle::ERROR;
+
+    default:
+        std::abort();
     }
 }
 
