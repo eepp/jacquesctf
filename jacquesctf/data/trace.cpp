@@ -59,7 +59,7 @@ void Trace::_createMetadata(const bfs::path& metadataPath)
 
 std::unique_ptr<Trace> Trace::withoutDsFiles(const bfs::path& traceDir)
 {
-    return std::make_unique<Trace>(traceDir / "metadata");
+    return std::make_unique<Trace>(traceDir / "metadata", std::vector<bfs::path> {});
 }
 
 } // namespace jacques

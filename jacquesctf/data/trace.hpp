@@ -30,7 +30,7 @@ public:
 
 public:
     explicit Trace(const boost::filesystem::path& metadataPath,
-                   const std::vector<boost::filesystem::path>& dsFilePaths = {});
+                   const std::vector<boost::filesystem::path>& dsFilePaths);
 
     explicit Trace(const std::vector<boost::filesystem::path>& dsFilePaths);
 
