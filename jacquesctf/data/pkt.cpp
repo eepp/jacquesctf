@@ -298,10 +298,11 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
         ++_it;
 
         while (!_it->isStaticLengthBlobEndElement() && !_it->isDynamicLengthBlobEndElement()) {
-            assert(_it->isBlobSectionElement());
+            if (_it->isBlobSectionElement()) {
+                // "consume" this BLOB section
+                bufEnd += _it->asBlobSectionElement().size();
+            }
 
-            // "consume" this BLOB section
-            bufEnd += _it->asBlobSectionElement().size();
             ++_it;
         }
 
