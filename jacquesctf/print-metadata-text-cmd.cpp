@@ -17,7 +17,7 @@ namespace jacques {
 void printMetadataTextCmd(const PrintMetadataTextCfg& cfg)
 {
     // not appending any newline to print the exact text
-    std::cout << Trace {cfg.path(), {}, false}.metadata().text();
+    std::cout << Trace {cfg.path(), {}}.metadata().text();
     std::cout.flush();
 }
 

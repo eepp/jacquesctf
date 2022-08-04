@@ -19,10 +19,12 @@ namespace jacques {
 namespace bfs = boost::filesystem;
 
 Metadata::Metadata(boost::filesystem::path path, yactfr::TraceType::UP traceType,
-                   std::unique_ptr<const yactfr::MetadataStream> stream) :
+                   std::unique_ptr<const yactfr::MetadataStream> stream,
+                   boost::optional<boost::uuids::uuid> streamUuid) :
     _path {std::move(path)},
     _traceType {std::move(traceType)},
-    _stream {std::move(stream)}
+    _stream {std::move(stream)},
+    _streamUuid {std::move(streamUuid)}
 {
     this->_setDtParents();
     this->_setIsCorrelatable();
@@ -119,11 +121,6 @@ public:
     }
 
     void visit(const yactfr::FixedLengthSignedEnumerationType& dt) override
-    {
-        this->_setParentAndPath(dt);
-    }
-
-    void visit(const yactfr::VariableLengthBitArrayType& dt) override
     {
         this->_setParentAndPath(dt);
     }

@@ -92,7 +92,7 @@ static void printRow(const PktIndexEntry& indexEntry, const ListPktsCfg::Fmt fmt
 
 void listPktsCmd(const ListPktsCfg& cfg)
 {
-    Trace trace {{cfg.path()}, false};
+    Trace trace {{cfg.path()}};
     auto& dsf = *trace.dsFiles().front();
 
     dsf.buildIndex();

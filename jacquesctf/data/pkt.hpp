@@ -491,10 +491,9 @@ private:
         return elem.type().length();
     }
 
-    static Size _bitArrayElemLen(const yactfr::VariableLengthBitArrayElement& elem) noexcept
+    static Size _bitArrayElemLen(const yactfr::VariableLengthIntegerElement& elem) noexcept
     {
-        // `elem.length()` is the length of the decoded bits
-        return elem.length() + elem.length() / 7;
+        return elem.dataLength();
     }
 
     /*

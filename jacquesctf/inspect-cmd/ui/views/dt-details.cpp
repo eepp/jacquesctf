@@ -52,8 +52,6 @@ void DtDetails::_renderLine(WINDOW *const window, const Size maxWidth, const boo
     // TODO: use data type visitor
     if (_dt->isFixedLengthBitArrayType()) {
         this->_renderDt(_dt->asFixedLengthBitArrayType(), window, remWidth, stylize);
-    } else if (_dt->isVariableLengthBitArrayType()) {
-        this->_renderDt(_dt->asVariableLengthBitArrayType(), window, remWidth, stylize);
     } else if (_dt->isNullTerminatedStringType()) {
         this->_renderDt(_dt->asNullTerminatedStringType(), window, remWidth, stylize);
     } else if (_dt->isStructureType()) {
@@ -182,7 +180,7 @@ void DtDetails::_renderDt(const yactfr::FixedLengthBitArrayType& dt, WINDOW * co
     }
 }
 
-void DtDetails::_renderDt(const yactfr::VariableLengthBitArrayType& dt, WINDOW * const window,
+void DtDetails::_renderDt(const yactfr::VariableLengthIntegerType& dt, WINDOW * const window,
                           Size remWidth, const bool stylize) const
 {
     std::ostringstream ss;
@@ -195,10 +193,8 @@ void DtDetails::_renderDt(const yactfr::VariableLengthBitArrayType& dt, WINDOW *
         ss << "~ue";
     } else if (dt.isVariableLengthSignedIntegerType()) {
         ss << "~i";
-    } else if (dt.isVariableLengthUnsignedIntegerType()) {
-        ss << "~u";
     } else {
-        ss << "~ba";
+        ss << "~u";
     }
 
     ss << '}';

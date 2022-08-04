@@ -51,7 +51,7 @@ private:
     void _renderDt(const yactfr::FixedLengthBitArrayType& dt, WINDOW *window, Size remWidth,
                    bool stylize) const;
 
-    void _renderDt(const yactfr::VariableLengthBitArrayType& dt, WINDOW *window, Size remWidth,
+    void _renderDt(const yactfr::VariableLengthIntegerType& dt, WINDOW *window, Size remWidth,
                    bool stylize) const;
 
     void _renderDt(const yactfr::NullTerminatedStringType& dt, WINDOW *window, Size remWidth,
@@ -88,8 +88,8 @@ private:
     void _tryRenderHasTraceTypeUuidRoleFlag(const DtT& dt, WINDOW * const window, Size& remWidth,
                                             const bool stylize) const
     {
-        if (dt.hasTraceTypeUuidRole()) {
-            this->_renderRoleFlag(window, remWidth, stylize, "trace-type-uuid");
+        if (dt.hasMetadataStreamUuidRole()) {
+            this->_renderRoleFlag(window, remWidth, stylize, "metadata-stream-uuid");
         }
     }
 

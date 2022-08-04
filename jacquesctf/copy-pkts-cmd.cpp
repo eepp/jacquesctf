@@ -142,7 +142,7 @@ static std::vector<Index> tryParsePktIndexSpecList(const std::string& pktIndexSp
 
 void copyPktsCmd(const CopyPktsCfg& cfg)
 {
-    Trace trace {{cfg.srcPath()}, false};
+    Trace trace {{cfg.srcPath()}};
     auto& dsf = *trace.dsFiles().front();
 
     dsf.buildIndex();

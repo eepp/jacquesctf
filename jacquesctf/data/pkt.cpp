@@ -208,15 +208,6 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
         region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthFloatingPointNumberElement>(scope);
         break;
 
-    case ElemKind::VARIABLE_LENGTH_BIT_ARRAY:
-    {
-        const auto val = _it->asVariableLengthBitArrayElement().unsignedIntegerValue();
-
-        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::VariableLengthBitArrayElement>(scope,
-                                                                                                    val);
-        break;
-    }
-
     case ElemKind::VARIABLE_LENGTH_SIGNED_INTEGER:
     case ElemKind::VARIABLE_LENGTH_SIGNED_ENUMERATION:
         region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::VariableLengthSignedIntegerElement>(scope);
@@ -404,7 +395,6 @@ void Pkt::_cachePreambleRegions()
             case ElemKind::FIXED_LENGTH_SIGNED_ENUMERATION:
             case ElemKind::FIXED_LENGTH_UNSIGNED_ENUMERATION:
             case ElemKind::FIXED_LENGTH_FLOATING_POINT_NUMBER:
-            case ElemKind::VARIABLE_LENGTH_BIT_ARRAY:
             case ElemKind::VARIABLE_LENGTH_SIGNED_INTEGER:
             case ElemKind::VARIABLE_LENGTH_UNSIGNED_INTEGER:
             case ElemKind::VARIABLE_LENGTH_SIGNED_ENUMERATION:
@@ -520,7 +510,6 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
         case ElemKind::FIXED_LENGTH_SIGNED_ENUMERATION:
         case ElemKind::FIXED_LENGTH_UNSIGNED_ENUMERATION:
         case ElemKind::FIXED_LENGTH_FLOATING_POINT_NUMBER:
-        case ElemKind::VARIABLE_LENGTH_BIT_ARRAY:
         case ElemKind::VARIABLE_LENGTH_SIGNED_INTEGER:
         case ElemKind::VARIABLE_LENGTH_UNSIGNED_INTEGER:
         case ElemKind::VARIABLE_LENGTH_SIGNED_ENUMERATION:

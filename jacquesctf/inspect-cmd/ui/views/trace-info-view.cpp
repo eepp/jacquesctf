@@ -48,14 +48,8 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
     rows.push_back(std::make_unique<_StrPropRow>("Trace directory",
                                                  metadata.path().parent_path().string()));
     rows.push_back(std::make_unique<_StrPropRow>("Metadata stream", metadata.path().string()));
-
-    if (trace.envStreamPath()) {
-        rows.push_back(std::make_unique<_StrPropRow>("Environment stream",
-                                                     trace.envStreamPath()->string()));
-    }
-
     rows.push_back(std::make_unique<_EmptyRow>());
-    rows.push_back(std::make_unique<_SectionRow>("Data stream info"));
+    rows.push_back(std::make_unique<_SectionRow>("Data streams"));
 
     Size dsfCount = 0;
     Size dsfWithoutDsIdCount = 0;
@@ -161,22 +155,28 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
                                                   static_cast<long long>(totalExpectedPktsPaddingLen.bits())));
     rows.push_back(std::make_unique<_SepRow>());
 
+    static constexpr const char *beginStr = "Beginning";
+
     if (firstTs) {
-        rows.push_back(std::make_unique<_TsPropRow>("Beginning", *firstTs));
+        rows.push_back(std::make_unique<_TsPropRow>(beginStr, *firstTs));
     } else {
-        rows.push_back(std::make_unique<_NonePropRow>("Beginning"));
+        rows.push_back(std::make_unique<_NonePropRow>(beginStr));
     }
+
+    static constexpr const char *endStr = "End";
 
     if (lastTs) {
-        rows.push_back(std::make_unique<_TsPropRow>("End", *lastTs));
+        rows.push_back(std::make_unique<_TsPropRow>(endStr, *lastTs));
     } else {
-        rows.push_back(std::make_unique<_NonePropRow>("End"));
+        rows.push_back(std::make_unique<_NonePropRow>(endStr));
     }
 
+    static constexpr const char *durationStr = "Duration";
+
     if (firstTs && lastTs && firstTs <= lastTs) {
-        rows.push_back(std::make_unique<_DurationPropRow>("Duration", *lastTs - *firstTs));
+        rows.push_back(std::make_unique<_DurationPropRow>(durationStr, *lastTs - *firstTs));
     } else {
-        rows.push_back(std::make_unique<_NonePropRow>("Duration"));
+        rows.push_back(std::make_unique<_NonePropRow>(durationStr));
     }
 
     rows.push_back(std::make_unique<_SepRow>());
@@ -207,7 +207,7 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
     }
 
     rows.push_back(std::make_unique<_EmptyRow>());
-    rows.push_back(std::make_unique<_SectionRow>("Metadata stream info"));
+    rows.push_back(std::make_unique<_SectionRow>("Metadata stream"));
 
     const auto pMetadataStream = dynamic_cast<const yactfr::PacketizedMetadataStream *>(&metadata.stream());
 
@@ -227,8 +227,11 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
                         "Big-endian" : "Little-endian";
 
         rows.push_back(std::make_unique<_StrPropRow>("Byte order", bo));
-        rows.push_back(std::make_unique<_StrPropRow>("UUID",
+        rows.push_back(std::make_unique<_StrPropRow>("UUID (stream packets)",
                                                      boost::uuids::to_string(pMetadataStream->uuid())));
+    } else if (metadata.streamUuid()) {
+        rows.push_back(std::make_unique<_StrPropRow>("Stream UUID",
+                                                     boost::uuids::to_string(*metadata.streamUuid())));
     }
 
     rows.push_back(std::make_unique<_EmptyRow>());
@@ -239,11 +242,13 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
 
     rows.push_back(std::make_unique<_StrPropRow>("Version", version));
 
+    static constexpr const char *traceUuidStr = "Trace UUID";
+
     if (traceType.uuid()) {
-        rows.push_back(std::make_unique<_StrPropRow>("UUID",
+        rows.push_back(std::make_unique<_StrPropRow>(traceUuidStr,
                                                      boost::uuids::to_string(*traceType.uuid())));
     } else {
-        rows.push_back(std::make_unique<_NonePropRow>("UUID"));
+        rows.push_back(std::make_unique<_NonePropRow>(traceUuidStr));
     }
 
     rows.push_back(std::make_unique<_StrPropRow>("Is correlatable",
@@ -263,38 +268,15 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
     rows.push_back(std::make_unique<_SIntPropRow>("Clock types",
                                                   static_cast<long long>(traceType.clockTypes().size())));
 
-    if (trace.envStreamError() || trace.env()) {
+    if (!traceType.environment().entries().empty()) {
         rows.push_back(std::make_unique<_EmptyRow>());
-        rows.push_back(std::make_unique<_SectionRow>(std::string {"Trace environment"} +
-                                                     (trace.envStreamError() ? " (error)" : "")));
+        rows.push_back(std::make_unique<_SectionRow>("Trace environment"));
 
-        if (trace.envStreamError()) {
-            assert(!trace.env());
-
-            if (trace.envStreamError()->path()) {
-                rows.push_back(std::make_unique<_ErrorPropRow>("Data stream path",
-                                                               trace.envStreamError()->path()->string()));
-            }
-
-            if (trace.envStreamError()->offset()) {
-                const auto offset = DataLen {*trace.envStreamError()->offset()};
-                const auto offsetStr = offset.format(utils::LenFmtMode::BITS, ',');
-
-                rows.push_back(std::make_unique<_ErrorPropRow>("Error offset",
-                                                               offsetStr.first + ' ' + offsetStr.second));
-            }
-
-            rows.push_back(std::make_unique<_ErrorPropRow>("Error message",
-                                                           trace.envStreamError()->msg()));
-        } else {
-            assert(!trace.envStreamError());
-
-            for (auto& entryPair : trace.env()->entries()) {
-                if (const auto intEntry = boost::get<long long>(&entryPair.second)) {
-                    rows.push_back(std::make_unique<_SIntPropRow>(entryPair.first, *intEntry));
-                } else if (const auto strEntry = boost::get<std::string>(&entryPair.second)) {
-                    rows.push_back(std::make_unique<_StrPropRow>(entryPair.first, *strEntry));
-                }
+        for (auto& entryPair : traceType.environment().entries()) {
+            if (const auto intEntry = boost::get<long long>(&entryPair.second)) {
+                rows.push_back(std::make_unique<_SIntPropRow>(entryPair.first, *intEntry));
+            } else if (const auto strEntry = boost::get<std::string>(&entryPair.second)) {
+                rows.push_back(std::make_unique<_StrPropRow>(entryPair.first, *strEntry));
             }
         }
     }
@@ -317,17 +299,21 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
 
         rows.push_back(std::make_unique<_SectionRow>(title));
 
+        static constexpr const char *descrStr = "Description";
+
         if (clkType->description()) {
-            rows.push_back(std::make_unique<_StrPropRow>("Description", *clkType->description()));
+            rows.push_back(std::make_unique<_StrPropRow>(descrStr, *clkType->description()));
         } else {
-            rows.push_back(std::make_unique<_NonePropRow>("Description"));
+            rows.push_back(std::make_unique<_NonePropRow>(descrStr));
         }
 
+        static constexpr const char *uuidStr = "UUID";
+
         if (clkType->uuid()) {
-            rows.push_back(std::make_unique<_StrPropRow>("UUID",
+            rows.push_back(std::make_unique<_StrPropRow>(uuidStr,
                                                          boost::uuids::to_string(*clkType->uuid())));
         } else {
-            rows.push_back(std::make_unique<_NonePropRow>("UUID"));
+            rows.push_back(std::make_unique<_NonePropRow>(uuidStr));
         }
 
         rows.push_back(std::make_unique<_SIntPropRow>("Frequency (Hz)",

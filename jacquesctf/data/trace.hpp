@@ -22,34 +22,6 @@ namespace jacques {
 
 class DsFile;
 
-class TraceEnvStreamError final
-{
-public:
-    explicit TraceEnvStreamError(std::string msg,
-                                 boost::optional<boost::filesystem::path> path = boost::none,
-                                 boost::optional<Index> offset = boost::none);
-
-    const std::string& msg() const noexcept
-    {
-        return _msg;
-    }
-
-    const boost::optional<boost::filesystem::path>& path() const noexcept
-    {
-        return _path;
-    }
-
-    const boost::optional<Index>& offset() const noexcept
-    {
-        return _offset;
-    }
-
-private:
-    std::string _msg;
-    boost::optional<boost::filesystem::path> _path;
-    boost::optional<Index> _offset;
-};
-
 class Trace final :
     boost::noncopyable
 {
@@ -58,11 +30,9 @@ public:
 
 public:
     explicit Trace(const boost::filesystem::path& metadataPath,
-                   const std::vector<boost::filesystem::path>& dsFilePaths = {},
-                   bool readEnvStream = true);
+                   const std::vector<boost::filesystem::path>& dsFilePaths = {});
 
-    explicit Trace(const std::vector<boost::filesystem::path>& dsFilePaths,
-                   bool readEnvStream = true);
+    explicit Trace(const std::vector<boost::filesystem::path>& dsFilePaths);
 
 public:
     static std::unique_ptr<Trace> withoutDsFiles(const boost::filesystem::path& traceDir);
@@ -82,31 +52,11 @@ public:
         return _dsFiles;
     }
 
-    const boost::optional<boost::filesystem::path>& envStreamPath() const noexcept
-    {
-        return _envStreamPath;
-    }
-
-    const boost::optional<yactfr::TraceEnvironment>& env() const noexcept
-    {
-        return _env;
-    }
-
-    const boost::optional<TraceEnvStreamError>& envStreamError() const noexcept
-    {
-        return _envStreamError;
-    }
-
 private:
-    void _createMetadataAndEnv(const boost::filesystem::path& path, bool readEnvStream);
-    void _readEnvStream();
-    bool _looksLikeTraceEnvStream(const boost::filesystem::path& path) const;
+    void _createMetadata(const boost::filesystem::path& path);
 
 private:
     DsFiles _dsFiles;
-    boost::optional<boost::filesystem::path> _envStreamPath;
-    boost::optional<yactfr::TraceEnvironment> _env;
-    boost::optional<TraceEnvStreamError> _envStreamError;
     std::unique_ptr<Metadata> _metadata;
 };
 

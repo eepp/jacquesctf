@@ -14,6 +14,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 #include <boost/core/noncopyable.hpp>
+#include <boost/uuid/uuid.hpp>
 
 #include "aliases.hpp"
 #include "bo.hpp"
@@ -33,7 +34,8 @@ public:
 
 public:
     explicit Metadata(boost::filesystem::path path, yactfr::TraceType::UP traceType,
-                      std::unique_ptr<const yactfr::MetadataStream> stream);
+                      std::unique_ptr<const yactfr::MetadataStream> stream,
+                      boost::optional<boost::uuids::uuid> streamUuid);
     const yactfr::DataType *dtParent(const yactfr::DataType& dt) const noexcept;
     yactfr::Scope dtScope(const yactfr::DataType& dt) const noexcept;
     const DtPath& dtPath(const yactfr::DataType& dt) const noexcept;
@@ -66,6 +68,11 @@ public:
         return *_stream;
     }
 
+    const boost::optional<boost::uuids::uuid>& streamUuid() const noexcept
+    {
+        return _streamUuid;
+    }
+
     // true if all clock types are absolute or have the same UUID
     bool isCorrelatable() const noexcept
     {
@@ -80,6 +87,7 @@ private:
     const boost::filesystem::path _path;
     yactfr::TraceType::UP _traceType;
     std::unique_ptr<const yactfr::MetadataStream> _stream;
+    boost::optional<boost::uuids::uuid> _streamUuid;
     DtParentMap _dtParents;
     DtScopeMap _dtScopes;
     DtPathMap _dtPaths;
