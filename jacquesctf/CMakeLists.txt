@@ -3,9 +3,21 @@
 # Unauthorized copying of this file, via any medium, is strictly
 # prohibited. Proprietary and confidential.
 
-# find ncurses
-set (CURSES_NEED_NCURSES TRUE)
-find_package (Curses REQUIRED)
+# find ncurses (optional)
+option (OPT_WITHOUT_INSPECT_CMD "Don't build the `inspect` command")
+
+if (NOT OPT_WITHOUT_INSPECT_CMD)
+    set (CURSES_NEED_NCURSES TRUE)
+    find_package (Curses)
+
+    if (CURSES_FOUND)
+        set (JACQUES_HAS_INSPECT_CMD ON)
+        add_compile_definitions (JACQUES_HAS_INSPECT_CMD)
+        message (STATUS "Will build the `inspect` command")
+    else ()
+        message (WARNING "Missing ncurses dependency: won't build the `inspect` command.")
+    endif ()
+endif ()
 
 # find Boost
 find_package (
@@ -38,6 +50,52 @@ endif ()
 find_package (Threads REQUIRED)
 
 # Jacques CTF program
+if (JACQUES_HAS_INSPECT_CMD)
+    set (
+        JACQUES_INSPECT_CMD_SOURCES
+        inspect-cmd/state/ds-file-state.cpp
+        inspect-cmd/state/pkt-state.cpp
+        inspect-cmd/state/search-query.cpp
+        inspect-cmd/state/state.cpp
+        inspect-cmd/ui/inspect-cmd.cpp
+        inspect-cmd/ui/screens/ds-files-screen.cpp
+        inspect-cmd/ui/screens/dts-screen.cpp
+        inspect-cmd/ui/screens/help-screen.cpp
+        inspect-cmd/ui/screens/inspect-screen.cpp
+        inspect-cmd/ui/screens/pkts-screen.cpp
+        inspect-cmd/ui/screens/screen.cpp
+        inspect-cmd/ui/screens/trace-info-screen.cpp
+        inspect-cmd/ui/search-ctrl.cpp
+        inspect-cmd/ui/stylist.cpp
+        inspect-cmd/ui/views/abstract-dt-details.cpp
+        inspect-cmd/ui/views/ds-file-table-view.cpp
+        inspect-cmd/ui/views/dst-table-view.cpp
+        inspect-cmd/ui/views/dt-details-from-dt.cpp
+        inspect-cmd/ui/views/dt-details.cpp
+        inspect-cmd/ui/views/dt-explorer-view.cpp
+        inspect-cmd/ui/views/enum-type-mapping-details.cpp
+        inspect-cmd/ui/views/er-table-view.cpp
+        inspect-cmd/ui/views/ert-table-view.cpp
+        inspect-cmd/ui/views/help-view.cpp
+        inspect-cmd/ui/views/input-view.cpp
+        inspect-cmd/ui/views/pkt-checkpoints-build-progress-view.cpp
+        inspect-cmd/ui/views/pkt-data-view.cpp
+        inspect-cmd/ui/views/pkt-decoding-error-details-view.cpp
+        inspect-cmd/ui/views/pkt-index-build-progress-view.cpp
+        inspect-cmd/ui/views/pkt-region-info-view.cpp
+        inspect-cmd/ui/views/pkt-table-view.cpp
+        inspect-cmd/ui/views/scroll-view.cpp
+        inspect-cmd/ui/views/search-input-view.cpp
+        inspect-cmd/ui/views/simple-msg-view.cpp
+        inspect-cmd/ui/views/status-view.cpp
+        inspect-cmd/ui/views/sub-dt-explorer-view.cpp
+        inspect-cmd/ui/views/table-view.cpp
+        inspect-cmd/ui/views/text-input-view.cpp
+        inspect-cmd/ui/views/trace-info-view.cpp
+        inspect-cmd/ui/views/view.cpp
+    )
+endif ()
+
 add_executable (
     jacquesctf
     cfg.cpp
@@ -63,46 +121,7 @@ add_executable (
     data/scope.cpp
     data/trace.cpp
     data/ts.cpp
-    inspect-cmd/state/ds-file-state.cpp
-    inspect-cmd/state/pkt-state.cpp
-    inspect-cmd/state/search-query.cpp
-    inspect-cmd/state/state.cpp
-    inspect-cmd/ui/inspect-cmd.cpp
-    inspect-cmd/ui/screens/ds-files-screen.cpp
-    inspect-cmd/ui/screens/dts-screen.cpp
-    inspect-cmd/ui/screens/help-screen.cpp
-    inspect-cmd/ui/screens/inspect-screen.cpp
-    inspect-cmd/ui/screens/pkts-screen.cpp
-    inspect-cmd/ui/screens/screen.cpp
-    inspect-cmd/ui/screens/trace-info-screen.cpp
-    inspect-cmd/ui/search-ctrl.cpp
-    inspect-cmd/ui/stylist.cpp
-    inspect-cmd/ui/views/abstract-dt-details.cpp
-    inspect-cmd/ui/views/ds-file-table-view.cpp
-    inspect-cmd/ui/views/dst-table-view.cpp
-    inspect-cmd/ui/views/dt-details-from-dt.cpp
-    inspect-cmd/ui/views/dt-details.cpp
-    inspect-cmd/ui/views/dt-explorer-view.cpp
-    inspect-cmd/ui/views/enum-type-mapping-details.cpp
-    inspect-cmd/ui/views/er-table-view.cpp
-    inspect-cmd/ui/views/ert-table-view.cpp
-    inspect-cmd/ui/views/help-view.cpp
-    inspect-cmd/ui/views/input-view.cpp
-    inspect-cmd/ui/views/pkt-checkpoints-build-progress-view.cpp
-    inspect-cmd/ui/views/pkt-data-view.cpp
-    inspect-cmd/ui/views/pkt-decoding-error-details-view.cpp
-    inspect-cmd/ui/views/pkt-index-build-progress-view.cpp
-    inspect-cmd/ui/views/pkt-region-info-view.cpp
-    inspect-cmd/ui/views/pkt-table-view.cpp
-    inspect-cmd/ui/views/scroll-view.cpp
-    inspect-cmd/ui/views/search-input-view.cpp
-    inspect-cmd/ui/views/simple-msg-view.cpp
-    inspect-cmd/ui/views/status-view.cpp
-    inspect-cmd/ui/views/sub-dt-explorer-view.cpp
-    inspect-cmd/ui/views/table-view.cpp
-    inspect-cmd/ui/views/text-input-view.cpp
-    inspect-cmd/ui/views/trace-info-view.cpp
-    inspect-cmd/ui/views/view.cpp
+    ${JACQUES_INSPECT_CMD_SOURCES}
     jacques.cpp
     list-pkts-cmd.cpp
     print-metadata-text-cmd.cpp

@@ -20,7 +20,10 @@
 #include "list-pkts-cmd.hpp"
 #include "copy-pkts-cmd.hpp"
 #include "create-lttng-index-cmd.hpp"
-#include "inspect-cmd/ui/inspect-cmd.hpp"
+
+#ifdef JACQUES_HAS_INSPECT_CMD
+# include "inspect-cmd/ui/inspect-cmd.hpp"
+#endif
 
 namespace bfs = boost::filesystem;
 
@@ -37,6 +40,8 @@ static void printCliUsage(const char * const cmdName)
     std::puts("");
     std::puts("`inspect` command (default)");
     std::puts("¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯");
+
+#ifdef JACQUES_HAS_INSPECT_CMD
     std::puts("Usage: inspect PATH...");
     std::puts("");
     std::puts("Interactively inspect CTF traces, CTF data stream files, or CTF metadata");
@@ -45,6 +50,10 @@ static void printCliUsage(const char * const cmdName)
     std::puts("If PATH is a single CTF metadata file, print its text content and exit.");
     std::puts("If PATH is a CTF data stream file, inspect this file.");
     std::puts("If PATH is a directory, inspect all CTF data stream files found recursively.");
+#else
+    std::puts("Not available in this build.");
+#endif
+
     std::puts("");
     std::puts("`list-packets` command");
     std::puts("¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯");
@@ -120,7 +129,11 @@ static void jacques(const int argc, const char *argv[])
     } else if (const auto specCfg = dynamic_cast<const CreateLttngIndexCfg *>(cfg.get())) {
         createLttngIndexCmd(*specCfg);
     } else if (const auto specCfg = dynamic_cast<const InspectCfg *>(cfg.get())) {
+#ifdef JACQUES_HAS_INSPECT_CMD
         inspectCmd(*specCfg);
+#else
+        throw CliError {"`inspect` command requested, but not available in this build."};
+#endif
     } else {
         std::abort();
     }
