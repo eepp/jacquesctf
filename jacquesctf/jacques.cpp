@@ -25,11 +25,14 @@
 # include "inspect-cmd/ui/inspect-cmd.hpp"
 #endif
 
-namespace bfs = boost::filesystem;
+#ifdef JACQUES_HAS_INSPECT_GUI_CMD
+# include "inspect-gui-cmd/ui/inspect-gui-cmd.hpp"
+#endif
 
 namespace jacques {
+namespace {
 
-static void printCliUsage(const char * const cmdName)
+void printCliUsage(const char * const cmdName)
 {
     std::printf("Usage: %s [GEN OPTS] [CMD] ARG...\n", cmdName);
     std::puts("");
@@ -107,12 +110,12 @@ static void printCliUsage(const char * const cmdName)
     std::puts("If PATH is a directory, use all the CTF data stream files found recursively.");
 }
 
-static void printVersion()
+void printVersion()
 {
     std::cout << "Jacques CTF " JACQUES_VERSION << std::endl;
 }
 
-static void jacques(const int argc, const char *argv[])
+void jacques(const int argc, const char *argv[])
 {
     const auto cfg = cfgFromArgs(argc, argv);
 
@@ -139,6 +142,7 @@ static void jacques(const int argc, const char *argv[])
     }
 }
 
+} // namespace
 } // namespace jacques
 
 int main(const int argc, const char *argv[])

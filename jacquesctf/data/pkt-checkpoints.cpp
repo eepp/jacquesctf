@@ -158,16 +158,20 @@ void PktCheckpoints::_createCheckpoint(yactfr::ElementSequenceIterator& it,
     pktCheckpointsBuildListener.update(*er);
 }
 
-static bool indexInPktLessThan(const PktCheckpoints::Checkpoint& checkpoint,
+namespace {
+
+bool indexInPktLessThan(const PktCheckpoints::Checkpoint& checkpoint,
                                const Index indexInPkt)
 {
     return checkpoint.first->indexInPkt() < indexInPkt;
 }
 
-static bool indexInPktEqual(const Er& er, const Index indexInPkt)
+bool indexInPktEqual(const Er& er, const Index indexInPkt)
 {
     return er.indexInPkt() == indexInPkt;
 }
+
+} // namespace
 
 const PktCheckpoints::Checkpoint *PktCheckpoints::nearestCheckpointBeforeOrAtIndex(const Index indexInPkt) const noexcept
 {
@@ -187,16 +191,20 @@ const PktCheckpoints::Checkpoint *PktCheckpoints::nearestCheckpointAfterIndex(co
     });
 }
 
-static bool offsetInPktBitsLessThan(const PktCheckpoints::Checkpoint& checkpoint,
+namespace {
+
+bool offsetInPktBitsLessThan(const PktCheckpoints::Checkpoint& checkpoint,
                                     const Index offsetInPktBits)
 {
     return checkpoint.first->segment().offsetInPktBits() < offsetInPktBits;
 }
 
-static bool offsetInPktBitsEqual(const Er& er, const Index offsetInPktBits)
+bool offsetInPktBitsEqual(const Er& er, const Index offsetInPktBits)
 {
     return er.segment().offsetInPktBits() == offsetInPktBits;
 }
+
+} // namespace
 
 const PktCheckpoints::Checkpoint *PktCheckpoints::nearestCheckpointBeforeOrAtOffsetInPktBits(const Index offsetInPktBits) const noexcept
 {
@@ -217,8 +225,10 @@ const PktCheckpoints::Checkpoint *PktCheckpoints::nearestCheckpointAfterOffsetIn
     });
 }
 
-static bool nsFromOriginLessThan(const PktCheckpoints::Checkpoint& checkpoint,
-                                 const long long nsFromOrigin)
+namespace {
+
+bool nsFromOriginLessThan(const PktCheckpoints::Checkpoint& checkpoint,
+                          const long long nsFromOrigin)
 {
     const auto& er = *checkpoint.first;
 
@@ -229,7 +239,7 @@ static bool nsFromOriginLessThan(const PktCheckpoints::Checkpoint& checkpoint,
     return er.ts()->nsFromOrigin() < nsFromOrigin;
 }
 
-static bool nsFromOriginEqual(const Er& er, const long long nsFromOrigin)
+bool nsFromOriginEqual(const Er& er, const long long nsFromOrigin)
 {
     if (!er.ts()) {
         return false;
@@ -237,6 +247,8 @@ static bool nsFromOriginEqual(const Er& er, const long long nsFromOrigin)
 
     return er.ts()->nsFromOrigin() == nsFromOrigin;
 }
+
+} // namespace
 
 const PktCheckpoints::Checkpoint *PktCheckpoints::nearestCheckpointBeforeOrAtNsFromOrigin(const long long nsFromOrigin) const noexcept
 {
@@ -297,8 +309,9 @@ const PktCheckpoints::Checkpoint *PktCheckpoints::nearestCheckpointAfterNsFromOr
     return checkpoint;
 }
 
-static bool cyclesLessThan(const PktCheckpoints::Checkpoint& checkpoint,
-                           const unsigned long long cycles)
+namespace {
+
+bool cyclesLessThan(const PktCheckpoints::Checkpoint& checkpoint, const unsigned long long cycles)
 {
     const auto& er = *checkpoint.first;
 
@@ -309,7 +322,7 @@ static bool cyclesLessThan(const PktCheckpoints::Checkpoint& checkpoint,
     return er.ts()->cycles() < cycles;
 }
 
-static bool cyclesEqual(const Er& er, const unsigned long long cycles)
+bool cyclesEqual(const Er& er, const unsigned long long cycles)
 {
     if (!er.ts()) {
         return false;
@@ -317,6 +330,8 @@ static bool cyclesEqual(const Er& er, const unsigned long long cycles)
 
     return er.ts()->cycles() == cycles;
 }
+
+} // namespace
 
 const PktCheckpoints::Checkpoint *PktCheckpoints::nearestCheckpointBeforeOrAtCycles(const unsigned long long cycles) const noexcept
 {

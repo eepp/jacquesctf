@@ -503,8 +503,9 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
     }
 }
 
-static inline
-Stylist::TableViewCellStyle stylistTvcStyleFromTvcStyle(const TableViewCell::Style style)
+namespace {
+
+inline Stylist::TableViewCellStyle stylistTvcStyleFromTvcStyle(const TableViewCell::Style style)
 {
     switch (style) {
     case TableViewCell::Style::NORMAL:
@@ -520,6 +521,8 @@ Stylist::TableViewCellStyle stylistTvcStyleFromTvcStyle(const TableViewCell::Sty
         std::abort();
     }
 }
+
+} // namespace
 
 void TableView::_drawCells(const Index index,
                            const std::vector<std::unique_ptr<TableViewCell>>& cells)

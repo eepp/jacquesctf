@@ -19,10 +19,12 @@
 #include "data/metadata.hpp"
 #include "data/ds-file.hpp"
 
+namespace jacques {
+
 namespace bfs = boost::filesystem;
 namespace bendian = boost::endian;
 
-namespace jacques {
+namespace {
 
 struct LTTngIndexHeader {
     bendian::big_uint32_buf_t magic;
@@ -53,7 +55,7 @@ static_assert(sizeof(LTTngIndexEntryBase) == 7 * 8,
 static_assert(sizeof(LTTngIndexEntry11Addon) == 2 * 8,
               "LTTng index entry v1.1 addon structure has the expected size.");
 
-static bool entryHas11Addon(const DsFile& dsf) noexcept
+bool entryHas11Addon(const DsFile& dsf) noexcept
 {
     return dsf.pktIndexEntry(0).dsId() && dsf.pktIndexEntry(0).seqNum();
 }
@@ -64,7 +66,7 @@ void writeData(std::ofstream& os, const DataT& data)
     os.write(reinterpret_cast<const char *>(&data), sizeof(data));
 }
 
-static void writeLTTngIndexHeader(std::ofstream& idxStream, const DsFile& dsf)
+void writeLTTngIndexHeader(std::ofstream& idxStream, const DsFile& dsf)
 {
     LTTngIndexHeader header;
 
@@ -82,8 +84,8 @@ static void writeLTTngIndexHeader(std::ofstream& idxStream, const DsFile& dsf)
     writeData(idxStream, header);
 }
 
-static void writeLttngIndexEntry(std::ofstream& idxStream, const DsFile& dsf,
-                                 const PktIndexEntry& indexEntry)
+void writeLttngIndexEntry(std::ofstream& idxStream, const DsFile& dsf,
+                          const PktIndexEntry& indexEntry)
 {
     LTTngIndexEntryBase entryBase;
 
@@ -125,7 +127,7 @@ static void writeLttngIndexEntry(std::ofstream& idxStream, const DsFile& dsf,
     }
 }
 
-static void createDsFileLttngIndex(const DsFile& dsf)
+void createDsFileLttngIndex(const DsFile& dsf)
 {
     const auto indexDir = dsf.path().parent_path() / "index";
 
@@ -151,6 +153,8 @@ static void createDsFileLttngIndex(const DsFile& dsf)
         throw CmdError {exc.what()};
     }
 }
+
+} // namespace
 
 void createLttngIndexCmd(const CreateLttngIndexCfg& cfg)
 {

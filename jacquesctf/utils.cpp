@@ -18,10 +18,10 @@
 #include "utils.hpp"
 #include "cfg.hpp"
 
-namespace bfs = boost::filesystem;
-
 namespace jacques {
 namespace utils {
+
+namespace bfs = boost::filesystem;
 
 std::pair<std::string, std::string> formatPath(const bfs::path& path, const Size maxLen)
 {
@@ -53,18 +53,20 @@ std::pair<std::string, std::string> formatPath(const bfs::path& path, const Size
     return std::make_pair(std::move(dirNameStr), std::move(filenameStr));
 }
 
-static inline long long abs(const long long val) noexcept
+namespace {
+
+inline long long abs(const long long val) noexcept
 {
     return std::abs(val);
 }
 
-static inline unsigned long long abs(const unsigned long long val) noexcept
+inline unsigned long long abs(const unsigned long long val) noexcept
 {
     return val;
 }
 
 template <typename ValT>
-static std::string sepNumber(const ValT val, const char sep, const char * const fmt)
+std::string sepNumber(const ValT val, const char sep, const char * const fmt)
 {
     /*
      * 1. Convert absolute value to string.
@@ -106,6 +108,8 @@ static std::string sepNumber(const ValT val, const char sep, const char * const 
     std::reverse(ret.begin(), ret.end());
     return ret;
 }
+
+} // namespace
 
 std::string sepNumber(const long long val, const char sep)
 {
@@ -188,14 +192,14 @@ std::string normalizeGlobPattern(const std::string& pattern)
     return normPat;
 }
 
-namespace internal {
+namespace {
 
-static inline bool atEndOfPattern(const char * const p, const std::string& pattern) noexcept
+inline bool atEndOfPattern(const char * const p, const std::string& pattern) noexcept
 {
     return static_cast<Size>(p - pattern.c_str()) == pattern.size() || *p == '\0';
 }
 
-} // namespace internal
+} // namespace
 
 bool globMatch(const std::string& pattern, const std::string& candidate)
 {
@@ -212,7 +216,7 @@ retry:
     while (static_cast<Size>(c - candidate.c_str()) < candidateLen && *c != '\0') {
         assert(*c);
 
-        if (internal::atEndOfPattern(p, pattern)) {
+        if (atEndOfPattern(p, pattern)) {
             goto endOfPattern;
         }
 
@@ -227,7 +231,7 @@ retry:
             retryC = c;
             retryP = p + 1;
 
-            if (internal::atEndOfPattern(retryP, pattern)) {
+            if (atEndOfPattern(retryP, pattern)) {
                 /*
                  * Star at the end of the pattern at this point:
                  * automatic match.
@@ -249,7 +253,7 @@ retry:
             // fall through!
 
         default:
-            if (internal::atEndOfPattern(p, pattern) || *c != *p) {
+            if (atEndOfPattern(p, pattern) || *c != *p) {
 endOfPattern:
                 /* Character mismatch OR end of pattern. */
                 if (!gotAStar) {
@@ -279,12 +283,12 @@ endOfPattern:
      * We checked every candidate character and we're still in a success
      * state: the only pattern character allowed to remain is a star.
      */
-    if (internal::atEndOfPattern(p, pattern)) {
+    if (atEndOfPattern(p, pattern)) {
         return true;
     }
 
     ++p;
-    return p[-1] == '*' && internal::atEndOfPattern(p, pattern);
+    return p[-1] == '*' && atEndOfPattern(p, pattern);
 }
 
 std::pair<std::string, std::string> formatLen(const Size lenBits, const LenFmtMode fmtMode,

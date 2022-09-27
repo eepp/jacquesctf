@@ -81,7 +81,9 @@ void DtDetails::_renderLine(WINDOW *const window, const Size maxWidth, const boo
     }
 }
 
-static yactfr::DisplayBase intTypePrefDispBase(const yactfr::DataType& dt) noexcept
+namespace {
+
+yactfr::DisplayBase intTypePrefDispBase(const yactfr::DataType& dt) noexcept
 {
     if (dt.isFixedLengthIntegerType()) {
         return dt.asFixedLengthIntegerType().preferredDisplayBase();
@@ -90,6 +92,8 @@ static yactfr::DisplayBase intTypePrefDispBase(const yactfr::DataType& dt) noexc
         return dt.asVariableLengthIntegerType().preferredDisplayBase();
     }
 }
+
+} // namespace
 
 void DtDetails::_tryRenderPrefDispBaseProp(const yactfr::DataType& dt, WINDOW * const window,
                                            Size& remWidth, const bool stylize) const
@@ -121,7 +125,9 @@ void DtDetails::_tryRenderPrefDispBaseProp(const yactfr::DataType& dt, WINDOW * 
     }());
 }
 
-static std::string alignStr(const yactfr::Size align)
+namespace {
+
+std::string alignStr(const yactfr::Size align)
 {
     if (align == 1) {
         return "";
@@ -133,10 +139,12 @@ static std::string alignStr(const yactfr::Size align)
     }
 }
 
-static std::string alignStr(const yactfr::DataType& dt)
+std::string alignStr(const yactfr::DataType& dt)
 {
     return alignStr(dt.alignment());
 }
+
+} // namespace
 
 void DtDetails::_renderDt(const yactfr::FixedLengthBitArrayType& dt, WINDOW * const window,
                           Size remWidth, const bool stylize) const

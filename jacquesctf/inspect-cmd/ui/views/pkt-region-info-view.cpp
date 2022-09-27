@@ -37,7 +37,9 @@ void PktRegionInfoView::_stateChanged(const Message)
     this->redraw();
 }
 
-static const char *scopeStr(const yactfr::Scope scope) noexcept
+namespace {
+
+const char *scopeStr(const yactfr::Scope scope) noexcept
 {
     switch (scope) {
     case yactfr::Scope::PACKET_HEADER:
@@ -98,6 +100,8 @@ private:
         return "<%>";
     }
 };
+
+} // namespace
 
 std::string dtPathItemStr(const DtPath::Item& item)
 {

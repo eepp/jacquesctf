@@ -60,6 +60,8 @@ void PktsScreen::_resized()
     _searchCtrl.parentScreenResized(*this);
 }
 
+namespace {
+
 class AnalyzeAllPktsProgressUpdater final :
     public PktCheckpointsBuildListener
 {
@@ -115,6 +117,8 @@ private:
     Index _count = 0;
     std::unique_ptr<PktCheckpointsBuildProgressView> _view;
 };
+
+} // namespace
 
 KeyHandlingReaction PktsScreen::_handleKey(const int key)
 {

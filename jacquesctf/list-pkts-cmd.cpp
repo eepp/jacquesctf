@@ -15,8 +15,9 @@
 #include "data/time-ops.hpp"
 
 namespace jacques {
+namespace {
 
-static void printHeader(const ListPktsCfg::Fmt fmt)
+void printHeader(const ListPktsCfg::Fmt fmt)
 {
     assert(fmt == ListPktsCfg::Fmt::MACHINE);
 
@@ -28,7 +29,7 @@ static void printHeader(const ListPktsCfg::Fmt fmt)
                  "Discarded event record counter snapshot,Is valid?" << std::endl;
 }
 
-static void printRow(const PktIndexEntry& indexEntry, const ListPktsCfg::Fmt fmt)
+void printRow(const PktIndexEntry& indexEntry, const ListPktsCfg::Fmt fmt)
 {
     assert(fmt == ListPktsCfg::Fmt::MACHINE);
 
@@ -89,6 +90,8 @@ static void printRow(const PktIndexEntry& indexEntry, const ListPktsCfg::Fmt fmt
 
     std::cout << (indexEntry.isInvalid() ? "no" : "yes") << std::endl;
 }
+
+} // namespace
 
 void listPktsCmd(const ListPktsCfg& cfg)
 {

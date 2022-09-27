@@ -8,8 +8,9 @@
 #include "content-pkt-region.hpp"
 
 namespace jacques {
+namespace {
 
-static OptBo boFromDt(const yactfr::DataType& dt)
+OptBo boFromDt(const yactfr::DataType& dt)
 {
     if (dt.isFixedLengthBitArrayType()) {
         return dt.asFixedLengthBitArrayType().byteOrder();
@@ -17,6 +18,8 @@ static OptBo boFromDt(const yactfr::DataType& dt)
 
     return boost::none;
 }
+
+} // namespace
 
 ContentPktRegion::ContentPktRegion(const PktSegment& segment, Scope::SP scope,
                                    const yactfr::DataType& dt, boost::optional<Val> val) noexcept :

@@ -23,8 +23,9 @@
 #include "data/time-ops.hpp"
 
 namespace jacques {
+namespace {
 
-static Index pktIndexSpecToIndex(const std::string& pktIndexSpec, const Size pktCount)
+Index pktIndexSpecToIndex(const std::string& pktIndexSpec, const Size pktCount)
 {
     std::string absIndexSpec = pktIndexSpec;
     auto fromLast = false;
@@ -63,8 +64,7 @@ static Index pktIndexSpecToIndex(const std::string& pktIndexSpec, const Size pkt
     return pktCount - pktIndexSpecNumber;
 }
 
-static std::vector<Index> parsePktIndexSpecList(const std::string& pktIndexSpecList,
-                                                const Size pktCount)
+std::vector<Index> parsePktIndexSpecList(const std::string& pktIndexSpecList, const Size pktCount)
 {
     const std::regex indexRe {"^\\s*(:?\\d+)\\s*"};
     const std::regex rangeRe {"^\\s*(:?\\d+)\\s*\\.\\.\\s*(:?\\d+)\\s*"};
@@ -109,8 +109,8 @@ static std::vector<Index> parsePktIndexSpecList(const std::string& pktIndexSpecL
     return indexes;
 }
 
-static void copyPkt(std::ifstream& srcStream, const PktIndexEntry& indexEntry,
-                    std::ofstream& dstStream, std::vector<char>& buf)
+void copyPkt(std::ifstream& srcStream, const PktIndexEntry& indexEntry, std::ofstream& dstStream,
+             std::vector<char>& buf)
 {
     const auto offset = indexEntry.offsetInDsFileBytes();
     const auto size = indexEntry.effectiveTotalLen().bytes();
@@ -127,8 +127,8 @@ static void copyPkt(std::ifstream& srcStream, const PktIndexEntry& indexEntry,
     }
 }
 
-static std::vector<Index> tryParsePktIndexSpecList(const std::string& pktIndexSpecList,
-                                                   const Size pktCount)
+std::vector<Index> tryParsePktIndexSpecList(const std::string& pktIndexSpecList,
+                                            const Size pktCount)
 {
     try {
         return parsePktIndexSpecList(pktIndexSpecList, pktCount);
@@ -139,6 +139,8 @@ static std::vector<Index> tryParsePktIndexSpecList(const std::string& pktIndexSp
         throw CmdError {ss.str()};
     }
 }
+
+} // namespace
 
 void copyPktsCmd(const CopyPktsCfg& cfg)
 {

@@ -509,7 +509,9 @@ void PktDataView::_redrawContent()
                          _state->activePktState().pkt().indexEntry().effectiveTotalLen());
 }
 
-static inline chtype charFromNibble(const std::uint8_t nibble)
+namespace {
+
+inline chtype charFromNibble(const std::uint8_t nibble)
 {
     if (nibble < 10) {
         return '0' + nibble;
@@ -517,6 +519,8 @@ static inline chtype charFromNibble(const std::uint8_t nibble)
         return 'a' + nibble - 10;
     }
 }
+
+} // namespace
 
 void PktDataView::_setHexChars()
 {

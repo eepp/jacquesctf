@@ -120,20 +120,24 @@ void SearchInputView::_drawCurText(const std::string& text)
     this->_drawFormatText(text);
 }
 
-static bool isHexDigit(const int ch)
+namespace {
+
+bool isHexDigit(const int ch)
 {
     return std::isxdigit(ch);
 }
 
-static bool isDecDigit(const int ch)
+bool isDecDigit(const int ch)
 {
     return std::isdigit(ch) || ch == ',';
 }
 
-static bool isOctDigit(const int ch)
+bool isOctDigit(const int ch)
 {
     return std::isdigit(ch) && ch != '8' && ch != '9';
 }
+
+} // namespace
 
 void SearchInputView::_drawNumber(std::string::const_iterator it,
                                   const std::string::const_iterator endIt)

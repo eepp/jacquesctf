@@ -36,13 +36,14 @@
 #include "data/error-pkt-region.hpp"
 
 namespace jacques {
+namespace {
 
-static auto screenInited = false;
+auto screenInited = false;
 
 /*
  * Releases the terminal.
  */
-static void finiScreen()
+void finiScreen()
 {
     if (screenInited) {
         endwin();
@@ -53,7 +54,7 @@ static void finiScreen()
 /*
  * Returns true if the terminal size has the minimum dimension.
  */
-static bool termSizeOk()
+bool termSizeOk()
 {
     return COLS >= 80 && LINES >= 16;
 }
@@ -61,7 +62,7 @@ static bool termSizeOk()
 /*
  * Initializes and takes control of the terminal.
  */
-static void initScreen()
+void initScreen()
 {
     initscr();
     screenInited = true;
@@ -100,7 +101,7 @@ static void initScreen()
     use_default_colors();
 }
 
-static void sigHandler(const int signo)
+void sigHandler(const int signo)
 {
     if (signo == SIGINT) {
         finiScreen();
@@ -112,7 +113,7 @@ static void sigHandler(const int signo)
     }
 }
 
-static void registerSignals()
+void registerSignals()
 {
     const auto ret = signal(SIGINT, sigHandler);
 
@@ -120,13 +121,13 @@ static void registerSignals()
     static_cast<void>(ret);
 }
 
-static void init()
+void init()
 {
     registerSignals();
     initScreen();
 }
 
-static void buildIndexes(State& state, const Stylist& stylist)
+void buildIndexes(State& state, const Stylist& stylist)
 {
     const auto screenRect = Rect {{0, 0}, static_cast<Size>(COLS), static_cast<Size>(LINES)};
     const auto view = std::make_unique<PktIndexBuildProgressView>(screenRect, stylist);
@@ -148,7 +149,7 @@ static void buildIndexes(State& state, const Stylist& stylist)
     }
 }
 
-static void showFullScreenMessage(const std::string& msg, const Stylist& stylist)
+void showFullScreenMessage(const std::string& msg, const Stylist& stylist)
 {
     const auto screenRect = Rect {{0, 0}, static_cast<Size>(COLS), static_cast<Size>(LINES)};
     const auto view = std::make_unique<SimpleMsgView>(screenRect, stylist);
@@ -222,7 +223,7 @@ private:
     bool * const _redrawCurScreen;
 };
 
-static void startInteractive(const InspectCfg& cfg)
+void startInteractive(const InspectCfg& cfg)
 {
     auto stylist = std::make_unique<const Stylist>();
 
@@ -477,6 +478,8 @@ static void startInteractive(const InspectCfg& cfg)
         doupdate();
     }
 }
+
+} // namespace
 
 void inspectCmd(const InspectCfg& cfg)
 {

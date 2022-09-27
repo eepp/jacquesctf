@@ -19,10 +19,10 @@
 #include "cfg.hpp"
 #include "utils.hpp"
 
+namespace jacques {
+
 namespace bfs = boost::filesystem;
 namespace bpo = boost::program_options;
-
-namespace jacques {
 
 CliError::CliError(const std::string& msg) :
     std::runtime_error {msg}
@@ -63,7 +63,9 @@ CreateLttngIndexCfg::CreateLttngIndexCfg(std::vector<bfs::path> paths) :
 {
 }
 
-static void expandDir(std::list<bfs::path>& tmpFilePaths, const bfs::path& path)
+namespace {
+
+void expandDir(std::list<bfs::path>& tmpFilePaths, const bfs::path& path)
 {
     namespace bfs = bfs;
 
@@ -88,8 +90,8 @@ static void expandDir(std::list<bfs::path>& tmpFilePaths, const bfs::path& path)
                         thisDirDsFilePaths.end());
 }
 
-static std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFilePaths,
-                                          const bool allowMetadata = true)
+std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFilePaths,
+                                   const bool allowMetadata = true)
 {
     namespace bfs = bfs;
 
@@ -158,7 +160,7 @@ static std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFile
     return expandedPaths;
 }
 
-static std::vector<bfs::path> getExpandedPaths(const std::vector<std::string>& args)
+std::vector<bfs::path> getExpandedPaths(const std::vector<std::string>& args)
 {
     if (args.empty()) {
         throw CliError {"Missing trace directory path, data stream file path, or metadata stream file path."};
@@ -170,7 +172,7 @@ static std::vector<bfs::path> getExpandedPaths(const std::vector<std::string>& a
     return expandPaths(origFilePaths);
 }
 
-static std::unique_ptr<const Cfg> inspectCfgFromArgs(const std::vector<std::string>& args)
+std::unique_ptr<const Cfg> inspectCfgFromArgs(const std::vector<std::string>& args)
 {
     bpo::options_description optDescr {""};
 
@@ -200,7 +202,7 @@ static std::unique_ptr<const Cfg> inspectCfgFromArgs(const std::vector<std::stri
     return std::make_unique<InspectCfg>(std::move(expandedPaths));
 }
 
-static std::unique_ptr<const Cfg> createLttngIndexCfgFromArgs(const std::vector<std::string>& args)
+std::unique_ptr<const Cfg> createLttngIndexCfgFromArgs(const std::vector<std::string>& args)
 {
     bpo::options_description optDescr {""};
 
@@ -226,7 +228,7 @@ static std::unique_ptr<const Cfg> createLttngIndexCfgFromArgs(const std::vector<
     return std::make_unique<CreateLttngIndexCfg>(std::move(expandedPaths));
 }
 
-static void checkLooksLikeDsFile(const bfs::path& path)
+void checkLooksLikeDsFile(const bfs::path& path)
 {
     if (!bfs::is_regular_file(path)) {
         std::ostringstream ss;
@@ -243,7 +245,7 @@ static void checkLooksLikeDsFile(const bfs::path& path)
     }
 }
 
-static std::unique_ptr<const Cfg> listPktsCfgFromArgs(const std::vector<std::string>& args)
+std::unique_ptr<const Cfg> listPktsCfgFromArgs(const std::vector<std::string>& args)
 {
     bpo::options_description optDescr {""};
 
@@ -283,7 +285,7 @@ static std::unique_ptr<const Cfg> listPktsCfgFromArgs(const std::vector<std::str
                                          vm.count("header") == 1);
 }
 
-static std::unique_ptr<const Cfg> copyPktsCfgFromArgs(const std::vector<std::string>& args)
+std::unique_ptr<const Cfg> copyPktsCfgFromArgs(const std::vector<std::string>& args)
 {
     bpo::options_description optDescr {""};
 
@@ -339,6 +341,8 @@ static std::unique_ptr<const Cfg> copyPktsCfgFromArgs(const std::vector<std::str
                                          vm["packet-indexes"].as<std::string>(),
                                          std::move(dstPath));
 }
+
+} // namespace
 
 std::unique_ptr<const Cfg> cfgFromArgs(const int argc, const char *argv[])
 {

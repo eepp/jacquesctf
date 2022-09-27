@@ -291,8 +291,10 @@ private:
     std::vector<_StackEntry> _stack;
 };
 
-static void setScopeDtParentsPaths(SetDtParentsPathsVisitor& visitor,
-                                   Metadata::DtScopeMap& dtScopes, const yactfr::DataType *dt)
+namespace {
+
+void setScopeDtParentsPaths(SetDtParentsPathsVisitor& visitor, Metadata::DtScopeMap& dtScopes,
+                            const yactfr::DataType *dt)
 {
     if (!dt) {
         return;
@@ -301,6 +303,8 @@ static void setScopeDtParentsPaths(SetDtParentsPathsVisitor& visitor,
     dtScopes[dt] = visitor.scope();
     dt->accept(visitor);
 }
+
+} // namespace
 
 void Metadata::_setDtParents()
 {
