@@ -96,8 +96,17 @@ if (JACQUES_HAS_INSPECT_CMD)
     )
 endif ()
 
+if (JACQUES_HAS_INSPECT_CMD OR JACQUES_HAS_INSPECT_GUI_CMD)
+    set (
+        JACQUES_INSPECT_COMMON_SOURCES
+        inspect-common/common-inspect-table-view.cpp
+    )
+endif ()
+
 add_executable (
     jacquesctf
+    ${JACQUES_INSPECT_CMD_SOURCES}
+    ${JACQUES_INSPECT_COMMON_SOURCES}
     cfg.cpp
     copy-pkts-cmd.cpp
     create-lttng-index-cmd.cpp
@@ -121,7 +130,6 @@ add_executable (
     data/scope.cpp
     data/trace.cpp
     data/ts.cpp
-    ${JACQUES_INSPECT_CMD_SOURCES}
     jacques.cpp
     list-pkts-cmd.cpp
     print-metadata-text-cmd.cpp
