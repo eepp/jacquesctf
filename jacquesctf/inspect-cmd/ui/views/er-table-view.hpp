@@ -23,9 +23,8 @@ public:
 
 protected:
     void _drawRow(Index index) override;
-    bool _hasIndex(Index index) override;
+    Size _rowCount() override;
     void _resized() override;
-    void _selectLast() override;
     void _stateChanged(Message msg) override;
 
 private:

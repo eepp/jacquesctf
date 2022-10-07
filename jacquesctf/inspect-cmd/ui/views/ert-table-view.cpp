@@ -84,13 +84,13 @@ void ErtTableView::_buildRows(const State& state)
     }
 }
 
-void ErtTableView::_drawRow(const Index index)
+void ErtTableView::_drawRow(const Index row)
 {
     if (!_erts) {
         return;
     }
 
-    const auto ert = (*_erts)[index];
+    const auto ert = (*_erts)[row];
 
     static_cast<UIntTableViewCell&>(*_row[0]).val(ert->id());
 
@@ -101,16 +101,16 @@ void ErtTableView::_drawRow(const Index index)
         _row[1]->na(true);
     }
 
-    this->_drawCells(index, _row);
+    this->_drawCells(row, _row);
 }
 
-bool ErtTableView::_hasIndex(const Index index)
+Size ErtTableView::_rowCount()
 {
     if (!_erts) {
-        return false;
+        return 0;
     }
 
-    return index < _erts->size();
+    return _erts->size();
 }
 
 void ErtTableView::dst(const yactfr::DataStreamType& dst)
@@ -122,9 +122,9 @@ void ErtTableView::dst(const yactfr::DataStreamType& dst)
     }
 
     _erts = erts;
-    this->_baseIndex(0, false);
-    this->_selIndex(0, false);
-    this->_redrawContent();
+    this->_selRowAndDraw(0, false);
+    this->_updateCounts();
+    this->_redrawRows();
 }
 
 const yactfr::EventRecordType *ErtTableView::ert() const noexcept
@@ -133,16 +133,7 @@ const yactfr::EventRecordType *ErtTableView::ert() const noexcept
         return nullptr;
     }
 
-    return (*_erts)[this->_selIndex()];
-}
-
-void ErtTableView::_selectLast()
-{
-    if (!_erts) {
-        return;
-    }
-
-    this->_selIndex(_erts->size() - 1);
+    return (*_erts)[this->_selRow()];
 }
 
 void ErtTableView::selectErt(const std::string& pattern, const bool relative)
@@ -154,7 +145,7 @@ void ErtTableView::selectErt(const std::string& pattern, const bool relative)
     Index startIndex = 0;
 
     if (relative) {
-        startIndex = this->_selIndex() + 1;
+        startIndex = this->_selRow() + 1;
 
         if (startIndex == _erts->size()) {
             startIndex = 0;
@@ -165,7 +156,7 @@ void ErtTableView::selectErt(const std::string& pattern, const bool relative)
         auto& ert = (*_erts)[index];
 
         if (ert->name() && utils::globMatch(pattern, *ert->name())) {
-            this->_selIndex(index);
+            this->_selRowAndDraw(index);
             return;
         }
     }
@@ -174,7 +165,7 @@ void ErtTableView::selectErt(const std::string& pattern, const bool relative)
         auto& ert = (*_erts)[index];
 
         if (ert->name() && utils::globMatch(pattern, *ert->name())) {
-            this->_selIndex(index);
+            this->_selRowAndDraw(index);
             return;
         }
     }
@@ -190,7 +181,7 @@ void ErtTableView::selectErt(const yactfr::TypeId id)
         auto& ert = (*_erts)[index];
 
         if (ert->id() == id) {
-            this->_selIndex(index);
+            this->_selRowAndDraw(index);
             return;
         }
     }

@@ -21,8 +21,7 @@ namespace jacques {
 
 TableView::TableView(const Rect& rect, const std::string& title, const DecorationStyle decoStyle,
                      const Stylist& stylist) :
-    View {rect, title, decoStyle, stylist},
-    _visibleRowCount {this->contentRect().h - 1}
+    View {rect, title, decoStyle, stylist}
 {
     assert(this->contentRect().h >= 2);
 }
@@ -37,6 +36,7 @@ void TableView::_colDescrs(std::vector<TableViewColumnDescr>&& colDescrs)
 {
     _theColDescrs = std::move(colDescrs);
     this->_drawHeader();
+    this->_updateCounts();
     this->_redrawRows();
 }
 
@@ -44,53 +44,6 @@ void TableView::_redrawContent()
 {
     this->_drawHeader();
     this->_redrawRows();
-}
-
-void TableView::_baseIndex(const Index baseIndex, const bool draw)
-{
-    if (_theBaseIndex == baseIndex) {
-        return;
-    }
-
-    if (!this->_hasIndex(baseIndex)) {
-        return;
-    }
-
-    _theBaseIndex = baseIndex;
-
-    if (_theSelIndex < _theBaseIndex) {
-        _theSelIndex = _theBaseIndex;
-    } else if (_theSelIndex >= _theBaseIndex + _visibleRowCount) {
-        _theSelIndex = _theBaseIndex + _visibleRowCount - 1;
-    }
-
-    if (draw) {
-        this->_redrawRows();
-    }
-}
-
-void TableView::_selIndex(const Index index, const bool draw)
-{
-    if (!this->_hasIndex(index)) {
-        return;
-    }
-
-    const auto oldSelIndex = _theSelIndex;
-
-    _theSelIndex = index;
-
-    if (index < _theBaseIndex) {
-        this->_baseIndex(index, draw);
-        return;
-    } else if (index >= _theBaseIndex + _visibleRowCount) {
-        this->_baseIndex(index - _visibleRowCount + 1, draw);
-        return;
-    }
-
-    if (draw) {
-        this->_drawRow(oldSelIndex);
-        this->_drawRow(_theSelIndex);
-    }
 }
 
 void TableView::_drawHeader()
@@ -524,14 +477,14 @@ inline Stylist::TableViewCellStyle stylistTvcStyleFromTvcStyle(const TableViewCe
 
 } // namespace
 
-void TableView::_drawCells(const Index index,
+void TableView::_drawCells(const Index row,
                            const std::vector<std::unique_ptr<TableViewCell>>& cells)
 {
     assert(cells.size() == _theColDescrs.size());
 
-    const auto sel = _isSelHighlightEnabledMemb && this->_indexIsSel(index);
+    const auto sel = _isSelHighlightEnabledMemb && this->_rowIsSel(row);
     Index x = 0;
-    const auto y = _contentYFromIndex(index);
+    const auto y = this->_contentYFromVisibleRow(row);
 
     // set style to clear row initially
     if (sel) {
@@ -572,12 +525,12 @@ void TableView::_drawCells(const Index index,
     }
 }
 
-void TableView::_drawWarningRow(const Index index, const std::string& msg)
+void TableView::_drawWarningRow(const Index row, const std::string& msg)
 {
     const Index x = (this->contentRect().w - msg.size()) / 2;
-    const auto y = _contentYFromIndex(index);
+    const auto y = this->_contentYFromVisibleRow(row);
 
-    if (this->_indexIsSel(index)) {
+    if (this->_rowIsSel(row)) {
         this->_stylist().tableViewSel(*this, Stylist::TableViewCellStyle::WARNING);
     } else {
         this->_stylist().tableViewCell(*this, Stylist::TableViewCellStyle::WARNING);
@@ -587,160 +540,145 @@ void TableView::_drawWarningRow(const Index index, const std::string& msg)
     this->_moveAndPrint({x, y}, "%s", msg.c_str());
 }
 
+void TableView::_updateCounts()
+{
+    this->_updateCounts(this->_rowCount(), this->contentRect().h - 1);
+}
+
 void TableView::_redrawRows()
 {
-    Index index;
-
-    for (index = _theBaseIndex; index < _theBaseIndex + _visibleRowCount; ++index) {
-        if (this->_hasIndex(index)) {
-            this->_drawRow(index);
-        } else {
-            break;
+    if (this->_rowCount() == 0) {
+        for (Index yIndex = 0; yIndex < this->contentRect().h; ++yIndex) {
+            this->_clearRow(yIndex);
         }
+
+        return;
+    }
+
+    for (auto row = this->_firstVisibleRow();
+            row < this->_firstVisibleRow() + this->_visibleRowCount(); ++row) {
+        this->_drawRow(row);
     }
 
     this->_stylist().tableViewSep(*this);
 
-    for (; index < _theBaseIndex + _visibleRowCount; ++index) {
-        this->_clearRow(this->_contentYFromIndex(index));
+    for (auto yIndex = this->_contentYFromVisibleRow(this->_lastVisibleRow()) + 1;
+            yIndex < this->contentRect().h; ++yIndex) {
+        this->_clearRow(yIndex);
     }
 
-    this->_hasMoreTop(_theBaseIndex > 0);
-    this->_hasMoreBottom(this->_hasIndex(_theBaseIndex + _visibleRowCount));
+    this->_hasMoreTop(this->_rowCount() > 0 && !this->_rowIsVisible(0));
+    this->_hasMoreBottom(this->_rowCount() > 0 && !this->_rowIsVisible(this->_rowCount() - 1));
+}
+
+void TableView::_selRowAndDraw(const Index row, const bool draw)
+{
+    const auto oldSelRow = this->_selRow();
+    const auto change = this->_selRow(row, true);
+
+    if (draw) {
+        this->_drawIfChanged(change, oldSelRow);
+    }
 }
 
 void TableView::_resized()
 {
-    _visibleRowCount = this->contentRect().h - 1;
-    _theSelIndex = std::min(_theSelIndex, _theBaseIndex + _visibleRowCount - 1);
+    this->_updateCounts();
 }
 
-void TableView::_next(Size count)
+void TableView::_drawIfChanged(const _Change change, const Index oldSelRow)
 {
-    assert(count > 0);
-
-    const auto oldSelIndex = _theSelIndex;
-
-    while (true) {
-        this->_selIndex(_theSelIndex + count);
-
-        if (_theSelIndex != oldSelIndex) {
-            break;
-        }
-
-        --count;
-
-        if (count == 0) {
-            break;
-        }
+    if (change == _Change::FIRST_VISIBLE_ROW) {
+        this->_redrawRows();
+    } else if (change == _Change::SELECTED_ROW) {
+        // only redraw the affected rows
+        this->_drawRow(oldSelRow);
+        this->_drawRow(this->_selRow());
     }
-}
-
-void TableView::_prev(Size count)
-{
-    if (_theSelIndex == 0) {
-        return;
-    }
-
-    if (count > _theSelIndex) {
-        count = _theSelIndex;
-    }
-
-    this->_selIndex(_theSelIndex - count);
-}
-
-Size TableView::_maxRowCountFromIndex(const Index index)
-{
-    Size rows = 0;
-
-    while (rows < _visibleRowCount) {
-        if (!this->_hasIndex(index + rows)) {
-            break;
-        }
-
-        ++rows;
-    }
-
-    return rows;
 }
 
 void TableView::next()
 {
-    this->_next(1);
+    if (this->_rowCount() == 0) {
+        return;
+    }
+
+    const auto oldSelRow = this->_selRow();
+
+    this->_drawIfChanged(this->_selNextRow(1, true), oldSelRow);
 }
 
 void TableView::prev()
 {
-    this->_prev(1);
+    if (this->_rowCount() == 0) {
+        return;
+    }
+
+    const auto oldSelRow = this->_selRow();
+
+    this->_drawIfChanged(this->_selPrevRow(1, true), oldSelRow);
 }
 
 void TableView::pageDown()
 {
-    const auto idealNewBaseIndex = _theBaseIndex + _visibleRowCount;
-    auto effectiveNewBaseIndex = idealNewBaseIndex;
-
-    while (!this->_hasIndex(effectiveNewBaseIndex)) {
-        --effectiveNewBaseIndex;
+    if (this->_rowCount() == 0) {
+        return;
     }
 
-    if (idealNewBaseIndex != effectiveNewBaseIndex) {
-        this->_selIndex(effectiveNewBaseIndex);
-    } else {
-        const auto oldSelIndex = _theSelIndex;
-
-        this->_baseIndex(effectiveNewBaseIndex);
-        this->_selIndex(oldSelIndex + _visibleRowCount);
-    }
+    this->_pageDown();
+    this->_selRow(std::min(this->_selRow() + this->_maxVisibleRowCount(),
+                           this->_rowCount() - 1));
+    this->_redrawRows();
 }
 
 void TableView::pageUp()
 {
-    Index newBaseIndex = 0;
-    Index newSelIndex = 0;
-
-    if (_theBaseIndex >= _visibleRowCount) {
-        newBaseIndex = _theBaseIndex - _visibleRowCount;
-        newSelIndex = _theSelIndex - _visibleRowCount;
+    if (this->_rowCount() == 0) {
+        return;
     }
 
-    this->_baseIndex(newBaseIndex);
-    this->_selIndex(newSelIndex);
+    this->_pageUp();
+
+    if (this->_selRow() < this->_maxVisibleRowCount()) {
+        this->_selFirstRow();
+    } else {
+        this->_selRow(this->_selRow() - this->_maxVisibleRowCount());
+    }
+
+    this->_redrawRows();
 }
 
 void TableView::centerSelRow(const bool draw)
 {
-    if (_theBaseIndex == 0 && this->_maxRowCountFromIndex(0) < _visibleRowCount) {
-        // all rows already visible
+    if (this->_rowCount() == 0) {
         return;
     }
 
-    const auto newBaseIndex = static_cast<long long>(_theSelIndex - _visibleRowCount / 2);
-
-    if (newBaseIndex < 0) {
-        // row is in the first half
-        this->_baseIndex(0);
-        return;
+    if (this->_centerOnSelRow() && draw) {
+        this->_redrawRows();
     }
-
-    const auto rowCountsFromNewBaseIndex = this->_maxRowCountFromIndex(newBaseIndex);
-
-    if (rowCountsFromNewBaseIndex < _visibleRowCount) {
-        // row is in the last half
-        this->_baseIndex(static_cast<Index>(newBaseIndex) +
-                         rowCountsFromNewBaseIndex - _visibleRowCount, draw);
-        return;
-    }
-
-    this->_baseIndex(static_cast<Index>(newBaseIndex), draw);
 }
 
 void TableView::selectFirst()
 {
-    this->_selIndex(0);
+    if (this->_rowCount() == 0) {
+        return;
+    }
+
+    const auto oldSelRow = this->_selRow();
+
+    this->_drawIfChanged(this->_selFirstRow(true), oldSelRow);
 }
 
-void TableView::_selectLast()
+void TableView::selectLast()
 {
+    if (this->_rowCount() == 0) {
+        return;
+    }
+
+    const auto oldSelRow = this->_selRow();
+
+    this->_drawIfChanged(this->_selLastRow(true), oldSelRow);
 }
 
 void TableView::_isSelHighlightEnabled(const bool isEnabled, const bool draw)

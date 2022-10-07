@@ -114,15 +114,15 @@ void PktTableView::_resetRow(const std::vector<TableViewColumnDescr>& descrs)
     }
 }
 
-void PktTableView::_drawRow(const Index index)
+void PktTableView::_drawRow(const Index row)
 {
     const auto& dsf = _state->activeDsFileState().dsFile();
 
-    assert(index < dsf.pktCount());
+    assert(row < dsf.pktCount());
 
-    auto& entry = dsf.pktIndexEntry(index);
-    const auto prevEntry = (index == 0) ? nullptr : &dsf.pktIndexEntry(index - 1);
-    const auto nextEntry = (index >= dsf.pktCount() - 1) ? nullptr : &dsf.pktIndexEntry(index + 1);
+    auto& entry = dsf.pktIndexEntry(row);
+    const auto prevEntry = (row == 0) ? nullptr : &dsf.pktIndexEntry(row - 1);
+    const auto nextEntry = (row >= dsf.pktCount() - 1) ? nullptr : &dsf.pktIndexEntry(row + 1);
 
     // set all cell styles to normal initially
     for (auto& cell : _row) {
@@ -273,12 +273,12 @@ void PktTableView::_drawRow(const Index index)
         }
     }
 
-    this->_drawCells(index, _row);
+    this->_drawCells(row, _row);
 }
 
-bool PktTableView::_hasIndex(const Index index)
+Size PktTableView::_rowCount()
 {
-    return index < _state->activeDsFileState().dsFile().pktCount();
+    return _state->activeDsFileState().dsFile().pktCount();
 }
 
 void PktTableView::tsFmtMode(const TsFmtMode tsFmtMode)
@@ -308,12 +308,12 @@ void PktTableView::dataLenFmtMode(const utils::LenFmtMode dataLenFmtMode)
 
 Index PktTableView::selPktIndex() const noexcept
 {
-    return this->_selIndex();
+    return this->_selRow();
 }
 
-void PktTableView::selPktIndex(Index index)
+void PktTableView::selPktIndex(const Index index)
 {
-    this->_selIndex(index);
+    this->_selRowAndDraw(index);
 }
 
 void PktTableView::_stateChanged(const Message msg)
@@ -325,8 +325,9 @@ void PktTableView::_stateChanged(const Message msg)
          * Go back to 0 without drawing first in case there's less
          * packets than our current selection index.
          */
-        this->_selIndex(0, false);
-        this->redraw();
+        this->_selRowAndDraw(0, false);
+        this->_updateCounts();
+        this->_redrawRows();
         updateSel = true;
     } else if (msg == Message::ACTIVE_PKT_CHANGED) {
         updateSel = true;
@@ -334,13 +335,8 @@ void PktTableView::_stateChanged(const Message msg)
 
     if (updateSel) {
         // reset selection from state
-        this->_selIndex(_state->activeDsFileState().activePktStateIndex());
+        this->_selRowAndDraw(_state->activeDsFileState().activePktStateIndex());
     }
-}
-
-void PktTableView::_selectLast()
-{
-    this->_selIndex(_state->activeDsFileState().dsFile().pktCount() - 1);
 }
 
 } // namespace jacques

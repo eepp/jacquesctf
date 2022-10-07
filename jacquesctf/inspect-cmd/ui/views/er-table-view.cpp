@@ -101,11 +101,11 @@ void ErTableView::_setColumnDescrs()
     this->_colDescrs(std::move(descrs));
 }
 
-void ErTableView::_drawRow(const Index index)
+void ErTableView::_drawRow(const Index row)
 {
     assert(_state->hasActivePktState());
 
-    auto& er = _state->activePktState().pkt().erAtIndexInPkt(index);
+    auto& er = _state->activePktState().pkt().erAtIndexInPkt(row);
 
     static_cast<UIntTableViewCell&>(*_row[0]).val(er.natIndexInPkt());
     static_cast<DataLenTableViewCell&>(*_row[1]).len(er.segment().offsetInPktBits());
@@ -147,11 +147,11 @@ void ErTableView::_drawRow(const Index index)
     if (_row.size() >= 7) {
         auto& cell = static_cast<DurationTableViewCell&>(*_row[6]);
 
-        if (index == 0 || !er.ts()) {
+        if (row == 0 || !er.ts()) {
             cell.na(true);
         } else {
             const auto curTs = *er.ts();
-            auto& prevEventRecord = _state->activePktState().pkt().erAtIndexInPkt(index - 1);
+            auto& prevEventRecord = _state->activePktState().pkt().erAtIndexInPkt(row - 1);
 
             if (!prevEventRecord.ts()) {
                 cell.na(true);
@@ -163,16 +163,16 @@ void ErTableView::_drawRow(const Index index)
         }
     }
 
-    this->_drawCells(index, _row);
+    this->_drawCells(row, _row);
 }
 
-bool ErTableView::_hasIndex(const Index index)
+Size ErTableView::_rowCount()
 {
     if (!_state->hasActivePktState()) {
-        return false;
+        return 0;
     }
 
-    return index < _state->activePktState().pkt().erCount();
+    return _state->activePktState().pkt().erCount();
 }
 
 void ErTableView::tsFmtMode(const TsFmtMode tsFmtMode)
@@ -197,25 +197,16 @@ void ErTableView::dataLenFmtMode(const utils::LenFmtMode dataLenFmtMode)
     this->_redrawRows();
 }
 
-void ErTableView::_selectLast()
-{
-    if (!_state->hasActivePktState()) {
-        return;
-    }
-
-    this->_selIndex(_state->activePktState().pkt().erCount() - 1);
-}
-
 void ErTableView::_stateChanged(const Message msg)
 {
-    if (msg == Message::ACTIVE_DS_FILE_CHANGED ||
-            msg == Message::ACTIVE_PKT_CHANGED) {
+    if (msg == Message::ACTIVE_DS_FILE_CHANGED || msg == Message::ACTIVE_PKT_CHANGED) {
         /*
          * Go back to 0 without drawing first in case there's less event
          * records than our current selection index.
          */
-        this->_selIndex(0, false);
+        this->_selRowAndDraw(0, false);
         this->_isSelHighlightEnabled(false, false);
+        this->_updateCounts();
     }
 
     if (_state->hasActivePktState() && _state->activePktState().pkt().erCount() > 0) {
@@ -226,17 +217,17 @@ void ErTableView::_stateChanged(const Message msg)
 
         if (curEr) {
             this->_isSelHighlightEnabled(true, false);
-            this->_selIndex(curEr->indexInPkt(), false);
+            this->_selRowAndDraw(curEr->indexInPkt(), false);
         } else {
             const auto& indexEntry = _state->activePktState().pktIndexEntry();
             const auto offsetInPktBits = _state->curOffsetInPktBits();
 
             // convenience for regions outside the event record block
             if (indexEntry.preambleLen() && offsetInPktBits < indexEntry.preambleLen()->bits()) {
-                this->_selIndex(0, false);
+                this->_selRowAndDraw(0, false);
             } else if (offsetInPktBits >=
                     _state->activePktState().pkt().lastEr()->segment().endOffsetInPktBits()) {
-                this->_selIndex(_state->activePktState().pkt().lastEr()->indexInPkt(), false);
+                this->_selRowAndDraw(_state->activePktState().pkt().lastEr()->indexInPkt(), false);
             }
 
             this->_isSelHighlightEnabled(false, false);

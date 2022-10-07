@@ -63,26 +63,26 @@ void DstTableView::_buildRows(const State& state)
     }
 }
 
-void DstTableView::_drawRow(const Index index)
+void DstTableView::_drawRow(const Index row)
 {
     if (!_dsts) {
         return;
     }
 
-    const auto dst = (*_dsts)[index];
+    const auto dst = (*_dsts)[row];
 
     static_cast<UIntTableViewCell&>(*_row[0]).val(dst->id());
     static_cast<UIntTableViewCell&>(*_row[1]).val(dst->eventRecordTypes().size());
-    this->_drawCells(index, _row);
+    this->_drawCells(row, _row);
 }
 
-bool DstTableView::_hasIndex(const Index index)
+Size DstTableView::_rowCount()
 {
     if (!_dsts) {
-        return false;
+        return 0;
     }
 
-    return index < _dsts->size();
+    return _dsts->size();
 }
 
 void DstTableView::traceType(const yactfr::TraceType& traceType)
@@ -94,9 +94,9 @@ void DstTableView::traceType(const yactfr::TraceType& traceType)
     }
 
     _dsts = dsts;
-    this->_baseIndex(0, false);
-    this->_selIndex(0, false);
-    this->_redrawContent();
+    this->_selRowAndDraw(0, false);
+    this->_updateCounts();
+    this->_redrawRows();
 }
 
 const yactfr::DataStreamType *DstTableView::dst() const
@@ -105,16 +105,7 @@ const yactfr::DataStreamType *DstTableView::dst() const
         return nullptr;
     }
 
-    return (*_dsts)[this->_selIndex()];
-}
-
-void DstTableView::_selectLast()
-{
-    if (!_dsts) {
-        return;
-    }
-
-    this->_selIndex(_dsts->size() - 1);
+    return (*_dsts)[this->_selRow()];
 }
 
 void DstTableView::selectDst(const yactfr::TypeId id)
@@ -127,7 +118,7 @@ void DstTableView::selectDst(const yactfr::TypeId id)
         auto& dst = (*_dsts)[index];
 
         if (dst->id() == id) {
-            this->_selIndex(index);
+            this->_selRowAndDraw(index);
             return;
         }
     }

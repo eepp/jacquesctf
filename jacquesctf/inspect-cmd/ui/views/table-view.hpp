@@ -16,6 +16,7 @@
 #include <boost/filesystem.hpp>
 #include <curses.h>
 
+#include "inspect-common/common-inspect-table-view.hpp"
 #include "view.hpp"
 #include "../rect.hpp"
 #include "data/ts.hpp"
@@ -393,7 +394,8 @@ private:
 };
 
 class TableView :
-    public View
+    public View,
+    public CommonInspectTableView
 {
 public:
     void next();
@@ -402,66 +404,28 @@ public:
     void pageUp();
     void centerSelRow(bool draw = true);
     void selectFirst();
-
-    void selectLast()
-    {
-        this->_selectLast();
-    }
+    void selectLast();
 
 protected:
     explicit TableView(const Rect& rect, const std::string& title, DecorationStyle decoStyle,
                        const Stylist& stylist);
 
-    virtual void _drawRow(Index index) = 0;
-    virtual bool _hasIndex(Index index) = 0;
-    virtual void _selectLast();
-    void _baseIndex(Index baseIndex, bool draw = true);
-    void _selIndex(Index index, bool draw = true);
-    void _drawCells(Index index, const std::vector<std::unique_ptr<TableViewCell>>& cells);
-    void _drawWarningRow(Index index, const std::string& msg);
+    virtual void _drawRow(Index row) = 0;
+    virtual Size _rowCount() = 0;
+    using CommonInspectTableView::_updateCounts;
+    void _updateCounts();
+    void _drawCells(Index row, const std::vector<std::unique_ptr<TableViewCell>>& cells);
+    void _drawWarningRow(Index row, const std::string& msg);
     void _colDescrs(std::vector<TableViewColumnDescr>&& columnDescriptions);
     void _redrawRows();
     void _redrawContent() override;
     void _isSelHighlightEnabled(bool isEnabled, bool draw = true);
-
-    Index _baseIndex() const noexcept
-    {
-        return _theBaseIndex;
-    }
-
-    Index _selIndex() const noexcept
-    {
-        return _theSelIndex;
-    }
+    void _selRowAndDraw(Index row, bool draw = true);
+    void _resized() override;
 
     const std::vector<TableViewColumnDescr>& _colDescrs() const noexcept
     {
         return _theColDescrs;
-    }
-
-    Index _selRow() const noexcept
-    {
-        return this->_rowFromIndex(_theSelIndex);
-    }
-
-    Index _rowFromIndex(const Index index) const noexcept
-    {
-        return index - _theBaseIndex;
-    }
-
-    Index _selContentY() const noexcept
-    {
-        return this->_contentYFromIndex(_theSelIndex);
-    }
-
-    Index _contentYFromIndex(const Index index) const noexcept
-    {
-        return 1 + this->_rowFromIndex(index);
-    }
-
-    bool _indexIsSel(const Index index) const noexcept
-    {
-        return index == _theSelIndex;
     }
 
     Size _contentSize(const Size columnCount) const noexcept
@@ -469,9 +433,13 @@ protected:
         return this->contentRect().w - columnCount + 1;
     }
 
-    void _resized() override;
+    Index _contentYFromVisibleRow(const Index row) const noexcept
+    {
+        return 1 + this->_yIndexFromVisibleRow(row);
+    }
 
 private:
+    void _drawIfChanged(_Change change, Index oldSelRow);
     void _clearRow(Index y);
     void _clearCell(const Point& pos, Size cellWidth);
 
@@ -482,15 +450,9 @@ private:
                    bool customStyle);
 
     void _drawHeader();
-    void _next(Size count);
-    void _prev(Size count);
-    Size _maxRowCountFromIndex(Index index);
 
 private:
     std::vector<TableViewColumnDescr> _theColDescrs;
-    Index _theBaseIndex = 0;
-    Index _theSelIndex = 0;
-    Size _visibleRowCount;
     bool _isSelHighlightEnabledMemb = true;
 };
 

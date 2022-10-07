@@ -25,7 +25,7 @@ DsFileTableView::DsFileTableView(const Rect& rect, const Stylist& stylist, State
 void DsFileTableView::_stateChanged(const Message msg)
 {
     if (msg == Message::ACTIVE_DS_FILE_CHANGED) {
-        this->_selIndex(_state->activeDsFileStateIndex());
+        this->_selRowAndDraw(_state->activeDsFileStateIndex());
     }
 }
 
@@ -99,11 +99,11 @@ void DsFileTableView::_resetRow(const std::vector<TableViewColumnDescr>& descrs)
     }
 }
 
-void DsFileTableView::_drawRow(const Index index)
+void DsFileTableView::_drawRow(const Index row)
 {
-    assert(index < _state->dsFileStateCount());
+    assert(row < _state->dsFileStateCount());
 
-    const auto& dsf = _state->dsFileState(index).dsFile();
+    const auto& dsf = _state->dsFileState(row).dsFile();
 
     static_cast<PathTableViewCell&>(*_row[0]).path(dsf.path());
     _row[0]->style(dsf.hasError() ? TableViewCell::Style::ERROR : TableViewCell::Style::NORMAL);
@@ -183,12 +183,12 @@ void DsFileTableView::_drawRow(const Index index)
         ++at;
     }
 
-    this->_drawCells(index, _row);
+    this->_drawCells(row, _row);
 }
 
-bool DsFileTableView::_hasIndex(const Index index)
+Size DsFileTableView::_rowCount()
 {
-    return index < _state->dsFileStateCount();
+    return _state->dsFileStateCount();
 }
 
 void DsFileTableView::tsFmtMode(const TsFmtMode tsFmtMode)
@@ -216,17 +216,12 @@ void DsFileTableView::dataLenFmtMode(const utils::LenFmtMode dataLenFmtMode)
 
 Index DsFileTableView::selDsFileIndex() const
 {
-    return this->_selIndex();
+    return this->_selRow();
 }
 
 void DsFileTableView::selDsFileIndex(const Index index)
 {
-    this->_selIndex(index);
-}
-
-void DsFileTableView::_selectLast()
-{
-    this->_selIndex(_state->dsFileStateCount() - 1);
+    this->_selRowAndDraw(index);
 }
 
 } // namespace jacques
