@@ -32,7 +32,7 @@ public:
 
 private:
     void _notify(Message msg);
-    void _activeDsFileChanged() override;
+    void _activeDsFileAndPktChanged() override;
     void _activePktChanged() override;
     void _curOffsetInPktChanged() override;
 

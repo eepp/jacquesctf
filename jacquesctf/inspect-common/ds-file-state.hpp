@@ -30,6 +30,8 @@ class AppState;
 class DsFileState final :
     boost::noncopyable
 {
+    friend class AppState;
+
 public:
     explicit DsFileState(AppState& appState, DsFile& dsFile,
                          PktCheckpointsBuildListener& pktCheckpointsBuildListener);
@@ -148,7 +150,7 @@ public:
 
 private:
     PktState& _pktState(Index index);
-    void _gotoPkt(Index index);
+    void _gotoPkt(Index index, bool notify);
     bool _gotoNextErWithProp(const std::function<bool (const Er&)>& cmpFunc,
                              const boost::optional<Index>& initPktIndex = boost::none,
                              const boost::optional<Index>& initErIndex = boost::none);

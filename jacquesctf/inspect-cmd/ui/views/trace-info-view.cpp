@@ -431,7 +431,7 @@ void TraceInfoView::_drawRows()
 
 void TraceInfoView::_appStateChanged(const Message msg)
 {
-    if (msg == Message::ACTIVE_DS_FILE_CHANGED) {
+    if (msg == Message::ACTIVE_DS_FILE_AND_PKT_CHANGED) {
         _rows = &_traceInfo[&_appState->trace()];
         this->_index(0);
         this->_rowCount(_rows->size());

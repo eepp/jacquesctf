@@ -47,8 +47,7 @@ void PktDataView::_resized()
 
 void PktDataView::_appStateChanged(const Message msg)
 {
-    if (msg == Message::ACTIVE_DS_FILE_CHANGED ||
-            msg == Message::ACTIVE_PKT_CHANGED) {
+    if (msg == Message::ACTIVE_DS_FILE_AND_PKT_CHANGED || msg == Message::ACTIVE_PKT_CHANGED) {
         if (_appState->hasActivePktState()) {
             this->_setDataXAndRowSize();
             this->_setPrevCurNextOffsetInPktBits();

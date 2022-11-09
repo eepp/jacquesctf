@@ -320,7 +320,7 @@ void PktTableView::_appStateChanged(const Message msg)
 {
     auto updateSel = false;
 
-    if (msg == Message::ACTIVE_DS_FILE_CHANGED) {
+    if (msg == Message::ACTIVE_DS_FILE_AND_PKT_CHANGED) {
         /*
          * Go back to 0 without drawing first in case there's less
          * packets than our current selection index.

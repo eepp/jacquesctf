@@ -55,13 +55,14 @@ void AppState::gotoDsFile(const Index index)
 
     _activeDsFileStateIndex = index;
     _activeDsFileState = _dsFileStates[index].get();
-    this->_activeDsFileChanged();
 
-    if (_activeDsFileState->dsFile().pktCount() > 0) {
-        if (!_activeDsFileState->hasActivePktState()) {
-            _activeDsFileState->gotoPkt(0);
-        }
+    if (_activeDsFileState->dsFile().pktCount() > 0 && !_activeDsFileState->hasActivePktState()) {
+        // go to first packet without notifying as we notify here
+        _activeDsFileState->_gotoPkt(0, false);
     }
+
+    // notify
+    this->_activeDsFileAndPktChanged();
 }
 
 void AppState::gotoPrevDsFile()
@@ -87,7 +88,7 @@ bool AppState::search(const SearchQuery& query)
     return this->activeDsFileState().search(query);
 }
 
-void AppState::_activeDsFileChanged()
+void AppState::_activeDsFileAndPktChanged()
 {
 }
 

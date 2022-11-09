@@ -25,7 +25,7 @@ DsFileTableView::DsFileTableView(const Rect& rect, const Stylist& stylist,
 
 void DsFileTableView::_appStateChanged(const Message msg)
 {
-    if (msg == Message::ACTIVE_DS_FILE_CHANGED) {
+    if (msg == Message::ACTIVE_DS_FILE_AND_PKT_CHANGED) {
         this->_selRowAndDraw(_appState->activeDsFileStateIndex());
     }
 }

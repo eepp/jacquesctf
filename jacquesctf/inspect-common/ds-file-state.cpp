@@ -64,30 +64,26 @@ PktState& DsFileState::_pktState(const Index index)
     return *_pktStates[index];
 }
 
-void DsFileState::_gotoPkt(const Index index)
+void DsFileState::_gotoPkt(const Index index, const bool notify)
 {
     assert(index < _dsFile->pktCount());
+
+    if (_activePktState && _activePktStateIndex == index) {
+        // nothing to change
+        return;
+    }
+
     _activePktStateIndex = index;
     _activePktState = &this->_pktState(index);
-    _appState->_activePktChanged();
+
+    if (notify && &_appState->activeDsFileState() == this) {
+        _appState->_activePktChanged();
+    }
 }
 
 void DsFileState::gotoPkt(const Index index)
 {
-    assert(index < _dsFile->pktCount());
-
-    if (!_activePktState) {
-        // special case for the very first one, no notification required
-        assert(index == 0);
-        this->_gotoPkt(index);
-        return;
-    }
-
-    if (_activePktStateIndex == index) {
-        return;
-    }
-
-    this->_gotoPkt(index);
+    this->_gotoPkt(index, true);
 }
 
 void DsFileState::gotoPrevPkt()

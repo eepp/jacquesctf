@@ -42,8 +42,8 @@ namespace jacques {
  *
  * A concrete application state may implement:
  *
- * _activeDsFileChanged():
- *     Called when the active data stream file changed.
+ * _activeDsFileAndPktChanged():
+ *     Called when the active data stream file AND packet changed.
  *
  * _activePktChanged():
  *     Called when the active packet changed.
@@ -184,7 +184,7 @@ public:
     }
 
 protected:
-    virtual void _activeDsFileChanged();
+    virtual void _activeDsFileAndPktChanged();
     virtual void _activePktChanged();
     virtual void _curOffsetInPktChanged();
 

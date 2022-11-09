@@ -199,7 +199,7 @@ void ErTableView::dataLenFmtMode(const utils::LenFmtMode dataLenFmtMode)
 
 void ErTableView::_appStateChanged(const Message msg)
 {
-    if (msg == Message::ACTIVE_DS_FILE_CHANGED || msg == Message::ACTIVE_PKT_CHANGED) {
+    if (msg == Message::ACTIVE_DS_FILE_AND_PKT_CHANGED || msg == Message::ACTIVE_PKT_CHANGED) {
         /*
          * Go back to 0 without drawing first in case there's less event
          * records than our current selection index.

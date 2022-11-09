@@ -45,9 +45,9 @@ void InspectCmdState::_notify(const Message msg)
     }
 }
 
-void InspectCmdState::_activeDsFileChanged()
+void InspectCmdState::_activeDsFileAndPktChanged()
 {
-    this->_notify(Message::ACTIVE_DS_FILE_CHANGED);
+    this->_notify(Message::ACTIVE_DS_FILE_AND_PKT_CHANGED);
 }
 
 void InspectCmdState::_activePktChanged()
