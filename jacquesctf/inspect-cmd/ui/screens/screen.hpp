@@ -14,7 +14,7 @@
 #include "../rect.hpp"
 #include "cfg.hpp"
 #include "../stylist.hpp"
-#include "../../state/state.hpp"
+#include "../../state/inspect-cmd-state.hpp"
 
 namespace jacques {
 
@@ -42,7 +42,7 @@ protected:
      * `rect` is the rectangle of the screen within the terminal screen.
      */
     explicit Screen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                    State& state) noexcept;
+                    InspectCmdState& appState) noexcept;
 
 public:
     virtual ~Screen() = default;
@@ -150,21 +150,21 @@ protected:
         return *_curStylist;
     }
 
-    State& _state() noexcept
+    InspectCmdState& _appState() noexcept
     {
-        return *_curState;
+        return *_curAppState;
     }
 
-    const State& _state() const noexcept
+    const InspectCmdState& _appState() const noexcept
     {
-        return *_curState;
+        return *_curAppState;
     }
 
 private:
     Rect _curRect;
-    const InspectCfg * const _curCfg;
-    const Stylist * const _curStylist;
-    State * const _curState;
+    const InspectCfg *_curCfg;
+    const Stylist *_curStylist;
+    InspectCmdState *_curAppState;
     bool _isVisible = false;
 };
 

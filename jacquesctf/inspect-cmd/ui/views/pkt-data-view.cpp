@@ -23,11 +23,11 @@
 
 namespace jacques {
 
-PktDataView::PktDataView(const Rect& rect, const Stylist& stylist, State& state,
+PktDataView::PktDataView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
                          const InspectScreen::Bookmarks& bookmarks) :
     View {rect, "Packet data", DecorationStyle::BORDERS, stylist},
-    _state {&state},
-    _stateObserverGuard {state, *this},
+    _appState {&appState},
+    _appStateObserverGuard {appState, *this},
     _bookmarks {&bookmarks}
 {
     this->_setTitle();
@@ -37,7 +37,7 @@ void PktDataView::_resized()
 {
     this->_setDataXAndRowSize();
 
-    if (_state->hasActivePktState()) {
+    if (_appState->hasActivePktState()) {
         this->_setPrevCurNextOffsetInPktBits();
         this->_setBaseAndEndOffsetInPktBitsFromOffset(_curOffsetInPktBits);
     }
@@ -45,11 +45,11 @@ void PktDataView::_resized()
     this->_redrawContent();
 }
 
-void PktDataView::_stateChanged(const Message msg)
+void PktDataView::_appStateChanged(const Message msg)
 {
     if (msg == Message::ACTIVE_DS_FILE_CHANGED ||
             msg == Message::ACTIVE_PKT_CHANGED) {
-        if (_state->hasActivePktState()) {
+        if (_appState->hasActivePktState()) {
             this->_setDataXAndRowSize();
             this->_setPrevCurNextOffsetInPktBits();
             this->_setBaseAndEndOffsetInPktBitsFromOffset(_curOffsetInPktBits);
@@ -63,8 +63,8 @@ void PktDataView::_stateChanged(const Message msg)
 
 void PktDataView::_setBaseAndEndOffsetInPktBitsFromOffset(const Index offsetInPktBits)
 {
-    assert(_state->hasActivePktState());
-    assert(offsetInPktBits < _state->activePktState().pkt().indexEntry().effectiveTotalLen());
+    assert(_appState->hasActivePktState());
+    assert(offsetInPktBits < _appState->activePktState().pkt().indexEntry().effectiveTotalLen());
 
     const auto rowOffsetInPktBits = offsetInPktBits - (offsetInPktBits % _rowSize.bits());
 
@@ -79,15 +79,15 @@ void PktDataView::_setBaseAndEndOffsetInPktBitsFromOffset(const Index offsetInPk
 
 void PktDataView::_setPrevCurNextOffsetInPktBits()
 {
-    if (!_state->hasActivePktState()) {
+    if (!_appState->hasActivePktState()) {
         return;
     }
 
     // current
-    _curOffsetInPktBits = _state->curOffsetInPktBits();
+    _curOffsetInPktBits = _appState->curOffsetInPktBits();
 
-    const auto curPktRegion = _state->curPktRegion();
-    auto& pkt = _state->activePktState().pkt();
+    const auto curPktRegion = _appState->curPktRegion();
+    auto& pkt = _appState->activePktState().pkt();
 
     assert(curPktRegion);
 
@@ -137,12 +137,12 @@ bool PktDataView::_isCharSel(const _Char& ch) const
 
 void PktDataView::_updateSel()
 {
-    assert(_state->hasActivePktState());
+    assert(_appState->hasActivePktState());
 
-    if (_state->curOffsetInPktBits() < _baseOffsetInPktBits ||
-            _state->curOffsetInPktBits() >= _endOffsetInPktBits || _chars.empty()) {
+    if (_appState->curOffsetInPktBits() < _baseOffsetInPktBits ||
+            _appState->curOffsetInPktBits() >= _endOffsetInPktBits || _chars.empty()) {
         // outside the current character: reset base offset
-        this->_setBaseAndEndOffsetInPktBitsFromOffset(_state->curOffsetInPktBits());
+        this->_setBaseAndEndOffsetInPktBitsFromOffset(_appState->curOffsetInPktBits());
         this->_setPrevCurNextOffsetInPktBits();
         this->_redrawContent();
         return;
@@ -188,16 +188,16 @@ void PktDataView::_updateSel()
 
 void PktDataView::_setDataXAndRowSize()
 {
-    if (!_state->hasActivePktState()) {
+    if (!_appState->hasActivePktState()) {
         return;
     }
 
     std::array<char, 32> buf;
     const Size div = _isOffsetInBytes ? 8 : 1;
-    auto totalLenBits = _state->activePktState().pktIndexEntry().effectiveTotalLen().bits();
+    auto totalLenBits = _appState->activePktState().pktIndexEntry().effectiveTotalLen().bits();
 
     if (!_isOffsetInPkt) {
-        totalLenBits += _state->activePktState().pktIndexEntry().offsetInDsFileBits();
+        totalLenBits += _appState->activePktState().pktIndexEntry().offsetInDsFileBits();
     }
 
     const auto maxOffset = static_cast<unsigned long long>(totalLenBits) / div;
@@ -238,8 +238,8 @@ void PktDataView::_setDataXAndRowSize()
         }
     }
 
-    if (bytesPerRow > _state->activePktState().pktIndexEntry().effectiveTotalLen().bytes()) {
-        bytesPerRow = _state->activePktState().pktIndexEntry().effectiveTotalLen().bytes();
+    if (bytesPerRow > _appState->activePktState().pktIndexEntry().effectiveTotalLen().bytes()) {
+        bytesPerRow = _appState->activePktState().pktIndexEntry().effectiveTotalLen().bytes();
     }
 
     _dataX = offsetWidth + 1;
@@ -249,7 +249,7 @@ void PktDataView::_setDataXAndRowSize()
 
 void PktDataView::_drawSeparators() const
 {
-    if (!_state->hasActivePktState()) {
+    if (!_appState->hasActivePktState()) {
         return;
     }
 
@@ -273,14 +273,14 @@ void PktDataView::_drawSeparators() const
 
 void PktDataView::_drawOffsets() const
 {
-    if (!_state->hasActivePktState()) {
+    if (!_appState->hasActivePktState()) {
         return;
     }
 
     assert(_dataX > 0 && _rowSize > 0);
 
-    const auto& curRegionSegment = _state->curPktRegion()->segment();
-    const auto& pktTotalLen = _state->activePktState().pktIndexEntry().effectiveTotalLen();
+    const auto& curRegionSegment = _appState->curPktRegion()->segment();
+    const auto& pktTotalLen = _appState->activePktState().pktIndexEntry().effectiveTotalLen();
     const auto maxOffsetWidth = _dataX - 1;
     auto offsetInPktBits = _baseOffsetInPktBits;
     const Size div = _isOffsetInBytes ? 8 : 1;
@@ -296,7 +296,7 @@ void PktDataView::_drawOffsets() const
             Index dispOffsetInPktBits = offsetInPktBits;
 
             if (!_isOffsetInPkt) {
-                dispOffsetInPktBits += _state->activePktState().pktIndexEntry().offsetInDsFileBits();
+                dispOffsetInPktBits += _appState->activePktState().pktIndexEntry().offsetInDsFileBits();
             }
 
             dispOffsetInPktBits /= div;
@@ -379,12 +379,12 @@ void PktDataView::_setCustomStyle(const _Char& ch) const
         return;
     }
 
-    const auto it = _bookmarks->find(_state->activeDsFileStateIndex());
+    const auto it = _bookmarks->find(_appState->activeDsFileStateIndex());
     const InspectScreen::PktBookmarks *bookmarks = nullptr;
 
     if (it != _bookmarks->end()) {
         const auto& dsFileBookmarks = it->second;
-        const auto pIt = dsFileBookmarks.find(_state->activeDsFileState().activePktStateIndex());
+        const auto pIt = dsFileBookmarks.find(_appState->activeDsFileState().activePktStateIndex());
 
         if (pIt != dsFileBookmarks.end()) {
             bookmarks = &pIt->second;
@@ -495,7 +495,7 @@ void PktDataView::_redrawContent()
 {
     this->_clearContent();
 
-    if (!_state->hasActivePktState()) {
+    if (!_appState->hasActivePktState()) {
         return;
     }
 
@@ -506,7 +506,7 @@ void PktDataView::_redrawContent()
     this->_drawAllAsciiChars();
     this->_hasMoreTop(_baseOffsetInPktBits != 0);
     this->_hasMoreBottom(_endOffsetInPktBits <
-                         _state->activePktState().pkt().indexEntry().effectiveTotalLen());
+                         _appState->activePktState().pkt().indexEntry().effectiveTotalLen());
 }
 
 namespace {
@@ -529,7 +529,7 @@ void PktDataView::_setHexChars()
      * and then iterate the packet regions and find the already-created
      * character to append a packet region (if not already appended).
      */
-    const auto data = _state->activePktState().pkt().data(_baseOffsetInPktBits / 8);
+    const auto data = _appState->activePktState().pkt().data(_baseOffsetInPktBits / 8);
 
     for (auto offsetInPktBits = _baseOffsetInPktBits; offsetInPktBits < _endOffsetInPktBits;
             offsetInPktBits += 8) {
@@ -561,7 +561,7 @@ void PktDataView::_setHexChars()
     const Er *curEr = nullptr;
 
     for (auto& pktRegion : _pktRegions) {
-        const auto bitArray = _state->activePktState().pkt().bitArray(*pktRegion);
+        const auto bitArray = _appState->activePktState().pkt().bitArray(*pktRegion);
         const auto firstBitOffsetInPkt = pktRegion->segment().offsetInPktBits();
 
         auto isErFirst = false;
@@ -613,7 +613,7 @@ void PktDataView::_setAsciiChars()
      */
     assert((_baseOffsetInPktBits & 7) == 0);
 
-    const auto& pkt = _state->activePktState().pkt();
+    const auto& pkt = _appState->activePktState().pkt();
 
     for (auto offsetInPktBits = _baseOffsetInPktBits; offsetInPktBits < _endOffsetInPktBits;
             offsetInPktBits += 8) {
@@ -675,7 +675,7 @@ void PktDataView::_setBinaryChars()
     const Er *curEr = nullptr;
 
     for (const auto& pktRegion : _pktRegions) {
-        const auto bitArray = _state->activePktState().pkt().bitArray(*pktRegion);
+        const auto bitArray = _appState->activePktState().pkt().bitArray(*pktRegion);
         const auto firstBitOffsetInPkt = pktRegion->segment().offsetInPktBits();
         bool isErFirst = false;
 
@@ -720,11 +720,11 @@ void PktDataView::_setNumericCharsAndAsciiChars()
     }
 
     assert(_baseOffsetInPktBits < _endOffsetInPktBits);
-    assert(_state->hasActivePktState());
+    assert(_appState->hasActivePktState());
 
     // set numeric characters
     std::vector<PktRegion::SPC> pktRegions;
-    auto& pkt = _state->activePktState().pkt();
+    auto& pkt = _appState->activePktState().pkt();
 
     /*
      * We'll go one packet region before to detect an initial event
@@ -756,11 +756,11 @@ void PktDataView::_setNumericCharsAndAsciiChars()
 
 void PktDataView::pageDown()
 {
-    if (!_state->hasActivePktState()) {
+    if (!_appState->hasActivePktState()) {
         return;
     }
 
-    const auto effectiveTotalLenBits = _state->activePktState().pkt().indexEntry().effectiveTotalLen().bits();
+    const auto effectiveTotalLenBits = _appState->activePktState().pkt().indexEntry().effectiveTotalLen().bits();
 
     _baseOffsetInPktBits += this->_halfPageLen().bits();
 
@@ -781,7 +781,7 @@ void PktDataView::pageDown()
 
 void PktDataView::pageUp()
 {
-    if (!_state->hasActivePktState()) {
+    if (!_appState->hasActivePktState()) {
         return;
     }
 
@@ -802,7 +802,7 @@ void PktDataView::isAsciiVisible(const bool isVisible)
     _isAsciiVisible = isVisible;
     this->_setDataXAndRowSize();
 
-    if (_state->hasActivePktState()) {
+    if (_appState->hasActivePktState()) {
         this->_setBaseAndEndOffsetInPktBitsFromOffset(_curOffsetInPktBits);
     }
 
@@ -826,7 +826,7 @@ void PktDataView::isDataInHex(const bool isDataInHex)
     _isDataInHex = isDataInHex;
     this->_setDataXAndRowSize();
 
-    if (_state->hasActivePktState()) {
+    if (_appState->hasActivePktState()) {
         this->_setBaseAndEndOffsetInPktBitsFromOffset(_curOffsetInPktBits);
     }
 
@@ -835,7 +835,7 @@ void PktDataView::isDataInHex(const bool isDataInHex)
 
 void PktDataView::centerSel()
 {
-    if (!_state->hasActivePktState()) {
+    if (!_appState->hasActivePktState()) {
         return;
     }
 
@@ -848,7 +848,7 @@ void PktDataView::isOffsetInHex(const bool isOffsetInHex)
     _isOffsetInHex = isOffsetInHex;
     this->_setDataXAndRowSize();
 
-    if (_state->hasActivePktState()) {
+    if (_appState->hasActivePktState()) {
         this->_setBaseAndEndOffsetInPktBitsFromOffset(_curOffsetInPktBits);
     }
 
@@ -861,7 +861,7 @@ void PktDataView::isOffsetInBytes(const bool isOffsetInBytes)
     _isOffsetInBytes = isOffsetInBytes;
     this->_setDataXAndRowSize();
 
-    if (_state->hasActivePktState()) {
+    if (_appState->hasActivePktState()) {
         this->_setBaseAndEndOffsetInPktBitsFromOffset(_curOffsetInPktBits);
     }
 
@@ -874,7 +874,7 @@ void PktDataView::isRowSizePowerOfTwo(const bool isPowerOfTwo)
     _isRowSizePowerOfTwo = isPowerOfTwo;
     this->_setDataXAndRowSize();
 
-    if (_state->hasActivePktState()) {
+    if (_appState->hasActivePktState()) {
         this->_setBaseAndEndOffsetInPktBitsFromOffset(_curOffsetInPktBits);
     }
 
@@ -886,7 +886,7 @@ void PktDataView::isOffsetInPkt(const bool isOffsetInPkt)
     _isOffsetInPkt = isOffsetInPkt;
     this->_setDataXAndRowSize();
 
-    if (_state->hasActivePktState()) {
+    if (_appState->hasActivePktState()) {
         this->_setBaseAndEndOffsetInPktBitsFromOffset(_curOffsetInPktBits);
     }
 

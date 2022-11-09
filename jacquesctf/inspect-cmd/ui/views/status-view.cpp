@@ -20,17 +20,17 @@
 
 namespace jacques {
 
-StatusView::StatusView(const Rect& rect, const Stylist& stylist, State& state) :
+StatusView::StatusView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState) :
     View {rect, "Status", DecorationStyle::BORDERLESS, stylist},
-    _state {&state},
-    _stateObserverGuard {state, *this}
+    _appState {&appState},
+    _appStateObserverGuard {appState, *this}
 {
     this->_createEndPositions();
 }
 
 void StatusView::_createEndPositions()
 {
-    for (const auto& dsfState : _state->dsFileStates()) {
+    for (const auto& dsfState : _appState->dsFileStates()) {
         _EndPositions positions;
         const auto& dsf = dsfState->dsFile();
         const auto pktCountStr = utils::sepNumber(dsf.pktCount());
@@ -56,10 +56,10 @@ void StatusView::_createEndPositions()
     }
 }
 
-void StatusView::_stateChanged(const Message msg)
+void StatusView::_appStateChanged(const Message msg)
 {
     if (msg == Message::ACTIVE_DS_FILE_CHANGED || msg == Message::ACTIVE_PKT_CHANGED) {
-        _curEndPositions = &_endPositions[&_state->activeDsFileState()];
+        _curEndPositions = &_endPositions[&_appState->activeDsFileState()];
         this->redraw();
     } else if (msg == Message::CUR_OFFSET_IN_PKT_CHANGED) {
         this->_drawOffset();
@@ -69,7 +69,7 @@ void StatusView::_stateChanged(const Message msg)
 
 void StatusView::_drawOffset()
 {
-    if (!_curEndPositions || !_state->hasActivePktState()) {
+    if (!_curEndPositions || !_appState->hasActivePktState()) {
         return;
     }
 
@@ -84,8 +84,8 @@ void StatusView::_drawOffset()
     // draw percentage
     this->_stylist().statusViewStd(*this, true);
 
-    const auto percent = _state->activePktState().curOffsetInPktBits() * 100 /
-                         _state->activePktState().pkt().indexEntry().effectiveTotalLen().bits();
+    const auto percent = _appState->activePktState().curOffsetInPktBits() * 100 /
+                         _appState->activePktState().pkt().indexEntry().effectiveTotalLen().bits();
 
     this->_moveAndPrint({this->contentRect().w - _curEndPositions->pktPercent - 5, 0}, "%3u",
                         static_cast<unsigned int>(percent));
@@ -95,7 +95,7 @@ void StatusView::_drawOffset()
     // draw new offset in packet
     this->_stylist().statusViewStd(*this, true);
 
-    auto str = utils::sepNumber(_state->activePktState().curOffsetInPktBits(), ',');
+    auto str = utils::sepNumber(_appState->activePktState().curOffsetInPktBits(), ',');
 
     this->_moveAndPrint({
         this->contentRect().w - _curEndPositions->curOffsetInPktBits - 2 - str.size(), 0
@@ -104,7 +104,7 @@ void StatusView::_drawOffset()
     this->_print(" b");
 
     // draw new offset in data stream file
-    str = utils::sepNumber(_state->activeDsFileState().curOffsetInDsFileBits(), ',');
+    str = utils::sepNumber(_appState->activeDsFileState().curOffsetInDsFileBits(), ',');
     this->_moveAndPrint({
         this->contentRect().w - _curEndPositions->curOffsetInDsFileBits - str.size() - 3, 0
     }, "(", str.c_str());
@@ -124,11 +124,11 @@ void StatusView::_redrawContent()
         return;
     }
 
-    if (_state->hasActivePktState()) {
+    if (_appState->hasActivePktState()) {
         // packet index and count
-        const auto count = _state->activeDsFileState().dsFile().pktCount();
+        const auto count = _appState->activeDsFileState().dsFile().pktCount();
         const auto countStr = utils::sepNumber(count, ',');
-        const auto index = _state->activePktState().pktIndexEntry().natIndexInDsFile();
+        const auto index = _appState->activePktState().pktIndexEntry().natIndexInDsFile();
         const auto indexStr = utils::sepNumber(index, ',');
 
         this->_putChar({
@@ -141,7 +141,7 @@ void StatusView::_redrawContent()
         this->_print("/%s", countStr.c_str());
 
         // packet sequence number
-        const auto& seqNum = _state->activePktState().pktIndexEntry().seqNum();
+        const auto& seqNum = _appState->activePktState().pktIndexEntry().seqNum();
 
         if (seqNum) {
             const auto seqNumStr = utils::sepNumber(*seqNum, ',');
@@ -156,7 +156,7 @@ void StatusView::_redrawContent()
 
     this->_drawOffset();
 
-    const auto& path = utils::escapeStr(_state->activeDsFileState().dsFile().path().string());
+    const auto& path = utils::escapeStr(_appState->activeDsFileState().dsFile().path().string());
     const auto pathMaxLen = this->contentRect().w - _curEndPositions->dsfPath;
     std::string dirNameStr, filenameStr;
 

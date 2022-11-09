@@ -9,13 +9,12 @@
 
 #include "pkt-state.hpp"
 #include "data/pkt-region.hpp"
-#include "state.hpp"
-#include "msg.hpp"
+#include "app-state.hpp"
 
 namespace jacques {
 
-PktState::PktState(State& state, const Metadata& metadata, Pkt& pkt) noexcept :
-    _state {&state},
+PktState::PktState(AppState& appState, const Metadata& metadata, Pkt& pkt) noexcept :
+    _appState {&appState},
     _metadata {&metadata},
     _pkt {&pkt}
 {
@@ -155,7 +154,7 @@ void PktState::gotoPktRegionAtOffsetInPktBits(const Index offsetInPktBits)
 
     assert(offsetInPktBits < _pkt->indexEntry().effectiveTotalLen());
     _curOffsetInPktBits = offsetInPktBits;
-    _state->_notify(Message::CUR_OFFSET_IN_PKT_CHANGED);
+    _appState->_curOffsetInPktChanged();
 }
 
 void PktState::gotoPktRegionNextParent()

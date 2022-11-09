@@ -90,7 +90,7 @@ void View::moveAndResize(const Rect& rect)
     this->redraw();
 }
 
-void View::_stateChanged(const Message)
+void View::_appStateChanged(Message)
 {
 }
 
@@ -278,8 +278,9 @@ int View::_vSafePrint(const char * const fmt, va_list& args) const
     return this->_print("%s", _lineBuf.data());
 }
 
-ViewStateObserverGuard::ViewStateObserverGuard(State& state, View& view) :
-    _observerGuard {state, std::bind(&View::_stateChanged, &view, std::placeholders::_1)}
+ViewInspectCmdStateObserverGuard::ViewInspectCmdStateObserverGuard(InspectCmdState& appState,
+                                                                   View& view) :
+    _observerGuard {appState, std::bind(&View::_appStateChanged, &view, std::placeholders::_1)}
 {
 }
 

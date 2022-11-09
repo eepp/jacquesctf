@@ -13,7 +13,7 @@
 
 #include "aliases.hpp"
 #include "../stylist.hpp"
-#include "../../state/state.hpp"
+#include "../../state/inspect-cmd-state.hpp"
 #include "../views/pkt-region-info-view.hpp"
 #include "../views/er-table-view.hpp"
 #include "../views/sub-dt-explorer-view.hpp"
@@ -37,7 +37,7 @@ public:
 
 public:
     explicit InspectScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                           State& state);
+                           InspectCmdState& appState);
     ~InspectScreen();
 
 private:

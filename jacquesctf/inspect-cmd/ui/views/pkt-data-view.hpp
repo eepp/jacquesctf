@@ -48,7 +48,7 @@ class PktDataView final :
     public View
 {
 public:
-    explicit PktDataView(const Rect& rect, const Stylist& stylist, State& state,
+    explicit PktDataView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
                          const InspectScreen::Bookmarks& bookmarks);
     void pageDown();
     void pageUp();
@@ -134,7 +134,7 @@ private:
     using _Chars = std::vector<_Char>;
 
 private:
-    void _stateChanged(Message msg) override;
+    void _appStateChanged(Message msg) override;
     void _redrawContent() override;
     void _resized() override;
     void _drawSeparators() const;
@@ -157,7 +157,7 @@ private:
 
     void _setEndOffsetInPktBitsFromBaseOffset() noexcept
     {
-        const auto effectiveTotalLenBits = _state->activePktState().pkt().indexEntry().effectiveTotalLen().bits();
+        const auto effectiveTotalLenBits = _appState->activePktState().pkt().indexEntry().effectiveTotalLen().bits();
 
         _endOffsetInPktBits = std::min(_baseOffsetInPktBits + this->_pageLen().bits(),
                                        effectiveTotalLenBits);
@@ -184,9 +184,9 @@ private:
     }
 
 private:
-    State * const _state;
-    const ViewStateObserverGuard _stateObserverGuard;
-    const InspectScreen::Bookmarks * const _bookmarks;
+    InspectCmdState *_appState;
+    ViewInspectCmdStateObserverGuard _appStateObserverGuard;
+    const InspectScreen::Bookmarks *_bookmarks;
 
     // X position of the first numeric character of a row
     Index _dataX = 0;

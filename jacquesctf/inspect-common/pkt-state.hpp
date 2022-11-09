@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_INSPECT_CMD_STATE_PKT_STATE_HPP
-#define _JACQUES_INSPECT_CMD_STATE_PKT_STATE_HPP
+#ifndef _JACQUES_INSPECT_COMMON_PKT_STATE_HPP
+#define _JACQUES_INSPECT_COMMON_PKT_STATE_HPP
 
 #include <vector>
 #include <boost/filesystem.hpp>
@@ -18,13 +18,13 @@
 
 namespace jacques {
 
-class State;
+class AppState;
 
 class PktState final :
     boost::noncopyable
 {
 public:
-    explicit PktState(State& state, const Metadata& metadata, Pkt& pkt) noexcept;
+    explicit PktState(AppState& appState, const Metadata& metadata, Pkt& pkt) noexcept;
     void gotoPrevEr(Size count = 1);
     void gotoNextEr(Size count = 1);
     void gotoPrevPktRegion();
@@ -72,23 +72,23 @@ public:
         return _pkt->regionAtOffsetInPktBits(_curOffsetInPktBits);
     }
 
-    State& state() noexcept
+    AppState& appState() noexcept
     {
-        return *_state;
+        return *_appState;
     }
 
-    const State& state() const noexcept
+    const AppState& appState() const noexcept
     {
-        return *_state;
+        return *_appState;
     }
 
 private:
-    State * const _state;
-    const Metadata * const _metadata;
-    Pkt * const _pkt;
+    AppState *_appState;
+    const Metadata *_metadata;
+    Pkt *_pkt;
     Index _curOffsetInPktBits = 0;
 };
 
 } // namespace jacques
 
-#endif // _JACQUES_INSPECT_CMD_STATE_PKT_STATE_HPP
+#endif // _JACQUES_INSPECT_COMMON_PKT_STATE_HPP

@@ -13,10 +13,10 @@
 
 namespace jacques {
 
-PktTableView::PktTableView(const Rect& rect, const Stylist& stylist, State& state) :
+PktTableView::PktTableView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState) :
     TableView {rect, "Packets", DecorationStyle::BORDERS, stylist},
-    _state {&state},
-    _stateObserverGuard {state, *this}
+    _appState {&appState},
+    _appStateObserverGuard {appState, *this}
 {
     this->_setColumnDescrs();
 }
@@ -116,7 +116,7 @@ void PktTableView::_resetRow(const std::vector<TableViewColumnDescr>& descrs)
 
 void PktTableView::_drawRow(const Index row)
 {
-    const auto& dsf = _state->activeDsFileState().dsFile();
+    const auto& dsf = _appState->activeDsFileState().dsFile();
 
     assert(row < dsf.pktCount());
 
@@ -278,7 +278,7 @@ void PktTableView::_drawRow(const Index row)
 
 Size PktTableView::_rowCount()
 {
-    return _state->activeDsFileState().dsFile().pktCount();
+    return _appState->activeDsFileState().dsFile().pktCount();
 }
 
 void PktTableView::tsFmtMode(const TsFmtMode tsFmtMode)
@@ -316,7 +316,7 @@ void PktTableView::selPktIndex(const Index index)
     this->_selRowAndDraw(index);
 }
 
-void PktTableView::_stateChanged(const Message msg)
+void PktTableView::_appStateChanged(const Message msg)
 {
     auto updateSel = false;
 
@@ -335,7 +335,7 @@ void PktTableView::_stateChanged(const Message msg)
 
     if (updateSel) {
         // reset selection from state
-        this->_selRowAndDraw(_state->activeDsFileState().activePktStateIndex());
+        this->_selRowAndDraw(_appState->activeDsFileState().activePktStateIndex());
     }
 }
 

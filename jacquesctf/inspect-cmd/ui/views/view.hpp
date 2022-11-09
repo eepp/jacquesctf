@@ -17,12 +17,12 @@
 
 #include "../rect.hpp"
 #include "../../state/msg.hpp"
-#include "../../state/state.hpp"
+#include "../../state/inspect-cmd-state.hpp"
 
 namespace jacques {
 
 class Stylist;
-class ViewStateObserverGuard;
+class ViewInspectCmdStateObserverGuard;
 
 /*
  * Base class of all views.
@@ -46,8 +46,9 @@ class ViewStateObserverGuard;
  * call refresh().
  *
  * A derived view can subscribe to the state of the application with a
- * ViewStateObserverGuard instance. This RAII helper has an underlying
- * StateObserverGuard and uses _stateChanged() as the observer.
+ * ViewInspectCmdStateObserverGuard instance. This RAII helper has an
+ * underlying StateObserverGuard and uses _appStateChanged() as the
+ * observer.
  *
  * The View class is friend with the Stylist class: the Stylist class
  * has a bunch of stylizing methods which apply to a view and it needs
@@ -58,7 +59,7 @@ class View :
     boost::noncopyable
 {
     friend class Stylist;
-    friend class ViewStateObserverGuard;
+    friend class ViewInspectCmdStateObserverGuard;
 
 public:
     enum class DecorationStyle {
@@ -173,10 +174,10 @@ public:
 
 protected:
     /*
-     * Called by the state (through a `ViewStateObserverGuard`) when the
-     * state changes.
+     * Called by the application state (through a
+     * `ViewInspectCmdStateObserverGuard`) when the state changes.
      */
-    virtual void _stateChanged(Message msg);
+    virtual void _appStateChanged(Message msg);
 
     /*
      * Implementation must redraw the whole content (everything in
@@ -339,20 +340,21 @@ private:
 };
 
 /*
- * This is a state observer guard for views.
+ * This is an application state observer guard for views.
  *
  * Just have an instance and build it with the state to observe and the
  * observer view. When the state changes, the virtual
- * View::_stateChanged() method is called. When the view is destroyed,
- * the observer guard removes the view from the state observers.
+ * View::_appStateChanged() method is called. When the view is
+ * destroyed, the observer guard removes the view from the state
+ * observers.
  */
-class ViewStateObserverGuard final
+class ViewInspectCmdStateObserverGuard final
 {
 public:
-    explicit ViewStateObserverGuard(State& state, View& view);
+    explicit ViewInspectCmdStateObserverGuard(InspectCmdState& state, View& view);
 
 private:
-    const StateObserverGuard _observerGuard;
+    const InspectCmdStateObserverGuard _observerGuard;
 };
 
 } // namespace jacques

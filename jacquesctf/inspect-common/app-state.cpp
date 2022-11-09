@@ -9,17 +9,16 @@
 #include <algorithm>
 #include <map>
 
-#include "state.hpp"
 #include "data/trace.hpp"
+#include "app-state.hpp"
 #include "search-query.hpp"
-#include "msg.hpp"
 
 namespace jacques {
 
 namespace bfs = boost::filesystem;
 
-State::State(const std::vector<bfs::path>& paths,
-             std::shared_ptr<PktCheckpointsBuildListener> pktCheckpointsBuildListener)
+AppState::AppState(const std::vector<bfs::path>& paths,
+                   PktCheckpointsBuildListener& pktCheckpointsBuildListener)
 {
     assert(!paths.empty());
 
@@ -46,21 +45,7 @@ State::State(const std::vector<bfs::path>& paths,
     _activeDsFileState = _dsFileStates.front().get();
 }
 
-Index State::addObserver(const Observer& observer)
-{
-    const Index id = _observers.size();
-
-    _observers.push_back(observer);
-    return id;
-}
-
-void State::removeObserver(const Index id)
-{
-    assert(id < _observers.size());
-    _observers[id] = nullptr;
-}
-
-void State::gotoDsFile(const Index index)
+void AppState::gotoDsFile(const Index index)
 {
     assert(index < _dsFileStates.size());
 
@@ -70,7 +55,7 @@ void State::gotoDsFile(const Index index)
 
     _activeDsFileStateIndex = index;
     _activeDsFileState = _dsFileStates[index].get();
-    this->_notify(Message::ACTIVE_DS_FILE_CHANGED);
+    this->_activeDsFileChanged();
 
     if (_activeDsFileState->dsFile().pktCount() > 0) {
         if (!_activeDsFileState->hasActivePktState()) {
@@ -79,7 +64,7 @@ void State::gotoDsFile(const Index index)
     }
 }
 
-void State::gotoPrevDsFile()
+void AppState::gotoPrevDsFile()
 {
     if (_activeDsFileStateIndex == 0) {
         return;
@@ -88,7 +73,7 @@ void State::gotoPrevDsFile()
     this->gotoDsFile(_activeDsFileStateIndex - 1);
 }
 
-void State::gotoNextDsFile()
+void AppState::gotoNextDsFile()
 {
     if (_activeDsFileStateIndex == _dsFileStates.size() - 1) {
         return;
@@ -97,29 +82,21 @@ void State::gotoNextDsFile()
     this->gotoDsFile(_activeDsFileStateIndex + 1);
 }
 
-void State::_notify(const Message msg)
-{
-    for (const auto& observer : _observers) {
-        if (observer) {
-            observer(msg);
-        }
-    }
-}
-
-bool State::search(const SearchQuery& query)
+bool AppState::search(const SearchQuery& query)
 {
     return this->activeDsFileState().search(query);
 }
 
-StateObserverGuard::StateObserverGuard(State& state, const State::Observer& observer) :
-    _state {&state},
-    _observerId {_state->addObserver(observer)}
+void AppState::_activeDsFileChanged()
 {
 }
 
-StateObserverGuard::~StateObserverGuard()
+void AppState::_activePktChanged()
 {
-    _state->removeObserver(_observerId);
+}
+
+void AppState::_curOffsetInPktChanged()
+{
 }
 
 } // namespace jacques

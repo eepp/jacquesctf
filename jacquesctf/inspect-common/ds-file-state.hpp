@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_INSPECT_CMD_STATE_DS_FILE_STATE_HPP
-#define _JACQUES_INSPECT_CMD_STATE_DS_FILE_STATE_HPP
+#ifndef _JACQUES_INSPECT_COMMON_DS_FILE_STATE_HPP
+#define _JACQUES_INSPECT_COMMON_DS_FILE_STATE_HPP
 
 #include <vector>
 #include <boost/filesystem.hpp>
@@ -25,15 +25,14 @@
 
 namespace jacques {
 
-class State;
+class AppState;
 
 class DsFileState final :
     boost::noncopyable
 {
 public:
-    explicit DsFileState(State& state, DsFile& dsFile,
-                         std::shared_ptr<PktCheckpointsBuildListener> pktCheckpointsBuildListener);
-
+    explicit DsFileState(AppState& appState, DsFile& dsFile,
+                         PktCheckpointsBuildListener& pktCheckpointsBuildListener);
     void gotoOffsetBits(Index offsetBits);
     void gotoPkt(Index index);
     void gotoPrevPkt();
@@ -45,7 +44,7 @@ public:
     void gotoPktCtx();
     void gotoLastPktRegion();
     bool search(const SearchQuery& query);
-    void analyzeAllPkts(PktCheckpointsBuildListener& buildListener);
+    void analyzeAllPkts(PktCheckpointsBuildListener *buildListener = nullptr);
 
     DsFile& dsFile() noexcept
     {
@@ -137,33 +136,32 @@ public:
         return _dsFile->trace();
     }
 
-    State& state() noexcept
+    AppState& appState() noexcept
     {
-        return *_state;
+        return *_appState;
     }
 
-    const State& state() const noexcept
+    const AppState& appState() const noexcept
     {
-        return *_state;
+        return *_appState;
     }
 
 private:
     PktState& _pktState(Index index);
     void _gotoPkt(Index index);
-
     bool _gotoNextErWithProp(const std::function<bool (const Er&)>& cmpFunc,
                              const boost::optional<Index>& initPktIndex = boost::none,
                              const boost::optional<Index>& initErIndex = boost::none);
 
 private:
-    State * const _state;
+    AppState *_appState;
     PktState *_activePktState = nullptr;
     Index _activePktStateIndex = 0;
     std::vector<std::unique_ptr<PktState>> _pktStates;
-    std::shared_ptr<PktCheckpointsBuildListener> _pktCheckpointsBuildListener;
-    DsFile * const _dsFile;
+    PktCheckpointsBuildListener *_pktCheckpointsBuildListener;
+    DsFile *_dsFile;
 };
 
 } // namespace jacques
 
-#endif // _JACQUES_INSPECT_CMD_STATE_DS_FILE_STATE_HPP
+#endif // _JACQUES_INSPECT_COMMON_DS_FILE_STATE_HPP

@@ -8,26 +8,25 @@
 #include "pkt-decoding-error-details-view.hpp"
 #include "utils.hpp"
 #include "../stylist.hpp"
-#include "../../state/state.hpp"
 #include "../../state/msg.hpp"
 
 namespace jacques {
 
 PktDecodingErrorDetailsView::PktDecodingErrorDetailsView(const Rect& rect, const Stylist& stylist,
-                                                         State& state) :
+                                                         InspectCmdState& appState) :
     View {rect, "", DecorationStyle::BORDERLESS, stylist},
-    _state {&state},
-    _stateObserverGuard {state, *this}
+    _appState {&appState},
+    _appStateObserverGuard {appState, *this}
 {
 }
 
 void PktDecodingErrorDetailsView::_redrawContent()
 {
-    if (!_state->hasActivePktState() || !_state->activePktState().pkt().error()) {
+    if (!_appState->hasActivePktState() || !_appState->activePktState().pkt().error()) {
         return;
     }
 
-    const auto& error = *_state->activePktState().pkt().error();
+    const auto& error = *_appState->activePktState().pkt().error();
 
     this->_stylist().pktDecodingErrorDetailsView(*this);
     this->_clearRect();
@@ -109,7 +108,7 @@ void PktDecodingErrorDetailsView::_redrawContent()
     }
 }
 
-void PktDecodingErrorDetailsView::_stateChanged(const Message msg)
+void PktDecodingErrorDetailsView::_appStateChanged(const Message msg)
 {
     if (msg == Message::ACTIVE_PKT_CHANGED) {
         this->_redrawContent();

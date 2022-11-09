@@ -10,7 +10,6 @@
 
 #include "aliases.hpp"
 #include "../stylist.hpp"
-#include "../../state/state.hpp"
 #include "screen.hpp"
 #include "../views/trace-info-view.hpp"
 
@@ -21,7 +20,7 @@ class TraceInfoScreen final :
 {
 public:
     explicit TraceInfoScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                             State& state);
+                             InspectCmdState& appState);
 
 private:
     void _redraw() override;

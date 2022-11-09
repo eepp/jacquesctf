@@ -10,7 +10,6 @@
 
 #include "aliases.hpp"
 #include "../stylist.hpp"
-#include "../../state/state.hpp"
 #include "../views/ds-file-table-view.hpp"
 #include "screen.hpp"
 #include "../cycle-wheel.hpp"
@@ -23,7 +22,7 @@ class DsFilesScreen final :
 {
 public:
     explicit DsFilesScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                           State& state);
+                           InspectCmdState& appState);
 
 private:
     void _redraw() override;

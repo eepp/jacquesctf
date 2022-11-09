@@ -14,7 +14,6 @@
 #include <yactfr/metadata/fwd.hpp>
 
 #include "scroll-view.hpp"
-#include "../../state/state.hpp"
 #include "data/ts.hpp"
 #include "data/duration.hpp"
 
@@ -24,11 +23,11 @@ class TraceInfoView final :
     public ScrollView
 {
 public:
-    explicit TraceInfoView(const Rect& rect, const Stylist& stylist, State& state);
+    explicit TraceInfoView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState);
 
 private:
     void _drawRows() override;
-    void _stateChanged(Message msg) override;
+    void _appStateChanged(Message msg) override;
     void _buildTraceInfoRows(const Trace& metadata);
     void _buildRows();
 
@@ -151,8 +150,8 @@ private:
     using _Rows = std::vector<std::unique_ptr<_Row>>;
 
 private:
-    State * const _state;
-    const ViewStateObserverGuard _stateObserverGuard;
+    InspectCmdState *_appState;
+    ViewInspectCmdStateObserverGuard _appStateObserverGuard;
     std::unordered_map<const Trace *, _Rows> _traceInfo;
     const _Rows *_rows = nullptr;
 };

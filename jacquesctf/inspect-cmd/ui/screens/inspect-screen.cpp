@@ -17,16 +17,15 @@
 #include "../views/er-table-view.hpp"
 #include "inspect-screen.hpp"
 #include "../stylist.hpp"
-#include "../../state/state.hpp"
 #include "../views/pkt-data-view.hpp"
 
 namespace jacques {
 
 InspectScreen::InspectScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                             State& state) :
-    Screen {rect, cfg, stylist, state},
+                             InspectCmdState& appState) :
+    Screen {rect, cfg, stylist, appState},
     _decErrorView {
-        std::make_unique<PktDecodingErrorDetailsView>(rect, stylist, state)
+        std::make_unique<PktDecodingErrorDetailsView>(rect, stylist, appState)
     },
     _searchCtrl {*this, stylist},
     _tsFmtModeWheel {
@@ -47,11 +46,11 @@ InspectScreen::InspectScreen(const Rect& rect, const InspectCfg& cfg, const Styl
         _ErtViewDispMode::HIDDEN,
     }
 {
-    _pdView = std::make_unique<PktDataView>(this->rect(), stylist, state, _bookmarks);
-    _ertView = std::make_unique<ErTableView>(this->rect(), stylist, state);
+    _pdView = std::make_unique<PktDataView>(this->rect(), stylist, appState, _bookmarks);
+    _ertView = std::make_unique<ErTableView>(this->rect(), stylist, appState);
     _priView = std::make_unique<PktRegionInfoView>(Rect {{0, 0}, this->rect().w, 1}, stylist,
-                                                   state);
-    _sdteView = std::make_unique<SubDtExplorerView>(this->rect(), stylist, state);
+                                                   appState);
+    _sdteView = std::make_unique<SubDtExplorerView>(this->rect(), stylist, appState);
     _decErrorView->isVisible(false);
     _pdView->focus();
     this->_updateViews();
@@ -63,15 +62,15 @@ InspectScreen::~InspectScreen()
 
 InspectScreen::PktBookmarks& InspectScreen::_curPktBookmarks() noexcept
 {
-    const auto dsFileStateIndex = this->_state().activeDsFileStateIndex();
-    const auto pktStateIndex = this->_state().activeDsFileState().activePktStateIndex();
+    const auto dsFileStateIndex = this->_appState().activeDsFileStateIndex();
+    const auto pktStateIndex = this->_appState().activeDsFileState().activePktStateIndex();
 
     return _bookmarks[dsFileStateIndex][pktStateIndex];
 }
 
 void InspectScreen::_toggleBookmark(const unsigned int id)
 {
-    if (!this->_state().hasActivePktState()) {
+    if (!this->_appState().hasActivePktState()) {
         return;
     }
 
@@ -82,13 +81,13 @@ void InspectScreen::_toggleBookmark(const unsigned int id)
     auto& bookmarkedOffsetInPktBit = bookmarks[id];
 
     if (bookmarkedOffsetInPktBit) {
-        if (bookmarkedOffsetInPktBit == this->_state().curOffsetInPktBits()) {
+        if (bookmarkedOffsetInPktBit == this->_appState().curOffsetInPktBits()) {
             bookmarkedOffsetInPktBit = boost::none;
         } else {
-            bookmarkedOffsetInPktBit = this->_state().curOffsetInPktBits();
+            bookmarkedOffsetInPktBit = this->_appState().curOffsetInPktBits();
         }
     } else {
-        bookmarkedOffsetInPktBit = this->_state().curOffsetInPktBits();
+        bookmarkedOffsetInPktBit = this->_appState().curOffsetInPktBits();
     }
 
     _pdView->redraw();
@@ -96,14 +95,14 @@ void InspectScreen::_toggleBookmark(const unsigned int id)
 
 void InspectScreen::_gotoBookmark(const unsigned int id)
 {
-    if (!this->_state().hasActivePktState()) {
+    if (!this->_appState().hasActivePktState()) {
         return;
     }
 
     const auto& bookmark = this->_curPktBookmarks()[id];
 
     if (bookmark) {
-        this->_state().gotoPktRegionAtOffsetInPktBits(*bookmark);
+        this->_appState().gotoPktRegionAtOffsetInPktBits(*bookmark);
     }
 }
 
@@ -222,8 +221,8 @@ void InspectScreen::_visibilityChanged()
 
 void InspectScreen::_tryShowDecodingError()
 {
-    if (this->_state().hasActivePktState() &&
-            this->_state().activePktState().pkt().error()) {
+    if (this->_appState().hasActivePktState() &&
+            this->_appState().activePktState().pkt().error()) {
         _decErrorView->moveAndResize({
             {this->rect().pos.x + 4, this->rect().h - 14},
             this->rect().w - 8, 12
@@ -238,10 +237,10 @@ InspectScreen::_StateSnapshot InspectScreen::_takeStateSnapshot()
 {
     _StateSnapshot snapshot;
 
-    snapshot.dsfStateIndex = this->_state().activeDsFileStateIndex();
+    snapshot.dsfStateIndex = this->_appState().activeDsFileStateIndex();
 
-    if (this->_state().hasActivePktState()) {
-        const auto& activeDsfState = this->_state().activeDsFileState();
+    if (this->_appState().hasActivePktState()) {
+        const auto& activeDsfState = this->_appState().activeDsFileState();
 
         snapshot.pktIndexInDsFile = activeDsfState.activePktStateIndex();
         snapshot.offsetInPktBits = activeDsfState.curOffsetInPktBits();
@@ -308,12 +307,12 @@ void InspectScreen::_goForward()
 
 void InspectScreen::_restoreStateSnapshot(const _StateSnapshot& snapshot)
 {
-    this->_state().gotoDsFile(snapshot.dsfStateIndex);
+    this->_appState().gotoDsFile(snapshot.dsfStateIndex);
 
     if (snapshot.pktIndexInDsFile) {
-        this->_state().gotoPkt(*snapshot.pktIndexInDsFile);
-        assert(this->_state().hasActivePktState());
-        this->_state().gotoPktRegionAtOffsetInPktBits(snapshot.offsetInPktBits);
+        this->_appState().gotoPkt(*snapshot.pktIndexInDsFile);
+        assert(this->_appState().hasActivePktState());
+        this->_appState().gotoPktRegionAtOffsetInPktBits(snapshot.offsetInPktBits);
     }
 }
 
@@ -328,7 +327,7 @@ void InspectScreen::_refreshViews()
 void InspectScreen::_setLastOffsetInRowBits()
 {
     if (!_lastOffsetInRowBits) {
-        _lastOffsetInRowBits = this->_state().curOffsetInPktBits() % _pdView->rowSize().bits();
+        _lastOffsetInRowBits = this->_appState().curOffsetInPktBits() % _pdView->rowSize().bits();
     }
 }
 
@@ -338,7 +337,7 @@ void InspectScreen::_search(const SearchQuery& query, const bool animate)
             dynamic_cast<const ErtIdSearchQuery *>(&query)) {
         std::atomic_bool stop {false};
         std::thread t {[this, &stop, &query] {
-            this->_state().search(query);
+            this->_appState().search(query);
             stop = true;
         }};
 
@@ -348,7 +347,7 @@ void InspectScreen::_search(const SearchQuery& query, const bool animate)
 
         t.join();
     } else {
-        this->_state().search(query);
+        this->_appState().search(query);
     }
 }
 
@@ -451,16 +450,16 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         break;
 
     case 'C':
-        this->_state().gotoPktCtx();
+        this->_appState().gotoPktCtx();
         this->_snapshotState();
         break;
 
     case 'z':
-        if (!this->_state().hasActivePktState()) {
+        if (!this->_appState().hasActivePktState()) {
             break;
         }
 
-        this->_state().activePktState().gotoPktRegionNextParent();
+        this->_appState().activePktState().gotoPktRegionNextParent();
         this->_snapshotState();
         break;
 
@@ -481,44 +480,44 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         break;
 
     case KEY_HOME:
-        this->_state().gotoPktRegionAtOffsetInPktBits(0);
+        this->_appState().gotoPktRegionAtOffsetInPktBits(0);
         this->_snapshotState();
         break;
 
     case KEY_END:
-        this->_state().gotoLastPktRegion();
+        this->_appState().gotoLastPktRegion();
         this->_snapshotState();
         this->_tryShowDecodingError();
         break;
 
     case KEY_LEFT:
-        this->_state().gotoPrevPktRegion();
+        this->_appState().gotoPrevPktRegion();
         this->_snapshotState();
         break;
 
     case KEY_RIGHT:
-        this->_state().gotoNextPktRegion();
+        this->_appState().gotoNextPktRegion();
         this->_snapshotState();
         break;
 
     case KEY_UP:
     {
-        if (!this->_state().hasActivePktState()) {
+        if (!this->_appState().hasActivePktState()) {
             break;
         }
 
-        auto& pkt = this->_state().activePktState().pkt();
+        auto& pkt = this->_appState().activePktState().pkt();
 
-        if (!this->_state().activePktState().pkt().hasData()) {
+        if (!this->_appState().activePktState().pkt().hasData()) {
             break;
         }
 
         Index reqOffsetInPktBits;
 
-        if (this->_state().curOffsetInPktBits() < _pdView->rowSize()) {
+        if (this->_appState().curOffsetInPktBits() < _pdView->rowSize()) {
             break;
         } else {
-            const auto curOffsetInPktBits = this->_state().curOffsetInPktBits();
+            const auto curOffsetInPktBits = this->_appState().curOffsetInPktBits();
             const auto rowSizeBits = _pdView->rowSize().bits();
 
             this->_setLastOffsetInRowBits();
@@ -530,18 +529,18 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 
         const auto& reqPktRegion = pkt.regionAtOffsetInPktBits(reqOffsetInPktBits);
 
-        this->_state().gotoPktRegionAtOffsetInPktBits(reqPktRegion.segment().offsetInPktBits());
+        this->_appState().gotoPktRegionAtOffsetInPktBits(reqPktRegion.segment().offsetInPktBits());
         this->_snapshotState();
         break;
     }
 
     case KEY_DOWN:
     {
-        if (!this->_state().hasActivePktState()) {
+        if (!this->_appState().hasActivePktState()) {
             break;
         }
 
-        auto& pkt = this->_state().activePktState().pkt();
+        auto& pkt = this->_appState().activePktState().pkt();
 
         if (!pkt.hasData()) {
             break;
@@ -549,9 +548,9 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 
         this->_setLastOffsetInRowBits();
 
-        const auto& curPktRegion = *this->_state().curPktRegion();
-        const auto nextOffsetInPktBits = this->_state().curOffsetInPktBits() -
-                                         (this->_state().curOffsetInPktBits() %
+        const auto& curPktRegion = *this->_appState().curPktRegion();
+        const auto nextOffsetInPktBits = this->_appState().curOffsetInPktBits() -
+                                         (this->_appState().curOffsetInPktBits() %
                                           _pdView->rowSize().bits()) +
                                          _pdView->rowSize().bits() + *_lastOffsetInRowBits;
         const auto reqOffsetInPktBits = std::max(nextOffsetInPktBits,
@@ -563,7 +562,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
 
         const auto& reqPktRegion = pkt.regionAtOffsetInPktBits(reqOffsetInPktBits);
 
-        this->_state().gotoPktRegionAtOffsetInPktBits(reqPktRegion.segment().offsetInPktBits());
+        this->_appState().gotoPktRegionAtOffsetInPktBits(reqPktRegion.segment().offsetInPktBits());
         this->_snapshotState();
         break;
     }
@@ -625,7 +624,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
                 if (!dynamic_cast<const ErtNameSearchQuery *>(&query) &&
                         !dynamic_cast<const ErtIdSearchQuery *>(&query)) {
                     // this makes the appropriate views update and redraw
-                    this->_state().search(query);
+                    this->_appState().search(query);
                 }
 
                 // refresh background views
@@ -672,48 +671,48 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         break;
 
     case '-':
-        this->_state().gotoPrevEr();
+        this->_appState().gotoPrevEr();
         this->_snapshotState();
         break;
 
     case '+':
     case '=':
     case ' ':
-        this->_state().gotoNextEr();
+        this->_appState().gotoNextEr();
         this->_snapshotState();
         break;
 
     case KEY_F(3):
-        this->_state().gotoPrevDsFile();
+        this->_appState().gotoPrevDsFile();
         this->_snapshotState();
         this->_tryShowDecodingError();
         break;
 
     case KEY_F(4):
-        this->_state().gotoNextDsFile();
+        this->_appState().gotoNextDsFile();
         this->_snapshotState();
         this->_tryShowDecodingError();
         break;
 
     case KEY_F(5):
-        this->_state().gotoPrevPkt();
+        this->_appState().gotoPrevPkt();
         this->_snapshotState();
         this->_tryShowDecodingError();
         break;
 
     case KEY_F(6):
-        this->_state().gotoNextPkt();
+        this->_appState().gotoNextPkt();
         this->_snapshotState();
         this->_tryShowDecodingError();
         break;
 
     case KEY_F(7):
-        this->_state().gotoPrevEr(10);
+        this->_appState().gotoPrevEr(10);
         this->_snapshotState();
         break;
 
     case KEY_F(8):
-        this->_state().gotoNextEr(10);
+        this->_appState().gotoNextEr(10);
         this->_snapshotState();
         break;
 

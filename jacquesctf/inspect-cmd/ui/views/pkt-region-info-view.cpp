@@ -24,15 +24,16 @@
 
 namespace jacques {
 
-PktRegionInfoView::PktRegionInfoView(const Rect& rect, const Stylist& stylist, State& state) :
+PktRegionInfoView::PktRegionInfoView(const Rect& rect, const Stylist& stylist,
+                                     InspectCmdState& appState) :
     View {rect, "Packet region info", DecorationStyle::BORDERLESS, stylist},
-    _state {&state},
-    _stateObserverGuard {state, *this}
+    _appState {&appState},
+    _appStateObserverGuard {appState, *this}
 {
     this->_setMaxDtPathSizes();
 }
 
-void PktRegionInfoView::_stateChanged(const Message)
+void PktRegionInfoView::_appStateChanged(Message)
 {
     this->redraw();
 }
@@ -119,7 +120,7 @@ void PktRegionInfoView::_redrawContent()
     this->_stylist().pktRegionInfoViewStd(*this);
     this->_clearRect();
 
-    const auto pktRegion = _state->curPktRegion();
+    const auto pktRegion = _appState->curPktRegion();
 
     if (!pktRegion) {
         return;
@@ -132,7 +133,7 @@ void PktRegionInfoView::_redrawContent()
 
     if ((cPktRegion = dynamic_cast<const ContentPktRegion *>(pktRegion))) {
         // path
-        const auto& path = _state->metadata().dtPath(cPktRegion->dt());
+        const auto& path = _appState->metadata().dtPath(cPktRegion->dt());
 
         if (path.items().empty()) {
             this->_stylist().pktRegionInfoViewStd(*this, true);
@@ -171,7 +172,7 @@ void PktRegionInfoView::_redrawContent()
     // size
     this->_stylist().pktRegionInfoViewStd(*this, false);
 
-    const auto pathWidth = _maxDtPathSizes[&_state->trace()];
+    const auto pathWidth = _maxDtPathSizes[&_appState->trace()];
     const auto str = utils::sepNumber(pktRegion->segment().len()->bits(), ',');
 
     this->_safeMoveAndPrint({
@@ -238,7 +239,7 @@ void PktRegionInfoView::_redrawContent()
             this->_safePrint("%s", utils::escapeStr(*val).c_str());
         }
     } else if (isError) {
-        const auto& error = _state->activePktState().pkt().error();
+        const auto& error = _appState->activePktState().pkt().error();
 
         assert(error);
         this->_safePrint("    ");
@@ -277,7 +278,7 @@ void PktRegionInfoView::_setMaxDtPathSize(const Trace& trace)
 
 void PktRegionInfoView::_setMaxDtPathSizes()
 {
-    for (const auto& dsfState : _state->dsFileStates()) {
+    for (const auto& dsfState : _appState->dsFileStates()) {
         auto& trace = dsfState->trace();
 
         if (_maxDtPathSizes.find(&trace) == _maxDtPathSizes.end()) {
@@ -288,9 +289,9 @@ void PktRegionInfoView::_setMaxDtPathSizes()
 
 Size PktRegionInfoView::_curMaxOffsetSize()
 {
-    assert(_state->hasActivePktState());
+    assert(_appState->hasActivePktState());
 
-    const auto& pkt = _state->activePktState().pkt();
+    const auto& pkt = _appState->activePktState().pkt();
     const auto it = _maxOffsetSizes.find(&pkt);
 
     if (it == _maxOffsetSizes.end()) {

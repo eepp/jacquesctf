@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_INSPECT_CMD_STATE_SEARCH_PARSER_HPP
-#define _JACQUES_INSPECT_CMD_STATE_SEARCH_PARSER_HPP
+#ifndef _JACQUES_INSPECT_COMMON_SEARCH_QUERY_HPP
+#define _JACQUES_INSPECT_COMMON_SEARCH_QUERY_HPP
 
 #include <memory>
 #include <string>
@@ -145,4 +145,4 @@ std::unique_ptr<const SearchQuery> parseSearchQuery(const std::string& input);
 
 } // namespace jacques
 
-#endif // _JACQUES_INSPECT_CMD_STATE_SEARCH_PARSER_HPP
+#endif // _JACQUES_INSPECT_COMMON_SEARCH_QUERY_HPP

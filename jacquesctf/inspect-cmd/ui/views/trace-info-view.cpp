@@ -22,13 +22,13 @@
 
 namespace jacques {
 
-TraceInfoView::TraceInfoView(const Rect& rect, const Stylist& stylist, State& state) :
+TraceInfoView::TraceInfoView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState) :
     ScrollView {rect, "Trace info", DecorationStyle::BORDERS, stylist},
-    _state {&state},
-    _stateObserverGuard {state, *this}
+    _appState {&appState},
+    _appStateObserverGuard {appState, *this}
 {
     this->_buildRows();
-    _rows = &_traceInfo[&state.trace()];
+    _rows = &_traceInfo[&appState.trace()];
     this->_rowCount(_rows->size());
     this->_drawRows();
 }
@@ -333,7 +333,7 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
 
 void TraceInfoView::_buildRows()
 {
-    for (const auto& dsfState : _state->dsFileStates()) {
+    for (const auto& dsfState : _appState->dsFileStates()) {
         this->_buildTraceInfoRows(dsfState->dsFile().trace());
     }
 
@@ -429,10 +429,10 @@ void TraceInfoView::_drawRows()
     }
 }
 
-void TraceInfoView::_stateChanged(const Message msg)
+void TraceInfoView::_appStateChanged(const Message msg)
 {
     if (msg == Message::ACTIVE_DS_FILE_CHANGED) {
-        _rows = &_traceInfo[&_state->trace()];
+        _rows = &_traceInfo[&_appState->trace()];
         this->_index(0);
         this->_rowCount(_rows->size());
         this->_redrawContent();

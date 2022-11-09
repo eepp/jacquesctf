@@ -18,10 +18,10 @@ class PktRegionInfoView final :
     public View
 {
 public:
-    explicit PktRegionInfoView(const Rect& rect, const Stylist& stylist, State& state);
+    explicit PktRegionInfoView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState);
 
 private:
-    void _stateChanged(Message msg) override;
+    void _appStateChanged(Message msg) override;
     void _redrawContent() override;
     void _safePrintScope(yactfr::Scope scope);
     Size _curMaxOffsetSize();
@@ -29,8 +29,8 @@ private:
     void _setMaxDtPathSizes();
 
 private:
-    State * const _state;
-    const ViewStateObserverGuard _stateObserverGuard;
+    InspectCmdState *_appState;
+    ViewInspectCmdStateObserverGuard _appStateObserverGuard;
     std::unordered_map<const Pkt *, Size> _maxOffsetSizes;
     std::unordered_map<const Trace *, Size> _maxDtPathSizes;
 };

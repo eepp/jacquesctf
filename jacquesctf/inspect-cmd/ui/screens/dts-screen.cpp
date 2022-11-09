@@ -7,18 +7,19 @@
 
 #include "dts-screen.hpp"
 #include "data/content-pkt-region.hpp"
-#include "../../state/search-query.hpp"
+#include "inspect-common/search-query.hpp"
 
 namespace jacques {
 
-DtsScreen::DtsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist, State& state) :
-    Screen {rect, cfg, stylist, state},
+DtsScreen::DtsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
+                     InspectCmdState& appState) :
+    Screen {rect, cfg, stylist, appState},
     _searchController {*this, stylist}
 {
     const auto viewRects = this->_viewRects();
 
-    _dstTableView = std::make_unique<DstTableView>(std::get<0>(viewRects), stylist, state);
-    _ertTableView = std::make_unique<ErtTableView>(std::get<1>(viewRects), stylist, state);
+    _dstTableView = std::make_unique<DstTableView>(std::get<0>(viewRects), stylist, appState);
+    _ertTableView = std::make_unique<ErtTableView>(std::get<1>(viewRects), stylist, appState);
     _dtExplorerView = std::make_unique<DtExplorerView>(std::get<2>(viewRects), stylist);
     _focusedView = _dstTableView.get();
     this->_updateViews();
@@ -61,7 +62,7 @@ std::tuple<Rect, Rect, Rect> DtsScreen::_viewRects() const
 
 void DtsScreen::_updateViews()
 {
-    _dstTableView->traceType(this->_state().metadata().traceType());
+    _dstTableView->traceType(this->_appState().metadata().traceType());
     _ertTableView->dst(*_dstTableView->dst());
 
     if (_focusedView == _dstTableView.get()) {
@@ -83,14 +84,14 @@ void DtsScreen::_resized()
 
 void DtsScreen::highlightCurDt()
 {
-    if (!this->_state().hasActivePktState()) {
+    if (!this->_appState().hasActivePktState()) {
         _dtExplorerView->clearHighlight();
     }
 
-    auto& activePktState = this->_state().activePktState();
+    auto& activePktState = this->_appState().activePktState();
 
     const auto curDst = activePktState.pktIndexEntry().dst();
-    const auto curEr = this->_state().curEr();
+    const auto curEr = this->_appState().curEr();
 
     if (curEr && curEr->type()) {
         assert(curDst);
@@ -118,7 +119,7 @@ void DtsScreen::highlightCurDt()
 
     _dtExplorerView->clearHighlight();
 
-    const auto curPktRegion = this->_state().curPktRegion();
+    const auto curPktRegion = this->_appState().curPktRegion();
 
     if (curPktRegion) {
         const auto cPktRegion = dynamic_cast<const ContentPktRegion *>(curPktRegion);

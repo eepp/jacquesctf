@@ -10,7 +10,6 @@
 
 #include "aliases.hpp"
 #include "../stylist.hpp"
-#include "../../state/state.hpp"
 #include "../views/pkt-table-view.hpp"
 #include "../search-ctrl.hpp"
 #include "screen.hpp"
@@ -24,7 +23,7 @@ class PktsScreen final :
 {
 public:
     explicit PktsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                        State& state);
+                        InspectCmdState& appState);
 
 protected:
     void _redraw() override;

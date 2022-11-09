@@ -13,7 +13,6 @@
 #include <yactfr/metadata/fwd.hpp>
 
 #include "table-view.hpp"
-#include "../../state/state.hpp"
 
 namespace jacques {
 
@@ -21,7 +20,8 @@ class DstTableView final :
     public TableView
 {
 public:
-    explicit DstTableView(const Rect& rect, const Stylist& stylist, const State& state);
+    explicit DstTableView(const Rect& rect, const Stylist& stylist,
+                          const InspectCmdState& appState);
     void traceType(const yactfr::TraceType& traceType);
     const yactfr::DataStreamType *dst() const;
     void selectDst(yactfr::TypeId id);
@@ -33,7 +33,7 @@ protected:
 
 private:
     void _setColumnDescrs();
-    void _buildRows(const State& state);
+    void _buildRows(const InspectCmdState& appState);
 
 private:
     using Dsts = std::vector<const yactfr::DataStreamType *>;

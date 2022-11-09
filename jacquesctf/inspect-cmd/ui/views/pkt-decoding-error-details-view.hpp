@@ -19,16 +19,16 @@ class PktDecodingErrorDetailsView final :
     public View
 {
 public:
-    explicit PktDecodingErrorDetailsView(const Rect& rect, const Stylist& stylist, State& state);
+    explicit PktDecodingErrorDetailsView(const Rect& rect, const Stylist& stylist,
+                                         InspectCmdState& appState);
 
 private:
     void _redrawContent() override;
-    void _stateChanged(Message msg) override;
+    void _appStateChanged(Message msg) override;
 
 private:
-    State * const _state;
-    const ViewStateObserverGuard _stateObserverGuard;
-
+    InspectCmdState *_appState;
+    ViewInspectCmdStateObserverGuard _appStateObserverGuard;
 };
 
 } // namespace jacques

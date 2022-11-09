@@ -14,7 +14,7 @@
 
 #include "inspect-cmd.hpp"
 #include "cfg.hpp"
-#include "../state/state.hpp"
+#include "../state/inspect-cmd-state.hpp"
 #include "stylist.hpp"
 #include "screens/inspect-screen.hpp"
 #include "screens/help-screen.hpp"
@@ -127,7 +127,7 @@ void init()
     initScreen();
 }
 
-void buildIndexes(State& state, const Stylist& stylist)
+void buildIndexes(InspectCmdState& appState, const Stylist& stylist)
 {
     const auto screenRect = Rect {{0, 0}, static_cast<Size>(COLS), static_cast<Size>(LINES)};
     const auto view = std::make_unique<PktIndexBuildProgressView>(screenRect, stylist);
@@ -141,7 +141,7 @@ void buildIndexes(State& state, const Stylist& stylist)
     view->isVisible(true);
     view->refresh(true);
 
-    for (auto& dsfStateUp : state.dsFileStates()) {
+    for (auto& dsfStateUp : appState.dsFileStates()) {
         auto& dsf = dsfStateUp->dsFile();
 
         view->dsFile(dsf);
@@ -231,10 +231,10 @@ void startInteractive(const InspectCfg& cfg)
 
     Screen *curScreen = nullptr;
     bool redrawCurScreen = false;
-    auto updater = std::make_shared<PktCheckpointsBuildProgressUpdater>(*stylist, redrawCurScreen);
-    auto state = std::make_unique<State>(cfg.paths(), updater);
+    PktCheckpointsBuildProgressUpdater updater {*stylist, redrawCurScreen};
+    auto appState = std::make_unique<InspectCmdState>(cfg.paths(), updater);
 
-    if (state->dsFileStates().empty()) {
+    if (appState->dsFileStates().empty()) {
         throw CmdError {"All data stream files to inspect are empty."};
     }
 
@@ -246,7 +246,7 @@ void startInteractive(const InspectCfg& cfg)
      * because we want to provide feedback to the user because it could
      * be a long process. Build indexes first.
      */
-    buildIndexes(*state, *stylist);
+    buildIndexes(*appState, *stylist);
 
     /*
      * Show this message because some views created by the screens below
@@ -256,16 +256,17 @@ void startInteractive(const InspectCfg& cfg)
 
     // status
     auto statusView = std::make_unique<StatusView>(Rect {{0, screenRect.h}, screenRect.w, 1},
-                                                   *stylist, *state);
+                                                   *stylist, *appState);
 
     // create screens
-    const auto inspectScreen = std::make_unique<InspectScreen>(screenRect, cfg, *stylist, *state);
-    const auto pktsScreen = std::make_unique<PktsScreen>(screenRect, cfg, *stylist, *state);
-    const auto dsfScreen = std::make_unique<DsFilesScreen>(screenRect, cfg, *stylist, *state);
-    const auto helpScreen = std::make_unique<HelpScreen>(screenRect, cfg, *stylist, *state);
-    const auto dtsScreen = std::make_unique<DtsScreen>(screenRect, cfg, *stylist, *state);
+    const auto inspectScreen = std::make_unique<InspectScreen>(screenRect, cfg, *stylist,
+                                                               *appState);
+    const auto pktsScreen = std::make_unique<PktsScreen>(screenRect, cfg, *stylist, *appState);
+    const auto dsfScreen = std::make_unique<DsFilesScreen>(screenRect, cfg, *stylist, *appState);
+    const auto helpScreen = std::make_unique<HelpScreen>(screenRect, cfg, *stylist, *appState);
+    const auto dtsScreen = std::make_unique<DtsScreen>(screenRect, cfg, *stylist, *appState);
     const auto traceInfoScreen = std::make_unique<TraceInfoScreen>(screenRect, cfg, *stylist,
-                                                                   *state);
+                                                                   *appState);
     const std::vector<Screen *> screens {
         inspectScreen.get(),
         pktsScreen.get(),
@@ -278,8 +279,8 @@ void startInteractive(const InspectCfg& cfg)
     // goto first packet if available: this creates it and shows the progress
     showFullScreenMessage("Selecting initial packet...", *stylist);
 
-    if (state->activeDsFileState().dsFile().pktCount() > 0) {
-        state->gotoPkt(0);
+    if (appState->activeDsFileState().dsFile().pktCount() > 0) {
+        appState->gotoPkt(0);
     }
 
     // draw status
@@ -287,10 +288,10 @@ void startInteractive(const InspectCfg& cfg)
     statusView->redraw();
 
     // initial screen depends on the situation
-    if (state->dsFileStateCount() == 1) {
-        if (state->activeDsFileState().dsFile().pktCount() == 0) {
+    if (appState->dsFileStateCount() == 1) {
+        if (appState->activeDsFileState().dsFile().pktCount() == 0) {
             curScreen = dsfScreen.get();
-        } else if (state->activeDsFileState().dsFile().pktCount() == 1) {
+        } else if (appState->activeDsFileState().dsFile().pktCount() == 1) {
             curScreen = inspectScreen.get();
         } else {
             curScreen = pktsScreen.get();

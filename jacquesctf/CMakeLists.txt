@@ -53,10 +53,7 @@ find_package (Threads REQUIRED)
 if (JACQUES_HAS_INSPECT_CMD)
     set (
         JACQUES_INSPECT_CMD_SOURCES
-        inspect-cmd/state/ds-file-state.cpp
-        inspect-cmd/state/pkt-state.cpp
-        inspect-cmd/state/search-query.cpp
-        inspect-cmd/state/state.cpp
+        inspect-cmd/state/inspect-cmd-state.cpp
         inspect-cmd/ui/inspect-cmd.cpp
         inspect-cmd/ui/screens/ds-files-screen.cpp
         inspect-cmd/ui/screens/dts-screen.cpp
@@ -99,7 +96,11 @@ endif ()
 if (JACQUES_HAS_INSPECT_CMD OR JACQUES_HAS_INSPECT_GUI_CMD)
     set (
         JACQUES_INSPECT_COMMON_SOURCES
+        inspect-common/app-state.cpp
         inspect-common/common-inspect-table-view.cpp
+        inspect-common/ds-file-state.cpp
+        inspect-common/pkt-state.cpp
+        inspect-common/search-query.cpp
     )
 endif ()
 

@@ -20,7 +20,7 @@ class StatusView final :
     public View
 {
 public:
-    explicit StatusView(const Rect& rect, const Stylist& stylist, State& state);
+    explicit StatusView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState);
 
 private:
     struct _EndPositions
@@ -37,12 +37,12 @@ private:
 private:
     void _createEndPositions();
     void _drawOffset();
-    void _stateChanged(Message msg) override;
+    void _appStateChanged(Message msg) override;
     void _redrawContent() override;
 
 private:
-    State * const _state;
-    const ViewStateObserverGuard _stateObserverGuard;
+    InspectCmdState *_appState;
+    ViewInspectCmdStateObserverGuard _appStateObserverGuard;
     std::unordered_map<const DsFileState *, _EndPositions> _endPositions;
     const _EndPositions *_curEndPositions = nullptr;
 };

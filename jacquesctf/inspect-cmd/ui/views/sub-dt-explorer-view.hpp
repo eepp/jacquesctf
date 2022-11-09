@@ -16,14 +16,14 @@ class SubDtExplorerView final :
     public DtExplorerView
 {
 public:
-    explicit SubDtExplorerView(const Rect& rect, const Stylist& stylist, State& state);
+    explicit SubDtExplorerView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState);
 
 private:
-    void _stateChanged(Message msg) override;
+    void _appStateChanged(Message msg) override;
 
 private:
-    State * const _state;
-    const ViewStateObserverGuard _stateObserverGuard;
+    InspectCmdState *_appState;
+    ViewInspectCmdStateObserverGuard _appStateObserverGuard;
 };
 
 } // namespace jacques

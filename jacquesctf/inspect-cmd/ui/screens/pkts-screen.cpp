@@ -15,16 +15,15 @@
 #include "../views/search-input-view.hpp"
 #include "pkts-screen.hpp"
 #include "../stylist.hpp"
-#include "../../state/state.hpp"
 #include "data/pkt-checkpoints-build-listener.hpp"
 #include "../views/pkt-checkpoints-build-progress-view.hpp"
 
 namespace jacques {
 
 PktsScreen::PktsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                       State& state) :
-    Screen {rect, cfg, stylist, state},
-    _ptView {std::make_unique<PktTableView>(rect, stylist, state)},
+                       InspectCmdState& appState) :
+    Screen {rect, cfg, stylist, appState},
+    _ptView {std::make_unique<PktTableView>(rect, stylist, appState)},
     _searchCtrl {*this, stylist},
     _tsFmtModeWheel {
         TsFmtMode::LONG,
@@ -204,7 +203,7 @@ KeyHandlingReaction PktsScreen::_handleKey(const int key)
             break;
         }
 
-        this->_state().search(*query);
+        this->_appState().search(*query);
         _lastQuery = std::move(query);
         this->_redraw();
         break;
@@ -215,40 +214,40 @@ KeyHandlingReaction PktsScreen::_handleKey(const int key)
             break;
         }
 
-        this->_state().search(*_lastQuery);
+        this->_appState().search(*_lastQuery);
         _ptView->redraw();
         break;
 
     case '\n':
     case '\r':
-        if (this->_state().activeDsFileState().dsFile().pktCount() == 0) {
+        if (this->_appState().activeDsFileState().dsFile().pktCount() == 0) {
             break;
         }
 
-        this->_state().gotoPkt(_ptView->selPktIndex());
+        this->_appState().gotoPkt(_ptView->selPktIndex());
         return KeyHandlingReaction::RETURN_TO_INSPECT;
 
     case KEY_F(3):
-        this->_state().gotoPrevDsFile();
+        this->_appState().gotoPrevDsFile();
         break;
 
     case KEY_F(4):
-        this->_state().gotoNextDsFile();
+        this->_appState().gotoNextDsFile();
         break;
 
     case KEY_F(5):
-        this->_state().gotoPrevPkt();
+        this->_appState().gotoPrevPkt();
         break;
 
     case KEY_F(6):
-        this->_state().gotoNextPkt();
+        this->_appState().gotoNextPkt();
         break;
 
     case 'a':
     {
         AnalyzeAllPktsProgressUpdater updater {this->_stylist()};
 
-        this->_state().activeDsFileState().analyzeAllPkts(updater);
+        this->_appState().activeDsFileState().analyzeAllPkts(updater);
         _ptView->redraw();
         break;
     }

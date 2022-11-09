@@ -5,15 +5,14 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_INSPECT_CMD_STATE_STATE_HPP
-#define _JACQUES_INSPECT_CMD_STATE_STATE_HPP
+#ifndef _JACQUES_INSPECT_COMMON_APP_STATE_HPP
+#define _JACQUES_INSPECT_COMMON_APP_STATE_HPP
 
 #include <vector>
 #include <functional>
 #include <boost/filesystem.hpp>
 #include <boost/core/noncopyable.hpp>
 
-#include "msg.hpp"
 #include "ds-file-state.hpp"
 #include "search-query.hpp"
 #include "data/pkt-checkpoints-build-listener.hpp"
@@ -22,37 +21,48 @@
 namespace jacques {
 
 /*
+ * Common abstract application state for an inspection command.
+ *
  * This state (application model) guarantees the following:
  *
- * * There is at least one data stream file state.
+ * * There's at least one data stream file state.
  *
  * * All data stream file state paths are unique.
  *
- * * There is always an active data stream file state.
+ * * There's always an active data stream file state.
  *
  * * All the contained data stream file states have a valid metadata
- *   object, because State::State() throws when there's any
+ *   object, because AppState::AppState() throws when there's any
  *   stream/parsing error.
  *
  * However, note that it's possible that any data stream file state,
  * including the active one, has no packets at all. This is only true
  * when the data stream file is empty, otherwise there's always at least
  * one available packet, but it could contain a decoding error.
+ *
+ * A concrete application state may implement:
+ *
+ * _activeDsFileChanged():
+ *     Called when the active data stream file changed.
+ *
+ * _activePktChanged():
+ *     Called when the active packet changed.
+ *
+ * _curOffsetInPktChanged():
+ *     Called when the current offset in the active packet changed.
  */
-class State final :
+class AppState :
     boost::noncopyable
 {
     friend class DsFileState;
     friend class PktState;
 
-public:
-    using Observer = std::function<void (Message)>;
+protected:
+    explicit AppState(const std::vector<boost::filesystem::path>& paths,
+                      PktCheckpointsBuildListener& pktCheckpointsBuildListener);
 
 public:
-    explicit State(const std::vector<boost::filesystem::path>& paths,
-                   std::shared_ptr<PktCheckpointsBuildListener> pktCheckpointsBuildListener);
-    Index addObserver(const Observer& observer);
-    void removeObserver(Index id);
+    virtual ~AppState() = default;
     void gotoDsFile(Index index);
     void gotoPrevDsFile();
     void gotoNextDsFile();
@@ -173,28 +183,18 @@ public:
         return _dsFileStates;
     }
 
-private:
-    void _notify(Message msg);
+protected:
+    virtual void _activeDsFileChanged();
+    virtual void _activePktChanged();
+    virtual void _curOffsetInPktChanged();
 
 private:
-    std::vector<Observer> _observers;
     std::vector<std::unique_ptr<DsFileState>> _dsFileStates;
     DsFileState *_activeDsFileState;
     Index _activeDsFileStateIndex = 0;
     std::vector<std::unique_ptr<Trace>> _traces;
 };
 
-class StateObserverGuard final
-{
-public:
-    explicit StateObserverGuard(State& state, const State::Observer& observer);
-    ~StateObserverGuard();
-
-private:
-    State * const _state;
-    const Index _observerId;
-};
-
 } // namespace jacques
 
-#endif // _JACQUES_INSPECT_CMD_STATE_STATE_HPP
+#endif // _JACQUES_INSPECT_COMMON_APP_STATE_HPP

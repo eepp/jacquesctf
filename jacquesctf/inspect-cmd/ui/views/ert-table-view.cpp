@@ -15,11 +15,10 @@
 
 namespace jacques {
 
-ErtTableView::ErtTableView(const Rect& rect, const Stylist& stylist, const State& state) :
+ErtTableView::ErtTableView(const Rect& rect, const Stylist& stylist, const InspectCmdState& appState) :
     TableView {rect, "Event record types", DecorationStyle::BORDERS, stylist}
 {
-    this->_buildRows(state);
-    //this->_buildLogLevelNames();
+    this->_buildRows(appState);
     this->_setColumnDescrs();
 }
 
@@ -55,9 +54,9 @@ void ErtTableView::_setColumnDescrs()
     this->_colDescrs(std::move(descrs));
 }
 
-void ErtTableView::_buildRows(const State& state)
+void ErtTableView::_buildRows(const InspectCmdState& appState)
 {
-    for (auto& dsFileState : state.dsFileStates()) {
+    for (auto& dsFileState : appState.dsFileStates()) {
         auto& metadata = dsFileState->metadata();
 
         for (auto& dst : metadata.traceType()) {

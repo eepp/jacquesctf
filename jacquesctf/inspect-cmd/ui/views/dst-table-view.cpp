@@ -12,14 +12,15 @@
 
 namespace jacques {
 
-DstTableView::DstTableView(const Rect& rect, const Stylist& stylist, const State& state) :
+DstTableView::DstTableView(const Rect& rect, const Stylist& stylist,
+                           const InspectCmdState& appState) :
     TableView {rect, "Data stream types", DecorationStyle::BORDERS, stylist}
 {
     _row.push_back(std::make_unique<UIntTableViewCell>(TableViewCell::TextAlign::RIGHT));
     _row.push_back(std::make_unique<UIntTableViewCell>(TableViewCell::TextAlign::RIGHT));
     _row[0]->emphasized(true);
     this->_setColumnDescrs();
-    this->_buildRows(state);
+    this->_buildRows(appState);
 }
 
 void DstTableView::_resized()
@@ -45,9 +46,9 @@ void DstTableView::_setColumnDescrs()
     this->_colDescrs(std::move(descrs));
 }
 
-void DstTableView::_buildRows(const State& state)
+void DstTableView::_buildRows(const InspectCmdState& appState)
 {
-    for (auto& dsFileState : state.dsFileStates()) {
+    for (auto& dsFileState : appState.dsFileStates()) {
         auto& metadata = dsFileState->metadata();
         auto& traceType = metadata.traceType();
 

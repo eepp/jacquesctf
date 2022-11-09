@@ -14,13 +14,12 @@
 #include "help-screen.hpp"
 #include "../views/help-view.hpp"
 #include "../stylist.hpp"
-#include "../../state/state.hpp"
 
 namespace jacques {
 
 HelpScreen::HelpScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                       State& state) :
-    Screen {rect, cfg, stylist, state},
+                       InspectCmdState& appState) :
+    Screen {rect, cfg, stylist, appState},
     _view {std::make_unique<HelpView>(rect, stylist)}
 {
     _view->focus();

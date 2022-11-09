@@ -15,7 +15,6 @@
 #include <yactfr/metadata/fwd.hpp>
 
 #include "table-view.hpp"
-#include "../../state/state.hpp"
 
 namespace jacques {
 
@@ -23,7 +22,7 @@ class ErtTableView final :
     public TableView
 {
 public:
-    explicit ErtTableView(const Rect& rect, const Stylist& stylist, const State& state);
+    explicit ErtTableView(const Rect& rect, const Stylist& stylist, const InspectCmdState& appState);
     void dst(const yactfr::DataStreamType& dst);
     const yactfr::EventRecordType *ert() const noexcept;
     void selectErt(const std::string& pattern, bool relative = false);
@@ -46,7 +45,7 @@ protected:
 
 private:
     void _setColumnDescrs();
-    void _buildRows(const State& state);
+    void _buildRows(const InspectCmdState& appState);
     void _resetRow();
     //void _buildLogLevelNames();
 

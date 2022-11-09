@@ -13,7 +13,6 @@
 
 #include "aliases.hpp"
 #include "../stylist.hpp"
-#include "../../state/state.hpp"
 #include "../views/ert-table-view.hpp"
 #include "../views/dst-table-view.hpp"
 #include "../views/dt-explorer-view.hpp"
@@ -27,7 +26,7 @@ class DtsScreen final :
 {
 public:
     explicit DtsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                       State& state);
+                       InspectCmdState& appState);
     void highlightCurDt();
     void clearHighlight();
 

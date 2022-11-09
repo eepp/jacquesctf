@@ -13,15 +13,14 @@
 #include "cfg.hpp"
 #include "../views/ds-file-table-view.hpp"
 #include "ds-files-screen.hpp"
-#include "../../state/state.hpp"
 #include "../stylist.hpp"
 
 namespace jacques {
 
 DsFilesScreen::DsFilesScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                             State& state) :
-    Screen {rect, cfg, stylist, state},
-    _view {std::make_unique<DsFileTableView>(rect, stylist, state)},
+                             InspectCmdState& appState) :
+    Screen {rect, cfg, stylist, appState},
+    _view {std::make_unique<DsFileTableView>(rect, stylist, appState)},
     _tsFmtModeWheel {
         TsFmtMode::LONG,
         TsFmtMode::NS_FROM_ORIGIN,
@@ -98,22 +97,22 @@ KeyHandlingReaction DsFilesScreen::_handleKey(const int key)
 
     case '\n':
     case '\r':
-        this->_state().gotoDsFile(_view->selDsFileIndex());
+        this->_appState().gotoDsFile(_view->selDsFileIndex());
 
-        if (this->_state().activeDsFileState().dsFile().pktCount() == 0) {
+        if (this->_appState().activeDsFileState().dsFile().pktCount() == 0) {
             break;
-        } else if (this->_state().activeDsFileState().dsFile().pktCount() == 1) {
+        } else if (this->_appState().activeDsFileState().dsFile().pktCount() == 1) {
             return KeyHandlingReaction::RETURN_TO_INSPECT;
         } else {
             return KeyHandlingReaction::RETURN_TO_PKTS;
         }
 
     case KEY_F(3):
-        this->_state().gotoPrevDsFile();
+        this->_appState().gotoPrevDsFile();
         break;
 
     case KEY_F(4):
-        this->_state().gotoNextDsFile();
+        this->_appState().gotoNextDsFile();
         break;
 
     default:

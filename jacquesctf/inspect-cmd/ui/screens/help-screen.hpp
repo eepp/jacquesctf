@@ -10,7 +10,6 @@
 
 #include "aliases.hpp"
 #include "../stylist.hpp"
-#include "../../state/state.hpp"
 #include "screen.hpp"
 #include "../views/help-view.hpp"
 
@@ -21,7 +20,7 @@ class HelpScreen final :
 {
 public:
     explicit HelpScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                        State& state);
+                        InspectCmdState& appState);
 
 private:
     void _redraw() override;

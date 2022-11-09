@@ -14,18 +14,19 @@
 
 namespace jacques {
 
-DsFileTableView::DsFileTableView(const Rect& rect, const Stylist& stylist, State& state) :
+DsFileTableView::DsFileTableView(const Rect& rect, const Stylist& stylist,
+                                 InspectCmdState& appState) :
     TableView {rect, "Data stream files", DecorationStyle::BORDERS, stylist},
-    _state {&state},
-    _stateObserverGuard {state, *this}
+    _appState {&appState},
+    _appStateObserverGuard {appState, *this}
 {
     this->_setColumnDescrs();
 }
 
-void DsFileTableView::_stateChanged(const Message msg)
+void DsFileTableView::_appStateChanged(const Message msg)
 {
     if (msg == Message::ACTIVE_DS_FILE_CHANGED) {
-        this->_selRowAndDraw(_state->activeDsFileStateIndex());
+        this->_selRowAndDraw(_appState->activeDsFileStateIndex());
     }
 }
 
@@ -101,9 +102,9 @@ void DsFileTableView::_resetRow(const std::vector<TableViewColumnDescr>& descrs)
 
 void DsFileTableView::_drawRow(const Index row)
 {
-    assert(row < _state->dsFileStateCount());
+    assert(row < _appState->dsFileStateCount());
 
-    const auto& dsf = _state->dsFileState(row).dsFile();
+    const auto& dsf = _appState->dsFileState(row).dsFile();
 
     static_cast<PathTableViewCell&>(*_row[0]).path(dsf.path());
     _row[0]->style(dsf.hasError() ? TableViewCell::Style::ERROR : TableViewCell::Style::NORMAL);
@@ -188,7 +189,7 @@ void DsFileTableView::_drawRow(const Index row)
 
 Size DsFileTableView::_rowCount()
 {
-    return _state->dsFileStateCount();
+    return _appState->dsFileStateCount();
 }
 
 void DsFileTableView::tsFmtMode(const TsFmtMode tsFmtMode)

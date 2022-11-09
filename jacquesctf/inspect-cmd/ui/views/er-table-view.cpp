@@ -13,10 +13,10 @@
 
 namespace jacques {
 
-ErTableView::ErTableView(const Rect& rect, const Stylist& stylist, State& state) :
+ErTableView::ErTableView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState) :
     TableView {rect, "Event records", DecorationStyle::BORDERS, stylist},
-    _state {&state},
-    _stateObserverGuard {state, *this}
+    _appState {&appState},
+    _appStateObserverGuard {appState, *this}
 {
     this->_setColumnDescrs();
 }
@@ -103,9 +103,9 @@ void ErTableView::_setColumnDescrs()
 
 void ErTableView::_drawRow(const Index row)
 {
-    assert(_state->hasActivePktState());
+    assert(_appState->hasActivePktState());
 
-    auto& er = _state->activePktState().pkt().erAtIndexInPkt(row);
+    auto& er = _appState->activePktState().pkt().erAtIndexInPkt(row);
 
     static_cast<UIntTableViewCell&>(*_row[0]).val(er.natIndexInPkt());
     static_cast<DataLenTableViewCell&>(*_row[1]).len(er.segment().offsetInPktBits());
@@ -151,7 +151,7 @@ void ErTableView::_drawRow(const Index row)
             cell.na(true);
         } else {
             const auto curTs = *er.ts();
-            auto& prevEventRecord = _state->activePktState().pkt().erAtIndexInPkt(row - 1);
+            auto& prevEventRecord = _appState->activePktState().pkt().erAtIndexInPkt(row - 1);
 
             if (!prevEventRecord.ts()) {
                 cell.na(true);
@@ -168,11 +168,11 @@ void ErTableView::_drawRow(const Index row)
 
 Size ErTableView::_rowCount()
 {
-    if (!_state->hasActivePktState()) {
+    if (!_appState->hasActivePktState()) {
         return 0;
     }
 
-    return _state->activePktState().pkt().erCount();
+    return _appState->activePktState().pkt().erCount();
 }
 
 void ErTableView::tsFmtMode(const TsFmtMode tsFmtMode)
@@ -197,7 +197,7 @@ void ErTableView::dataLenFmtMode(const utils::LenFmtMode dataLenFmtMode)
     this->_redrawRows();
 }
 
-void ErTableView::_stateChanged(const Message msg)
+void ErTableView::_appStateChanged(const Message msg)
 {
     if (msg == Message::ACTIVE_DS_FILE_CHANGED || msg == Message::ACTIVE_PKT_CHANGED) {
         /*
@@ -209,25 +209,25 @@ void ErTableView::_stateChanged(const Message msg)
         this->_updateCounts();
     }
 
-    if (_state->hasActivePktState() && _state->activePktState().pkt().erCount() > 0) {
-        assert(_state->activePktState().pkt().firstEr());
-        assert(_state->activePktState().pkt().lastEr());
+    if (_appState->hasActivePktState() && _appState->activePktState().pkt().erCount() > 0) {
+        assert(_appState->activePktState().pkt().firstEr());
+        assert(_appState->activePktState().pkt().lastEr());
 
-        const auto curEr = _state->curEr();
+        const auto curEr = _appState->curEr();
 
         if (curEr) {
             this->_isSelHighlightEnabled(true, false);
             this->_selRowAndDraw(curEr->indexInPkt(), false);
         } else {
-            const auto& indexEntry = _state->activePktState().pktIndexEntry();
-            const auto offsetInPktBits = _state->curOffsetInPktBits();
+            const auto& indexEntry = _appState->activePktState().pktIndexEntry();
+            const auto offsetInPktBits = _appState->curOffsetInPktBits();
 
             // convenience for regions outside the event record block
             if (indexEntry.preambleLen() && offsetInPktBits < indexEntry.preambleLen()->bits()) {
                 this->_selRowAndDraw(0, false);
             } else if (offsetInPktBits >=
-                    _state->activePktState().pkt().lastEr()->segment().endOffsetInPktBits()) {
-                this->_selRowAndDraw(_state->activePktState().pkt().lastEr()->indexInPkt(), false);
+                    _appState->activePktState().pkt().lastEr()->segment().endOffsetInPktBits()) {
+                this->_selRowAndDraw(_appState->activePktState().pkt().lastEr()->indexInPkt(), false);
             }
 
             this->_isSelHighlightEnabled(false, false);

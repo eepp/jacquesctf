@@ -9,7 +9,6 @@
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_PKT_TABLE_VIEW_HPP
 
 #include "table-view.hpp"
-#include "../../state/state.hpp"
 #include "data/data-len.hpp"
 
 namespace jacques {
@@ -18,7 +17,7 @@ class PktTableView final :
     public TableView
 {
 public:
-    explicit PktTableView(const Rect& rect, const Stylist& stylist, State& state);
+    explicit PktTableView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState);
     void tsFmtMode(TsFmtMode tsFmtMode);
     void dataLenFmtMode(utils::LenFmtMode dataLenFmtMode);
     Index selPktIndex() const noexcept;
@@ -28,7 +27,7 @@ protected:
     void _drawRow(Index row) override;
     Size _rowCount() override;
     void _resized() override;
-    void _stateChanged(Message msg) override;
+    void _appStateChanged(Message msg) override;
 
 private:
     void _setColumnDescrs();
@@ -36,8 +35,8 @@ private:
 
 private:
     std::vector<std::unique_ptr<TableViewCell>> _row;
-    State * const _state;
-    const ViewStateObserverGuard _stateObserverGuard;
+    InspectCmdState *_appState;
+    ViewInspectCmdStateObserverGuard _appStateObserverGuard;
     TsFmtMode _tsFmtMode = TsFmtMode::LONG;
     utils::LenFmtMode _dataLenFmtMode = utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS;
 };

@@ -12,17 +12,16 @@
 #include <fcntl.h>
 
 #include "ds-file-state.hpp"
-#include "msg.hpp"
 #include "search-query.hpp"
-#include "state.hpp"
+#include "app-state.hpp"
 #include "io-error.hpp"
 
 namespace jacques {
 
-DsFileState::DsFileState(State& state, DsFile& dsFile,
-                         std::shared_ptr<PktCheckpointsBuildListener> pktCheckpointsBuildListener) :
-    _state {&state},
-    _pktCheckpointsBuildListener {std::move(pktCheckpointsBuildListener)},
+DsFileState::DsFileState(AppState& appState, DsFile& dsFile,
+                         PktCheckpointsBuildListener& pktCheckpointsBuildListener) :
+    _appState {&appState},
+    _pktCheckpointsBuildListener {&pktCheckpointsBuildListener},
     _dsFile {&dsFile}
 {
 }
@@ -59,7 +58,7 @@ PktState& DsFileState::_pktState(const Index index)
     if (!_pktStates[index]) {
         auto& pkt = _dsFile->pktAtIndex(index, *_pktCheckpointsBuildListener);
 
-        _pktStates[index] = std::make_unique<PktState>(*_state, _dsFile->metadata(), pkt);
+        _pktStates[index] = std::make_unique<PktState>(*_appState, _dsFile->metadata(), pkt);
     }
 
     return *_pktStates[index];
@@ -70,7 +69,7 @@ void DsFileState::_gotoPkt(const Index index)
     assert(index < _dsFile->pktCount());
     _activePktStateIndex = index;
     _activePktState = &this->_pktState(index);
-    _state->_notify(Message::ACTIVE_PKT_CHANGED);
+    _appState->_activePktChanged();
 }
 
 void DsFileState::gotoPkt(const Index index)
@@ -483,15 +482,19 @@ bool DsFileState::search(const SearchQuery& query)
     return false;
 }
 
-void DsFileState::analyzeAllPkts(PktCheckpointsBuildListener& buildListener)
+void DsFileState::analyzeAllPkts(PktCheckpointsBuildListener *buildListener)
 {
+    if (!buildListener) {
+        buildListener = _pktCheckpointsBuildListener;
+    }
+
     for (auto& pktIndexEntry : _dsFile->pktIndexEntries()) {
         if (pktIndexEntry.erCount()) {
             continue;
         }
 
         // this creates checkpoints and shows progress
-        _dsFile->pktAtIndex(pktIndexEntry.indexInDsFile(), buildListener);
+        _dsFile->pktAtIndex(pktIndexEntry.indexInDsFile(), *buildListener);
     }
 }
 

@@ -14,14 +14,13 @@
 #include "trace-info-screen.hpp"
 #include "../views/trace-info-view.hpp"
 #include "../stylist.hpp"
-#include "../../state/state.hpp"
 
 namespace jacques {
 
 TraceInfoScreen::TraceInfoScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                                 State& state) :
-    Screen {rect, cfg, stylist, state},
-    _view {std::make_unique<TraceInfoView>(rect, stylist, state)}
+                                 InspectCmdState& appState) :
+    Screen {rect, cfg, stylist, appState},
+    _view {std::make_unique<TraceInfoView>(rect, stylist, appState)}
 {
     _view->focus();
 }
@@ -64,11 +63,11 @@ KeyHandlingReaction TraceInfoScreen::_handleKey(const int key)
         break;
 
     case KEY_F(3):
-        this->_state().gotoPrevDsFile();
+        this->_appState().gotoPrevDsFile();
         break;
 
     case KEY_F(4):
-        this->_state().gotoNextDsFile();
+        this->_appState().gotoNextDsFile();
         break;
 
     default:

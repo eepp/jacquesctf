@@ -11,7 +11,7 @@
 #include <curses.h>
 
 #include "search-ctrl.hpp"
-#include "../state/search-query.hpp"
+#include "inspect-common/search-query.hpp"
 
 namespace jacques {
 
