@@ -16,6 +16,8 @@
 
 namespace jacques {
 
+class DsFile;
+
 class PktCheckpointsBuildListener
 {
 protected:
@@ -24,9 +26,9 @@ protected:
 public:
     virtual ~PktCheckpointsBuildListener() = default;
 
-    void startBuild(const PktIndexEntry& pktIndexEntry)
+    void startBuild(const DsFile& dsFile, const PktIndexEntry& pktIndexEntry)
     {
-        this->_startBuild(pktIndexEntry);
+        this->_startBuild(dsFile, pktIndexEntry);
     }
 
     void update(const Er& er)
@@ -40,7 +42,7 @@ public:
     }
 
 protected:
-    virtual void _startBuild(const PktIndexEntry& pktIndexEntry);
+    virtual void _startBuild(const DsFile& dsFile, const PktIndexEntry& pktIndexEntry);
     virtual void _update(const Er& er);
     virtual void _endBuild();
 };

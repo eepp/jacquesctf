@@ -172,7 +172,7 @@ public:
     }
 
 private:
-    void _startBuild(const PktIndexEntry& pktIndexEntry) override
+    void _startBuild(const DsFile&, const PktIndexEntry& pktIndexEntry) override
     {
         if (pktIndexEntry.effectiveTotalLen() < 2_MiB) {
             // too fast anyway

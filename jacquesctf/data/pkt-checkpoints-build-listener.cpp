@@ -9,7 +9,7 @@
 
 namespace jacques {
 
-void PktCheckpointsBuildListener::_startBuild(const PktIndexEntry&)
+void PktCheckpointsBuildListener::_startBuild(const DsFile&, const PktIndexEntry&)
 {
 }
 

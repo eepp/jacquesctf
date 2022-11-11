@@ -78,7 +78,7 @@ public:
     }
 
 private:
-    void _startBuild(const PktIndexEntry& pktIndexEntry) override
+    void _startBuild(const DsFile&, const PktIndexEntry& pktIndexEntry) override
     {
         ++_pktCount;
 
@@ -247,7 +247,7 @@ KeyHandlingReaction PktsScreen::_handleKey(const int key)
     {
         AnalyzeAllPktsProgressUpdater updater {this->_stylist()};
 
-        this->_appState().activeDsFileState().analyzeAllPkts(updater);
+        this->_appState().activeDsFileState().analyzeAllPkts(&updater);
         _ptView->redraw();
         break;
     }

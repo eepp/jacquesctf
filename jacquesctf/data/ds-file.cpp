@@ -384,7 +384,7 @@ Pkt& DsFile::pktAtIndex(const Index index, PktCheckpointsBuildListener& buildLis
         auto& pktIndexEntry = _index[index];
         auto mmapFile = std::make_unique<MemMappedFile>(_path, _fd);
 
-        buildListener.startBuild(pktIndexEntry);
+        buildListener.startBuild(*this, pktIndexEntry);
 
         auto pkt = std::make_unique<Pkt>(pktIndexEntry, _seq, _trace->metadata(),
                                          _factory->createDataSource(), std::move(mmapFile),
