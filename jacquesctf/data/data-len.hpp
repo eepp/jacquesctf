@@ -59,6 +59,11 @@ public:
         return _lenBits;
     }
 
+    Size operator*() const noexcept
+    {
+        return _lenBits;
+    }
+
     Size bytes() const noexcept
     {
         return _lenBits / 8;
