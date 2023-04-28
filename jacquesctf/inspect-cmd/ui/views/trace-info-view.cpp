@@ -242,11 +242,10 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
 
     rows.push_back(std::make_unique<_StrPropRow>("Version", version));
 
-    static constexpr const char *traceUuidStr = "Trace UUID";
+    static constexpr const char *traceUuidStr = "Trace UID";
 
-    if (traceType.uuid()) {
-        rows.push_back(std::make_unique<_StrPropRow>(traceUuidStr,
-                                                     boost::uuids::to_string(*traceType.uuid())));
+    if (traceType.uid()) {
+        rows.push_back(std::make_unique<_StrPropRow>(traceUuidStr, *traceType.uid()));
     } else {
         rows.push_back(std::make_unique<_NonePropRow>(traceUuidStr));
     }
@@ -307,25 +306,35 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
             rows.push_back(std::make_unique<_NonePropRow>(descrStr));
         }
 
-        static constexpr const char *uuidStr = "UUID";
+        static constexpr const char *originStr = "Origin";
 
-        if (clkType->uuid()) {
-            rows.push_back(std::make_unique<_StrPropRow>(uuidStr,
-                                                         boost::uuids::to_string(*clkType->uuid())));
+        if (clkType->origin()) {
+            if (clkType->origin()->isUnixEpoch()) {
+                rows.push_back(std::make_unique<_StrPropRow>(originStr, "Unix epoch"));
+            } else {
+                static constexpr const char *originNsStr = "Origin namespace";
+
+                if (clkType->origin()->nameSpace()) {
+                    rows.push_back(std::make_unique<_StrPropRow>(originNsStr, *clkType->origin()->nameSpace()));
+                } else {
+                    rows.push_back(std::make_unique<_NonePropRow>(originNsStr));
+                }
+
+                rows.push_back(std::make_unique<_StrPropRow>("Origin name", clkType->origin()->name()));
+                rows.push_back(std::make_unique<_StrPropRow>("Origin UID", clkType->origin()->uid()));
+            }
         } else {
-            rows.push_back(std::make_unique<_NonePropRow>(uuidStr));
+            rows.push_back(std::make_unique<_NonePropRow>(originStr));
         }
 
         rows.push_back(std::make_unique<_SIntPropRow>("Frequency (Hz)",
                                                       static_cast<long long>(clkType->frequency())));
-        rows.push_back(std::make_unique<_SIntPropRow>("Offset (s)",
-                                                      static_cast<long long>(clkType->offset().seconds())));
-        rows.push_back(std::make_unique<_SIntPropRow>("Offset (cycles)",
-                                                      static_cast<long long>(clkType->offset().cycles())));
+        rows.push_back(std::make_unique<_SIntPropRow>("Offset from origin (s)",
+                                                      static_cast<long long>(clkType->offsetFromOrigin().seconds())));
+        rows.push_back(std::make_unique<_SIntPropRow>("Offset from origin (cycles)",
+                                                      static_cast<long long>(clkType->offsetFromOrigin().cycles())));
         rows.push_back(std::make_unique<_SIntPropRow>("Precision (cycles)",
                                                       static_cast<long long>(clkType->precision())));
-        rows.push_back(std::make_unique<_StrPropRow>("Origin is Unix epoch",
-                                                     clkType->originIsUnixEpoch() ? "Yes" : "No"));
     }
 
     _traceInfo[&trace] = std::move(rows);

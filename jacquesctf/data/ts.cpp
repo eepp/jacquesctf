@@ -79,7 +79,12 @@ Ts::Ts(const unsigned long long cycles, const unsigned long long freq, long long
 }
 
 Ts::Ts(const unsigned long long cycles, const yactfr::ClockType& clkType) noexcept :
-    Ts {cycles, clkType.frequency(), clkType.offset().seconds(), clkType.offset().cycles()}
+    Ts {
+        cycles,
+        clkType.frequency(),
+        clkType.offsetFromOrigin().seconds(),
+        clkType.offsetFromOrigin().cycles()
+    }
 {
 }
 

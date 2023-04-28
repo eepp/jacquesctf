@@ -36,34 +36,16 @@ void Metadata::_setIsCorrelatable()
         return;
     }
 
-    auto hasUnixEpochOrigin = false;
-    auto hasUnknownOrigin = false;
-    const boost::uuids::uuid *uuid = nullptr;
+    auto& firstClkTypeOrig = (*_traceType->clockTypes().begin())->origin();
 
     for (auto& clkType : _traceType->clockTypes()) {
-        if (clkType->originIsUnixEpoch()) {
-            hasUnixEpochOrigin = true;
-        } else {
-            if (uuid) {
-                if (clkType->uuid()) {
-                    if (*clkType->uuid() != *uuid) {
-                        return;
-                    }
-                } else {
-                    return;
-                }
-            } else {
-                if (clkType->uuid()) {
-                    uuid = &(*clkType->uuid());
-                }
-            }
-
-            hasUnknownOrigin = true;
+        if (!clkType->origin()) {
+            return;
         }
-    }
 
-    if (hasUnixEpochOrigin && hasUnknownOrigin) {
-        return;
+        if (*clkType->origin() != *firstClkTypeOrig) {
+            return;
+        }
     }
 
     _isCorrelatable = true;
