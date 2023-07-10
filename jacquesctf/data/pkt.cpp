@@ -225,6 +225,8 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
         // null-terminated strings are always byte-aligned within the packet
         assert(this->_itOffsetInPktBits() % 8 == 0);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdangling-reference"
         // get corresponding data type
         auto& dt = [this]() -> const yactfr::DataType& {
             if (_it->isNullTerminatedStringBeginningElement()) {
@@ -236,6 +238,7 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
                 return _it->asDynamicLengthStringBeginningElement().type();
             }
         }();
+#pragma GCC diagnostic pop
 
         const auto offsetStartBits = this->_itOffsetInPktBits();
         const auto bufStart = _mmapFile->addr() + this->_itOffsetInPktBytes();
@@ -281,6 +284,8 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
         // BLOBs are always byte-aligned within the packet
         assert(this->_itOffsetInPktBits() % 8 == 0);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdangling-reference"
         // get corresponding data type
         auto& dt = [this]() -> const yactfr::DataType& {
             if (_it->isStaticLengthBlobBeginningElement()) {
@@ -290,6 +295,7 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
                 return _it->asDynamicLengthBlobBeginningElement().type();
             }
         }();
+#pragma GCC diagnostic pop
 
         const auto offsetStartBits = this->_itOffsetInPktBits();
         const auto bufStart = _mmapFile->addr() + this->_itOffsetInPktBytes();
