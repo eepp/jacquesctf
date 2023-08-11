@@ -292,9 +292,9 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
 
     for (auto& clkType : traceType.clockTypes()) {
         rows.push_back(std::make_unique<_EmptyRow>());
-        assert(clkType->name());
+        assert(clkType->internalId());
 
-        const auto title = std::string {"Clock type `"} + *clkType->name() + "`";
+        const auto title = std::string {"Clock type `"} + *clkType->internalId() + "`";
 
         rows.push_back(std::make_unique<_SectionRow>(title));
 
@@ -306,11 +306,31 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
             rows.push_back(std::make_unique<_NonePropRow>(descrStr));
         }
 
-        static constexpr const char *originStr = "Origin";
+        static constexpr const char *nsStr = "Namespace";
+
+        if (clkType->nameSpace()) {
+            rows.push_back(std::make_unique<_StrPropRow>(nsStr, *clkType->nameSpace()));
+        } else {
+            rows.push_back(std::make_unique<_NonePropRow>(nsStr));
+        }
+
+        rows.push_back(std::make_unique<_StrPropRow>("Name", clkType->name()));
+        rows.push_back(std::make_unique<_StrPropRow>("UID", clkType->uid()));
+
+        static constexpr const char *origUuidStr = "Original UUID";
+
+        if (clkType->originalUuid()) {
+            rows.push_back(std::make_unique<_StrPropRow>(origUuidStr,
+                                                         boost::uuids::to_string(*clkType->originalUuid())));
+        } else {
+            rows.push_back(std::make_unique<_NonePropRow>(origUuidStr));
+        }
+
+        static constexpr const char *origStr = "Origin";
 
         if (clkType->origin()) {
             if (clkType->origin()->isUnixEpoch()) {
-                rows.push_back(std::make_unique<_StrPropRow>(originStr, "Unix epoch"));
+                rows.push_back(std::make_unique<_StrPropRow>(origStr, "Unix epoch"));
             } else {
                 static constexpr const char *originNsStr = "Origin namespace";
 
@@ -324,7 +344,7 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
                 rows.push_back(std::make_unique<_StrPropRow>("Origin UID", clkType->origin()->uid()));
             }
         } else {
-            rows.push_back(std::make_unique<_NonePropRow>(originStr));
+            rows.push_back(std::make_unique<_NonePropRow>(origStr));
         }
 
         rows.push_back(std::make_unique<_SIntPropRow>("Frequency (Hz)",
@@ -333,8 +353,24 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
                                                       static_cast<long long>(clkType->offsetFromOrigin().seconds())));
         rows.push_back(std::make_unique<_SIntPropRow>("Offset from origin (cycles)",
                                                       static_cast<long long>(clkType->offsetFromOrigin().cycles())));
-        rows.push_back(std::make_unique<_SIntPropRow>("Precision (cycles)",
-                                                      static_cast<long long>(clkType->precision())));
+
+        static constexpr const char *precStr = "Precision (cycles)";
+
+        if (clkType->precision()) {
+            rows.push_back(std::make_unique<_SIntPropRow>(precStr,
+                                                          static_cast<long long>(*clkType->precision())));
+        } else {
+            rows.push_back(std::make_unique<_NonePropRow>(precStr));
+        }
+
+        static constexpr const char *accuracyStr = "Accuracy (cycles)";
+
+        if (clkType->accuracy()) {
+            rows.push_back(std::make_unique<_SIntPropRow>(accuracyStr,
+                                                          static_cast<long long>(*clkType->accuracy())));
+        } else {
+            rows.push_back(std::make_unique<_NonePropRow>(accuracyStr));
+        }
     }
 
     _traceInfo[&trace] = std::move(rows);
