@@ -333,8 +333,10 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
                                                       static_cast<long long>(clkType->offsetFromOrigin().seconds())));
         rows.push_back(std::make_unique<_SIntPropRow>("Offset from origin (cycles)",
                                                       static_cast<long long>(clkType->offsetFromOrigin().cycles())));
-        rows.push_back(std::make_unique<_SIntPropRow>("Precision (cycles)",
-                                                      static_cast<long long>(clkType->precision())));
+        if (clkType->precision()) {
+            rows.push_back(std::make_unique<_SIntPropRow>("Precision (cycles)",
+                                                          static_cast<long long>(*clkType->precision())));
+        }
     }
 
     _traceInfo[&trace] = std::move(rows);
