@@ -10,25 +10,25 @@
 #include <cstring>
 #include <sstream>
 
-#include "enum-type-mapping-details.hpp"
+#include "mapping-or-flag-details.hpp"
 
 namespace jacques {
 
-EnumTypeMappingDetails::EnumTypeMappingDetails(std::string name, std::string rangesStr,
-                                               const Size indent, const Stylist& stylist) :
+MappingOrFlagDetails::MappingOrFlagDetails(std::string name, std::string rangesStr,
+                                           const Size indent, const Stylist& stylist) :
     AbstractDtDetails {indent, stylist},
     _name {std::move(name)},
     _rangesStrs {std::move(rangesStr)}
 {
 }
 
-void EnumTypeMappingDetails::_renderLine(WINDOW * const window, const Size maxWidth,
-                                         const bool stylize) const
+void MappingOrFlagDetails::_renderLine(WINDOW * const window, const Size maxWidth,
+                                       const bool stylize) const
 {
     auto remWidth = maxWidth;
 
     if (stylize) {
-        this->_stylist().detailsViewEnumTypeMappingName(window);
+        this->_stylist().detailsViewMappingOrFlagName(window);
     }
 
     this->_renderStr(window, remWidth, _name + ' ');
@@ -38,7 +38,7 @@ void EnumTypeMappingDetails::_renderLine(WINDOW * const window, const Size maxWi
     }
 
     if (stylize) {
-        this->_stylist().detailsViewIntRanges(window);
+        this->_stylist().detailsViewMappingOrFlagRange(window);
     }
 
     this->_renderStr(window, remWidth, _rangesStrs);

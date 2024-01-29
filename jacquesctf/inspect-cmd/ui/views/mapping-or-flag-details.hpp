@@ -5,8 +5,8 @@
  * prohibited. Proprietary and confidential.
  */
 
-#ifndef _JACQUES_INSPECT_CMD_UI_VIEWS_ENUM_TYPE_MAPPING_DETAILS_HPP
-#define _JACQUES_INSPECT_CMD_UI_VIEWS_ENUM_TYPE_MAPPING_DETAILS_HPP
+#ifndef _JACQUES_INSPECT_CMD_UI_VIEWS_MAPPING_OR_FLAG_DETAILS_HPP
+#define _JACQUES_INSPECT_CMD_UI_VIEWS_MAPPING_OR_FLAG_DETAILS_HPP
 
 #include <cstring>
 #include <cstdio>
@@ -22,12 +22,12 @@
 
 namespace jacques {
 
-class EnumTypeMappingDetails final :
+class MappingOrFlagDetails final :
     public AbstractDtDetails
 {
 public:
-    explicit EnumTypeMappingDetails(std::string name, std::string rangesStr, Size indent,
-                                    const Stylist& stylist);
+    explicit MappingOrFlagDetails(std::string name, std::string rangesStr, Size indent,
+                                  const Stylist& stylist);
 
 private:
     void _renderLine(WINDOW *window, Size maxWidth, bool stylize) const override;
@@ -39,4 +39,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_INSPECT_CMD_UI_VIEWS_ENUM_TYPE_MAPPING_DETAILS_HPP
+#endif // _JACQUES_INSPECT_CMD_UI_VIEWS_MAPPING_OR_FLAG_DETAILS_HPP

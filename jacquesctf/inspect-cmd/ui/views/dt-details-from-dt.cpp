@@ -13,7 +13,7 @@
 #include "dt-details-from-dt.hpp"
 #include "abstract-dt-details.hpp"
 #include "dt-details.hpp"
-#include "enum-type-mapping-details.hpp"
+#include "mapping-or-flag-details.hpp"
 
 namespace jacques {
 namespace {
@@ -23,16 +23,16 @@ void _dtDetailsFromDt(const yactfr::DataType& dt, Size indent, const Stylist& st
                       boost::optional<std::string> extra, Size extraWidth,
                       std::vector<std::unique_ptr<const AbstractDtDetails>>& vec);
 
-template <typename EnumTypeT>
-void _enumTypeMappingDetailsFromDt(const EnumTypeT& dt, const Size indent, const Stylist& stylist,
-                                   std::vector<std::unique_ptr<const AbstractDtDetails>>& vec)
+template <typename DtT>
+void _mappingOrFlagDetailsFromDt(const DtT& dt, const Size indent, const Stylist& stylist,
+                                 std::vector<std::unique_ptr<const AbstractDtDetails>>& vec)
 {
-    for (auto& nameRangesPair : dt.mappings()) {
+    for (auto& nameRangesPair : dt) {
         auto& name = nameRangesPair.first;
         auto rangesStr = intRangeSetStr(nameRangesPair.second);
 
-        vec.push_back(std::make_unique<const EnumTypeMappingDetails>(name, std::move(rangesStr),
-                                                                     indent, stylist));
+        vec.push_back(std::make_unique<const MappingOrFlagDetails>(name, std::move(rangesStr),
+                                                                   indent, stylist));
     }
 }
 
@@ -145,18 +145,19 @@ void _dtDetailsFromDt(const yactfr::DataType& dt, const Size indent, const Styli
                                         stylist, vec);
     } else if (dt.isArrayType()) {
         _dtDetailsFromDt(dt.asArrayType().elementType(), indent + 2, stylist, boost::none, 0, vec);
-    } else if (dt.isFixedLengthSignedEnumerationType()) {
-        _enumTypeMappingDetailsFromDt(dt.asFixedLengthSignedEnumerationType(), indent + 2, stylist,
-                                      vec);
-    } else if (dt.isFixedLengthUnsignedEnumerationType()) {
-        _enumTypeMappingDetailsFromDt(dt.asFixedLengthUnsignedEnumerationType(), indent + 2,
-                                      stylist, vec);
-    } else if (dt.isVariableLengthSignedEnumerationType()) {
-        _enumTypeMappingDetailsFromDt(dt.asVariableLengthSignedEnumerationType(), indent + 2,
-                                      stylist, vec);
-    } else if (dt.isVariableLengthUnsignedEnumerationType()) {
-        _enumTypeMappingDetailsFromDt(dt.asVariableLengthUnsignedEnumerationType(), indent + 2,
-                                      stylist, vec);
+    } else if (dt.isFixedLengthSignedIntegerType()) {
+        _mappingOrFlagDetailsFromDt(dt.asFixedLengthSignedIntegerType(), indent + 2, stylist, vec);
+    } else if (dt.isFixedLengthUnsignedIntegerType()) {
+        _mappingOrFlagDetailsFromDt(dt.asFixedLengthUnsignedIntegerType(), indent + 2, stylist,
+                                    vec);
+    } else if (dt.isVariableLengthSignedIntegerType()) {
+        _mappingOrFlagDetailsFromDt(dt.asVariableLengthSignedIntegerType(), indent + 2, stylist,
+                                    vec);
+    } else if (dt.isVariableLengthUnsignedIntegerType()) {
+        _mappingOrFlagDetailsFromDt(dt.asVariableLengthUnsignedIntegerType(), indent + 2, stylist,
+                                    vec);
+    } else if (dt.isFixedLengthBitMapType()) {
+        _mappingOrFlagDetailsFromDt(dt.asFixedLengthBitMapType(), indent + 2, stylist, vec);
     }
 }
 

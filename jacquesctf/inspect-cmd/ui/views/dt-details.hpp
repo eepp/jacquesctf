@@ -9,6 +9,7 @@
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_DT_DETAILS_HPP
 
 #include <string>
+#include <sstream>
 #include <yactfr/yactfr.hpp>
 #include <boost/optional.hpp>
 
@@ -51,9 +52,6 @@ private:
     void _renderDt(const yactfr::FixedLengthBitArrayType& dt, WINDOW *window, Size remWidth,
                    bool stylize) const;
 
-    void _renderDt(const yactfr::VariableLengthIntegerType& dt, WINDOW *window, Size remWidth,
-                   bool stylize) const;
-
     void _renderDt(const yactfr::NullTerminatedStringType& dt, WINDOW *window, Size remWidth,
                    bool stylize) const;
 
@@ -83,6 +81,64 @@ private:
 
     void _renderDt(const yactfr::OptionalType& dt, WINDOW *window, Size remWidth,
                    bool stylize) const;
+
+    template <typename IntTypeT>
+    void _renderMappingCountProp(const IntTypeT& dt, WINDOW * const window, Size& remWidth,
+                                 const bool stylize) const
+    {
+        if (!dt.mappings().empty()) {
+            this->_renderProp(window, remWidth, stylize, "mapping-cnt", dt.mappings().size());
+        }
+    }
+
+    template <typename IntTypeT>
+    void _renderIntTypeCommon(const IntTypeT& dt, WINDOW * const window, Size remWidth,
+                              const bool stylize) const
+    {
+        if (remWidth == 0) {
+            return;
+        }
+
+        this->_tryRenderPrefDispBaseProp(dt, window, remWidth, stylize);
+
+        if (remWidth == 0) {
+            return;
+        }
+
+        if (dt.isFixedLengthUnsignedIntegerType()) {
+            this->_renderRoleFlags(dt.asFixedLengthUnsignedIntegerType(), window, remWidth,
+                                   stylize);
+        } else if (dt.isVariableLengthUnsignedIntegerType()) {
+            this->_renderRoleFlags(dt.asVariableLengthUnsignedIntegerType(), window, remWidth,
+                                   stylize);
+        }
+
+        if (remWidth == 0) {
+            return;
+        }
+
+        this->_renderMappingCountProp(dt, window, remWidth, stylize);
+    }
+
+    template <typename VlIntTypeT>
+    void _renderVlIntType(const VlIntTypeT& dt, WINDOW * const window, Size remWidth,
+                          const bool stylize) const
+    {
+        std::ostringstream ss;
+
+        ss << '{';
+
+        if (dt.isVariableLengthUnsignedIntegerType()) {
+            ss << "~u";
+        } else {
+            assert(dt.isVariableLengthSignedIntegerType());
+            ss << "~i";
+        }
+
+        ss << '}';
+        this->_renderDtInfo(window, remWidth, stylize, ss.str().c_str());
+        this->_renderIntTypeCommon(dt, window, remWidth, stylize);
+    }
 
     template <typename DtT>
     void _tryRenderHasTraceTypeUuidRoleFlag(const DtT& dt, WINDOW * const window, Size& remWidth,
@@ -194,6 +250,8 @@ private:
     void _renderExtra(WINDOW *window, Size& remWidth, bool stylize) const;
     void _renderDtInfo(WINDOW *window, Size& remWidth, bool stylize, const char *info) const;
     void _renderRoleFlag(WINDOW *window, Size& remWidth, bool stylize, const char *name) const;
+    void _renderStrEncodingProp(WINDOW *window, Size& remWidth, bool stylize,
+                                const yactfr::StringType& strType) const;
 
     void _renderProp(WINDOW *window, Size& remWidth, bool stylize, const char *key,
                      const char *val) const;

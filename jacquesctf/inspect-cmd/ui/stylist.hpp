@@ -77,8 +77,8 @@ public:
     void detailsViewTypeInfo(WINDOW *window) const;
     void detailsViewDtName(WINDOW *window) const;
     void detailsViewDtExtra(WINDOW *window) const;
-    void detailsViewEnumTypeMappingName(WINDOW *window) const;
-    void detailsViewIntRanges(WINDOW *window) const;
+    void detailsViewMappingOrFlagName(WINDOW *window) const;
+    void detailsViewMappingOrFlagRange(WINDOW *window) const;
     void detailsViewPropKey(WINDOW *window) const;
     void detailsViewPropVal(WINDOW *window) const;
     void traceInfoViewPropKey(const View& view) const;
@@ -146,8 +146,8 @@ private:
         DETAILS_VIEW_TYPE_INFO,
         DETAILS_VIEW_DT_NAME,
         DETAILS_VIEW_DT_EXTRA,
-        DETAILS_VIEW_ENUM_TYPE_MEMBER_NAME,
-        DETAILS_VIEW_ENUM_TYPE_MEMBER_RANGE,
+        DETAILS_VIEW_MAPPING_OR_FLAG_NAME,
+        DETAILS_VIEW_MAPPING_OR_FLAG_RANGE,
         DETAILS_VIEW_PROP_KEY,
         DETAILS_VIEW_PROP_VAL,
         TRACE_INFO_VIEW_PROP_VAL,

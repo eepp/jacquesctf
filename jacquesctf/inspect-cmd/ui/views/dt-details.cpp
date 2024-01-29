@@ -52,6 +52,11 @@ void DtDetails::_renderLine(WINDOW *const window, const Size maxWidth, const boo
     // TODO: use data type visitor
     if (_dt->isFixedLengthBitArrayType()) {
         this->_renderDt(_dt->asFixedLengthBitArrayType(), window, remWidth, stylize);
+    } else if (_dt->isVariableLengthUnsignedIntegerType()) {
+        this->_renderVlIntType(_dt->asVariableLengthUnsignedIntegerType(), window, remWidth,
+                               stylize);
+    } else if (_dt->isVariableLengthSignedIntegerType()) {
+        this->_renderVlIntType(_dt->asVariableLengthSignedIntegerType(), window, remWidth, stylize);
     } else if (_dt->isNullTerminatedStringType()) {
         this->_renderDt(_dt->asNullTerminatedStringType(), window, remWidth, stylize);
     } else if (_dt->isStructureType()) {
@@ -81,20 +86,6 @@ void DtDetails::_renderLine(WINDOW *const window, const Size maxWidth, const boo
     }
 }
 
-namespace {
-
-yactfr::DisplayBase intTypePrefDispBase(const yactfr::DataType& dt) noexcept
-{
-    if (dt.isFixedLengthIntegerType()) {
-        return dt.asFixedLengthIntegerType().preferredDisplayBase();
-    } else {
-        assert(dt.isVariableLengthIntegerType());
-        return dt.asVariableLengthIntegerType().preferredDisplayBase();
-    }
-}
-
-} // namespace
-
 void DtDetails::_tryRenderPrefDispBaseProp(const yactfr::DataType& dt, WINDOW * const window,
                                            Size& remWidth, const bool stylize) const
 {
@@ -102,7 +93,7 @@ void DtDetails::_tryRenderPrefDispBaseProp(const yactfr::DataType& dt, WINDOW * 
         return;
     }
 
-    const auto prefDispBase = intTypePrefDispBase(dt);
+    const auto prefDispBase = utils::intTypePrefDispBase(dt);
 
     if (prefDispBase == yactfr::DisplayBase::DECIMAL) {
         return;
@@ -153,10 +144,8 @@ void DtDetails::_renderDt(const yactfr::FixedLengthBitArrayType& dt, WINDOW * co
 
     ss << '{';
 
-    if (dt.isFixedLengthSignedEnumerationType()) {
-        ss << "ie";
-    } else if (dt.isFixedLengthUnsignedEnumerationType()) {
-        ss << "ue";
+    if (dt.isFixedLengthBitMapType()) {
+        ss << "bm";
     } else if (dt.isFixedLengthSignedIntegerType()) {
         ss << 'i';
     } else if (dt.isFixedLengthUnsignedIntegerType()) {
@@ -169,64 +158,36 @@ void DtDetails::_renderDt(const yactfr::FixedLengthBitArrayType& dt, WINDOW * co
         ss << "ba";
     }
 
-    ss << dt.length() << ' ' << (dt.byteOrder() == yactfr::ByteOrder::BIG ? "be" : "le") <<
-          alignStr(dt) << '}';
+    ss << dt.length() << ' ' << (dt.byteOrder() == yactfr::ByteOrder::BIG ? "be" : "le");
+
+    if ((dt.byteOrder() == yactfr::ByteOrder::BIG && dt.bitOrder() == yactfr::BitOrder::FIRST_TO_LAST) ||
+            (dt.byteOrder() == yactfr::ByteOrder::LITTLE && dt.bitOrder() == yactfr::BitOrder::LAST_TO_FIRST)) {
+        // indicate unnatural bit order
+        ss << '^';
+    }
+
+    ss << alignStr(dt) << '}';
     this->_renderDtInfo(window, remWidth, stylize, ss.str().c_str());
 
-    if (remWidth == 0) {
-        return;
-    }
+    if (dt.isFixedLengthBitMapType()) {
+        const auto count = dt.asFixedLengthBitMapType().flags().size();
 
-    this->_tryRenderPrefDispBaseProp(dt, window, remWidth, stylize);
-
-    if (remWidth == 0) {
-        return;
-    }
-
-    if (dt.isFixedLengthUnsignedIntegerType()) {
-        this->_renderRoleFlags(dt.asFixedLengthUnsignedIntegerType(), window, remWidth, stylize);
+        if (count > 0) {
+            this->_renderProp(window, remWidth, stylize, "flag-cnt", count);
+        }
+    } else if (dt.isFixedLengthUnsignedIntegerType()) {
+        this->_renderIntTypeCommon(dt.asFixedLengthUnsignedIntegerType(), window, remWidth,
+                                   stylize);
+    } else if (dt.isFixedLengthSignedIntegerType()) {
+        this->_renderIntTypeCommon(dt.asFixedLengthSignedIntegerType(), window, remWidth, stylize);
     }
 }
 
-void DtDetails::_renderDt(const yactfr::VariableLengthIntegerType& dt, WINDOW * const window,
-                          Size remWidth, const bool stylize) const
-{
-    std::ostringstream ss;
-
-    ss << '{';
-
-    if (dt.isVariableLengthSignedEnumerationType()) {
-        ss << "~ie";
-    } else if (dt.isVariableLengthUnsignedEnumerationType()) {
-        ss << "~ue";
-    } else if (dt.isVariableLengthSignedIntegerType()) {
-        ss << "~i";
-    } else {
-        ss << "~u";
-    }
-
-    ss << '}';
-    this->_renderDtInfo(window, remWidth, stylize, ss.str().c_str());
-
-    if (remWidth == 0) {
-        return;
-    }
-
-    this->_tryRenderPrefDispBaseProp(dt, window, remWidth, stylize);
-
-    if (remWidth == 0) {
-        return;
-    }
-
-    if (dt.isVariableLengthUnsignedIntegerType()) {
-        this->_renderRoleFlags(dt.asVariableLengthUnsignedIntegerType(), window, remWidth, stylize);
-    }
-}
-
-void DtDetails::_renderDt(const yactfr::NullTerminatedStringType&, WINDOW * const window,
+void DtDetails::_renderDt(const yactfr::NullTerminatedStringType& dt, WINDOW * const window,
                           Size remWidth, const bool stylize) const
 {
     this->_renderDtInfo(window, remWidth, stylize, "{nt-str}");
+    this->_renderStrEncodingProp(window, remWidth, stylize, dt);
 }
 
 void DtDetails::_renderDt(const yactfr::StructureType& dt, WINDOW * const window,
@@ -281,6 +242,7 @@ void DtDetails::_renderDt(const yactfr::StaticLengthStringType& dt, WINDOW * con
     }
 
     this->_renderProp(window, remWidth, stylize, "max-len", dt.maximumLength());
+    this->_renderStrEncodingProp(window, remWidth, stylize, dt);
 }
 
 void DtDetails::_tryRenderMediaTypeProp(const yactfr::BlobType& dt, WINDOW * const window,
@@ -342,6 +304,7 @@ void DtDetails::_renderDt(const yactfr::DynamicLengthStringType& dt, WINDOW * co
     }
 
     this->_renderDataLoc(window, remWidth, stylize, "max-len-loc", dt.maximumLengthLocation());
+    this->_renderStrEncodingProp(window, remWidth, stylize, dt);
 }
 
 void DtDetails::_renderDt(const yactfr::DynamicLengthBlobType& dt, WINDOW * const window,
@@ -439,6 +402,43 @@ void DtDetails::_renderRoleFlag(WINDOW * const window, Size& remWidth, const boo
 
     ss << '<' << name << '>';
     this->_renderStr(window, remWidth, ss.str());
+}
+
+void DtDetails::_renderStrEncodingProp(WINDOW * const window, Size& remWidth, const bool stylize,
+                                       const yactfr::StringType& strType) const
+{
+    if (strType.encoding() == yactfr::StringEncoding::UTF_8) {
+        return;
+    }
+
+    if (remWidth == 0) {
+        return;
+    }
+
+    std::string enc;
+
+    switch (strType.encoding()) {
+    case yactfr::StringEncoding::UTF_16LE:
+        enc = "u16le";
+        break;
+
+    case yactfr::StringEncoding::UTF_16BE:
+        enc = "u16be";
+        break;
+
+    case yactfr::StringEncoding::UTF_32LE:
+        enc = "u32le";
+        break;
+
+    case yactfr::StringEncoding::UTF_32BE:
+        enc = "u32be";
+        break;
+
+    default:
+        break;
+    }
+
+    this->_renderProp(window, remWidth, stylize, "enc", enc.c_str());
 }
 
 void DtDetails::_renderProp(WINDOW * const window, Size& remWidth, const bool stylize,

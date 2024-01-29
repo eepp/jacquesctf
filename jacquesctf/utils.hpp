@@ -91,6 +91,11 @@ bool isHiddenFile(const boost::filesystem::path& path);
 bool looksLikeDsFilePath(const boost::filesystem::path& path);
 
 /*
+ * Returns the preferred display base of the integer type `dt`.
+ */
+yactfr::DisplayBase intTypePrefDispBase(const yactfr::DataType& dt) noexcept;
+
+/*
  * Used as such:
  *
  *     error() << "Cannot something something" << std::endl;

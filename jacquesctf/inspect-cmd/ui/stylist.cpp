@@ -49,8 +49,8 @@ Stylist::Stylist()
     this->_registerStyle(_StyleId::DETAILS_VIEW_TYPE_INFO, COLOR_MAGENTA, true, -1);
     this->_registerStyle(_StyleId::DETAILS_VIEW_DT_NAME, COLOR_WHITE, false, COLOR_BLUE);
     this->_registerStyle(_StyleId::DETAILS_VIEW_DT_EXTRA, COLOR_WHITE, false, COLOR_GREEN);
-    this->_registerStyle(_StyleId::DETAILS_VIEW_ENUM_TYPE_MEMBER_NAME, COLOR_YELLOW, false, -1);
-    this->_registerStyle(_StyleId::DETAILS_VIEW_ENUM_TYPE_MEMBER_RANGE, COLOR_CYAN, false, -1);
+    this->_registerStyle(_StyleId::DETAILS_VIEW_MAPPING_OR_FLAG_NAME, COLOR_YELLOW, false, -1);
+    this->_registerStyle(_StyleId::DETAILS_VIEW_MAPPING_OR_FLAG_RANGE, COLOR_CYAN, false, -1);
     this->_registerStyle(_StyleId::DETAILS_VIEW_PROP_KEY, COLOR_GREEN, false, -1);
     this->_registerStyle(_StyleId::DETAILS_VIEW_PROP_VAL, COLOR_GREEN, false, -1);
     this->_registerStyle(_StyleId::TRACE_INFO_VIEW_PROP_VAL, COLOR_GREEN, false, -1);
@@ -337,15 +337,14 @@ void Stylist::detailsViewDtExtra(WINDOW * const window) const
     this->_applyStyle(window, _StyleId::DETAILS_VIEW_DT_EXTRA, A_BOLD);
 }
 
-void Stylist::detailsViewEnumTypeMappingName(WINDOW * const window) const
+void Stylist::detailsViewMappingOrFlagName(WINDOW * const window) const
 {
-    this->_applyStyle(window,
-                      _StyleId::DETAILS_VIEW_ENUM_TYPE_MEMBER_NAME);
+    this->_applyStyle(window, _StyleId::DETAILS_VIEW_MAPPING_OR_FLAG_NAME);
 }
 
-void Stylist::detailsViewIntRanges(WINDOW * const window) const
+void Stylist::detailsViewMappingOrFlagRange(WINDOW * const window) const
 {
-    this->_applyStyle(window, _StyleId::DETAILS_VIEW_ENUM_TYPE_MEMBER_RANGE);
+    this->_applyStyle(window, _StyleId::DETAILS_VIEW_MAPPING_OR_FLAG_RANGE);
 }
 
 void Stylist::detailsViewPropKey(WINDOW * const window) const

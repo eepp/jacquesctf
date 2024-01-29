@@ -190,17 +190,24 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
         break;
     }
 
+    case ElemKind::FIXED_LENGTH_BIT_MAP:
+    {
+        const auto val = _it->asFixedLengthBitMapElement().unsignedIntegerValue();
+
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthBitMapElement>(scope,
+                                                                                               val);
+        break;
+    }
+
     case ElemKind::FIXED_LENGTH_BOOLEAN:
         region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthBooleanElement>(scope);
         break;
 
     case ElemKind::FIXED_LENGTH_SIGNED_INTEGER:
-    case ElemKind::FIXED_LENGTH_SIGNED_ENUMERATION:
         region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthSignedIntegerElement>(scope);
         break;
 
     case ElemKind::FIXED_LENGTH_UNSIGNED_INTEGER:
-    case ElemKind::FIXED_LENGTH_UNSIGNED_ENUMERATION:
         region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthUnsignedIntegerElement>(scope);
         break;
 
@@ -209,12 +216,10 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
         break;
 
     case ElemKind::VARIABLE_LENGTH_SIGNED_INTEGER:
-    case ElemKind::VARIABLE_LENGTH_SIGNED_ENUMERATION:
         region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::VariableLengthSignedIntegerElement>(scope);
         break;
 
     case ElemKind::VARIABLE_LENGTH_UNSIGNED_INTEGER:
-    case ElemKind::VARIABLE_LENGTH_UNSIGNED_ENUMERATION:
         region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::VariableLengthUnsignedIntegerElement>(scope);
         break;
 
@@ -249,24 +254,33 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
         while (!_it->isNullTerminatedStringEndElement() &&
                 !_it->isStaticLengthStringEndElement() &&
                 !_it->isDynamicLengthStringEndElement()) {
-            assert(_it->isSubstringElement());
+            assert(_it->isRawDataElement());
 
             // "consume" this substring
-            bufEnd += _it->asSubstringElement().size();
+            bufEnd += _it->asRawDataElement().size();
             ++_it;
         }
 
-        /*
-         * Find end of string in buffer. std::find() returns either the
-         * location of the (first) null character or `bufEnd`.
-         */
-        const auto bufStrEnd = std::find(bufStart, bufEnd, 0);
+        auto str = [&dt, &bufStart, &bufEnd] {
+            if (dt.isStringType() &&
+                    dt.asStringType().encoding() == yactfr::StringEncoding::UTF_8) {
+                /*
+                 * Find end of string in buffer. std::find() returns
+                 * either the location of the (first) null character or
+                 * `bufEnd`.
+                 */
+                const auto bufStrEnd = std::find(bufStart, bufEnd, 0);
 
-        // create string value
-        std::string str {
-            reinterpret_cast<const char *>(bufStart),
-            static_cast<std::string::size_type>(bufStrEnd - bufStart)
-        };
+                // create string value
+                return std::string {
+                    reinterpret_cast<const char *>(bufStart),
+                    static_cast<std::string::size_type>(bufStrEnd - bufStart)
+                };
+            } else {
+                // TODO: decode value, remove this temporary message
+                return std::string {"(not an UTF-8 string)"};
+            }
+        }();
 
         const PktSegment segment {
             offsetStartBits,
@@ -304,9 +318,9 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
         ++_it;
 
         while (!_it->isStaticLengthBlobEndElement() && !_it->isDynamicLengthBlobEndElement()) {
-            if (_it->isBlobSectionElement()) {
+            if (_it->isRawDataElement()) {
                 // "consume" this BLOB section
-                bufEnd += _it->asBlobSectionElement().size();
+                bufEnd += _it->asRawDataElement().size();
             }
 
             ++_it;
@@ -396,16 +410,13 @@ void Pkt::_cachePreambleRegions()
             // TODO: replace with element visitor
             switch (_it->kind()) {
             case ElemKind::FIXED_LENGTH_BIT_ARRAY:
+            case ElemKind::FIXED_LENGTH_BIT_MAP:
             case ElemKind::FIXED_LENGTH_BOOLEAN:
             case ElemKind::FIXED_LENGTH_SIGNED_INTEGER:
             case ElemKind::FIXED_LENGTH_UNSIGNED_INTEGER:
-            case ElemKind::FIXED_LENGTH_SIGNED_ENUMERATION:
-            case ElemKind::FIXED_LENGTH_UNSIGNED_ENUMERATION:
             case ElemKind::FIXED_LENGTH_FLOATING_POINT_NUMBER:
             case ElemKind::VARIABLE_LENGTH_SIGNED_INTEGER:
             case ElemKind::VARIABLE_LENGTH_UNSIGNED_INTEGER:
-            case ElemKind::VARIABLE_LENGTH_SIGNED_ENUMERATION:
-            case ElemKind::VARIABLE_LENGTH_UNSIGNED_ENUMERATION:
             case ElemKind::NULL_TERMINATED_STRING_BEGINNING:
             case ElemKind::STATIC_LENGTH_STRING_BEGINNING:
             case ElemKind::DYNAMIC_LENGTH_STRING_BEGINNING:
@@ -511,16 +522,13 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
         // TODO: replace with element visitor
         switch (_it->kind()) {
         case ElemKind::FIXED_LENGTH_BIT_ARRAY:
+        case ElemKind::FIXED_LENGTH_BIT_MAP:
         case ElemKind::FIXED_LENGTH_BOOLEAN:
         case ElemKind::FIXED_LENGTH_SIGNED_INTEGER:
         case ElemKind::FIXED_LENGTH_UNSIGNED_INTEGER:
-        case ElemKind::FIXED_LENGTH_SIGNED_ENUMERATION:
-        case ElemKind::FIXED_LENGTH_UNSIGNED_ENUMERATION:
         case ElemKind::FIXED_LENGTH_FLOATING_POINT_NUMBER:
         case ElemKind::VARIABLE_LENGTH_SIGNED_INTEGER:
         case ElemKind::VARIABLE_LENGTH_UNSIGNED_INTEGER:
-        case ElemKind::VARIABLE_LENGTH_SIGNED_ENUMERATION:
-        case ElemKind::VARIABLE_LENGTH_UNSIGNED_ENUMERATION:
         case ElemKind::NULL_TERMINATED_STRING_BEGINNING:
         case ElemKind::STATIC_LENGTH_STRING_BEGINNING:
         case ElemKind::DYNAMIC_LENGTH_STRING_BEGINNING:

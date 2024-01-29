@@ -12,7 +12,7 @@
 
 #include "abstract-dt-details.hpp"
 #include "dt-details.hpp"
-#include "enum-type-mapping-details.hpp"
+#include "mapping-or-flag-details.hpp"
 
 namespace jacques {
 

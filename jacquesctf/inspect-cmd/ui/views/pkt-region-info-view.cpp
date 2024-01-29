@@ -205,11 +205,10 @@ void PktRegionInfoView::_redrawContent()
             this->_safePrint("%s", utils::sepNumber(*val, ',').c_str());
         } else if (const auto val = boost::get<unsigned long long>(&varVal)) {
             const auto prefDispBase = [cPktRegion] {
-                if (cPktRegion->dt().isFixedLengthIntegerType()) {
-                    return cPktRegion->dt().asFixedLengthIntegerType().preferredDisplayBase();
+                if (cPktRegion->dt().isIntegerType()) {
+                    return utils::intTypePrefDispBase(cPktRegion->dt());
                 } else {
-                    assert(cPktRegion->dt().isVariableLengthIntegerType());
-                    return cPktRegion->dt().asVariableLengthIntegerType().preferredDisplayBase();
+                    return yactfr::DisplayBase::DECIMAL;
                 }
             }();
 

@@ -70,11 +70,11 @@ if (JACQUES_HAS_INSPECT_CMD)
         inspect-cmd/ui/views/dt-details-from-dt.cpp
         inspect-cmd/ui/views/dt-details.cpp
         inspect-cmd/ui/views/dt-explorer-view.cpp
-        inspect-cmd/ui/views/enum-type-mapping-details.cpp
         inspect-cmd/ui/views/er-table-view.cpp
         inspect-cmd/ui/views/ert-table-view.cpp
         inspect-cmd/ui/views/help-view.cpp
         inspect-cmd/ui/views/input-view.cpp
+        inspect-cmd/ui/views/mapping-or-flag-details.cpp
         inspect-cmd/ui/views/pkt-checkpoints-build-progress-view.cpp
         inspect-cmd/ui/views/pkt-data-view.cpp
         inspect-cmd/ui/views/pkt-decoding-error-details-view.cpp

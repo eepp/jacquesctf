@@ -77,6 +77,11 @@ public:
         this->_setParentAndPath(dt);
     }
 
+    void visit(const yactfr::FixedLengthBitMapType& dt) override
+    {
+        this->_setParentAndPath(dt);
+    }
+
     void visit(const yactfr::FixedLengthBooleanType& dt) override
     {
         this->_setParentAndPath(dt);
@@ -97,32 +102,12 @@ public:
         this->_setParentAndPath(dt);
     }
 
-    void visit(const yactfr::FixedLengthUnsignedEnumerationType& dt) override
-    {
-        this->_setParentAndPath(dt);
-    }
-
-    void visit(const yactfr::FixedLengthSignedEnumerationType& dt) override
-    {
-        this->_setParentAndPath(dt);
-    }
-
     void visit(const yactfr::VariableLengthUnsignedIntegerType& dt) override
     {
         this->_setParentAndPath(dt);
     }
 
     void visit(const yactfr::VariableLengthSignedIntegerType& dt) override
-    {
-        this->_setParentAndPath(dt);
-    }
-
-    void visit(const yactfr::VariableLengthUnsignedEnumerationType& dt) override
-    {
-        this->_setParentAndPath(dt);
-    }
-
-    void visit(const yactfr::VariableLengthSignedEnumerationType& dt) override
     {
         this->_setParentAndPath(dt);
     }

@@ -5,6 +5,7 @@
  * prohibited. Proprietary and confidential.
  */
 
+#include <cassert>
 #include <cstring>
 #include <cstdio>
 #include <array>
@@ -476,6 +477,22 @@ bool looksLikeDsFilePath(const bfs::path& path)
     }
 
     return true;
+}
+
+yactfr::DisplayBase intTypePrefDispBase(const yactfr::DataType& dt) noexcept
+{
+    assert(dt.isIntegerType());
+
+    if (dt.isFixedLengthUnsignedIntegerType()) {
+        return dt.asFixedLengthUnsignedIntegerType().preferredDisplayBase();
+    } else if (dt.isFixedLengthSignedIntegerType()) {
+        return dt.asFixedLengthSignedIntegerType().preferredDisplayBase();
+    } else if (dt.isVariableLengthUnsignedIntegerType()) {
+        return dt.asVariableLengthUnsignedIntegerType().preferredDisplayBase();
+    } else {
+        assert(dt.isVariableLengthSignedIntegerType());
+        return dt.asVariableLengthSignedIntegerType().preferredDisplayBase();
+    }
 }
 
 } // namespace utils

@@ -314,8 +314,21 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
             rows.push_back(std::make_unique<_NonePropRow>(nsStr));
         }
 
-        rows.push_back(std::make_unique<_StrPropRow>("Name", clkType->name()));
-        rows.push_back(std::make_unique<_StrPropRow>("UID", clkType->uid()));
+        static constexpr const char *nameStr = "Name";
+
+        if (clkType->name()) {
+            rows.push_back(std::make_unique<_StrPropRow>(nameStr, *clkType->name()));
+        } else {
+            rows.push_back(std::make_unique<_NonePropRow>(nameStr));
+        }
+
+        static constexpr const char *uidStr = "UID";
+
+        if (clkType->uid()) {
+            rows.push_back(std::make_unique<_StrPropRow>(uidStr, *clkType->uid()));
+        } else {
+            rows.push_back(std::make_unique<_NonePropRow>(uidStr));
+        }
 
         static constexpr const char *origUuidStr = "Original UUID";
 
