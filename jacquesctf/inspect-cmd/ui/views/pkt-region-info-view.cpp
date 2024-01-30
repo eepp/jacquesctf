@@ -10,6 +10,9 @@
 #include <numeric>
 #include <cinttypes>
 #include <cstdio>
+#include <set>
+#include <string>
+#include <cassert>
 #include <curses.h>
 #include <signal.h>
 #include <unistd.h>
@@ -114,6 +117,50 @@ void PktRegionInfoView::_safePrintScope(const yactfr::Scope scope)
     this->_safePrint(scopeStr(scope));
 }
 
+namespace {
+
+template <typename IntTypeT>
+std::unordered_set<const std::string *> mappingNamesOfVal(const IntTypeT& intType,
+                                                          const ContentPktRegion& pktRegion)
+{
+    std::unordered_set<const std::string *> names;
+
+    intType.mappingNamesForValue(boost::get<typename IntTypeT::MappingValue>(*pktRegion.val()),
+                                 names);
+    return names;
+}
+
+std::set<std::string> flagOrMappingNamesOfPktRegion(const ContentPktRegion& pktRegion)
+{
+    assert(pktRegion.val());
+
+    std::unordered_set<const std::string *> names;
+
+    if (pktRegion.dt().isFixedLengthBitMapType()) {
+        auto& dt = pktRegion.dt().asFixedLengthBitMapType();
+        dt.activeFlagNamesForUnsignedIntegerValue(boost::get<unsigned long long>(*pktRegion.val()),
+                                                  names);
+    } else if (pktRegion.dt().isFixedLengthUnsignedIntegerType()) {
+        names = mappingNamesOfVal(pktRegion.dt().asFixedLengthUnsignedIntegerType(), pktRegion);
+    } else if (pktRegion.dt().isFixedLengthSignedIntegerType()) {
+        names = mappingNamesOfVal(pktRegion.dt().asFixedLengthSignedIntegerType(), pktRegion);
+    } else if (pktRegion.dt().isVariableLengthUnsignedIntegerType()) {
+        names = mappingNamesOfVal(pktRegion.dt().asVariableLengthUnsignedIntegerType(), pktRegion);
+    } else if (pktRegion.dt().isVariableLengthSignedIntegerType()) {
+        names = mappingNamesOfVal(pktRegion.dt().asVariableLengthSignedIntegerType(), pktRegion);
+    }
+
+    std::set<std::string> sortedNames;
+
+    for (const auto namePtr : names) {
+        sortedNames.insert(*namePtr);
+    }
+
+    return sortedNames;
+}
+
+} // namespace
+
 void PktRegionInfoView::_redrawContent()
 {
     // clear
@@ -207,6 +254,8 @@ void PktRegionInfoView::_redrawContent()
             const auto prefDispBase = [cPktRegion] {
                 if (cPktRegion->dt().isIntegerType()) {
                     return utils::intTypePrefDispBase(cPktRegion->dt());
+                } else if (cPktRegion->dt().isFixedLengthBitArrayType()) {
+                    return yactfr::DisplayBase::HEXADECIMAL;
                 } else {
                     return yactfr::DisplayBase::DECIMAL;
                 }
@@ -236,6 +285,24 @@ void PktRegionInfoView::_redrawContent()
             this->_safePrint("%f", *val);
         } else if (const auto val = boost::get<std::string>(&varVal)) {
             this->_safePrint("%s", utils::escapeStr(*val).c_str());
+        }
+
+        if (cPktRegion->dt().isFixedLengthBitMapType() || cPktRegion->dt().isIntegerType()) {
+            const auto names = flagOrMappingNamesOfPktRegion(*cPktRegion);
+
+            if (!names.empty()) {
+                this->_stylist().pktRegionInfoViewStd(*this);
+                this->_safePrint("   ");
+
+                for (auto& name : names) {
+                    this->_stylist().pktRegionInfoViewStd(*this);
+                    this->_safePrint(" [");
+                    this->_stylist().pktRegionInfoViewStd(*this, true);
+                    this->_safePrint("%s", name.c_str());
+                    this->_stylist().pktRegionInfoViewStd(*this);
+                    this->_safePrint("]");
+                }
+            }
         }
     } else if (isError) {
         const auto& error = _appState->activePktState().pkt().error();
