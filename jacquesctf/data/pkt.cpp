@@ -16,7 +16,7 @@
 namespace jacques {
 
 Pkt::Pkt(const PktIndexEntry& indexEntry, yactfr::ElementSequence& seq, const Metadata& metadata,
-         yactfr::DataSource::UP dataSrc, std::unique_ptr<MemMappedFile> mmapFile,
+         yactfr::DataSource::Up dataSrc, std::unique_ptr<MemMappedFile> mmapFile,
          PktCheckpointsBuildListener& pktCheckpointsBuildListener) :
     _indexEntry {&indexEntry},
     _metadata {&metadata},
@@ -181,7 +181,7 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
     PktRegion::SP region;
 
     switch (_it->kind()) {
-    case ElemKind::FIXED_LENGTH_BIT_ARRAY:
+    case ElemKind::FixedLengthBitArray:
     {
         const auto val = _it->asFixedLengthBitArrayElement().unsignedIntegerValue();
 
@@ -190,7 +190,7 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
         break;
     }
 
-    case ElemKind::FIXED_LENGTH_BIT_MAP:
+    case ElemKind::FixedLengthBitMap:
     {
         const auto val = _it->asFixedLengthBitMapElement().unsignedIntegerValue();
 
@@ -199,33 +199,33 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
         break;
     }
 
-    case ElemKind::FIXED_LENGTH_BOOLEAN:
+    case ElemKind::FixedLengthBoolean:
         region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthBooleanElement>(scope);
         break;
 
-    case ElemKind::FIXED_LENGTH_SIGNED_INTEGER:
+    case ElemKind::FixedLengthSignedInteger:
         region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthSignedIntegerElement>(scope);
         break;
 
-    case ElemKind::FIXED_LENGTH_UNSIGNED_INTEGER:
+    case ElemKind::FixedLengthUnsignedInteger:
         region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthUnsignedIntegerElement>(scope);
         break;
 
-    case ElemKind::FIXED_LENGTH_FLOATING_POINT_NUMBER:
+    case ElemKind::FixedLengthFloatingPointNumber:
         region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthFloatingPointNumberElement>(scope);
         break;
 
-    case ElemKind::VARIABLE_LENGTH_SIGNED_INTEGER:
+    case ElemKind::VariableLengthSignedInteger:
         region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::VariableLengthSignedIntegerElement>(scope);
         break;
 
-    case ElemKind::VARIABLE_LENGTH_UNSIGNED_INTEGER:
+    case ElemKind::VariableLengthUnsignedInteger:
         region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::VariableLengthUnsignedIntegerElement>(scope);
         break;
 
-    case ElemKind::NULL_TERMINATED_STRING_BEGINNING:
-    case ElemKind::STATIC_LENGTH_STRING_BEGINNING:
-    case ElemKind::DYNAMIC_LENGTH_STRING_BEGINNING:
+    case ElemKind::NullTerminatedStringBeginning:
+    case ElemKind::StaticLengthStringBeginning:
+    case ElemKind::DynamicLengthStringBeginning:
     {
         // null-terminated strings are always byte-aligned within the packet
         assert(this->_itOffsetInPktBits() % 8 == 0);
@@ -263,7 +263,7 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
 
         auto str = [&dt, &bufStart, &bufEnd] {
             if (dt.isStringType() &&
-                    dt.asStringType().encoding() == yactfr::StringEncoding::UTF_8) {
+                    dt.asStringType().encoding() == yactfr::StringEncoding::Utf8) {
                 /*
                  * Find end of string in buffer. std::find() returns
                  * either the location of the (first) null character or
@@ -292,8 +292,8 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
         break;
     }
 
-    case ElemKind::STATIC_LENGTH_BLOB_BEGINNING:
-    case ElemKind::DYNAMIC_LENGTH_BLOB_BEGINNING:
+    case ElemKind::StaticLengthBlobBeginning:
+    case ElemKind::DynamicLengthBlobBeginning:
     {
         // BLOBs are always byte-aligned within the packet
         assert(this->_itOffsetInPktBits() % 8 == 0);
@@ -409,26 +409,26 @@ void Pkt::_cachePreambleRegions()
         while (!isDone) {
             // TODO: replace with element visitor
             switch (_it->kind()) {
-            case ElemKind::FIXED_LENGTH_BIT_ARRAY:
-            case ElemKind::FIXED_LENGTH_BIT_MAP:
-            case ElemKind::FIXED_LENGTH_BOOLEAN:
-            case ElemKind::FIXED_LENGTH_SIGNED_INTEGER:
-            case ElemKind::FIXED_LENGTH_UNSIGNED_INTEGER:
-            case ElemKind::FIXED_LENGTH_FLOATING_POINT_NUMBER:
-            case ElemKind::VARIABLE_LENGTH_SIGNED_INTEGER:
-            case ElemKind::VARIABLE_LENGTH_UNSIGNED_INTEGER:
-            case ElemKind::NULL_TERMINATED_STRING_BEGINNING:
-            case ElemKind::STATIC_LENGTH_STRING_BEGINNING:
-            case ElemKind::DYNAMIC_LENGTH_STRING_BEGINNING:
-            case ElemKind::STATIC_LENGTH_BLOB_BEGINNING:
-            case ElemKind::DYNAMIC_LENGTH_BLOB_BEGINNING:
+            case ElemKind::FixedLengthBitArray:
+            case ElemKind::FixedLengthBitMap:
+            case ElemKind::FixedLengthBoolean:
+            case ElemKind::FixedLengthSignedInteger:
+            case ElemKind::FixedLengthUnsignedInteger:
+            case ElemKind::FixedLengthFloatingPointNumber:
+            case ElemKind::VariableLengthSignedInteger:
+            case ElemKind::VariableLengthUnsignedInteger:
+            case ElemKind::NullTerminatedStringBeginning:
+            case ElemKind::StaticLengthStringBeginning:
+            case ElemKind::DynamicLengthStringBeginning:
+            case ElemKind::StaticLengthBlobBeginning:
+            case ElemKind::DynamicLengthBlobBeginning:
                 this->_tryCachePaddingRegionBeforeCurIt(curScope);
 
                 // _cacheContentRegionAtCurIt() increments the iterator
                 this->_cacheContentRegionAtCurIt(curScope);
                 break;
 
-            case ElemKind::SCOPE_BEGINNING:
+            case ElemKind::ScopeBeginning:
             {
                 // cache padding before scope
                 this->_tryCachePaddingRegionBeforeCurIt(curScope);
@@ -439,7 +439,7 @@ void Pkt::_cachePreambleRegions()
                 break;
             }
 
-            case ElemKind::STRUCTURE_BEGINNING:
+            case ElemKind::StructureBeginning:
             {
                 if (curScope && !curScope->dt()) {
                     curScope->dt(_it->asStructureBeginningElement().type());
@@ -449,7 +449,7 @@ void Pkt::_cachePreambleRegions()
                 break;
             }
 
-            case ElemKind::SCOPE_END:
+            case ElemKind::ScopeEnd:
             {
                 assert(curScope);
                 curScope->segment().len(this->_itOffsetInPktBits() -
@@ -459,13 +459,13 @@ void Pkt::_cachePreambleRegions()
                 break;
             }
 
-            case ElemKind::EVENT_RECORD_BEGINNING:
+            case ElemKind::EventRecordBeginning:
                 // cache padding before first event record
                 this->_tryCachePaddingRegionBeforeCurIt(curScope);
                 isDone = true;
                 break;
 
-            case ElemKind::PACKET_CONTENT_END:
+            case ElemKind::PacketContentEnd:
                 // cache padding before end of packet
                 while (!_it->isPacketEndElement()) {
                     ++_it;
@@ -521,26 +521,26 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
 
         // TODO: replace with element visitor
         switch (_it->kind()) {
-        case ElemKind::FIXED_LENGTH_BIT_ARRAY:
-        case ElemKind::FIXED_LENGTH_BIT_MAP:
-        case ElemKind::FIXED_LENGTH_BOOLEAN:
-        case ElemKind::FIXED_LENGTH_SIGNED_INTEGER:
-        case ElemKind::FIXED_LENGTH_UNSIGNED_INTEGER:
-        case ElemKind::FIXED_LENGTH_FLOATING_POINT_NUMBER:
-        case ElemKind::VARIABLE_LENGTH_SIGNED_INTEGER:
-        case ElemKind::VARIABLE_LENGTH_UNSIGNED_INTEGER:
-        case ElemKind::NULL_TERMINATED_STRING_BEGINNING:
-        case ElemKind::STATIC_LENGTH_STRING_BEGINNING:
-        case ElemKind::DYNAMIC_LENGTH_STRING_BEGINNING:
-        case ElemKind::STATIC_LENGTH_BLOB_BEGINNING:
-        case ElemKind::DYNAMIC_LENGTH_BLOB_BEGINNING:
+        case ElemKind::FixedLengthBitArray:
+        case ElemKind::FixedLengthBitMap:
+        case ElemKind::FixedLengthBoolean:
+        case ElemKind::FixedLengthSignedInteger:
+        case ElemKind::FixedLengthUnsignedInteger:
+        case ElemKind::FixedLengthFloatingPointNumber:
+        case ElemKind::VariableLengthSignedInteger:
+        case ElemKind::VariableLengthUnsignedInteger:
+        case ElemKind::NullTerminatedStringBeginning:
+        case ElemKind::StaticLengthStringBeginning:
+        case ElemKind::DynamicLengthStringBeginning:
+        case ElemKind::StaticLengthBlobBeginning:
+        case ElemKind::DynamicLengthBlobBeginning:
             this->_tryCachePaddingRegionBeforeCurIt(curScope);
 
             // _cacheContentRegionAtCurIt() increments the iterator
             this->_cacheContentRegionAtCurIt(curScope);
             break;
 
-        case ElemKind::SCOPE_BEGINNING:
+        case ElemKind::ScopeBeginning:
         {
             // cache padding before scope
             this->_tryCachePaddingRegionBeforeCurIt(curScope);
@@ -551,7 +551,7 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
             break;
         }
 
-        case ElemKind::STRUCTURE_BEGINNING:
+        case ElemKind::StructureBeginning:
         {
             if (curScope && !curScope->dt()) {
                 curScope->dt(_it->asStructureBeginningElement().type());
@@ -561,7 +561,7 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
             break;
         }
 
-        case ElemKind::SCOPE_END:
+        case ElemKind::ScopeEnd:
             if (curScope) {
                 curScope->segment().len(this->_itOffsetInPktBits() -
                                         curScope->segment().offsetInPktBits());
@@ -571,7 +571,7 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
             ++_it;
             break;
 
-        case ElemKind::EVENT_RECORD_BEGINNING:
+        case ElemKind::EventRecordBeginning:
             // cache padding before event record
             this->_tryCachePaddingRegionBeforeCurIt(curScope);
             curEr = std::make_shared<Er>(erIndexInPkt);
@@ -582,7 +582,7 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
             ++_it;
             break;
 
-        case ElemKind::EVENT_RECORD_END:
+        case ElemKind::EventRecordEnd:
             if (curEr) {
                 curEr->segment().len(this->_itOffsetInPktBits() -
                                      curEr->segment().offsetInPktBits());
@@ -594,7 +594,7 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
             ++_it;
             break;
 
-        case ElemKind::EVENT_RECORD_INFO:
+        case ElemKind::EventRecordInfo:
         {
             auto& elem = _it->asEventRecordInfoElement();
 
@@ -606,7 +606,7 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
             break;
         }
 
-        case ElemKind::DEFAULT_CLOCK_VALUE:
+        case ElemKind::DefaultClockValue:
             if (curEr && _metadata->isCorrelatable()) {
                 assert(_indexEntry->dst());
                 assert(_indexEntry->dst()->defaultClockType());
@@ -631,13 +631,13 @@ void Pkt::_cacheRegionsFromOneErAtCurIt(const Index indexInPkt)
     using ElemKind = yactfr::Element::Kind;
 
     assert(_it->isEventRecordBeginningElement());
-    this->_cacheRegionsAtCurIt(ElemKind::EVENT_RECORD_END, indexInPkt);
+    this->_cacheRegionsAtCurIt(ElemKind::EventRecordEnd, indexInPkt);
 }
 
 void Pkt::_cacheRegionsAtCurItUntilError(const Index initErIndexInPkt)
 {
     try {
-        this->_cacheRegionsAtCurIt(yactfr::Element::Kind::PACKET_END, initErIndexInPkt);
+        this->_cacheRegionsAtCurIt(yactfr::Element::Kind::PacketEnd, initErIndexInPkt);
     } catch (const yactfr::DecodingError&) {
         Index offsetStartBits = _preambleLen.bits();
         OptBo bo;

@@ -23,7 +23,7 @@ DsFile::DsFile(Trace& trace, boost::filesystem::path path) :
     _path {std::move(path)},
     _factory {
         std::make_unique<yactfr::MemoryMappedFileViewFactory>(_path.string(), 8 << 20,
-                                                              yactfr::MemoryMappedFileViewFactory::AccessPattern::SEQUENTIAL)
+                                                              yactfr::MemoryMappedFileViewFactory::AccessPattern::Sequential)
     },
     _seq {trace.metadata().traceType(), *_factory}
 {
@@ -60,7 +60,7 @@ void DsFile::buildIndex(const BuildIndexProgressFunc& progressFunc, const Size s
 
     const auto oldExpectedAccessPattern = _factory->expectedAccessPattern();
 
-    _factory->expectedAccessPattern(yactfr::MemoryMappedFileViewFactory::AccessPattern::RANDOM);
+    _factory->expectedAccessPattern(yactfr::MemoryMappedFileViewFactory::AccessPattern::Random);
     this->_buildIndex(progressFunc, step);
     _factory->expectedAccessPattern(oldExpectedAccessPattern);
     _isIndexBuilt = true;
@@ -154,17 +154,17 @@ void DsFile::_buildIndex(const BuildIndexProgressFunc& progressFunc, const Size 
     try {
         while (it != endIt) {
             switch (it->kind()) {
-            case yactfr::Element::Kind::PACKET_BEGINNING:
+            case yactfr::Element::Kind::PacketBeginning:
                 offsetBytes = it.offset() / 8;
                 pktStarted = true;
                 curBeginTs = boost::none;
                 break;
 
-            case yactfr::Element::Kind::SCOPE_BEGINNING:
+            case yactfr::Element::Kind::ScopeBeginning:
             {
                 auto& elem = it->asScopeBeginningElement();
 
-                if (elem.scope() == yactfr::Scope::PACKET_CONTEXT) {
+                if (elem.scope() == yactfr::Scope::PacketContext) {
                     state.inPktCtxScope = true;
                     state.pktCtxOffsetInPktBits = it.offset() - (offsetBytes * 8);
                 }
@@ -172,8 +172,8 @@ void DsFile::_buildIndex(const BuildIndexProgressFunc& progressFunc, const Size 
                 break;
             }
 
-            case yactfr::Element::Kind::PACKET_CONTENT_END:
-            case yactfr::Element::Kind::EVENT_RECORD_BEGINNING:
+            case yactfr::Element::Kind::PacketContentEnd:
+            case yactfr::Element::Kind::EventRecordBeginning:
             {
                 state.preambleLen = it.offset() - offsetBytes * 8;
                 state.inPktCtxScope = false;
@@ -203,7 +203,7 @@ void DsFile::_buildIndex(const BuildIndexProgressFunc& progressFunc, const Size 
                 continue;
             }
 
-            case yactfr::Element::Kind::PACKET_INFO:
+            case yactfr::Element::Kind::PacketInfo:
             {
                 auto& elem = it->asPacketInfoElement();
 
@@ -240,7 +240,7 @@ void DsFile::_buildIndex(const BuildIndexProgressFunc& progressFunc, const Size 
                 break;
             }
 
-            case yactfr::Element::Kind::DATA_STREAM_INFO:
+            case yactfr::Element::Kind::DataStreamInfo:
             {
                 auto& elem = it->asDataStreamInfoElement();
 
@@ -255,7 +255,7 @@ void DsFile::_buildIndex(const BuildIndexProgressFunc& progressFunc, const Size 
                 break;
             }
 
-            case yactfr::Element::Kind::DEFAULT_CLOCK_VALUE:
+            case yactfr::Element::Kind::DefaultClockValue:
             {
                 if (state.inPktCtxScope && _trace->metadata().isCorrelatable()) {
                     auto& elem = it->asDefaultClockValueElement();

@@ -34,8 +34,8 @@ void SubDtExplorerView::_appStateChanged(Message)
 
     if (pktRegion->scope()->er() && pktRegion->scope()->er()->type()) {
         this->ert(*pktRegion->scope()->er()->type());
-    } else if (pktRegion->scope()->scope() == yactfr::Scope::PACKET_HEADER ||
-            pktRegion->scope()->scope() == yactfr::Scope::PACKET_CONTEXT) {
+    } else if (pktRegion->scope()->scope() == yactfr::Scope::PacketHeader ||
+            pktRegion->scope()->scope() == yactfr::Scope::PacketContext) {
         const auto dst = _appState->activePktState().pkt().indexEntry().dst();
 
         if (dst) {

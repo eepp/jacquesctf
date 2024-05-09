@@ -95,19 +95,19 @@ void DtDetails::_tryRenderPrefDispBaseProp(const yactfr::DataType& dt, WINDOW * 
 
     const auto prefDispBase = utils::intTypePrefDispBase(dt);
 
-    if (prefDispBase == yactfr::DisplayBase::DECIMAL) {
+    if (prefDispBase == yactfr::DisplayBase::Decimal) {
         return;
     }
 
     this->_renderProp(window, remWidth, stylize, "pref-disp-base", [prefDispBase] {
         switch (prefDispBase) {
-        case yactfr::DisplayBase::BINARY:
+        case yactfr::DisplayBase::Binary:
             return "bin";
 
-        case yactfr::DisplayBase::OCTAL:
+        case yactfr::DisplayBase::Octal:
             return "oct";
 
-        case yactfr::DisplayBase::HEXADECIMAL:
+        case yactfr::DisplayBase::Hexadecimal:
             return "hex";
 
         default:
@@ -158,10 +158,10 @@ void DtDetails::_renderDt(const yactfr::FixedLengthBitArrayType& dt, WINDOW * co
         ss << "ba";
     }
 
-    ss << dt.length() << ' ' << (dt.byteOrder() == yactfr::ByteOrder::BIG ? "be" : "le");
+    ss << dt.length() << ' ' << (dt.byteOrder() == yactfr::ByteOrder::Big ? "be" : "le");
 
-    if ((dt.byteOrder() == yactfr::ByteOrder::BIG && dt.bitOrder() == yactfr::BitOrder::FIRST_TO_LAST) ||
-            (dt.byteOrder() == yactfr::ByteOrder::LITTLE && dt.bitOrder() == yactfr::BitOrder::LAST_TO_FIRST)) {
+    if ((dt.byteOrder() == yactfr::ByteOrder::Big && dt.bitOrder() == yactfr::BitOrder::FirstToLast) ||
+            (dt.byteOrder() == yactfr::ByteOrder::Little && dt.bitOrder() == yactfr::BitOrder::LastToFirst)) {
         // indicate unnatural bit order
         ss << '^';
     }
@@ -407,7 +407,7 @@ void DtDetails::_renderRoleFlag(WINDOW * const window, Size& remWidth, const boo
 void DtDetails::_renderStrEncodingProp(WINDOW * const window, Size& remWidth, const bool stylize,
                                        const yactfr::StringType& strType) const
 {
-    if (strType.encoding() == yactfr::StringEncoding::UTF_8) {
+    if (strType.encoding() == yactfr::StringEncoding::Utf8) {
         return;
     }
 
@@ -418,19 +418,19 @@ void DtDetails::_renderStrEncodingProp(WINDOW * const window, Size& remWidth, co
     std::string enc;
 
     switch (strType.encoding()) {
-    case yactfr::StringEncoding::UTF_16LE:
+    case yactfr::StringEncoding::Utf16Le:
         enc = "u16le";
         break;
 
-    case yactfr::StringEncoding::UTF_16BE:
+    case yactfr::StringEncoding::Utf16Be:
         enc = "u16be";
         break;
 
-    case yactfr::StringEncoding::UTF_32LE:
+    case yactfr::StringEncoding::Utf32Le:
         enc = "u32le";
         break;
 
-    case yactfr::StringEncoding::UTF_32BE:
+    case yactfr::StringEncoding::Utf32Be:
         enc = "u32be";
         break;
 
@@ -492,27 +492,27 @@ void DtDetails::_renderDataLoc(WINDOW * const window, Size& remWidth, const bool
     std::ostringstream ss;
 
     switch (loc.scope()) {
-    case yactfr::Scope::PACKET_HEADER:
+    case yactfr::Scope::PacketHeader:
         ss << "PH";
         break;
 
-    case yactfr::Scope::PACKET_CONTEXT:
+    case yactfr::Scope::PacketContext:
         ss << "PC";
         break;
 
-    case yactfr::Scope::EVENT_RECORD_HEADER:
+    case yactfr::Scope::EventRecordHeader:
         ss << "ERH";
         break;
 
-    case yactfr::Scope::EVENT_RECORD_COMMON_CONTEXT:
+    case yactfr::Scope::EventRecordCommonContext:
         ss << "ERCC";
         break;
 
-    case yactfr::Scope::EVENT_RECORD_SPECIFIC_CONTEXT:
+    case yactfr::Scope::EventRecordSpecificContext:
         ss << "ERSC";
         break;
 
-    case yactfr::Scope::EVENT_RECORD_PAYLOAD:
+    case yactfr::Scope::EventRecordPayload:
         ss << "ERP";
         break;
     }

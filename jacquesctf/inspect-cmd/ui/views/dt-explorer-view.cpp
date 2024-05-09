@@ -34,26 +34,26 @@ void DtExplorerView::dst(const yactfr::DataStreamType& dst, const bool showErts)
     const auto traceType = dst.traceType();
 
     if (traceType->packetHeaderType()) {
-        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::PACKET_HEADER});
+        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::PacketHeader});
         this->_appendDetailsRow(*traceType->packetHeaderType(), _details.pktHeader);
         _rows.push_back(_EmptyRow {});
     }
 
     if (dst.packetContextType()) {
-        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::PACKET_CONTEXT});
+        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::PacketContext});
         this->_appendDetailsRow(*dst.packetContextType(), _details.pktContext);
         _rows.push_back(_EmptyRow {});
     }
 
     if (showErts) {
         if (dst.eventRecordHeaderType()) {
-            _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EVENT_RECORD_HEADER});
+            _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EventRecordHeader});
             this->_appendDetailsRow(*dst.eventRecordHeaderType(), _details.ertHeader);
             _rows.push_back(_EmptyRow {});
         }
 
         if (dst.eventRecordCommonContextType()) {
-            _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EVENT_RECORD_COMMON_CONTEXT});
+            _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EventRecordCommonContext});
             this->_appendDetailsRow(*dst.eventRecordCommonContextType(), _details.ertFirstCtx);
             _rows.push_back(_EmptyRow {});
         }
@@ -93,25 +93,25 @@ void DtExplorerView::ert(const yactfr::EventRecordType& ert)
     _rows.clear();
 
     if (dst.eventRecordHeaderType()) {
-        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EVENT_RECORD_HEADER});
+        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EventRecordHeader});
         this->_appendDetailsRow(*dst.eventRecordHeaderType(), _details.ertHeader);
         _rows.push_back(_EmptyRow {});
     }
 
     if (dst.eventRecordCommonContextType()) {
-        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EVENT_RECORD_COMMON_CONTEXT});
+        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EventRecordCommonContext});
         this->_appendDetailsRow(*dst.eventRecordCommonContextType(), _details.ertFirstCtx);
         _rows.push_back(_EmptyRow {});
     }
 
     if (ert.specificContextType()) {
-        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EVENT_RECORD_SPECIFIC_CONTEXT});
+        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EventRecordSpecificContext});
         this->_appendDetailsRow(*ert.specificContextType(), _details.ertSecondCtx);
         _rows.push_back(_EmptyRow {});
     }
 
     if (ert.payloadType()) {
-        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EVENT_RECORD_PAYLOAD});
+        _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::EventRecordPayload});
         this->_appendDetailsRow(*ert.payloadType(), _details.ertPayload);
         _rows.push_back(_EmptyRow {});
     }
@@ -157,27 +157,27 @@ void DtExplorerView::singleDt(const yactfr::DataType& dt, const yactfr::Scope sc
     std::string title {"Data type: "};
 
     switch (scope) {
-    case yactfr::Scope::PACKET_HEADER:
+    case yactfr::Scope::PacketHeader:
         title += "packet header";
         break;
 
-    case yactfr::Scope::PACKET_CONTEXT:
+    case yactfr::Scope::PacketContext:
         title += "packet context";
         break;
 
-    case yactfr::Scope::EVENT_RECORD_HEADER:
+    case yactfr::Scope::EventRecordHeader:
         title += "event record header";
         break;
 
-    case yactfr::Scope::EVENT_RECORD_COMMON_CONTEXT:
+    case yactfr::Scope::EventRecordCommonContext:
         title += "event record common context";
         break;
 
-    case yactfr::Scope::EVENT_RECORD_SPECIFIC_CONTEXT:
+    case yactfr::Scope::EventRecordSpecificContext:
         title += "event record specific context";
         break;
 
-    case yactfr::Scope::EVENT_RECORD_PAYLOAD:
+    case yactfr::Scope::EventRecordPayload:
         title += "event record payload";
         break;
     }
@@ -296,27 +296,27 @@ void DtExplorerView::_drawRows()
             this->_stylist().sectionTitle(*this);
 
             switch (subRow->scope) {
-            case yactfr::Scope::PACKET_HEADER:
+            case yactfr::Scope::PacketHeader:
                 this->_print("Packet header");
                 break;
 
-            case yactfr::Scope::PACKET_CONTEXT:
+            case yactfr::Scope::PacketContext:
                 this->_print("Packet context");
                 break;
 
-            case yactfr::Scope::EVENT_RECORD_HEADER:
+            case yactfr::Scope::EventRecordHeader:
                 this->_print("Event record header");
                 break;
 
-            case yactfr::Scope::EVENT_RECORD_COMMON_CONTEXT:
+            case yactfr::Scope::EventRecordCommonContext:
                 this->_print("Event record common context");
                 break;
 
-            case yactfr::Scope::EVENT_RECORD_SPECIFIC_CONTEXT:
+            case yactfr::Scope::EventRecordSpecificContext:
                 this->_print("Event record specific context");
                 break;
 
-            case yactfr::Scope::EVENT_RECORD_PAYLOAD:
+            case yactfr::Scope::EventRecordPayload:
                 this->_print("Event record payload");
                 break;
             }

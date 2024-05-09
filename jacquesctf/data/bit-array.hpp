@@ -74,7 +74,7 @@ public:
         const auto byteIndex = index / 8;
         Index bitIndexInByte;
 
-        if (!_bo || _bo == yactfr::ByteOrder::BIG) {
+        if (!_bo || _bo == yactfr::ByteOrder::Big) {
             bitIndexInByte = 7 - (index - byteIndex * 8);
         } else {
             bitIndexInByte = index - byteIndex * 8;

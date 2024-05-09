@@ -18,7 +18,7 @@ namespace jacques {
 
 namespace bfs = boost::filesystem;
 
-Metadata::Metadata(boost::filesystem::path path, yactfr::TraceType::UP traceType,
+Metadata::Metadata(boost::filesystem::path path, yactfr::TraceType::Up traceType,
                    std::unique_ptr<const yactfr::MetadataStream> stream,
                    boost::optional<boost::uuids::uuid> streamUuid) :
     _path {std::move(path)},
@@ -277,21 +277,21 @@ void Metadata::_setDtParents()
 {
     SetDtParentsPathsVisitor visitor {_dtParents, _dtPaths};
 
-    visitor.scope(yactfr::Scope::PACKET_HEADER);
+    visitor.scope(yactfr::Scope::PacketHeader);
     setScopeDtParentsPaths(visitor, _dtScopes, _traceType->packetHeaderType());
 
     for (auto& dst : _traceType->dataStreamTypes()) {
-        visitor.scope(yactfr::Scope::PACKET_CONTEXT);
+        visitor.scope(yactfr::Scope::PacketContext);
         setScopeDtParentsPaths(visitor, _dtScopes, dst->packetContextType());
-        visitor.scope(yactfr::Scope::EVENT_RECORD_HEADER);
+        visitor.scope(yactfr::Scope::EventRecordHeader);
         setScopeDtParentsPaths(visitor, _dtScopes, dst->eventRecordHeaderType());
-        visitor.scope(yactfr::Scope::EVENT_RECORD_COMMON_CONTEXT);
+        visitor.scope(yactfr::Scope::EventRecordCommonContext);
         setScopeDtParentsPaths(visitor, _dtScopes, dst->eventRecordCommonContextType());
 
         for (auto& ert : dst->eventRecordTypes()) {
-            visitor.scope(yactfr::Scope::EVENT_RECORD_SPECIFIC_CONTEXT);
+            visitor.scope(yactfr::Scope::EventRecordSpecificContext);
             setScopeDtParentsPaths(visitor, _dtScopes, ert->specificContextType());
-            visitor.scope(yactfr::Scope::EVENT_RECORD_PAYLOAD);
+            visitor.scope(yactfr::Scope::EventRecordPayload);
             setScopeDtParentsPaths(visitor, _dtScopes, ert->payloadType());
         }
     }

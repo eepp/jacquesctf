@@ -98,8 +98,8 @@ void PktCheckpoints::_createCheckpoints(yactfr::ElementSequenceIterator& it,
     Index indexInPkt = 0;
 
     // create all checkpoints except (possibly) the last one
-    while (it->kind() != yactfr::Element::Kind::PACKET_END) {
-        if (it->kind() == yactfr::Element::Kind::EVENT_RECORD_BEGINNING) {
+    while (it->kind() != yactfr::Element::Kind::PacketEnd) {
+        if (it->kind() == yactfr::Element::Kind::EventRecordBeginning) {
             const auto curIndexInPkt = indexInPkt;
 
             ++indexInPkt;
@@ -130,8 +130,8 @@ void PktCheckpoints::_lastErPositions(yactfr::ElementSequenceIteratorPosition& l
 
     auto nextIndexInPkt = _checkpoints.back().first->indexInPkt();
 
-    while (it->kind() != yactfr::Element::Kind::PACKET_END) {
-        if (it->kind() == yactfr::Element::Kind::EVENT_RECORD_BEGINNING) {
+    while (it->kind() != yactfr::Element::Kind::PacketEnd) {
+        if (it->kind() == yactfr::Element::Kind::EventRecordBeginning) {
             penultimatePos = std::move(lastPos);
             it.savePosition(lastPos);
             lastIndexInPkt = nextIndexInPkt;
@@ -150,7 +150,7 @@ void PktCheckpoints::_createCheckpoint(yactfr::ElementSequenceIterator& it,
 {
     yactfr::ElementSequenceIteratorPosition pos;
 
-    assert(it->kind() == yactfr::Element::Kind::EVENT_RECORD_BEGINNING);
+    assert(it->kind() == yactfr::Element::Kind::EventRecordBeginning);
     it.savePosition(pos);
 
     const auto er = Er::createFromElemSeqIt(it, metadata, pktIndexEntry, indexInPkt);

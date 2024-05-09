@@ -46,22 +46,22 @@ namespace {
 const char *scopeStr(const yactfr::Scope scope) noexcept
 {
     switch (scope) {
-    case yactfr::Scope::PACKET_HEADER:
+    case yactfr::Scope::PacketHeader:
         return "PH";
 
-    case yactfr::Scope::PACKET_CONTEXT:
+    case yactfr::Scope::PacketContext:
         return "PC";
 
-    case yactfr::Scope::EVENT_RECORD_HEADER:
+    case yactfr::Scope::EventRecordHeader:
         return "ERH";
 
-    case yactfr::Scope::EVENT_RECORD_COMMON_CONTEXT:
+    case yactfr::Scope::EventRecordCommonContext:
         return "ERCC";
 
-    case yactfr::Scope::EVENT_RECORD_SPECIFIC_CONTEXT:
+    case yactfr::Scope::EventRecordSpecificContext:
         return "ERSC";
 
-    case yactfr::Scope::EVENT_RECORD_PAYLOAD:
+    case yactfr::Scope::EventRecordPayload:
         return "ERP";
 
     default:
@@ -230,7 +230,7 @@ void PktRegionInfoView::_redrawContent()
     if (pktRegion->segment().bo()) {
         this->_safePrint("    ");
 
-        if (*pktRegion->segment().bo() == yactfr::ByteOrder::BIG) {
+        if (*pktRegion->segment().bo() == yactfr::ByteOrder::Big) {
             this->_safePrint("BE");
         } else {
             this->_safePrint("LE");
@@ -255,20 +255,20 @@ void PktRegionInfoView::_redrawContent()
                 if (cPktRegion->dt().isIntegerType()) {
                     return utils::intTypePrefDispBase(cPktRegion->dt());
                 } else if (cPktRegion->dt().isFixedLengthBitArrayType()) {
-                    return yactfr::DisplayBase::HEXADECIMAL;
+                    return yactfr::DisplayBase::Hexadecimal;
                 } else {
-                    return yactfr::DisplayBase::DECIMAL;
+                    return yactfr::DisplayBase::Decimal;
                 }
             }();
 
             std::string intFmt;
 
             switch (prefDispBase) {
-            case yactfr::DisplayBase::OCTAL:
+            case yactfr::DisplayBase::Octal:
                 intFmt = "0%" PRIo64;
                 break;
 
-            case yactfr::DisplayBase::HEXADECIMAL:
+            case yactfr::DisplayBase::Hexadecimal:
                 intFmt = "0x%" PRIx64;
                 break;
 

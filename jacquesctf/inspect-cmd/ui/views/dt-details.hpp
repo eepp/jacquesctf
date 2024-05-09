@@ -165,34 +165,34 @@ private:
         for (const auto role : dt.roles()) {
             const auto roleStr = [role] {
                 switch (role) {
-                case yactfr::UnsignedIntegerTypeRole::PACKET_MAGIC_NUMBER:
+                case yactfr::UnsignedIntegerTypeRole::PacketMagicNumber:
                     return "pkt-magic-number";
 
-                case yactfr::UnsignedIntegerTypeRole::DATA_STREAM_TYPE_ID:
+                case yactfr::UnsignedIntegerTypeRole::DataStreamTypeId:
                     return "dst-id";
 
-                case yactfr::UnsignedIntegerTypeRole::DATA_STREAM_ID:
+                case yactfr::UnsignedIntegerTypeRole::DataStreamId:
                     return "ds-id";
 
-                case yactfr::UnsignedIntegerTypeRole::PACKET_TOTAL_LENGTH:
+                case yactfr::UnsignedIntegerTypeRole::PacketTotalLength:
                     return "pkt-total-len";
 
-                case yactfr::UnsignedIntegerTypeRole::PACKET_CONTENT_LENGTH:
+                case yactfr::UnsignedIntegerTypeRole::PacketContentLength:
                     return "pkt-content-len";
 
-                case yactfr::UnsignedIntegerTypeRole::DEFAULT_CLOCK_TIMESTAMP:
+                case yactfr::UnsignedIntegerTypeRole::DefaultClockTimestamp:
                     return "def-clk-ts";
 
-                case yactfr::UnsignedIntegerTypeRole::PACKET_END_DEFAULT_CLOCK_TIMESTAMP:
+                case yactfr::UnsignedIntegerTypeRole::PacketEndDefaultClockTimestamp:
                     return "pkt-end-def-clk-ts";
 
-                case yactfr::UnsignedIntegerTypeRole::DISCARDED_EVENT_RECORD_COUNTER_SNAPSHOT:
+                case yactfr::UnsignedIntegerTypeRole::DiscardedEventRecordCounterSnapshot:
                     return "disc-er-counter-snap";
 
-                case yactfr::UnsignedIntegerTypeRole::PACKET_SEQUENCE_NUMBER:
+                case yactfr::UnsignedIntegerTypeRole::PacketSequenceNumber:
                     return "pkt-seq-num";
 
-                case yactfr::UnsignedIntegerTypeRole::EVENT_RECORD_TYPE_ID:
+                case yactfr::UnsignedIntegerTypeRole::EventRecordTypeId:
                     return "ert-id";
 
                 default:

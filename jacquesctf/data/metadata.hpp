@@ -33,7 +33,7 @@ public:
     using DtPathMap = std::unordered_map<const yactfr::DataType *, DtPath>;
 
 public:
-    explicit Metadata(boost::filesystem::path path, yactfr::TraceType::UP traceType,
+    explicit Metadata(boost::filesystem::path path, yactfr::TraceType::Up traceType,
                       std::unique_ptr<const yactfr::MetadataStream> stream,
                       boost::optional<boost::uuids::uuid> streamUuid);
     const yactfr::DataType *dtParent(const yactfr::DataType& dt) const noexcept;
@@ -85,7 +85,7 @@ private:
 
 private:
     const boost::filesystem::path _path;
-    yactfr::TraceType::UP _traceType;
+    yactfr::TraceType::Up _traceType;
     std::unique_ptr<const yactfr::MetadataStream> _stream;
     boost::optional<boost::uuids::uuid> _streamUuid;
     DtParentMap _dtParents;

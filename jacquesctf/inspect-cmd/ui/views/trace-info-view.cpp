@@ -223,7 +223,7 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
         rows.push_back(std::make_unique<_SIntPropRow>("Packets",
                                                       static_cast<long long>(pMetadataStream->packetCount())));
 
-        const auto bo = (pMetadataStream->byteOrder() == yactfr::ByteOrder::BIG) ?
+        const auto bo = (pMetadataStream->byteOrder() == yactfr::ByteOrder::Big) ?
                         "Big-endian" : "Little-endian";
 
         rows.push_back(std::make_unique<_StrPropRow>("Byte order", bo));

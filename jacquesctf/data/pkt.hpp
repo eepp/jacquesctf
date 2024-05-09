@@ -130,7 +130,7 @@ public:
 
 public:
     explicit Pkt(const PktIndexEntry& indexEntry, yactfr::ElementSequence& seq,
-                 const Metadata& metadata, yactfr::DataSource::UP dataSrc,
+                 const Metadata& metadata, yactfr::DataSource::Up dataSrc,
                  std::unique_ptr<MemMappedFile> mmapFile,
                  PktCheckpointsBuildListener& pktCheckpointsBuildListener);
 
@@ -634,7 +634,7 @@ private:
 private:
     const PktIndexEntry * const _indexEntry;
     const Metadata * const _metadata;
-    yactfr::DataSource::UP _dataSrc;
+    yactfr::DataSource::Up _dataSrc;
     std::unique_ptr<MemMappedFile> _mmapFile;
     yactfr::ElementSequenceIterator _it;
     yactfr::ElementSequenceIterator _endIt;

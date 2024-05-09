@@ -36,12 +36,12 @@ Er::SP Er::createFromElemSeqIt(yactfr::ElementSequenceIterator& it, const Metada
         while (true) {
             // TODO: replace with element visitor
             switch (it->kind()) {
-            case yactfr::Element::Kind::EVENT_RECORD_BEGINNING:
+            case yactfr::Element::Kind::EventRecordBeginning:
                 er = std::make_shared<Er>(indexInPkt);
                 er->segment().offsetInPktBits(it.offset() - pktOffsetInDsFileBits);
                 break;
 
-            case yactfr::Element::Kind::EVENT_RECORD_INFO:
+            case yactfr::Element::Kind::EventRecordInfo:
             {
                 auto& elem = it->asEventRecordInfoElement();
 
@@ -56,7 +56,7 @@ Er::SP Er::createFromElemSeqIt(yactfr::ElementSequenceIterator& it, const Metada
                 break;
             }
 
-            case yactfr::Element::Kind::DEFAULT_CLOCK_VALUE:
+            case yactfr::Element::Kind::DefaultClockValue:
             {
                 if (metadata.isCorrelatable()) {
                     auto& elem = it->asDefaultClockValueElement();
@@ -69,7 +69,7 @@ Er::SP Er::createFromElemSeqIt(yactfr::ElementSequenceIterator& it, const Metada
                 break;
             }
 
-            case yactfr::Element::Kind::EVENT_RECORD_END:
+            case yactfr::Element::Kind::EventRecordEnd:
             {
                 er->segment().len(it.offset() - pktOffsetInDsFileBits -
                                   er->segment().offsetInPktBits());
