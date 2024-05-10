@@ -25,13 +25,13 @@ namespace jacques {
  *
  * This state (application model) guarantees the following:
  *
- * * There's at least one data stream file state.
+ * • There's at least one data stream file state.
  *
- * * All data stream file state paths are unique.
+ * • All data stream file state paths are unique.
  *
- * * There's always an active data stream file state.
+ * • There's always an active data stream file state.
  *
- * * All the contained data stream file states have a valid metadata
+ * • All the contained data stream file states have a valid metadata
  *   object, because AppState::AppState() throws when there's any
  *   stream/parsing error.
  *
