@@ -105,61 +105,17 @@ private:
     }
 };
 
-} // namespace
-
 std::string dtPathItemStr(const DtPath::Item& item)
 {
     return boost::apply_visitor(DtPathItemStrVisitor {}, item);
 }
 
+} // namespace
+
 void PktRegionInfoView::_safePrintScope(const yactfr::Scope scope)
 {
     this->_safePrint(scopeStr(scope));
 }
-
-namespace {
-
-template <typename IntTypeT>
-std::unordered_set<const std::string *> mappingNamesOfVal(const IntTypeT& intType,
-                                                          const ContentPktRegion& pktRegion)
-{
-    std::unordered_set<const std::string *> names;
-
-    intType.mappingNamesForValue(boost::get<typename IntTypeT::MappingValue>(*pktRegion.val()),
-                                 names);
-    return names;
-}
-
-std::set<std::string> flagOrMappingNamesOfPktRegion(const ContentPktRegion& pktRegion)
-{
-    assert(pktRegion.val());
-
-    std::unordered_set<const std::string *> names;
-
-    if (pktRegion.dt().isFixedLengthBitMapType()) {
-        auto& dt = pktRegion.dt().asFixedLengthBitMapType();
-        dt.activeFlagNamesForUnsignedIntegerValue(boost::get<unsigned long long>(*pktRegion.val()),
-                                                  names);
-    } else if (pktRegion.dt().isFixedLengthUnsignedIntegerType()) {
-        names = mappingNamesOfVal(pktRegion.dt().asFixedLengthUnsignedIntegerType(), pktRegion);
-    } else if (pktRegion.dt().isFixedLengthSignedIntegerType()) {
-        names = mappingNamesOfVal(pktRegion.dt().asFixedLengthSignedIntegerType(), pktRegion);
-    } else if (pktRegion.dt().isVariableLengthUnsignedIntegerType()) {
-        names = mappingNamesOfVal(pktRegion.dt().asVariableLengthUnsignedIntegerType(), pktRegion);
-    } else if (pktRegion.dt().isVariableLengthSignedIntegerType()) {
-        names = mappingNamesOfVal(pktRegion.dt().asVariableLengthSignedIntegerType(), pktRegion);
-    }
-
-    std::set<std::string> sortedNames;
-
-    for (const auto namePtr : names) {
-        sortedNames.insert(*namePtr);
-    }
-
-    return sortedNames;
-}
-
-} // namespace
 
 void PktRegionInfoView::_redrawContent()
 {
@@ -288,7 +244,7 @@ void PktRegionInfoView::_redrawContent()
         }
 
         if (cPktRegion->dt().isFixedLengthBitMapType() || cPktRegion->dt().isIntegerType()) {
-            const auto names = flagOrMappingNamesOfPktRegion(*cPktRegion);
+            const auto names = cPktRegion->flagOrMappingNames();
 
             if (!names.empty()) {
                 this->_stylist().pktRegionInfoViewStd(*this);
