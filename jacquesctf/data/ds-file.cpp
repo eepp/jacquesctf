@@ -390,14 +390,13 @@ Pkt& DsFile::pktAtIndex(const Index index, PktCheckpointsBuildListener& buildLis
                                          _factory->createDataSource(), std::move(mmapFile),
                                          buildListener);
 
-        buildListener.endBuild();
-
         if (pkt->error()) {
             pktIndexEntry.isInvalid(true);
         }
 
         pktIndexEntry.erCount(pkt->erCount());
         _pkts[index] = std::move(pkt);
+        buildListener.endBuild();
     }
 
     return *_pkts[index];
