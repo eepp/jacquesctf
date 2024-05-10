@@ -64,11 +64,15 @@ void DtsScreen::_updateViews()
 {
     _dstTableView->traceType(this->_appState().metadata().traceType());
     _ertTableView->dst(*_dstTableView->dst());
+    _dstTableView->highlightSel(false);
+    _ertTableView->highlightSel(false);
 
     if (_focusedView == _dstTableView.get()) {
         _dtExplorerView->dst(*_dstTableView->dst());
+        _dstTableView->highlightSel(true);
     } else if (_focusedView == _ertTableView.get()) {
         _dtExplorerView->ert(*_ertTableView->ert());
+        _ertTableView->highlightSel(true);
     }
 }
 

@@ -308,7 +308,8 @@ void PktTableView::dataLenFmtMode(const utils::LenFmtMode dataLenFmtMode)
 
 Index PktTableView::selPktIndex() const noexcept
 {
-    return this->_selRow();
+    assert(this->_selRow());
+    return *this->_selRow();
 }
 
 void PktTableView::selPktIndex(const Index index)

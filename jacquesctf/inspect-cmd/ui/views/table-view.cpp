@@ -482,7 +482,7 @@ void TableView::_drawCells(const Index row,
 {
     assert(cells.size() == _theColDescrs.size());
 
-    const auto sel = _isSelHighlightEnabledMemb && this->_rowIsSel(row);
+    const auto sel = this->_rowIsSel(row) && _highlightSel;
     Index x = 0;
     const auto y = this->_contentYFromVisibleRow(row);
 
@@ -548,6 +548,8 @@ void TableView::_updateCounts()
 void TableView::_redrawRows()
 {
     if (this->_rowCount() == 0) {
+        this->_stylist().tableViewCell(*this);
+
         for (Index yIndex = 0; yIndex < this->contentRect().h; ++yIndex) {
             this->_clearRow(yIndex);
         }
@@ -581,19 +583,40 @@ void TableView::_selRowAndDraw(const Index row, const bool draw)
     }
 }
 
+void TableView::_removeSel()
+{
+    const auto oldSelRow = this->_selRow();
+
+    if (!oldSelRow) {
+        // already missing
+        return;
+    }
+
+    CommonInspectTableView::_removeSel();
+
+    if (this->_rowIsVisible(*oldSelRow)) {
+        this->_drawIfChanged(_Change::SELECTED_ROW, oldSelRow);
+    }
+}
+
 void TableView::_resized()
 {
     this->_updateCounts();
 }
 
-void TableView::_drawIfChanged(const _Change change, const Index oldSelRow)
+void TableView::_drawIfChanged(const _Change change, const boost::optional<Index>& oldSelRow)
 {
     if (change == _Change::FIRST_VISIBLE_ROW) {
         this->_redrawRows();
     } else if (change == _Change::SELECTED_ROW) {
         // only redraw the affected rows
-        this->_drawRow(oldSelRow);
-        this->_drawRow(this->_selRow());
+        if (oldSelRow) {
+            this->_drawRow(*oldSelRow);
+        }
+
+        if (this->_selRow()) {
+            this->_drawRow(*this->_selRow());
+        }
     }
 }
 
@@ -626,8 +649,12 @@ void TableView::pageDown()
     }
 
     this->_pageDown();
-    this->_selRow(std::min(this->_selRow() + this->_maxVisibleRowCount(),
-                           this->_rowCount() - 1));
+
+    if (this->_selRow()) {
+        this->_selRow(std::min(*this->_selRow() + this->_maxVisibleRowCount(),
+                               this->_rowCount() - 1));
+    }
+
     this->_redrawRows();
 }
 
@@ -639,13 +666,29 @@ void TableView::pageUp()
 
     this->_pageUp();
 
-    if (this->_selRow() < this->_maxVisibleRowCount()) {
-        this->_selFirstRow();
-    } else {
-        this->_selRow(this->_selRow() - this->_maxVisibleRowCount());
+    if (this->_selRow()) {
+        if (*this->_selRow() < this->_maxVisibleRowCount()) {
+            this->_selFirstRow();
+        } else {
+            this->_selRow(*this->_selRow() - this->_maxVisibleRowCount());
+        }
     }
 
     this->_redrawRows();
+}
+
+void TableView::showFirstPage()
+{
+    if (this->_showFirstPage()) {
+        this->_redrawRows();
+    }
+}
+
+void TableView::showLastPage()
+{
+    if (this->_showLastPage()) {
+        this->_redrawRows();
+    }
 }
 
 void TableView::centerSelRow(const bool draw)
@@ -681,17 +724,14 @@ void TableView::selectLast()
     this->_drawIfChanged(this->_selLastRow(true), oldSelRow);
 }
 
-void TableView::_isSelHighlightEnabled(const bool isEnabled, const bool draw)
+void TableView::highlightSel(const bool highlight)
 {
-    if (_isSelHighlightEnabledMemb == isEnabled) {
+    if (highlight == _highlightSel || !this->_selRow()) {
         return;
     }
 
-    _isSelHighlightEnabledMemb = isEnabled;
-
-    if (draw) {
-        this->_redrawRows();
-    }
+    _highlightSel = highlight;
+    this->_drawIfChanged(_Change::SELECTED_ROW, *this->_selRow());
 }
 
 } // namespace jacques

@@ -11,6 +11,7 @@
 #include <cassert>
 #include <utility>
 #include <tuple>
+#include <boost/optional.hpp>
 
 #include "aliases.hpp"
 
@@ -35,10 +36,13 @@ protected:
     _Change _selNextRow(Size steps = 1, bool ensureVisible = false);
     _Change _selPrevRow(Size steps = 1, bool ensureVisible = false);
     _Change _selRow(Index row, bool ensureVisible = false);
+    void _removeSel();
     bool _goUp(Size steps = 1);
     bool _goDown(Size steps = 1);
     bool _pageUp();
     bool _pageDown();
+    bool _showFirstPage();
+    bool _showLastPage();
     bool _centerOnRow(Index row);
     bool _centerOnSelRow();
     Index _maxFirstVisibleRow() const noexcept;
@@ -51,7 +55,7 @@ protected:
 
     bool _rowIsSel(const Index row) const noexcept
     {
-        return row == _theSelRow;
+        return _theSelRow && row == *_theSelRow;
     }
 
     Size _maxVisibleRowCount() const noexcept
@@ -59,7 +63,7 @@ protected:
         return _theMaxVisibleRowCount;
     }
 
-    Index _selRow() const noexcept
+    const boost::optional<Index>& _selRow() const noexcept
     {
         return _theSelRow;
     }
@@ -98,7 +102,7 @@ private:
     Size _theRowCount = 0;
     Size _theMaxVisibleRowCount = 0;
     Index _theFirstVisibleRow = 0;
-    Index _theSelRow = 0;
+    boost::optional<Index> _theSelRow;
 };
 
 } // namespace jacques

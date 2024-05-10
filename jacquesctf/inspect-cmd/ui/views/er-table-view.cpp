@@ -201,11 +201,10 @@ void ErTableView::_appStateChanged(const Message msg)
 {
     if (msg == Message::ACTIVE_DS_FILE_AND_PKT_CHANGED || msg == Message::ACTIVE_PKT_CHANGED) {
         /*
-         * Go back to 0 without drawing first in case there's less event
-         * records than our current selection index.
+         * Remove selection in case there's less event records than our
+         * current selection index.
          */
-        this->_selRowAndDraw(0, false);
-        this->_isSelHighlightEnabled(false, false);
+        this->_removeSel();
         this->_updateCounts();
     }
 
@@ -216,7 +215,6 @@ void ErTableView::_appStateChanged(const Message msg)
         const auto curEr = _appState->curEr();
 
         if (curEr) {
-            this->_isSelHighlightEnabled(true, false);
             this->_selRowAndDraw(curEr->indexInPkt(), false);
         } else {
             const auto& indexEntry = _appState->activePktState().pktIndexEntry();
@@ -224,13 +222,13 @@ void ErTableView::_appStateChanged(const Message msg)
 
             // convenience for regions outside the event record block
             if (indexEntry.preambleLen() && offsetInPktBits < indexEntry.preambleLen()->bits()) {
-                this->_selRowAndDraw(0, false);
+                this->_showFirstPage();
             } else if (offsetInPktBits >=
                     _appState->activePktState().pkt().lastEr()->segment().endOffsetInPktBits()) {
-                this->_selRowAndDraw(_appState->activePktState().pkt().lastEr()->indexInPkt(), false);
+                this->_showLastPage();
             }
 
-            this->_isSelHighlightEnabled(false, false);
+            this->_removeSel();
         }
 
         this->centerSelRow(false);

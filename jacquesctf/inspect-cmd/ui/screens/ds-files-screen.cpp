@@ -32,6 +32,7 @@ DsFilesScreen::DsFilesScreen(const Rect& rect, const InspectCfg& cfg, const Styl
         utils::LenFmtMode::BITS,
     }
 {
+    _view->selectFirst();
     _view->focus();
 }
 

@@ -402,9 +402,12 @@ public:
     void prev();
     void pageDown();
     void pageUp();
+    void showFirstPage();
+    void showLastPage();
     void centerSelRow(bool draw = true);
     void selectFirst();
     void selectLast();
+    void highlightSel(bool highlight);
 
 protected:
     explicit TableView(const Rect& rect, const std::string& title, DecorationStyle decoStyle,
@@ -419,8 +422,8 @@ protected:
     void _colDescrs(std::vector<TableViewColumnDescr>&& columnDescriptions);
     void _redrawRows();
     void _redrawContent() override;
-    void _isSelHighlightEnabled(bool isEnabled, bool draw = true);
     void _selRowAndDraw(Index row, bool draw = true);
+    void _removeSel();
     void _resized() override;
 
     const std::vector<TableViewColumnDescr>& _colDescrs() const noexcept
@@ -439,7 +442,7 @@ protected:
     }
 
 private:
-    void _drawIfChanged(_Change change, Index oldSelRow);
+    void _drawIfChanged(_Change change, const boost::optional<Index>& oldSelRow);
     void _clearRow(Index y);
     void _clearCell(const Point& pos, Size cellWidth);
 
@@ -453,7 +456,7 @@ private:
 
 private:
     std::vector<TableViewColumnDescr> _theColDescrs;
-    bool _isSelHighlightEnabledMemb = true;
+    bool _highlightSel = true;
 };
 
 } // namespace jacques

@@ -217,7 +217,8 @@ void DsFileTableView::dataLenFmtMode(const utils::LenFmtMode dataLenFmtMode)
 
 Index DsFileTableView::selDsFileIndex() const
 {
-    return this->_selRow();
+    assert(this->_selRow());
+    return *this->_selRow();
 }
 
 void DsFileTableView::selDsFileIndex(const Index index)

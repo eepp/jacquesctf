@@ -16,7 +16,7 @@ void CommonInspectTableView::_updateCounts(const Size rowCount, const Size maxVi
 {
     if (rowCount != _theRowCount) {
         _theFirstVisibleRow = 0;
-        _theSelRow = 0;
+        _theSelRow.reset();
     }
 
     _theRowCount = rowCount;
@@ -55,16 +55,24 @@ CommonInspectTableView::_Change CommonInspectTableView::_selLastRow(const bool e
 CommonInspectTableView::_Change CommonInspectTableView::_selNextRow(const Size steps,
                                                                     const bool ensureVisible)
 {
+    if (!_theSelRow) {
+        return _Change::NONE;
+    }
+
     return this->_selRow(steps, ensureVisible, [this] {
-        return std::min(_theSelRow + 1, _theRowCount - 1);
+        return std::min(*_theSelRow + 1, _theRowCount - 1);
     });
 }
 
 CommonInspectTableView::_Change CommonInspectTableView::_selPrevRow(const Size steps,
                                                                     const bool ensureVisible)
 {
+    if (!_theSelRow) {
+        return _Change::NONE;
+    }
+
     return this->_selRow(steps, ensureVisible, [this] {
-        return _theSelRow == 0 ? 0 : _theSelRow - 1;
+        return *_theSelRow == 0 ? 0 : *_theSelRow - 1;
     });
 }
 
@@ -75,7 +83,7 @@ CommonInspectTableView::_Change CommonInspectTableView::_selRow(const Index row,
         return _Change::NONE;
     }
 
-    if (row == _theSelRow) {
+    if (_theSelRow && row == *_theSelRow) {
         return _Change::NONE;
     }
 
@@ -92,6 +100,11 @@ CommonInspectTableView::_Change CommonInspectTableView::_selRow(const Index row,
     }
 
     return _Change::SELECTED_ROW;
+}
+
+void CommonInspectTableView::_removeSel()
+{
+    _theSelRow.reset();
 }
 
 bool CommonInspectTableView::_goUp(const Size steps)
@@ -140,6 +153,24 @@ bool CommonInspectTableView::_pageDown()
     return this->_goDown(_theMaxVisibleRowCount);
 }
 
+bool CommonInspectTableView::_showFirstPage()
+{
+    if (_theRowCount == 0) {
+        return false;
+    }
+
+    return this->_firstVisibleRow(0);
+}
+
+bool CommonInspectTableView::_showLastPage()
+{
+    if (_theRowCount == 0) {
+        return false;
+    }
+
+    return this->_firstVisibleRow(this->_maxFirstVisibleRow());
+}
+
 bool CommonInspectTableView::_centerOnRow(const Index row)
 {
     assert(_theRowCount > 0);
@@ -160,7 +191,11 @@ bool CommonInspectTableView::_centerOnRow(const Index row)
 
 bool CommonInspectTableView::_centerOnSelRow()
 {
-    return this->_centerOnRow(_theSelRow);
+    if (!_theSelRow) {
+        return false;
+    }
+
+    return this->_centerOnRow(*_theSelRow);
 }
 
 Index CommonInspectTableView::_maxFirstVisibleRow() const noexcept

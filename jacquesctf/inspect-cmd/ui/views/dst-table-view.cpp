@@ -95,8 +95,13 @@ void DstTableView::traceType(const yactfr::TraceType& traceType)
     }
 
     _dsts = dsts;
-    this->_selRowAndDraw(0, false);
+    this->_removeSel();
     this->_updateCounts();
+
+    if (this->_rowCount() > 0) {
+        this->_selRowAndDraw(0, false);
+    }
+
     this->_redrawRows();
 }
 
@@ -106,7 +111,8 @@ const yactfr::DataStreamType *DstTableView::dst() const
         return nullptr;
     }
 
-    return (*_dsts)[this->_selRow()];
+    assert(this->_selRow());
+    return (*_dsts)[*this->_selRow()];
 }
 
 void DstTableView::selectDst(const yactfr::TypeId id)
