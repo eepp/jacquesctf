@@ -53,12 +53,36 @@ void AppState::gotoDsFile(const Index index)
         return;
     }
 
-    _activeDsFileStateIndex = index;
-    _activeDsFileState = _dsFileStates[index].get();
+    /*
+     * The sequence here is:
+     *
+     * 1. Make sure the checkpoints of the next packet to select (first
+     *    of the new data stream file) are built _before_ changing any
+     *    public state, because otherwise the state would be invalid
+     *    from the checkpoint build listener point of view.
+     *
+     * 2. Set the current data stream file state.
+     *
+     * 3. Go to the first packet of the current data stream file
+     *    _without_ notifying.
+     *
+     * 4. Notify that both the active data stream file and
+     *    packet changed.
+     */
+    auto& nextActiveDsFileState = *_dsFileStates[index];
+    const auto gotoFirstPkt = nextActiveDsFileState.dsFile().pktCount() > 0 &&
+                              !nextActiveDsFileState.hasActivePktState();
 
-    if (_activeDsFileState->dsFile().pktCount() > 0 && !_activeDsFileState->hasActivePktState()) {
-        // go to first packet without notifying as we notify here
-        _activeDsFileState->_gotoPkt(0, false);
+    if (gotoFirstPkt) {
+        nextActiveDsFileState.dsFile().pktAtIndex(0,
+                                                  *nextActiveDsFileState._pktCheckpointsBuildListener);
+    }
+
+    _activeDsFileStateIndex = index;
+    _activeDsFileState = &nextActiveDsFileState;
+
+    if (gotoFirstPkt) {
+        nextActiveDsFileState._gotoPkt(0, false);
     }
 
     // notify
