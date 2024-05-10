@@ -18,6 +18,7 @@
 #include "inspect-screen.hpp"
 #include "../stylist.hpp"
 #include "../views/pkt-data-view.hpp"
+#include "utils.hpp"
 
 namespace jacques {
 
@@ -585,7 +586,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     case '*':
     case 'P':
     {
-        const auto init = [key]() {
+        const auto init = utils::call([key]() {
             switch (key) {
             case 'N':
             case '*':
@@ -611,7 +612,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
             default:
                 return "";
             }
-        }();
+        });
 
         std::unique_ptr<const SearchQuery> query;
 

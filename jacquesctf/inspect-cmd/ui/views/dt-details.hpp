@@ -14,6 +14,7 @@
 #include <boost/optional.hpp>
 
 #include "abstract-dt-details.hpp"
+#include "utils.hpp"
 
 namespace jacques {
 
@@ -163,7 +164,7 @@ private:
     void _renderRoleFlags(const DtT& dt, WINDOW * const window, Size& remWidth, const bool stylize) const
     {
         for (const auto role : dt.roles()) {
-            const auto roleStr = [role] {
+            const auto roleStr = utils::call([role] {
                 switch (role) {
                 case yactfr::UnsignedIntegerTypeRole::PacketMagicNumber:
                     return "pkt-magic-number";
@@ -198,7 +199,7 @@ private:
                 default:
                     std::abort();
                 }
-            }();
+            });
 
             this->_renderRoleFlag(window, remWidth, stylize, roleStr);
 

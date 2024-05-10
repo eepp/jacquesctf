@@ -12,6 +12,7 @@
 #include <yactfr/yactfr.hpp>
 
 #include "dt-details.hpp"
+#include "utils.hpp"
 
 namespace jacques {
 
@@ -99,7 +100,7 @@ void DtDetails::_tryRenderPrefDispBaseProp(const yactfr::DataType& dt, WINDOW * 
         return;
     }
 
-    this->_renderProp(window, remWidth, stylize, "pref-disp-base", [prefDispBase] {
+    this->_renderProp(window, remWidth, stylize, "pref-disp-base", utils::call([prefDispBase] {
         switch (prefDispBase) {
         case yactfr::DisplayBase::Binary:
             return "bin";
@@ -113,7 +114,7 @@ void DtDetails::_tryRenderPrefDispBaseProp(const yactfr::DataType& dt, WINDOW * 
         default:
             std::abort();
         }
-    }());
+    }));
 }
 
 namespace {
@@ -330,7 +331,7 @@ void DtDetails::_renderDt(const yactfr::OptionalType& dt, WINDOW * const window,
 {
     std::ostringstream ss;
 
-    ss << "{opt-" << [&dt] {
+    ss << "{opt-" << utils::call([&dt] {
         if (dt.isOptionalWithBooleanSelectorType()) {
             return 'b';
         } else if (dt.isOptionalWithUnsignedIntegerSelectorType()) {
@@ -339,7 +340,7 @@ void DtDetails::_renderDt(const yactfr::OptionalType& dt, WINDOW * const window,
             assert(dt.isOptionalWithSignedIntegerSelectorType());
             return 'i';
         }
-    }() << "-sel}";
+    }) << "-sel}";
     this->_renderDtInfo(window, remWidth, stylize, ss.str().c_str());
 
     if (remWidth == 0) {

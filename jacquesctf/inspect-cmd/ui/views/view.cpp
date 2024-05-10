@@ -124,13 +124,13 @@ void View::_decorate() const
     box(_curWindow, 0, 0);
 
     const auto maxWidth = _rect.w - 4;
-    const auto title = [this, maxWidth] {
+    const auto title = utils::call([this, maxWidth] {
         if (_theTitle.size() > maxWidth) {
             return _theTitle.substr(0, maxWidth - 3) + "...";
         } else {
             return _theTitle;
         }
-    }();
+    });
 
     _theStylist->viewTitle(*this, _hasFocusMemb, _decoStyle == DecorationStyle::BORDERS_EMPHASIZED);
 

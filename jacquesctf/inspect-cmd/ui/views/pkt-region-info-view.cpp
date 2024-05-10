@@ -207,7 +207,7 @@ void PktRegionInfoView::_redrawContent()
         } else if (const auto val = boost::get<long long>(&varVal)) {
             this->_safePrint("%s", utils::sepNumber(*val, ',').c_str());
         } else if (const auto val = boost::get<unsigned long long>(&varVal)) {
-            const auto prefDispBase = [cPktRegion] {
+            const auto prefDispBase = utils::call([cPktRegion] {
                 if (cPktRegion->dt().isIntegerType()) {
                     return utils::intTypePrefDispBase(cPktRegion->dt());
                 } else if (cPktRegion->dt().isFixedLengthBitArrayType()) {
@@ -215,7 +215,7 @@ void PktRegionInfoView::_redrawContent()
                 } else {
                     return yactfr::DisplayBase::Decimal;
                 }
-            }();
+            });
 
             std::string intFmt;
 

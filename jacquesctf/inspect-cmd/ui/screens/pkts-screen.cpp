@@ -17,6 +17,7 @@
 #include "../stylist.hpp"
 #include "data/pkt-checkpoints-build-listener.hpp"
 #include "../views/pkt-checkpoints-build-progress-view.hpp"
+#include "utils.hpp"
 
 namespace jacques {
 
@@ -169,7 +170,7 @@ KeyHandlingReaction PktsScreen::_handleKey(const int key)
     case '*':
     case 'P':
     {
-        auto query = _searchCtrl.start([key]() -> std::string {
+        auto query = _searchCtrl.start(utils::call([key]() -> std::string {
             switch (key) {
             case 'N':
             case '*':
@@ -195,7 +196,7 @@ KeyHandlingReaction PktsScreen::_handleKey(const int key)
             default:
                 return {};
             }
-        }());
+        }));
 
         if (!query) {
             // canceled or invalid

@@ -12,6 +12,7 @@
 #include "content-pkt-region.hpp"
 #include "padding-pkt-region.hpp"
 #include "error-pkt-region.hpp"
+#include "utils.hpp"
 
 namespace jacques {
 
@@ -233,7 +234,7 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdangling-reference"
         // get corresponding data type
-        auto& dt = [this]() -> const yactfr::DataType& {
+        auto& dt = utils::call([this]() -> const yactfr::DataType& {
             if (_it->isNullTerminatedStringBeginningElement()) {
                 return _it->asNullTerminatedStringBeginningElement().type();
             } else if (_it->isStaticLengthStringBeginningElement()) {
@@ -242,7 +243,7 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
                 assert(_it->isDynamicLengthStringBeginningElement());
                 return _it->asDynamicLengthStringBeginningElement().type();
             }
-        }();
+        });
 #pragma GCC diagnostic pop
 
         const auto offsetStartBits = this->_itOffsetInPktBits();
@@ -261,7 +262,7 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
             ++_it;
         }
 
-        auto str = [&dt, &bufStart, &bufEnd] {
+        auto str = utils::call([&dt, &bufStart, &bufEnd] {
             if (dt.isStringType() &&
                     dt.asStringType().encoding() == yactfr::StringEncoding::Utf8) {
                 /*
@@ -280,7 +281,7 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
                 // TODO: decode value, remove this temporary message
                 return std::string {"(not an UTF-8 string)"};
             }
-        }();
+        });
 
         const PktSegment segment {
             offsetStartBits,
@@ -301,14 +302,14 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdangling-reference"
         // get corresponding data type
-        auto& dt = [this]() -> const yactfr::DataType& {
+        auto& dt = utils::call([this]() -> const yactfr::DataType& {
             if (_it->isStaticLengthBlobBeginningElement()) {
                 return _it->asStaticLengthBlobBeginningElement().type();
             } else {
                 assert(_it->isDynamicLengthBlobBeginningElement());
                 return _it->asDynamicLengthBlobBeginningElement().type();
             }
-        }();
+        });
 #pragma GCC diagnostic pop
 
         const auto offsetStartBits = this->_itOffsetInPktBits();
