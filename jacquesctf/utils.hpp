@@ -245,6 +245,18 @@ std::string csvListStr(const ContainerT& container, const bool withBackticks = t
     return ss.str();
 }
 
+/*
+ * Partial implementation of INVOKE.
+ *
+ * As found in
+ * <https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0312r1.html>.
+ */
+template <typename FuncT, typename... ArgTs>
+auto call(FuncT func, ArgTs&&...args) -> decltype(std::ref(func)(std::forward<ArgTs>(args)...))
+{
+    return std::ref(func)(std::forward<ArgTs>(args)...);
+}
+
 } // namespace utils
 } // namespace jacques
 
