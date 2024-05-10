@@ -10,6 +10,8 @@
 
 #include <memory>
 #include <cstdint>
+#include <set>
+#include <string>
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
 #include <yactfr/yactfr.hpp>
@@ -39,8 +41,28 @@ public:
         return _val;
     }
 
+    /*
+     * Returns the sorted active flag or mapping names of this packet
+     * region.
+     *
+     * val() must have a value.
+     *
+     * If dt() doesn't return a bit map type or an integer type, then
+     * this method returns an empty set.
+     */
+    std::set<std::string> flagOrMappingNames() const;
+
 private:
     void _accept(PktRegionVisitor& visitor) override;
+
+    template <typename IntTypeT>
+    std::unordered_set<const std::string *> _mappingNamesOfVal(const IntTypeT& intType) const
+    {
+        std::unordered_set<const std::string *> names;
+
+        intType.mappingNamesForValue(boost::get<typename IntTypeT::MappingValue>(*_val), names);
+        return names;
+    }
 
 private:
     const yactfr::DataType *_dt;
