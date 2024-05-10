@@ -93,7 +93,7 @@ if (JACQUES_HAS_INSPECT_CMD)
     )
 endif ()
 
-if (JACQUES_HAS_INSPECT_CMD OR JACQUES_HAS_INSPECT_GUI_CMD)
+if (JACQUES_HAS_INSPECT_CMD)
     set (
         JACQUES_INSPECT_COMMON_SOURCES
         inspect-common/app-state.cpp

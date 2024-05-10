@@ -25,10 +25,6 @@
 # include "inspect-cmd/ui/inspect-cmd.hpp"
 #endif
 
-#ifdef JACQUES_HAS_INSPECT_GUI_CMD
-# include "inspect-gui-cmd/ui/inspect-gui-cmd.hpp"
-#endif
-
 namespace jacques {
 namespace {
 
