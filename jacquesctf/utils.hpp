@@ -206,7 +206,7 @@ std::string csvListStr(const ContainerT& container, const bool withBackticks = t
         return "";
     }
 
-    const auto fmtStr = [withBackticks](const auto& str) {
+    const auto fmtStrFunc = [withBackticks](const auto& str) {
         if (withBackticks) {
             return std::string {'`'} + str + '`';
         }
@@ -215,15 +215,15 @@ std::string csvListStr(const ContainerT& container, const bool withBackticks = t
     };
 
     if (container.size() == 1) {
-        return fmtStr(*container.begin());
+        return fmtStrFunc(*container.begin());
     }
 
     if (container.size() == 2 && lastWord) {
         std::ostringstream ss;
 
-        ss << fmtStr(*container.begin());
+        ss << fmtStrFunc(*container.begin());
         ss << ' ' << lastWord << ' ';
-        ss << fmtStr(*std::next(container.begin()));
+        ss << fmtStrFunc(*std::next(container.begin()));
         return ss.str();
     }
 
@@ -235,7 +235,7 @@ std::string csvListStr(const ContainerT& container, const bool withBackticks = t
             ss << lastWord << ' ';
         }
 
-        ss << fmtStr(*it);
+        ss << fmtStrFunc(*it);
 
         if (it != penultimateIt) {
             ss << ", ";
