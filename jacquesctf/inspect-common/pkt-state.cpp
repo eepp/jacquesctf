@@ -112,13 +112,9 @@ void PktState::gotoNextPktRegion()
 
 void PktState::gotoPktCtx()
 {
-    const auto& offset = _pkt->indexEntry().pktCtxOffsetInPktBits();
-
-    if (!offset) {
-        return;
+    if (const auto& offset = _pkt->indexEntry().pktCtxOffsetInPktBits()) {
+        this->gotoPktRegionAtOffsetInPktBits(*offset);
     }
-
-    this->gotoPktRegionAtOffsetInPktBits(*offset);
 }
 
 void PktState::gotoLastPktRegion()
