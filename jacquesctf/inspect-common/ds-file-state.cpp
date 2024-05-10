@@ -73,8 +73,15 @@ void DsFileState::_gotoPkt(const Index index, const bool notify)
         return;
     }
 
+    /*
+     * Do this first because DsFileState::_pktState() may call the
+     * packet checkpoints build listener and this one needs a valid
+     * general state.
+     */
+    auto& nextActivePktState = this->_pktState(index);
+
     _activePktStateIndex = index;
-    _activePktState = &this->_pktState(index);
+    _activePktState = &nextActivePktState;
 
     if (notify && &_appState->activeDsFileState() == this) {
         _appState->_activePktChanged();
