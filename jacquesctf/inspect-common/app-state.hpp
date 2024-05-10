@@ -148,6 +148,14 @@ public:
         return _activeDsFileState->activePktState();
     }
 
+    /*
+     * See the documentation of DsFileState::activePktState().
+     */
+    const PktState& activePktState() const
+    {
+        return static_cast<const DsFileState&>(*_activeDsFileState).activePktState();
+    }
+
     Index curOffsetInPktBits() const noexcept
     {
         return _activeDsFileState->curOffsetInPktBits();
