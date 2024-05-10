@@ -73,6 +73,23 @@ public:
         return this->_pktState(_activePktStateIndex);
     }
 
+    /*
+     * This version returns `*_activePktState` directly instead of
+     * lazily creating it like the non `const` version above does
+     * because creating it involves creating a `Pkt` object which will
+     * call the registered packet checkpoints build listener and I
+     * believe it's a little intense as a side effect of a `const`
+     * method.
+     *
+     * You may only call this if this data stream file state has an
+     * active packet state.
+     */
+    const PktState& activePktState() const
+    {
+        assert(_activePktState);
+        return *_activePktState;
+    }
+
     Index activePktStateIndex() const noexcept
     {
         return _activePktStateIndex;
