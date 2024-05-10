@@ -139,7 +139,6 @@ add_executable (
 target_include_directories (
     jacquesctf PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/logging
     ${CURSES_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${YACTFR_INCLUDE_DIR}
