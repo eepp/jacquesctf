@@ -8,12 +8,12 @@
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/range/iterator_range.hpp>
+#include <list>
 #include <sstream>
 #include <algorithm>
 #include <iterator>
 #include <cstdlib>
 #include <unordered_set>
-#include <iostream>
 #include <cassert>
 
 #include "cfg.hpp"
