@@ -17,7 +17,7 @@
 namespace jacques {
 namespace {
 
-void printHeader(const ListPktsCfg::Fmt fmt)
+void printHeader(const ListPktsCfg::Fmt fmt __attribute__((unused)))
 {
     assert(fmt == ListPktsCfg::Fmt::MACHINE);
 
@@ -29,7 +29,7 @@ void printHeader(const ListPktsCfg::Fmt fmt)
                  "Discarded event record counter snapshot,Is valid?" << std::endl;
 }
 
-void printRow(const PktIndexEntry& indexEntry, const ListPktsCfg::Fmt fmt)
+void printRow(const PktIndexEntry& indexEntry, const ListPktsCfg::Fmt fmt __attribute__((unused)))
 {
     assert(fmt == ListPktsCfg::Fmt::MACHINE);
 
