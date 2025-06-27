@@ -217,11 +217,6 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
 
         std::sprintf(buf.data(), fmt, parts.first.c_str(), parts.second.c_str());
 
-        auto fh = fopen("/tmp/meow", "wb");
-
-        fwrite(parts.first.c_str(), 1, parts.first.size() + 1, fh);
-        fclose(fh);
-
         if (customStyle) {
             this->_stylist().tableViewTextCell(*this, cell.emphasized());
         }
