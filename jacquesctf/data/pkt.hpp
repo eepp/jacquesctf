@@ -326,6 +326,34 @@ private:
     using _RegionCache = std::vector<PktRegion::SP>;
     using _ErCache = std::vector<Er::SP>;
 
+    /*
+     * Tracks the array indexes while handling yactfr elements.
+     *
+     * Call handle() with an element.
+     *
+     * Get the current array indexes (to be passed to
+     * ContentPktRegion::ContentPktRegion()) with indexes().
+     */
+    class _ArrayIndexesTracker final
+    {
+    public:
+        explicit _ArrayIndexesTracker() = default;
+        void handle(yactfr::Element::Kind elemKind);
+        void reset();
+
+        const ContentPktRegion::ArrayIndexes& indexes() const noexcept
+        {
+            return _indexes;
+        }
+
+    private:
+        bool _immediatelyInArray() const noexcept;
+
+    private:
+        ContentPktRegion::ArrayIndexes _indexes;
+        std::vector<bool> _immediatelyInArrayStack;
+    };
+
 private:
     /*
      * Caches the whole packet preamble (single time): packet header,
@@ -358,7 +386,8 @@ private:
      * iterator until any decoding error, and then an error packet
      * region.
      */
-    void _cacheRegionsAtCurItUntilError(Index initErIndexInPkt);
+    void _cacheRegionsAtCurItUntilError(Index initErIndexInPkt,
+                                        _ArrayIndexesTracker& arrayIndexesTracker);
 
     /*
      * After clearing the caches, caches all the packet regions from the
@@ -371,7 +400,8 @@ private:
      * Appends a single event record (having index `indexInPkt`) worth
      * of packet regions to the cache starting at the current iterator.
      */
-    void _cacheRegionsFromOneErAtCurIt(Index indexInPkt);
+    void _cacheRegionsFromOneErAtCurIt(Index indexInPkt,
+                                       _ArrayIndexesTracker& arrayIndexesTracker);
 
     /*
      * Appends packet regions to the packet region cache (and updates
@@ -379,7 +409,8 @@ private:
      * iterator. Stops appending _after_ the kind of the current element
      * of the iterator is `endElemKind`.
      */
-    void _cacheRegionsAtCurIt(yactfr::Element::Kind endElemKind, Index erIndexInPkt);
+    void _cacheRegionsAtCurIt(yactfr::Element::Kind endElemKind, Index erIndexInPkt,
+                              _ArrayIndexesTracker& arrayIndexesTracker);
 
     /*
      * Tries to append a padding packet region to the current cache,
@@ -397,7 +428,8 @@ private:
      * iterator so that it contains the following element. The content
      * packet region is assigned scope `scope` (may not be `nullptr`).
      */
-    void _cacheContentRegionAtCurIt(Scope::SP scope);
+    void _cacheContentRegionAtCurIt(Scope::SP scope,
+                                    const ContentPktRegion::ArrayIndexes& arrayIndexes);
 
     /*
      * Returns whether or not the packet region cache `cache` contains
@@ -505,7 +537,8 @@ private:
      * not be `nullptr`).
      */
     template <typename ElemT, typename ValT>
-    ContentPktRegion::SP _contentRegionFromBitArrayElemAtCurIt(Scope::SP scope, const ValT val)
+    ContentPktRegion::SP _contentRegionFromBitArrayElemAtCurIt(Scope::SP scope, const ValT val,
+                                                               const ContentPktRegion::ArrayIndexes& arrayIndexes)
     {
         assert(scope);
 
@@ -513,7 +546,8 @@ private:
         const PktSegment segment {this->_itOffsetInPktBits(), Pkt::_bitArrayElemLen(elem)};
 
         return std::make_shared<ContentPktRegion>(segment, std::move(scope), elem.type(),
-                                                  ContentPktRegion::Val {val});
+                                                  _metadata->dtPaths().at(&elem.type()),
+                                                  arrayIndexes, ContentPktRegion::Val {val});
     }
 
     /*
@@ -524,11 +558,13 @@ private:
      * `nullptr`).
      */
     template <typename ElemT>
-    ContentPktRegion::SP _contentRegionFromBitArrayElemAtCurIt(Scope::SP scope)
+    ContentPktRegion::SP _contentRegionFromBitArrayElemAtCurIt(Scope::SP scope,
+                                                               const ContentPktRegion::ArrayIndexes& arrayIndexes)
     {
         auto& elem = static_cast<const ElemT&>(*_it);
 
-        return this->_contentRegionFromBitArrayElemAtCurIt<ElemT>(std::move(scope), elem.value());
+        return this->_contentRegionFromBitArrayElemAtCurIt<ElemT>(std::move(scope), elem.value(),
+                                                                  arrayIndexes);
     }
 
     void _trySetPrevRegionOffsetInPktBits(PktRegion& region) const

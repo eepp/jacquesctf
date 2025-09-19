@@ -16,6 +16,7 @@
 #include <boost/optional.hpp>
 #include <yactfr/yactfr.hpp>
 
+#include "dt-path.hpp"
 #include "pkt-region.hpp"
 #include "scope.hpp"
 
@@ -25,15 +26,33 @@ class ContentPktRegion final :
     public PktRegion
 {
 public:
-    using Val = boost::variant<nullptr_t, bool, unsigned long long, long long, double, std::string>;
+    using Val = boost::variant<std::nullptr_t, bool, unsigned long long, long long, double, std::string>;
+    using ArrayIndexes = std::vector<Index>;
 
 public:
+    /*
+     * `arrayIndexes` contains the indexes, in data path item order,
+     * of the arrays to reach this datum. In other words, the number
+     * of current array element items in `dtPath` matches
+     * `arrayIndexes.size()`.
+     */
     explicit ContentPktRegion(const PktSegment& segment, Scope::SP scope,
-                              const yactfr::DataType& dt, boost::optional<Val> val) noexcept;
+                              const yactfr::DataType& dt, const DtPath& dtPath,
+                              ArrayIndexes arrayIndexes, boost::optional<Val> val) noexcept;
 
     const yactfr::DataType& dt() const noexcept
     {
         return *_dt;
+    }
+
+    const DtPath& dtPath() const noexcept
+    {
+        return *_dtPath;
+    }
+
+    const ArrayIndexes& arrayIndexes() const noexcept
+    {
+        return _arrayIndexes;
     }
 
     const boost::optional<Val>& val() const noexcept
@@ -66,6 +85,8 @@ private:
 
 private:
     const yactfr::DataType *_dt;
+    const DtPath *_dtPath;
+    ArrayIndexes _arrayIndexes;
     boost::optional<Val> _val;
 };
 

@@ -8,6 +8,8 @@
 #include <cassert>
 
 #include "content-pkt-region.hpp"
+#include "aliases.hpp"
+#include "utils.hpp"
 
 namespace jacques {
 namespace {
@@ -21,17 +23,39 @@ OptBo boFromDt(const yactfr::DataType& dt)
     return boost::none;
 }
 
+#ifndef NDEBUG
+bool arrayIndexesLenIsExpected(const DtPath& dtPath,
+                               const ContentPktRegion::ArrayIndexes& arrayIndexes)
+{
+    return utils::call([&dtPath] {
+        Size count = 0;
+
+        for (auto& item : dtPath.items()) {
+            if (boost::get<DtPath::CurArrayElemItem>(&item)) {
+                ++count;
+            }
+        }
+
+        return count;
+    }) == arrayIndexes.size();
+}
+#endif
+
 } // namespace
 
 ContentPktRegion::ContentPktRegion(const PktSegment& segment, Scope::SP scope,
-                                   const yactfr::DataType& dt, boost::optional<Val> val) noexcept :
+                                   const yactfr::DataType& dt, const DtPath& dtPath,
+                                   ArrayIndexes arrayIndexes, boost::optional<Val> val) noexcept :
     PktRegion {
         segment,
         std::move(scope)
     },
     _dt {&dt},
+    _dtPath {&dtPath},
+    _arrayIndexes {std::move(arrayIndexes)},
     _val {std::move(val)}
 {
+    assert(arrayIndexesLenIsExpected(dtPath, _arrayIndexes));
     this->_segment().bo(boFromDt(dt));
 }
 

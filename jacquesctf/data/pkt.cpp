@@ -175,7 +175,8 @@ void Pkt::_ensureOffsetInPktBitsIsCached(const Index offsetInPktBits)
     }
 }
 
-void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
+void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope,
+                                     const ContentPktRegion::ArrayIndexes& arrayIndexes)
 {
     using ElemKind = yactfr::Element::Kind;
 
@@ -187,7 +188,8 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
         const auto val = _it->asFixedLengthBitArrayElement().unsignedIntegerValue();
 
         region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthBitArrayElement>(scope,
-                                                                                                 val);
+                                                                                                 val,
+                                                                                                 arrayIndexes);
         break;
     }
 
@@ -196,32 +198,39 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
         const auto val = _it->asFixedLengthBitMapElement().unsignedIntegerValue();
 
         region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthBitMapElement>(scope,
-                                                                                               val);
+                                                                                               val,
+                                                                                               arrayIndexes);
         break;
     }
 
     case ElemKind::FixedLengthBoolean:
-        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthBooleanElement>(scope);
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthBooleanElement>(scope,
+                                                                                                arrayIndexes);
         break;
 
     case ElemKind::FixedLengthSignedInteger:
-        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthSignedIntegerElement>(scope);
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthSignedIntegerElement>(scope,
+                                                                                                      arrayIndexes);
         break;
 
     case ElemKind::FixedLengthUnsignedInteger:
-        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthUnsignedIntegerElement>(scope);
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthUnsignedIntegerElement>(scope,
+                                                                                                        arrayIndexes);
         break;
 
     case ElemKind::FixedLengthFloatingPointNumber:
-        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthFloatingPointNumberElement>(scope);
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::FixedLengthFloatingPointNumberElement>(scope,
+                                                                                                            arrayIndexes);
         break;
 
     case ElemKind::VariableLengthSignedInteger:
-        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::VariableLengthSignedIntegerElement>(scope);
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::VariableLengthSignedIntegerElement>(scope,
+                                                                                                         arrayIndexes);
         break;
 
     case ElemKind::VariableLengthUnsignedInteger:
-        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::VariableLengthUnsignedIntegerElement>(scope);
+        region = this->_contentRegionFromBitArrayElemAtCurIt<yactfr::VariableLengthUnsignedIntegerElement>(scope,
+                                                                                                           arrayIndexes);
         break;
 
     case ElemKind::NullTerminatedStringBeginning:
@@ -289,6 +298,8 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
         };
 
         region = std::make_shared<ContentPktRegion>(segment, std::move(scope), dt,
+                                                    _metadata->dtPaths().at(&dt),
+                                                    arrayIndexes,
                                                     ContentPktRegion::Val {std::move(str)});
         break;
     }
@@ -333,6 +344,8 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope)
         };
 
         region = std::make_shared<ContentPktRegion>(segment, std::move(scope), dt,
+                                                    _metadata->dtPaths().at(&dt),
+                                                    arrayIndexes,
                                                     ContentPktRegion::Val {nullptr});
         break;
     }
@@ -386,6 +399,95 @@ void Pkt::_tryCachePaddingRegionBeforeCurIt(Scope::SP scope)
     _curRegionCache.push_back(std::move(region));
 }
 
+void Pkt::_ArrayIndexesTracker::handle(const yactfr::Element::Kind elemKind)
+{
+    using ElemKind = yactfr::Element::Kind;
+
+    switch (elemKind) {
+    case ElemKind::FixedLengthBitArray:
+    case ElemKind::FixedLengthBitMap:
+    case ElemKind::FixedLengthBoolean:
+    case ElemKind::FixedLengthSignedInteger:
+    case ElemKind::FixedLengthUnsignedInteger:
+    case ElemKind::FixedLengthFloatingPointNumber:
+    case ElemKind::VariableLengthSignedInteger:
+    case ElemKind::VariableLengthUnsignedInteger:
+    case ElemKind::NullTerminatedStringBeginning:
+    case ElemKind::StaticLengthStringBeginning:
+    case ElemKind::DynamicLengthStringBeginning:
+    case ElemKind::StaticLengthBlobBeginning:
+    case ElemKind::DynamicLengthBlobBeginning:
+        if (this->_immediatelyInArray()) {
+            // scalar immediately in array: increase current array index
+            assert(!_indexes.empty());
+            ++_indexes.back();
+        }
+
+        break;
+
+    case ElemKind::DynamicLengthArrayBeginning:
+    case ElemKind::StaticLengthArrayBeginning:
+        // immediately in array now
+        _immediatelyInArrayStack.push_back(true);
+
+        // add new index level
+        _indexes.push_back(0);
+        break;
+
+    case ElemKind::DynamicLengthArrayEnd:
+    case ElemKind::StaticLengthArrayEnd:
+        // remove level
+        assert(!_immediatelyInArrayStack.empty());
+        assert(_immediatelyInArrayStack.back());
+        _immediatelyInArrayStack.pop_back();
+
+        // remove index level
+        assert(!_indexes.empty());
+        _indexes.pop_back();
+
+        if (this->_immediatelyInArray()) {
+            // array end immediately in array: increase current array index
+            assert(!_indexes.empty());
+            ++_indexes.back();
+        }
+
+        break;
+
+    case ElemKind::StructureBeginning:
+        // not immediately in array now
+        _immediatelyInArrayStack.push_back(false);
+        break;
+
+    case ElemKind::StructureEnd:
+        // remove level
+        assert(!_immediatelyInArrayStack.empty());
+        assert(!_immediatelyInArrayStack.back());
+        _immediatelyInArrayStack.pop_back();
+
+        if (this->_immediatelyInArray()) {
+            // structure end immediately in array: increase current array index
+            assert(!_indexes.empty());
+            ++_indexes.back();
+        }
+
+        break;
+
+    default:
+        break;
+    }
+}
+
+void Pkt::_ArrayIndexesTracker::reset()
+{
+    _indexes.clear();
+    _immediatelyInArrayStack.clear();
+}
+
+bool Pkt::_ArrayIndexesTracker::_immediatelyInArray() const noexcept
+{
+    return !_immediatelyInArrayStack.empty() && _immediatelyInArrayStack.back();
+}
+
 void Pkt::_cachePreambleRegions()
 {
     using ElemKind = yactfr::Element::Kind;
@@ -396,9 +498,11 @@ void Pkt::_cachePreambleRegions()
     // go to beginning of packet
     _it.seekPacket(_indexEntry->offsetInDsFileBytes());
 
+    _ArrayIndexesTracker arrayIndexesTracker;
+
     // special case: no event records and an error: cache everything now
     if (_checkpoints.error() && _checkpoints.erCount() == 0) {
-        this->_cacheRegionsAtCurItUntilError(0);
+        this->_cacheRegionsAtCurItUntilError(0, arrayIndexesTracker);
         _preambleRegionCache = std::move(_curRegionCache);
         return;
     }
@@ -423,10 +527,24 @@ void Pkt::_cachePreambleRegions()
             case ElemKind::DynamicLengthStringBeginning:
             case ElemKind::StaticLengthBlobBeginning:
             case ElemKind::DynamicLengthBlobBeginning:
+            {
                 this->_tryCachePaddingRegionBeforeCurIt(curScope);
 
                 // _cacheContentRegionAtCurIt() increments the iterator
-                this->_cacheContentRegionAtCurIt(curScope);
+                const auto kind = _it->kind();
+
+                this->_cacheContentRegionAtCurIt(curScope, arrayIndexesTracker.indexes());
+                arrayIndexesTracker.handle(kind);
+                break;
+            }
+
+            case ElemKind::DynamicLengthArrayBeginning:
+            case ElemKind::StaticLengthArrayBeginning:
+            case ElemKind::DynamicLengthArrayEnd:
+            case ElemKind::StaticLengthArrayEnd:
+            case ElemKind::StructureEnd:
+                arrayIndexesTracker.handle(_it->kind());
+                ++_it;
                 break;
 
             case ElemKind::ScopeBeginning:
@@ -446,6 +564,7 @@ void Pkt::_cachePreambleRegions()
                     curScope->dt(_it->asStructureBeginningElement().type());
                 }
 
+                arrayIndexesTracker.handle(ElemKind::StructureBeginning);
                 ++_it;
                 break;
             }
@@ -506,7 +625,8 @@ void Pkt::_cachePreambleRegions()
     _preambleRegionCache = std::move(_curRegionCache);
 }
 
-void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index erIndexInPkt)
+void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index erIndexInPkt,
+                               _ArrayIndexesTracker& arrayIndexesTracker)
 {
     using ElemKind = yactfr::Element::Kind;
 
@@ -535,10 +655,24 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
         case ElemKind::DynamicLengthStringBeginning:
         case ElemKind::StaticLengthBlobBeginning:
         case ElemKind::DynamicLengthBlobBeginning:
+        {
             this->_tryCachePaddingRegionBeforeCurIt(curScope);
 
             // _cacheContentRegionAtCurIt() increments the iterator
-            this->_cacheContentRegionAtCurIt(curScope);
+            const auto kind = _it->kind();
+
+            this->_cacheContentRegionAtCurIt(curScope, arrayIndexesTracker.indexes());
+            arrayIndexesTracker.handle(kind);
+            break;
+        }
+
+        case ElemKind::DynamicLengthArrayBeginning:
+        case ElemKind::StaticLengthArrayBeginning:
+        case ElemKind::DynamicLengthArrayEnd:
+        case ElemKind::StaticLengthArrayEnd:
+        case ElemKind::StructureEnd:
+            arrayIndexesTracker.handle(_it->kind());
+            ++_it;
             break;
 
         case ElemKind::ScopeBeginning:
@@ -558,6 +692,7 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
                 curScope->dt(_it->asStructureBeginningElement().type());
             }
 
+            arrayIndexesTracker.handle(ElemKind::StructureBeginning);
             ++_it;
             break;
         }
@@ -627,18 +762,20 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
     }
 }
 
-void Pkt::_cacheRegionsFromOneErAtCurIt(const Index indexInPkt)
+void Pkt::_cacheRegionsFromOneErAtCurIt(const Index indexInPkt,
+                                        _ArrayIndexesTracker& arrayIndexesTracker)
 {
-    using ElemKind = yactfr::Element::Kind;
-
     assert(_it->isEventRecordBeginningElement());
-    this->_cacheRegionsAtCurIt(ElemKind::EventRecordEnd, indexInPkt);
+    this->_cacheRegionsAtCurIt(yactfr::Element::Kind::EventRecordEnd, indexInPkt,
+                               arrayIndexesTracker);
 }
 
-void Pkt::_cacheRegionsAtCurItUntilError(const Index initErIndexInPkt)
+void Pkt::_cacheRegionsAtCurItUntilError(const Index initErIndexInPkt,
+                                         _ArrayIndexesTracker& arrayIndexesTracker)
 {
     try {
-        this->_cacheRegionsAtCurIt(yactfr::Element::Kind::PacketEnd, initErIndexInPkt);
+        this->_cacheRegionsAtCurIt(yactfr::Element::Kind::PacketEnd, initErIndexInPkt,
+                                   arrayIndexesTracker);
     } catch (const yactfr::DecodingError&) {
         Index offsetStartBits = _preambleLen.bits();
         OptBo bo;
@@ -694,13 +831,16 @@ void Pkt::_cacheRegionsFromErsAtCurIt(const Index erIndexInPkt, const Size erCou
 
     assert(erIndexInPkt <= endErIndexInPktBeforeLast);
 
+    _ArrayIndexesTracker arrayIndexesTracker;
+
     for (auto index = erIndexInPkt; index < endErIndexInPktBeforeLast; ++index) {
         while (!_it->isEventRecordBeginningElement()) {
             assert(!_it->isPacketEndElement());
             ++_it;
         }
 
-        this->_cacheRegionsFromOneErAtCurIt(index);
+        arrayIndexesTracker.reset();
+        this->_cacheRegionsFromOneErAtCurIt(index, arrayIndexesTracker);
     }
 
     if (endErIndexInPkt == _checkpoints.erCount()) {
@@ -712,7 +852,8 @@ void Pkt::_cacheRegionsFromErsAtCurIt(const Index erIndexInPkt, const Size erCou
              * then create an error packet region with the remaining
              * data.
              */
-            this->_cacheRegionsAtCurItUntilError(endErIndexInPktBeforeLast);
+            this->_cacheRegionsAtCurItUntilError(endErIndexInPktBeforeLast,
+                                                 arrayIndexesTracker);
         } else {
             // end of packet: also cache any padding before the end of packet
             while (!_it->isPacketEndElement()) {
