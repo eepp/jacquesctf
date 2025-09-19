@@ -70,44 +70,70 @@ const char *scopeStr(const yactfr::Scope scope) noexcept
 }
 
 class DtPathItemStrVisitor final :
-    public boost::static_visitor<std::string>
+    public boost::static_visitor<std::pair<std::string, std::string>>
 {
 public:
+    explicit DtPathItemStrVisitor(ContentPktRegion::ArrayIndexes::const_iterator * const arrayIndexesIt) :
+        _arrayIndexesIt {arrayIndexesIt}
+    {
+    }
+
     template <typename ItemT>
-    std::string operator()(const ItemT& item) const
+    result_type operator()(const ItemT& item) const
     {
         return this->_itemStr(item);
     }
 
 private:
-    std::string _itemStr(const DtPath::StructMemberItem& item) const
+    result_type _itemStr(const DtPath::StructMemberItem& item) const
     {
-        return utils::escapeStr(item.name);
+        return std::make_pair(std::string {"/"}, utils::escapeStr(item.name));
     }
 
-    std::string _itemStr(const DtPath::VarOptItem& item) const
+    result_type _itemStr(const DtPath::VarOptItem& item) const
     {
-        if (item.name) {
-            return std::string {'<'} + utils::escapeStr(*item.name) + '>';
-        } else {
-            return std::string {'<'} + std::to_string(item.index) + '>';
+        return std::make_pair(std::string {},
+                              utils::call([&item] {
+            if (item.name) {
+                return std::string {'<'} + utils::escapeStr(*item.name) + '>';
+            } else {
+                return std::string {'<'} + std::to_string(item.index) + '>';
+            }
+        }));
+    }
+
+    result_type _itemStr(const DtPath::CurArrayElemItem&) const
+    {
+        /*
+         * A bit of a hack here: we also use this visitor to compute the
+         * maximum possible length of a data path string, but at this
+         * point we don't know the maximum array indexes yet.
+         *
+         * Reserve five digits each as a trade-off.
+         */
+        const auto index = _arrayIndexesIt ? **_arrayIndexesIt : 99999;
+        auto str = std::string {'['} + std::to_string(index) + ']';
+
+        if (_arrayIndexesIt) {
+            ++*_arrayIndexesIt;
         }
+
+        return std::make_pair(std::string {}, str);
     }
 
-    std::string _itemStr(const DtPath::CurArrayElemItem&) const
+    result_type _itemStr(const DtPath::CurOptDataItem&) const
     {
-        return "<%>";
+        return std::make_pair(std::string {}, std::string {"<%>"});
     }
 
-    std::string _itemStr(const DtPath::CurOptDataItem&) const
-    {
-        return "<%>";
-    }
+private:
+    ContentPktRegion::ArrayIndexes::const_iterator *_arrayIndexesIt;
 };
 
-std::string dtPathItemStr(const DtPath::Item& item)
+DtPathItemStrVisitor::result_type dtPathItemStr(const DtPath::Item& item,
+                                                ContentPktRegion::ArrayIndexes::const_iterator * const arrayIndexesIt)
 {
-    return boost::apply_visitor(DtPathItemStrVisitor {}, item);
+    return boost::apply_visitor(DtPathItemStrVisitor {arrayIndexesIt}, item);
 }
 
 } // namespace
@@ -136,28 +162,32 @@ void PktRegionInfoView::_redrawContent()
 
     if ((cPktRegion = dynamic_cast<const ContentPktRegion *>(pktRegion))) {
         // path
-        const auto& path = _appState->metadata().dtPath(cPktRegion->dt());
-
-        if (path.items().empty()) {
+        if (cPktRegion->dtPath().items().empty()) {
             this->_stylist().pktRegionInfoViewStd(*this, true);
         }
 
-        this->_safePrintScope(path.scope());
+        this->_safePrintScope(cPktRegion->dtPath().scope());
 
-        if (path.items().empty()) {
+        if (cPktRegion->dtPath().items().empty()) {
             this->_stylist().pktRegionInfoViewStd(*this);
         }
 
-        for (auto it = path.items().begin(); it != path.items().end(); ++it) {
-            this->_safePrint("/");
+        auto arrayIndexesIt = cPktRegion->arrayIndexes().begin();
 
-            if (it == path.items().end() - 1) {
+        for (auto it = cPktRegion->dtPath().items().begin(); it != cPktRegion->dtPath().items().end(); ++it) {
+            const auto itemStr = dtPathItemStr(*it, &arrayIndexesIt);
+
+            if (!itemStr.first.empty()) {
+                this->_safePrint(itemStr.first.c_str());
+            }
+
+            if (it == cPktRegion->dtPath().items().end() - 1) {
                 this->_stylist().pktRegionInfoViewStd(*this, true);
             }
 
-            this->_safePrint("%s", dtPathItemStr(*it).c_str());
+            this->_safePrint("%s", itemStr.second.c_str());
         }
-    } else if (const auto sPktRegion = dynamic_cast<const PaddingPktRegion *>(pktRegion)) {
+    } else if (dynamic_cast<const PaddingPktRegion *>(pktRegion)) {
         if (pktRegion->scope()) {
             this->_stylist().pktRegionInfoViewStd(*this);
             this->_safePrintScope(pktRegion->scope()->scope());
@@ -166,7 +196,7 @@ void PktRegionInfoView::_redrawContent()
 
         this->_stylist().pktRegionInfoViewStd(*this, true);
         this->_print("PADDING");
-    } else if (const auto sPktRegion = dynamic_cast<const ErrorPktRegion *>(pktRegion)) {
+    } else if (dynamic_cast<const ErrorPktRegion *>(pktRegion)) {
         this->_stylist().pktRegionInfoViewStd(*this, true);
         this->_print("ERROR");
         isError = true;
@@ -273,7 +303,9 @@ void PktRegionInfoView::_redrawContent()
 void PktRegionInfoView::_setMaxDtPathSize(const Trace& trace)
 {
     const auto accFunc = [](const auto total, auto& item) {
-        return total + dtPathItemStr(item).size();
+        const auto itemStr = dtPathItemStr(item, nullptr);
+
+        return total + itemStr.first.size() + itemStr.second.size();
     };
 
     const auto totalDtPathItSizeFunc = [&accFunc](auto& dtDtPathPair) {
