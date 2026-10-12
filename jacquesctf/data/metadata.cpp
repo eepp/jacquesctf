@@ -36,14 +36,29 @@ void Metadata::_setIsCorrelatable()
         return;
     }
 
-    auto& firstClkTypeOrig = (*_traceType->clockTypes().begin())->origin();
+    auto& firstClkType = **_traceType->clockTypes().begin();
+    const auto onlyOneClkType = _traceType->clockTypes().size() == 1;
 
     for (auto& clkType : _traceType->clockTypes()) {
-        if (!clkType->origin()) {
+        if (firstClkType.origin() || clkType->origin()) {
+            if (!firstClkType.origin() || !clkType->origin() ||
+                    *clkType->origin() != *firstClkType.origin()) {
+                return;
+            }
+            continue;
+        }
+
+        /*
+         * Unknown origins: clock values remain comparable as long as
+         * they all come from the very same clock type.
+         */
+        if (!onlyOneClkType && !clkType->uid()) {
             return;
         }
 
-        if (*clkType->origin() != *firstClkTypeOrig) {
+        if (clkType->nameSpace() != firstClkType.nameSpace() ||
+                clkType->name() != firstClkType.name() ||
+                clkType->uid() != firstClkType.uid()) {
             return;
         }
     }

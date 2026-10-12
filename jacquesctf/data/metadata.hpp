@@ -73,7 +73,7 @@ public:
         return _streamUuid;
     }
 
-    // true if all clock types are absolute or have the same UUID
+    // true if all clock types share the same origin or the same identity
     bool isCorrelatable() const noexcept
     {
         return _isCorrelatable;
