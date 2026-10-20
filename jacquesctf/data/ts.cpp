@@ -19,9 +19,10 @@
 namespace jacques {
 
 Ts::Ts(const unsigned long long cycles, const unsigned long long freq, long long offsetSecs,
-       const unsigned long long offsetCycles) noexcept :
+       const unsigned long long offsetCycles, const bool hasUnixEpochOrigin) noexcept :
     _cycles {cycles},
-    _freq {freq}
+    _freq {freq},
+    _hasUnixEpochOrigin {hasUnixEpochOrigin}
 {
     assert(offsetCycles < freq);
 
@@ -51,9 +52,21 @@ Ts::Ts(const unsigned long long cycles, const unsigned long long freq, long long
 
     _nsFromOrigin = offsetSecs * llNsInS + static_cast<long long>(offsetNsPart);
 
+    // I'm pretty sure there's a way to do this without branching
+    if (_nsFromOrigin < 0) {
+        _ns = std::abs((std::abs(_nsFromOrigin) % llNsInS) - llNsInS);
+    } else {
+        _ns = _nsFromOrigin % llNsInS;
+    }
+
+    if (!_hasUnixEpochOrigin) {
+        // calendar properties are meaningless without a known origin
+        return;
+    }
+
     static_assert(sizeof(time_t) >= 8, "Expecting a 64-bit `time_t`.");
 
-    // I'm pretty sure there's a way to do this without branching
+    // this too...
     const auto secsFloor = static_cast<time_t>((_nsFromOrigin < 0) ?
                                                (_nsFromOrigin - llNsInS) / llNsInS :
                                                _nsFromOrigin / llNsInS);
@@ -61,14 +74,6 @@ Ts::Ts(const unsigned long long cycles, const unsigned long long freq, long long
     tm tm;
 
     localtime_r(&secsFloor, &tm);
-
-    // this too
-    if (_nsFromOrigin < 0) {
-        _ns = std::abs((std::abs(_nsFromOrigin) % llNsInS) - llNsInS);
-    } else {
-        _ns = _nsFromOrigin % llNsInS;
-    }
-
     _sec = tm.tm_sec;
     _min = tm.tm_min;
     _hour = tm.tm_hour;
@@ -83,14 +88,25 @@ Ts::Ts(const unsigned long long cycles, const yactfr::ClockType& clkType) noexce
         cycles,
         clkType.frequency(),
         clkType.offsetFromOrigin().seconds(),
-        clkType.offsetFromOrigin().cycles()
+        clkType.offsetFromOrigin().cycles(),
+        clkType.origin() && clkType.origin()->isUnixEpoch()
     }
 {
 }
 
+TsFmtMode Ts::effectiveFmtMode(const TsFmtMode fmtMode) const noexcept
+{
+    if (!_hasUnixEpochOrigin && (fmtMode == TsFmtMode::LONG || fmtMode == TsFmtMode::SHORT)) {
+        // can't format a date without a known origin!
+        return TsFmtMode::NS_FROM_ORIGIN;
+    }
+
+    return fmtMode;
+}
+
 void Ts::format(char * const buf, const Size bufSize, const TsFmtMode fmtMode) const
 {
-    switch (fmtMode) {
+    switch (this->effectiveFmtMode(fmtMode)) {
     case TsFmtMode::LONG:
         std::snprintf(buf, bufSize, "%d-%02u-%02u %02u:%02u:%02u.%09u", _year, _month, _day, _hour,
                       _min, _sec, _ns);

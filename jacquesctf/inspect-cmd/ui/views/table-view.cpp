@@ -113,15 +113,15 @@ DataLenTableViewCell::DataLenTableViewCell(const utils::LenFmtMode fmtMode) noex
 
 TsTableViewCell::TsTableViewCell(const TsFmtMode fmtMode) noexcept :
     TableViewCell {TextAlign::RIGHT},
-    _ts {0, 1'000'000'000ULL, 0, 0},
+    _ts {0, 1'000'000'000ULL, 0, 0, true},
     _fmtMode {fmtMode}
 {
 }
 
 DurationTableViewCell::DurationTableViewCell(const TsFmtMode fmtMode) noexcept :
     TableViewCell {TextAlign::RIGHT},
-    _beginTs {0, 1'000'000'000ULL, 0, 0},
-    _endTs {0, 1'000'000'000ULL, 0, 0},
+    _beginTs {0, 1'000'000'000ULL, 0, 0, true},
+    _endTs {0, 1'000'000'000ULL, 0, 0, true},
     _fmtMode {fmtMode}
 {
 }
@@ -279,7 +279,7 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
     } else if (const auto rCell = dynamic_cast<const TsTableViewCell *>(&cell)) {
         std::array<char, 32> buf;
 
-        switch (rCell->fmtMode()) {
+        switch (rCell->ts().effectiveFmtMode(rCell->fmtMode())) {
         case TsFmtMode::LONG:
         case TsFmtMode::SHORT:
             rCell->ts().format(buf.data(), buf.size(), rCell->fmtMode());

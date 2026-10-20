@@ -46,7 +46,7 @@ public:
     explicit Ts(unsigned long long cycles, const yactfr::ClockType& clkType) noexcept;
 
     explicit Ts(unsigned long long cycles, unsigned long long freq, long long offsetSecs,
-                unsigned long long offsetCycles) noexcept;
+                unsigned long long offsetCycles, bool hasUnixEpochOrigin) noexcept;
 
     Ts(const Ts&) noexcept = default;
     Ts& operator=(const Ts&) noexcept = default;
@@ -70,6 +70,17 @@ public:
     {
         return _ns;
     }
+
+    // true if the origin of the clock is the Unix epoch
+    bool hasUnixEpochOrigin() const noexcept
+    {
+        return _hasUnixEpochOrigin;
+    }
+
+    /*
+     * The following calendar properties are only meaningful when
+     * hasUnixEpochOrigin() returns true: they're all zero otherwise.
+     */
 
     unsigned int sec() const noexcept
     {
@@ -106,6 +117,14 @@ public:
         return _weekday;
     }
 
+    /*
+     * Format mode which format() actually uses for `fmtMode`.
+     *
+     * This is `TsFmtMode::NS_FROM_ORIGIN` instead of a date format mode
+     * when the origin of the clock isn't the Unix epoch.
+     */
+    TsFmtMode effectiveFmtMode(TsFmtMode fmtMode) const noexcept;
+
     void format(char *buf, Size bufSize, TsFmtMode fmtMode = TsFmtMode::LONG) const;
     std::string format(TsFmtMode fmtMode = TsFmtMode::LONG) const;
 
@@ -123,14 +142,15 @@ private:
     unsigned long long _cycles;
     unsigned long long _freq;
     long long _nsFromOrigin;
+    bool _hasUnixEpochOrigin;
     unsigned int _ns,
-                 _sec,
-                 _min,
-                 _hour,
-                 _day,
-                 _month;
-    int _year;
-    Weekday _weekday;
+                 _sec = 0,
+                 _min = 0,
+                 _hour = 0,
+                 _day = 0,
+                 _month = 0;
+    int _year = 0;
+    Weekday _weekday = Weekday::SUNDAY;
 };
 
 static inline std::ostream& operator<<(std::ostream& stream, const Ts& ts)
