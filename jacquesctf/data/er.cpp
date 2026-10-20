@@ -25,7 +25,7 @@ Er::Er(Index indexInPkt) noexcept :
 {
 }
 
-Er::SP Er::createFromElemSeqIt(yactfr::ElementSequenceIterator& it, const Metadata& metadata,
+Er::SP Er::createFromElemSeqIt(yactfr::ElementSequenceIterator& it,
                                const PktIndexEntry& pktIndexEntry, const Index indexInPkt)
 {
     const auto pktOffsetInDsFileBits = pktIndexEntry.offsetInDsFileBytes() * 8;
@@ -49,7 +49,7 @@ Er::SP Er::createFromElemSeqIt(yactfr::ElementSequenceIterator& it, const Metada
                     er->type(*elem.type());
                 }
 
-                if (curTs && metadata.isCorrelatable()) {
+                if (curTs) {
                     er->ts(*curTs);
                 }
 
@@ -58,14 +58,11 @@ Er::SP Er::createFromElemSeqIt(yactfr::ElementSequenceIterator& it, const Metada
 
             case yactfr::Element::Kind::DefaultClockValue:
             {
-                if (metadata.isCorrelatable()) {
-                    auto& elem = it->asDefaultClockValueElement();
+                auto& elem = it->asDefaultClockValueElement();
 
-                    assert(pktIndexEntry.dst());
-                    assert(pktIndexEntry.dst()->defaultClockType());
-                    curTs = Ts {elem.cycles(), *pktIndexEntry.dst()->defaultClockType()};
-                }
-
+                assert(pktIndexEntry.dst());
+                assert(pktIndexEntry.dst()->defaultClockType());
+                curTs = Ts {elem.cycles(), *pktIndexEntry.dst()->defaultClockType()};
                 break;
             }
 

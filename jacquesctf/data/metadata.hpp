@@ -73,15 +73,8 @@ public:
         return _streamUuid;
     }
 
-    // true if all clock types are absolute or have the same UUID
-    bool isCorrelatable() const noexcept
-    {
-        return _isCorrelatable;
-    }
-
 private:
     void _setDtParents();
-    void _setIsCorrelatable();
 
 private:
     const boost::filesystem::path _path;
@@ -91,7 +84,6 @@ private:
     DtParentMap _dtParents;
     DtScopeMap _dtScopes;
     DtPathMap _dtPaths;
-    bool _isCorrelatable = false;
 };
 
 const yactfr::DataLocation *dtDataLoc(const yactfr::DataType& dt) noexcept;

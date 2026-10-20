@@ -586,7 +586,8 @@ private:
     const Er *_erBeforeOrAtTs(CpNearestFuncT&& cpNearestFunc, GetProcFuncT&& getProcFuncT,
                               const PropT prop)
     {
-        if (!_metadata->isCorrelatable()) {
+        if (!_indexEntry->dst() || !_indexEntry->dst()->defaultClockType()) {
+            // no default clock type: no timestamps
             return nullptr;
         }
 

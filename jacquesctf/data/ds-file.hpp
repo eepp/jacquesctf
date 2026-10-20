@@ -140,10 +140,6 @@ private:
                                                      ValInTsFuncT&& valInTsFunc,
                                                      const ValT val) const noexcept
     {
-        if (!_trace->metadata().isCorrelatable()) {
-            return nullptr;
-        }
-
         if (_index.empty()) {
             return nullptr;
         }

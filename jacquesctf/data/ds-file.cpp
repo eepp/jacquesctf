@@ -215,18 +215,14 @@ void DsFile::_buildIndex(const BuildIndexProgressFunc& progressFunc, const Size 
                     state.expectedContentLen = *elem.expectedContentLength();
                 }
 
-                if (_trace->metadata().isCorrelatable()) {
-                    assert(!state.beginTs);
-                    state.beginTs = curBeginTs;
-                }
+                assert(!state.beginTs);
+                state.beginTs = curBeginTs;
 
                 if (elem.endDefaultClockValue()) {
-                    if (_trace->metadata().isCorrelatable()) {
-                        assert(!state.endTs);
-                        assert(state.dst);
-                        assert(state.dst->defaultClockType());
-                        state.endTs = Ts {*elem.endDefaultClockValue(), *state.dst->defaultClockType()};
-                    }
+                    assert(!state.endTs);
+                    assert(state.dst);
+                    assert(state.dst->defaultClockType());
+                    state.endTs = Ts {*elem.endDefaultClockValue(), *state.dst->defaultClockType()};
                 }
 
                 if (elem.sequenceNumber()) {
@@ -257,7 +253,7 @@ void DsFile::_buildIndex(const BuildIndexProgressFunc& progressFunc, const Size 
 
             case yactfr::Element::Kind::DefaultClockValue:
             {
-                if (state.inPktCtxScope && _trace->metadata().isCorrelatable()) {
+                if (state.inPktCtxScope) {
                     auto& elem = it->asDefaultClockValueElement();
 
                     assert(state.dst);

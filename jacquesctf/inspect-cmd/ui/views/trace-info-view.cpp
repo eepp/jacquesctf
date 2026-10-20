@@ -250,9 +250,6 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
         rows.push_back(std::make_unique<_NonePropRow>(traceUuidStr));
     }
 
-    rows.push_back(std::make_unique<_StrPropRow>("Is correlatable",
-                                                 metadata.isCorrelatable() ? "Yes" : "No"));
-
     rows.push_back(std::make_unique<_SIntPropRow>("Data stream types",
                                                   static_cast<long long>(traceType.dataStreamTypes().size())));
 

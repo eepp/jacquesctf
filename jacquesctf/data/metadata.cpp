@@ -27,28 +27,6 @@ Metadata::Metadata(boost::filesystem::path path, yactfr::TraceType::Up traceType
     _streamUuid {std::move(streamUuid)}
 {
     this->_setDtParents();
-    this->_setIsCorrelatable();
-}
-
-void Metadata::_setIsCorrelatable()
-{
-    if (_traceType->clockTypes().empty()) {
-        return;
-    }
-
-    auto& firstClkTypeOrig = (*_traceType->clockTypes().begin())->origin();
-
-    for (auto& clkType : _traceType->clockTypes()) {
-        if (!clkType->origin()) {
-            return;
-        }
-
-        if (*clkType->origin() != *firstClkTypeOrig) {
-            return;
-        }
-    }
-
-    _isCorrelatable = true;
 }
 
 class SetDtParentsPathsVisitor final :

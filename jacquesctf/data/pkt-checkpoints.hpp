@@ -21,7 +21,6 @@
 #include "er.hpp"
 #include "ts.hpp"
 #include "pkt-checkpoints-build-listener.hpp"
-#include "metadata.hpp"
 
 namespace jacques {
 
@@ -53,9 +52,8 @@ public:
     using Checkpoints = std::vector<Checkpoint>;
 
 public:
-    explicit PktCheckpoints(yactfr::ElementSequence& seq, const Metadata& metadata,
-                            const PktIndexEntry& pktIndexEntry, Size step,
-                            PktCheckpointsBuildListener& pktCheckpointsBuildListener);
+    explicit PktCheckpoints(yactfr::ElementSequence& seq, const PktIndexEntry& pktIndexEntry,
+                            Size step, PktCheckpointsBuildListener& pktCheckpointsBuildListener);
 
     const Checkpoint *nearestCheckpointBeforeOrAtIndex(Index indexInPkt) const noexcept;
     const Checkpoint *nearestCheckpointBeforeIndex(Index indexInPkt) const noexcept;
@@ -261,17 +259,15 @@ public:
     }
 
 private:
-    void _createCheckpoint(yactfr::ElementSequenceIterator& it, const Metadata& metadata,
-                           const PktIndexEntry& pktIndexEntry, Index indexInPkt,
+    void _createCheckpoint(yactfr::ElementSequenceIterator& it, const PktIndexEntry& pktIndexEntry,
+                           Index indexInPkt,
                            PktCheckpointsBuildListener& pktCheckpointsBuildListener);
 
-    void _createCheckpoints(yactfr::ElementSequenceIterator& it, const Metadata& metadata,
-                            const PktIndexEntry& pktIndexEntry, Size step,
-                            PktCheckpointsBuildListener& pktCheckpointsBuildListener);
+    void _createCheckpoints(yactfr::ElementSequenceIterator& it, const PktIndexEntry& pktIndexEntry,
+                            Size step, PktCheckpointsBuildListener& pktCheckpointsBuildListener);
 
-    void _tryCreateCheckpoints(yactfr::ElementSequence& seq, const Metadata& metadata,
-                               const PktIndexEntry& pktIndexEntry, Size step,
-                               PktCheckpointsBuildListener& pktCheckpointsBuildListener);
+    void _tryCreateCheckpoints(yactfr::ElementSequence& seq, const PktIndexEntry& pktIndexEntry,
+                               Size step, PktCheckpointsBuildListener& pktCheckpointsBuildListener);
 
     void _lastErPositions(yactfr::ElementSequenceIteratorPosition& lastPos,
                           yactfr::ElementSequenceIteratorPosition& penultimatePos,

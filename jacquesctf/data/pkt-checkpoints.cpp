@@ -19,14 +19,14 @@ PktDecodingError::PktDecodingError(const yactfr::DecodingError& decodingError,
 {
 }
 
-PktCheckpoints::PktCheckpoints(yactfr::ElementSequence& seq, const Metadata& metadata,
-                               const PktIndexEntry& pktIndexEntry, const Size step,
+PktCheckpoints::PktCheckpoints(yactfr::ElementSequence& seq, const PktIndexEntry& pktIndexEntry,
+                               const Size step,
                                PktCheckpointsBuildListener& pktCheckpointsBuildListener)
 {
-    this->_tryCreateCheckpoints(seq, metadata, pktIndexEntry, step, pktCheckpointsBuildListener);
+    this->_tryCreateCheckpoints(seq, pktIndexEntry, step, pktCheckpointsBuildListener);
 }
 
-void PktCheckpoints::_tryCreateCheckpoints(yactfr::ElementSequence& seq, const Metadata& metadata,
+void PktCheckpoints::_tryCreateCheckpoints(yactfr::ElementSequence& seq,
                                            const PktIndexEntry& pktIndexEntry, const Size step,
                                            PktCheckpointsBuildListener& pktCheckpointsBuildListener)
 {
@@ -34,7 +34,7 @@ void PktCheckpoints::_tryCreateCheckpoints(yactfr::ElementSequence& seq, const M
 
     // we consider other errors (e.g., I/O) unrecoverable: do not catch them
     try {
-        this->_createCheckpoints(it, metadata, pktIndexEntry, step, pktCheckpointsBuildListener);
+        this->_createCheckpoints(it, pktIndexEntry, step, pktCheckpointsBuildListener);
     } catch (const yactfr::DecodingError& exc) {
         _error = PktDecodingError {exc, pktIndexEntry};
     }
@@ -73,7 +73,7 @@ void PktCheckpoints::_tryCreateCheckpoints(yactfr::ElementSequence& seq, const M
     it.restorePosition(lastPos);
 
     try {
-        this->_createCheckpoint(it, metadata, pktIndexEntry, lastIndex,
+        this->_createCheckpoint(it, pktIndexEntry, lastIndex,
                                 pktCheckpointsBuildListener);
     } catch (const yactfr::DecodingError& exc) {
         assert(_error);
@@ -85,13 +85,12 @@ void PktCheckpoints::_tryCreateCheckpoints(yactfr::ElementSequence& seq, const M
 
         // this won't fail
         it.restorePosition(penultimatePos);
-        this->_createCheckpoint(it, metadata, pktIndexEntry, penultimateIndex,
+        this->_createCheckpoint(it, pktIndexEntry, penultimateIndex,
                                 pktCheckpointsBuildListener);
     }
 }
 
 void PktCheckpoints::_createCheckpoints(yactfr::ElementSequenceIterator& it,
-                                        const Metadata& metadata,
                                         const PktIndexEntry& pktIndexEntry, const Size step,
                                         PktCheckpointsBuildListener& pktCheckpointsBuildListener)
 {
@@ -105,7 +104,7 @@ void PktCheckpoints::_createCheckpoints(yactfr::ElementSequenceIterator& it,
             ++indexInPkt;
 
             if (curIndexInPkt % step == 0) {
-                this->_createCheckpoint(it, metadata, pktIndexEntry, curIndexInPkt,
+                this->_createCheckpoint(it, pktIndexEntry, curIndexInPkt,
                                         pktCheckpointsBuildListener);
                 continue;
             }
@@ -144,7 +143,6 @@ void PktCheckpoints::_lastErPositions(yactfr::ElementSequenceIteratorPosition& l
 }
 
 void PktCheckpoints::_createCheckpoint(yactfr::ElementSequenceIterator& it,
-                                       const Metadata& metadata,
                                        const PktIndexEntry& pktIndexEntry, const Index indexInPkt,
                                        PktCheckpointsBuildListener& pktCheckpointsBuildListener)
 {
@@ -153,7 +151,7 @@ void PktCheckpoints::_createCheckpoint(yactfr::ElementSequenceIterator& it,
     assert(it->kind() == yactfr::Element::Kind::EventRecordBeginning);
     it.savePosition(pos);
 
-    const auto er = Er::createFromElemSeqIt(it, metadata, pktIndexEntry, indexInPkt);
+    const auto er = Er::createFromElemSeqIt(it, pktIndexEntry, indexInPkt);
     _checkpoints.push_back({er, std::move(pos)});
     pktCheckpointsBuildListener.update(*er);
 }

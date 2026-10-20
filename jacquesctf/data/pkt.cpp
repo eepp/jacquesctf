@@ -26,7 +26,7 @@ Pkt::Pkt(const PktIndexEntry& indexEntry, yactfr::ElementSequence& seq, const Me
     _it {seq.begin()},
     _endIt {seq.end()},
     _checkpoints {
-        seq, metadata, *_indexEntry, 3779, pktCheckpointsBuildListener,
+        seq, *_indexEntry, 3779, pktCheckpointsBuildListener,
     },
     _lruRegionCache {2000},
     _preambleLen {
@@ -743,7 +743,7 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
         }
 
         case ElemKind::DefaultClockValue:
-            if (curEr && _metadata->isCorrelatable()) {
+            if (curEr) {
                 assert(_indexEntry->dst());
                 assert(_indexEntry->dst()->defaultClockType());
                 curEr->ts(Ts {

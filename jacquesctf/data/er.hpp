@@ -17,7 +17,6 @@
 #include "aliases.hpp"
 #include "pkt-segment.hpp"
 #include "ts.hpp"
-#include "metadata.hpp"
 #include "pkt-index-entry.hpp"
 
 namespace jacques {
@@ -31,7 +30,7 @@ public:
     using SPC = std::shared_ptr<const Er>;
 
 public:
-    static SP createFromElemSeqIt(yactfr::ElementSequenceIterator& it, const Metadata& metadata,
+    static SP createFromElemSeqIt(yactfr::ElementSequenceIterator& it,
                                   const PktIndexEntry& pktIndexEntry, Index indexInPkt);
 
 public:
