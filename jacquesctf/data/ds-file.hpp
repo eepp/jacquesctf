@@ -44,6 +44,7 @@ public:
     void buildIndex(const BuildIndexProgressFunc& progressFunc, Size step = 1);
     bool hasOffsetBits(Index offsetBits) const noexcept;
     Pkt& pktAtIndex(Index index, PktCheckpointsBuildListener& buildListener);
+    void countPktErs(Index index);
     const PktIndexEntry& pktIndexEntryContainingOffsetBits(Index offsetBits) const noexcept;
     const PktIndexEntry *pktIndexEntryWithSeqNum(Index seqNum) const noexcept;
     const PktIndexEntry *pktIndexEntryContainingNsFromOrigin(long long nsFromOrigin) const noexcept;

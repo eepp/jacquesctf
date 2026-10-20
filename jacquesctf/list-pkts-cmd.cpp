@@ -17,7 +17,7 @@
 namespace jacques {
 namespace {
 
-void printHeader(const ListPktsCfg::Fmt fmt __attribute__((unused)))
+void printHeader(const ListPktsCfg::Fmt fmt __attribute__((unused)), const bool withErCount)
 {
     assert(fmt == ListPktsCfg::Fmt::MACHINE);
 
@@ -26,10 +26,17 @@ void printHeader(const ListPktsCfg::Fmt fmt __attribute__((unused)))
                  "Beginning timestamp (ns),End timestamp (cycles),End timestamp (ns)," <<
                  "Duration (cycles),Duration (ns),Data stream type ID," <<
                  "Data stream ID,Sequence number," <<
-                 "Discarded event record counter snapshot,Is valid?" << std::endl;
+                 "Discarded event record counter snapshot,";
+
+    if (withErCount) {
+        std::cout << "Event record count,";
+    }
+
+    std::cout << "Is valid?" << std::endl;
 }
 
-void printRow(const PktIndexEntry& indexEntry, const ListPktsCfg::Fmt fmt __attribute__((unused)))
+void printRow(const PktIndexEntry& indexEntry, const ListPktsCfg::Fmt fmt __attribute__((unused)),
+              const bool withErCount)
 {
     assert(fmt == ListPktsCfg::Fmt::MACHINE);
 
@@ -88,6 +95,15 @@ void printRow(const PktIndexEntry& indexEntry, const ListPktsCfg::Fmt fmt __attr
         std::cout << ",";
     }
 
+    if (withErCount) {
+        // no event record count for an invalid packet
+        if (!indexEntry.isInvalid() && indexEntry.erCount()) {
+            std::cout << *indexEntry.erCount();
+        }
+
+        std::cout << ",";
+    }
+
     std::cout << (indexEntry.isInvalid() ? "no" : "yes") << std::endl;
 }
 
@@ -106,11 +122,24 @@ void listPktsCmd(const ListPktsCfg& cfg)
     }
 
     if (cfg.withHeader()) {
-        printHeader(cfg.format());
+        printHeader(cfg.format(), cfg.withErCount());
     }
 
     for (const auto& indexEntry : dsf.pktIndexEntries()) {
-        printRow(indexEntry, cfg.format());
+        /*
+         * Counting the event records of a packet means decoding it
+         * completely, which is slow: only do it on demand.
+         *
+         * Don't bother with a packet which is already invalid.
+         *
+         * dsf.countPktErs() marks the packet as invalid on
+         * decoding error.
+         */
+        if (cfg.withErCount() && !indexEntry.isInvalid()) {
+            dsf.countPktErs(indexEntry.indexInDsFile());
+        }
+
+        printRow(indexEntry, cfg.format(), cfg.withErCount());
     }
 }
 

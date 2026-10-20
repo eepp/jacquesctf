@@ -398,4 +398,31 @@ Pkt& DsFile::pktAtIndex(const Index index, PktCheckpointsBuildListener& buildLis
     return *_pkts[index];
 }
 
+void DsFile::countPktErs(const Index index)
+{
+    assert(_isIndexBuilt);
+    assert(index < _index.size());
+
+    auto& pktIndexEntry = _index[index];
+    Size erCount = 0;
+
+    /*
+     * We consider other errors (like I/O) unrecoverable: do not
+     * catch them.
+     */
+    try {
+        for (auto it = _seq.at(pktIndexEntry.offsetInDsFileBytes());
+                it->kind() != yactfr::Element::Kind::PacketEnd; ++it) {
+            if (it->kind() == yactfr::Element::Kind::EventRecordBeginning) {
+                ++erCount;
+            }
+        }
+    } catch (const yactfr::DecodingError&) {
+        pktIndexEntry.isInvalid(true);
+        return;
+    }
+
+    pktIndexEntry.erCount(erCount);
+}
+
 } // namespace jacques

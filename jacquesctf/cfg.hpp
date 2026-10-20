@@ -86,7 +86,8 @@ public:
     };
 
 public:
-    explicit ListPktsCfg(boost::filesystem::path path, Fmt format, bool withHeader);
+    explicit ListPktsCfg(boost::filesystem::path path, Fmt format, bool withHeader,
+                         bool withErCount);
 
     Fmt format() const noexcept
     {
@@ -98,9 +99,15 @@ public:
         return _withHeader;
     }
 
+    bool withErCount() const noexcept
+    {
+        return _withErCount;
+    }
+
 private:
     Fmt _fmt;
     bool _withHeader;
+    bool _withErCount;
 };
 
 class CopyPktsCfg final :

@@ -44,10 +44,11 @@ PrintMetadataTextCfg::PrintMetadataTextCfg(bfs::path path) :
 {
 }
 
-ListPktsCfg::ListPktsCfg(bfs::path path, Fmt fmt, bool withHeader) :
+ListPktsCfg::ListPktsCfg(bfs::path path, Fmt fmt, bool withHeader, bool withErCount) :
     SinglePathCfg {std::move(path)},
     _fmt {fmt},
-    _withHeader {withHeader}
+    _withHeader {withHeader},
+    _withErCount {withErCount}
 {
 }
 
@@ -252,6 +253,7 @@ std::unique_ptr<const Cfg> listPktsCfgFromArgs(const std::vector<std::string>& a
     optDescr.add_options()
         ("machine,m", "")
         ("header", "")
+        ("with-er-count", "")
         ("path", bpo::value<std::string>(), "");
 
     bpo::positional_options_description posDesc;
@@ -282,7 +284,8 @@ std::unique_ptr<const Cfg> listPktsCfgFromArgs(const std::vector<std::string>& a
 
     checkLooksLikeDsFile(path);
     return std::make_unique<ListPktsCfg>(std::move(path), ListPktsCfg::Fmt::MACHINE,
-                                         vm.count("header") == 1);
+                                         vm.count("header") == 1,
+                                         vm.count("with-er-count") == 1);
 }
 
 std::unique_ptr<const Cfg> copyPktsCfgFromArgs(const std::vector<std::string>& args)
