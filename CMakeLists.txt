@@ -15,9 +15,9 @@ set (CPACK_SOURCE_IGNORE_FILES "/build/;/.git/;.gitignore;~$;${CPACK_SOURCE_IGNO
 include (CPack)
 add_custom_target (dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
 
-# configure compiler globally for C++14
+# configure compiler globally for C++17
 set (CMAKE_CXX_EXTENSIONS OFF)
-set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Jacques CTF

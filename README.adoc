@@ -87,8 +87,8 @@ packets.
 Make sure you have the build time requirements:
 
 * Linux/Unix platform
-* https://cmake.org/[CMake] ≥ 3.1.0
-* pass:[C++14] compiler
+* https://cmake.org/[CMake] ≥ 3.12.0
+* pass:[C++17] compiler
 * http://www.boost.org/[Boost] ≥ 1.58
 * https://www.gnu.org/software/ncurses/[ncurses]
 * Latest version of https://github.com/eepp/yactfr[yactfr]
