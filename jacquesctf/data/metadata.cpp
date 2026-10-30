@@ -8,9 +8,9 @@
 #include <memory>
 #include <fstream>
 #include <numeric>
+#include <optional>
 #include <yactfr/yactfr.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/optional.hpp>
 
 #include "metadata.hpp"
 
@@ -20,7 +20,7 @@ namespace bfs = boost::filesystem;
 
 Metadata::Metadata(boost::filesystem::path path, yactfr::TraceType::Up traceType,
                    std::unique_ptr<const yactfr::MetadataStream> stream,
-                   boost::optional<boost::uuids::uuid> streamUuid) :
+                   std::optional<boost::uuids::uuid> streamUuid) :
     _path {std::move(path)},
     _traceType {std::move(traceType)},
     _stream {std::move(stream)},

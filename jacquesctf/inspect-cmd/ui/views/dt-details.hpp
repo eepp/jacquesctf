@@ -10,8 +10,8 @@
 
 #include <string>
 #include <sstream>
+#include <optional>
 #include <yactfr/yactfr.hpp>
-#include <boost/optional.hpp>
 
 #include "abstract-dt-details.hpp"
 #include "utils.hpp"
@@ -22,11 +22,11 @@ class DtDetails :
     public AbstractDtDetails
 {
 public:
-    explicit DtDetails(const yactfr::DataType& dt, boost::optional<std::string> name,
-                       Size nameWidth, boost::optional<std::string> extra, Size extraWidth,
+    explicit DtDetails(const yactfr::DataType& dt, std::optional<std::string> name,
+                       Size nameWidth, std::optional<std::string> extra, Size extraWidth,
                        Size indent, const Stylist& stylist) noexcept;
 
-    explicit DtDetails(const yactfr::DataType& dt, boost::optional<std::string> name,
+    explicit DtDetails(const yactfr::DataType& dt, std::optional<std::string> name,
                        Size nameWidth, Size indent, const Stylist& stylist) noexcept;
 
     const yactfr::DataType& dt() const noexcept
@@ -34,12 +34,12 @@ public:
         return *_dt;
     }
 
-    const boost::optional<std::string>& name() const noexcept
+    const std::optional<std::string>& name() const noexcept
     {
         return _name;
     }
 
-    const boost::optional<std::string>& extra() const noexcept
+    const std::optional<std::string>& extra() const noexcept
     {
         return _extra;
     }
@@ -265,7 +265,7 @@ private:
 
     template <typename StyliseFuncT, typename UnstyliseFuncT>
     void _renderAligned(WINDOW * const window, Size& remWidth, StyliseFuncT&& styliseFunc,
-                        UnstyliseFuncT&& unstyliseFunc, const boost::optional<std::string>& str,
+                        UnstyliseFuncT&& unstyliseFunc, const std::optional<std::string>& str,
                         const Size strWidth) const
     {
         if (!str) {
@@ -297,9 +297,9 @@ private:
 
 private:
     const yactfr::DataType *_dt;
-    const boost::optional<std::string> _name;
+    const std::optional<std::string> _name;
     const Size _nameWidth;
-    const boost::optional<std::string> _extra;
+    const std::optional<std::string> _extra;
     const Size _extraWidth;
 };
 

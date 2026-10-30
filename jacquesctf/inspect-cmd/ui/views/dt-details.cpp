@@ -16,8 +16,8 @@
 
 namespace jacques {
 
-DtDetails::DtDetails(const yactfr::DataType& dt, boost::optional<std::string> name,
-                     const Size nameWidth, boost::optional<std::string> extra,
+DtDetails::DtDetails(const yactfr::DataType& dt, std::optional<std::string> name,
+                     const Size nameWidth, std::optional<std::string> extra,
                      const Size extraWidth, const Size indent, const Stylist& stylist) noexcept :
     AbstractDtDetails {indent, stylist},
     _dt {&dt},
@@ -28,9 +28,9 @@ DtDetails::DtDetails(const yactfr::DataType& dt, boost::optional<std::string> na
 {
 }
 
-DtDetails::DtDetails(const yactfr::DataType& dt, boost::optional<std::string> name,
+DtDetails::DtDetails(const yactfr::DataType& dt, std::optional<std::string> name,
                      const Size nameWidth, const Size indent, const Stylist& stylist) noexcept :
-    DtDetails {dt, std::move(name), nameWidth, boost::none, 0, indent, stylist}
+    DtDetails {dt, std::move(name), nameWidth, std::nullopt, 0, indent, stylist}
 {
 }
 

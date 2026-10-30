@@ -245,7 +245,7 @@ void DsFile::_buildIndex(const BuildIndexProgressFunc& progressFunc, const Size 
                 }
 
                 if (elem.id()) {
-                    state.dsId = elem.id();
+                    state.dsId = *elem.id();
                 }
 
                 break;

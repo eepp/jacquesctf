@@ -10,9 +10,9 @@
 
 #include <memory>
 #include <unordered_map>
+#include <optional>
 #include <yactfr/yactfr.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/optional.hpp>
 #include <boost/core/noncopyable.hpp>
 #include <boost/uuid/uuid.hpp>
 
@@ -35,7 +35,7 @@ public:
 public:
     explicit Metadata(boost::filesystem::path path, yactfr::TraceType::Up traceType,
                       std::unique_ptr<const yactfr::MetadataStream> stream,
-                      boost::optional<boost::uuids::uuid> streamUuid);
+                      std::optional<boost::uuids::uuid> streamUuid);
     const yactfr::DataType *dtParent(const yactfr::DataType& dt) const noexcept;
     yactfr::Scope dtScope(const yactfr::DataType& dt) const noexcept;
     const DtPath& dtPath(const yactfr::DataType& dt) const noexcept;
@@ -68,7 +68,7 @@ public:
         return *_stream;
     }
 
-    const boost::optional<boost::uuids::uuid>& streamUuid() const noexcept
+    const std::optional<boost::uuids::uuid>& streamUuid() const noexcept
     {
         return _streamUuid;
     }
@@ -80,7 +80,7 @@ private:
     const boost::filesystem::path _path;
     yactfr::TraceType::Up _traceType;
     std::unique_ptr<const yactfr::MetadataStream> _stream;
-    boost::optional<boost::uuids::uuid> _streamUuid;
+    std::optional<boost::uuids::uuid> _streamUuid;
     DtParentMap _dtParents;
     DtScopeMap _dtScopes;
     DtPathMap _dtPaths;

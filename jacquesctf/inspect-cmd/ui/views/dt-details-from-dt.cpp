@@ -19,8 +19,8 @@ namespace jacques {
 namespace {
 
 void _dtDetailsFromDt(const yactfr::DataType& dt, Size indent, const Stylist& stylist,
-                      const boost::optional<std::string>& name, Size nameWidth,
-                      boost::optional<std::string> extra, Size extraWidth,
+                      const std::optional<std::string>& name, Size nameWidth,
+                      std::optional<std::string> extra, Size extraWidth,
                       std::vector<std::unique_ptr<const AbstractDtDetails>>& vec);
 
 template <typename DtT>
@@ -79,11 +79,11 @@ void _dtDetailsFromVarType(const VarTypeT& varType, const Size indent, const Sty
 }
 
 void _dtDetailsFromOptType(const yactfr::OptionalType& optType, const Size indent,
-                           const Stylist& stylist, boost::optional<std::string> extra,
+                           const Stylist& stylist, std::optional<std::string> extra,
                            const Size extraWidth,
                            std::vector<std::unique_ptr<const AbstractDtDetails>>& vec)
 {
-    _dtDetailsFromDt(optType.dataType(), indent + 2, stylist, boost::none, 0, std::move(extra),
+    _dtDetailsFromDt(optType.dataType(), indent + 2, stylist, std::nullopt, 0, std::move(extra),
                      extraWidth, vec);
 }
 
@@ -99,15 +99,15 @@ void _dtDetailsFromOptWithIntSelType(const OptTypeT& optType, const Size indent,
 }
 
 void _dtDetailsFromDt(const yactfr::DataType& dt, const Size indent, const Stylist& stylist,
-                      const boost::optional<std::string>& name, const Size nameWidth,
+                      const std::optional<std::string>& name, const Size nameWidth,
                       std::vector<std::unique_ptr<const AbstractDtDetails>>& vec)
 {
-    _dtDetailsFromDt(dt, indent, stylist, name, nameWidth, boost::none, 0, vec);
+    _dtDetailsFromDt(dt, indent, stylist, name, nameWidth, std::nullopt, 0, vec);
 }
 
 void _dtDetailsFromDt(const yactfr::DataType& dt, const Size indent, const Stylist& stylist,
-                      const boost::optional<std::string>& name, const Size nameWidth,
-                      boost::optional<std::string> extra, const Size extraWidth,
+                      const std::optional<std::string>& name, const Size nameWidth,
+                      std::optional<std::string> extra, const Size extraWidth,
                       std::vector<std::unique_ptr<const AbstractDtDetails>>& vec)
 {
     vec.push_back(std::make_unique<const DtDetails>(dt, name, nameWidth, std::move(extra),
@@ -135,7 +135,7 @@ void _dtDetailsFromDt(const yactfr::DataType& dt, const Size indent, const Styli
     } else if (dt.isVariantWithUnsignedIntegerSelectorType()) {
         _dtDetailsFromVarType(dt.asVariantWithSignedIntegerSelectorType(), indent, stylist, vec);
     } else if (dt.isOptionalWithBooleanSelectorType()) {
-        _dtDetailsFromOptType(dt.asOptionalWithBooleanSelectorType(), indent, stylist, boost::none,
+        _dtDetailsFromOptType(dt.asOptionalWithBooleanSelectorType(), indent, stylist, std::nullopt,
                               0, vec);
     } else if (dt.isOptionalWithUnsignedIntegerSelectorType()) {
         _dtDetailsFromOptWithIntSelType(dt.asOptionalWithUnsignedIntegerSelectorType(), indent,
@@ -144,7 +144,7 @@ void _dtDetailsFromDt(const yactfr::DataType& dt, const Size indent, const Styli
         _dtDetailsFromOptWithIntSelType(dt.asOptionalWithSignedIntegerSelectorType(), indent,
                                         stylist, vec);
     } else if (dt.isArrayType()) {
-        _dtDetailsFromDt(dt.asArrayType().elementType(), indent + 2, stylist, boost::none, 0, vec);
+        _dtDetailsFromDt(dt.asArrayType().elementType(), indent + 2, stylist, std::nullopt, 0, vec);
     } else if (dt.isFixedLengthSignedIntegerType()) {
         _mappingOrFlagDetailsFromDt(dt.asFixedLengthSignedIntegerType(), indent + 2, stylist, vec);
     } else if (dt.isFixedLengthUnsignedIntegerType()) {
@@ -166,7 +166,7 @@ void _dtDetailsFromDt(const yactfr::DataType& dt, const Size indent, const Styli
 void dtDetailsFromDt(const yactfr::DataType& dt, const Stylist& stylist,
                      std::vector<std::unique_ptr<const AbstractDtDetails>>& vec)
 {
-    _dtDetailsFromDt(dt, 0, stylist, boost::none, 0, vec);
+    _dtDetailsFromDt(dt, 0, stylist, std::nullopt, 0, vec);
 }
 
 } // namespace jacques

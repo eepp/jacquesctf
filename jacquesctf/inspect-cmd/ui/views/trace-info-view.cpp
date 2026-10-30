@@ -9,8 +9,8 @@
 #include <algorithm>
 #include <numeric>
 #include <unordered_set>
+#include <variant>
 #include <boost/type_traits/remove_cv.hpp>
-#include <boost/variant/get.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <yactfr/yactfr.hpp>
 
@@ -216,10 +216,6 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
     rows.push_back(std::make_unique<_DataLenPropRow>("Size", metadata.fileLen()));
 
     if (pMetadataStream) {
-        const auto version = std::to_string(pMetadataStream->majorVersion()) + "." +
-                             std::to_string(pMetadataStream->minorVersion());
-
-        rows.push_back(std::make_unique<_StrPropRow>("Version", version));
         rows.push_back(std::make_unique<_SIntPropRow>("Packets",
                                                       static_cast<long long>(pMetadataStream->packetCount())));
 
@@ -269,9 +265,9 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
         rows.push_back(std::make_unique<_SectionRow>("Trace environment"));
 
         for (auto& entryPair : traceType.environment().entries()) {
-            if (const auto intEntry = boost::get<long long>(&entryPair.second)) {
+            if (const auto intEntry = std::get_if<long long>(&entryPair.second)) {
                 rows.push_back(std::make_unique<_SIntPropRow>(entryPair.first, *intEntry));
-            } else if (const auto strEntry = boost::get<std::string>(&entryPair.second)) {
+            } else if (const auto strEntry = std::get_if<std::string>(&entryPair.second)) {
                 rows.push_back(std::make_unique<_StrPropRow>(entryPair.first, *strEntry));
             }
         }

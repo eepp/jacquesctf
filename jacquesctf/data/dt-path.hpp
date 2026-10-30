@@ -10,8 +10,8 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 #include <boost/variant.hpp>
-#include <boost/optional.hpp>
 #include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
@@ -30,7 +30,7 @@ public:
     struct VarOptItem
     {
         Index index;
-        boost::optional<std::string> name;
+        std::optional<std::string> name;
     };
 
     struct CurArrayElemItem
