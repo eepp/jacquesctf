@@ -115,10 +115,9 @@ void sigHandler(const int signo)
 
 void registerSignals()
 {
-    const auto ret = signal(SIGINT, sigHandler);
+    [[maybe_unused]] const auto ret = signal(SIGINT, sigHandler);
 
     assert(ret != SIG_ERR);
-    static_cast<void>(ret);
 }
 
 void init()

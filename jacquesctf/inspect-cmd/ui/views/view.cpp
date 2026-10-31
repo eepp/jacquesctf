@@ -57,10 +57,9 @@ void View::refresh(const bool touch) const
         this->touch();
     }
 
-    const auto ret = wnoutrefresh(_curWindow);
+    [[maybe_unused]] const auto ret = wnoutrefresh(_curWindow);
 
     assert(ret == OK);
-    static_cast<void>(ret);
 }
 
 void View::redraw(const bool touch)
@@ -135,10 +134,9 @@ void View::_decorate() const
 
     _theStylist->viewTitle(*this, _hasFocusMemb, _decoStyle == DecorationStyle::BORDERS_EMPHASIZED);
 
-    const auto ret = mvwprintw(_curWindow, 0, 2, "%s", title.c_str());
+    [[maybe_unused]] const auto ret = mvwprintw(_curWindow, 0, 2, "%s", title.c_str());
 
     assert(ret == OK);
-    static_cast<void>(ret);
 
     static auto moreStr = " +++ ";
     const auto moreX = _rect.w - 7;
@@ -262,10 +260,10 @@ void View::_hasMoreBottom(const bool hasMore)
 
 int View::_vSafePrint(const char * const fmt, va_list& args) const
 {
-    int x, y;
+    int x;
+    [[maybe_unused]] int y;
 
     getyx(_curWindow, y, x);
-    static_cast<void>(y);
     assert(x >= 0);
 
     if (static_cast<Index>(x) >= _contentRect.w) {

@@ -85,10 +85,9 @@ void Stylist::_registerStyle(const _StyleId id, int fg, const bool fgIsBright, c
 
     assert(bg < 8);
 
-    const auto ret = init_pair(intId, fg, bg);
+    [[maybe_unused]] const auto ret = init_pair(intId, fg, bg);
 
     assert(ret == OK);
-    static_cast<void>(ret);
 
     if (_styles.size() <= intId) {
         _styles.resize(intId + 1);
@@ -106,16 +105,14 @@ void Stylist::_applyStyle(WINDOW * const window, const _StyleId id, const int ex
 
     assert(intId < _styles.size());
 
-    auto ret = wattrset(window, 0);
+    [[maybe_unused]] auto ret = wattrset(window, 0);
 
     assert(ret == OK);
-    static_cast<void>(ret);
 
     const auto& style = _styles[intId];
 
     ret = wcolor_set(window, style.colorPair, NULL);
     assert(ret == OK);
-    static_cast<void>(ret);
 
     auto attrs = extraAttrs;
 
@@ -132,7 +129,6 @@ void Stylist::_applyStyle(WINDOW * const window, const _StyleId id, const int ex
     if (attrs != 0) {
         ret = wattron(window, attrs);
         assert(ret == OK);
-        static_cast<void>(ret);
     }
 }
 

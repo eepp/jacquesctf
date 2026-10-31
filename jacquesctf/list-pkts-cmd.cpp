@@ -17,7 +17,7 @@
 namespace jacques {
 namespace {
 
-void printHeader(const ListPktsCfg::Fmt fmt __attribute__((unused)), const bool withErCount)
+void printHeader([[maybe_unused]] const ListPktsCfg::Fmt fmt, const bool withErCount)
 {
     assert(fmt == ListPktsCfg::Fmt::MACHINE);
 
@@ -35,7 +35,7 @@ void printHeader(const ListPktsCfg::Fmt fmt __attribute__((unused)), const bool 
     std::cout << "Is valid?" << std::endl;
 }
 
-void printRow(const PktIndexEntry& indexEntry, const ListPktsCfg::Fmt fmt __attribute__((unused)),
+void printRow(const PktIndexEntry& indexEntry, [[maybe_unused]] const ListPktsCfg::Fmt fmt,
               const bool withErCount)
 {
     assert(fmt == ListPktsCfg::Fmt::MACHINE);
