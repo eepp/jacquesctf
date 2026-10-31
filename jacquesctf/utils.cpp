@@ -49,7 +49,7 @@ std::pair<std::string, std::string> formatPath(const bfs::path& path, const Size
         }
     }
 
-    return std::make_pair(std::move(dirNameStr), std::move(filenameStr));
+    return std::pair {std::move(dirNameStr), std::move(filenameStr)};
 }
 
 namespace {

@@ -91,19 +91,18 @@ public:
 private:
     Result _itemStr(const DtPath::StructMemberItem& item) const
     {
-        return std::make_pair(std::string {"/"}, utils::escapeStr(item.name));
+        return std::pair {std::string {"/"}, utils::escapeStr(item.name)};
     }
 
     Result _itemStr(const DtPath::VarOptItem& item) const
     {
-        return std::make_pair(std::string {},
-                              std::invoke([&item] {
+        return std::pair {std::string {}, std::invoke([&item] {
             if (item.name) {
                 return std::string {'<'} + utils::escapeStr(*item.name) + '>';
             } else {
                 return std::string {'<'} + std::to_string(item.index) + '>';
             }
-        }));
+        })};
     }
 
     Result _itemStr(const DtPath::CurArrayElemItem&) const
@@ -122,12 +121,12 @@ private:
             ++*_arrayIndexesIt;
         }
 
-        return std::make_pair(std::string {}, str);
+        return std::pair {std::string {}, str};
     }
 
     Result _itemStr(const DtPath::CurOptDataItem&) const
     {
-        return std::make_pair(std::string {}, std::string {"<%>"});
+        return std::pair {std::string {}, std::string {"<%>"}};
     }
 
 private:

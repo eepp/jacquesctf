@@ -57,7 +57,7 @@ std::tuple<Rect, Rect, Rect> DtsScreen::_viewRects() const
                                  rect.w / 2, rect.h - dstTableViewRect.h};
     const Rect dtExplorerViewRect {{detailsX, rect.pos.y}, detailsWidth, rect.h};
 
-    return std::make_tuple(dstTableViewRect, ertTableViewRect, dtExplorerViewRect);
+    return std::tuple {dstTableViewRect, ertTableViewRect, dtExplorerViewRect};
 }
 
 void DtsScreen::_updateViews()

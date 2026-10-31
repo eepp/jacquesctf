@@ -50,9 +50,9 @@ void Trace::_createMetadata(const bfs::path& metadataPath)
                                                std::move(metadataStream),
                                                std::move(metadataStreamUuid));
     } catch (const yactfr::InvalidMetadataStream& exc) {
-        throw MetadataError<yactfr::InvalidMetadataStream> {metadataPath, exc};
+        throw MetadataError {metadataPath, exc};
     } catch (const yactfr::TextParseError& exc) {
-        throw MetadataError<yactfr::TextParseError> {metadataPath, exc};
+        throw MetadataError {metadataPath, exc};
     }
 }
 
