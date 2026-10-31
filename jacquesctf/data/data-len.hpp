@@ -12,8 +12,8 @@
 #include <tuple>
 #include <string>
 #include <ostream>
+#include <optional>
 #include <boost/operators.hpp>
-#include <boost/optional.hpp>
 
 #include "aliases.hpp"
 #include "utils.hpp"
@@ -42,7 +42,7 @@ public:
     DataLen& operator=(const DataLen&) noexcept = default;
 
     std::pair<std::string, std::string> format(utils::LenFmtMode fmtMode = utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
-                                               const boost::optional<char>& sep = boost::none) const;
+                                               const std::optional<char>& sep = std::nullopt) const;
 
     bool hasExtraBits() const noexcept
     {

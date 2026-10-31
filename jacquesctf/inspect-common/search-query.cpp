@@ -76,15 +76,15 @@ void skipWs(std::string::const_iterator& it, std::string::const_iterator end)
     }
 }
 
-boost::optional<long long> parseInt(std::string::const_iterator& begin,
+std::optional<long long> parseInt(std::string::const_iterator& begin,
                                     std::string::const_iterator end)
 {
     if (begin == end) {
-        return boost::none;
+        return std::nullopt;
     }
 
     if (!std::isdigit(*begin)) {
-        return boost::none;
+        return std::nullopt;
     }
 
     auto rBegin = begin;
@@ -114,7 +114,7 @@ boost::optional<long long> parseInt(std::string::const_iterator& begin,
     const auto val = std::strtoll(&(*rBegin), &strEnd, 0);
 
     if ((val == 0 && &(*rBegin) == strEnd) || errno == ERANGE) {
-        return boost::none;
+        return std::nullopt;
     }
 
     begin += (strEnd - &(*rBegin)) + nbCommas;

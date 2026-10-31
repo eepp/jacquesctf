@@ -8,7 +8,7 @@
 #ifndef _JACQUES_INSPECT_CMD_UI_VIEWS_PKT_INDEX_BUILD_PROGRESS_VIEW_HPP
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_PKT_INDEX_BUILD_PROGRESS_VIEW_HPP
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include "view.hpp"
 #include "data/ds-file.hpp"
@@ -35,7 +35,7 @@ private:
 private:
     Index _index = 0;
     Index _offsetBytes = 0;
-    boost::optional<Index> _seqNum = boost::none;
+    std::optional<Index> _seqNum = std::nullopt;
     const DsFile *_dsf = nullptr;
 };
 

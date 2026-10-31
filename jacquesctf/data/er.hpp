@@ -9,7 +9,7 @@
 #define _JACQUES_DATA_ER_HPP
 
 #include <memory>
-#include <boost/optional.hpp>
+#include <optional>
 #include <boost/operators.hpp>
 #include <yactfr/yactfr.hpp>
 
@@ -35,7 +35,7 @@ public:
     explicit Er(Index indexInPkt) noexcept;
 
     explicit Er(const yactfr::EventRecordType& type, const Index indexInPkt,
-                boost::optional<Ts> ts, const PktSegment& segment) noexcept;
+                std::optional<Ts> ts, const PktSegment& segment) noexcept;
 
     Er(const Er&) = delete;
     Er& operator=(const Er&) = delete;
@@ -75,7 +75,7 @@ public:
         _segment = segment;
     }
 
-    const boost::optional<Ts>& ts() const noexcept
+    const std::optional<Ts>& ts() const noexcept
     {
         return _ts;
     }
@@ -98,7 +98,7 @@ public:
 private:
     const yactfr::EventRecordType *_type = nullptr;
     Index _indexInPkt;
-    boost::optional<Ts> _ts;
+    std::optional<Ts> _ts;
     PktSegment _segment;
 };
 

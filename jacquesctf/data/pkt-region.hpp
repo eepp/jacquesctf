@@ -10,8 +10,8 @@
 
 #include <memory>
 #include <vector>
+#include <optional>
 #include <boost/operators.hpp>
-#include <boost/optional.hpp>
 
 #include "pkt-region-visitor.hpp"
 #include "pkt-segment.hpp"
@@ -82,7 +82,7 @@ public:
         return _seg;
     }
 
-    const boost::optional<Index>& prevRegionOffsetInPktBits() const noexcept
+    const std::optional<Index>& prevRegionOffsetInPktBits() const noexcept
     {
         return _prevRegionOffsetInPktBits;
     }
@@ -112,7 +112,7 @@ private:
     virtual void _accept(PktRegionVisitor& visitor) = 0;
 
 private:
-    boost::optional<Index> _prevRegionOffsetInPktBits;
+    std::optional<Index> _prevRegionOffsetInPktBits;
     PktSegment _seg;
     Scope::SP _scope;
 };

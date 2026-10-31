@@ -8,12 +8,12 @@
 #ifndef _JACQUES_DATA_BO_HPP
 #define _JACQUES_DATA_BO_HPP
 
-#include <boost/optional.hpp>
+#include <optional>
 #include <yactfr/yactfr.hpp>
 
 namespace jacques {
 
-using OptBo = boost::optional<yactfr::ByteOrder>;
+using OptBo = std::optional<yactfr::ByteOrder>;
 
 } // namespace jacques
 

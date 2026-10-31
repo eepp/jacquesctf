@@ -13,8 +13,8 @@
 #include <utility>
 #include <sstream>
 #include <iterator>
+#include <optional>
 #include <boost/filesystem.hpp>
-#include <boost/optional.hpp>
 #include <yactfr/yactfr.hpp>
 
 #include "data/metadata-error.hpp"
@@ -118,10 +118,10 @@ enum class LenFmtMode
 
 std::pair<std::string, std::string> formatLen(Size lenBits,
                                               LenFmtMode fmtMode = LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
-                                              const boost::optional<char>& sep = boost::none);
+                                              const std::optional<char>& sep = std::nullopt);
 
 std::pair<std::string, std::string> formatNs(long long ns,
-                                             const boost::optional<char>& sep = boost::none);
+                                             const std::optional<char>& sep = std::nullopt);
 
 void printTextParseError(std::ostream& os, const std::string& path,
                          const yactfr::TextParseError& error);
@@ -162,7 +162,7 @@ static inline std::string formatTextParseError(const std::string& path,
 } // namespace internal
 
 template <typename FuncT>
-boost::optional<std::string> tryFunc(FuncT&& func)
+std::optional<std::string> tryFunc(FuncT&& func)
 {
     std::ostringstream ss;
 
@@ -190,7 +190,7 @@ boost::optional<std::string> tryFunc(FuncT&& func)
     auto str = ss.str();
 
     if (str.empty()) {
-        return boost::none;
+        return std::nullopt;
     }
 
     internal::maybeAppendPeriod(str);

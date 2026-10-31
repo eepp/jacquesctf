@@ -11,8 +11,8 @@
 #include <memory>
 #include <cstring>
 #include <vector>
+#include <optional>
 #include <curses.h>
-#include <boost/optional.hpp>
 #include <yactfr/metadata/fwd.hpp>
 
 #include "aliases.hpp"

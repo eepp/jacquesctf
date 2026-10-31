@@ -10,15 +10,15 @@
 namespace jacques {
 
 PktIndexEntry::PktIndexEntry(const Index indexInDsFile, const Index offsetInDsFileBytes,
-                             boost::optional<Size> pktCtxOffsetInPktBits,
-                             boost::optional<DataLen> preambleLen,
-                             boost::optional<DataLen> expectedTotalLen,
-                             boost::optional<DataLen> expectedContentLen,
+                             std::optional<Size> pktCtxOffsetInPktBits,
+                             std::optional<DataLen> preambleLen,
+                             std::optional<DataLen> expectedTotalLen,
+                             std::optional<DataLen> expectedContentLen,
                              const DataLen& effectiveTotalLen, const DataLen& effectiveContentLen,
-                             const yactfr::DataStreamType *dst, boost::optional<Index> dsId,
-                             boost::optional<Ts> beginTs, boost::optional<Ts> endTs,
-                             boost::optional<Index> seqNum,
-                             boost::optional<Size> discErCounterSnap, const bool isInvalid) noexcept :
+                             const yactfr::DataStreamType *dst, std::optional<Index> dsId,
+                             std::optional<Ts> beginTs, std::optional<Ts> endTs,
+                             std::optional<Index> seqNum,
+                             std::optional<Size> discErCounterSnap, const bool isInvalid) noexcept :
     _indexInDsFile {indexInDsFile},
     _offsetInDsFileBytes {offsetInDsFileBytes},
     _pktCtxOffsetInPktBits {std::move(pktCtxOffsetInPktBits)},

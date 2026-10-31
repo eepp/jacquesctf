@@ -11,7 +11,7 @@
 namespace jacques {
 
 std::pair<std::string, std::string> DataLen::format(const utils::LenFmtMode fmtMode,
-                                                    const boost::optional<char>& sep) const
+                                                    const std::optional<char>& sep) const
 {
     return utils::formatLen(_lenBits, fmtMode, sep);
 }

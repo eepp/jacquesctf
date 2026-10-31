@@ -83,7 +83,7 @@ void InspectScreen::_toggleBookmark(const unsigned int id)
 
     if (bookmarkedOffsetInPktBit) {
         if (bookmarkedOffsetInPktBit == this->_appState().curOffsetInPktBits()) {
-            bookmarkedOffsetInPktBit = boost::none;
+            bookmarkedOffsetInPktBit = std::nullopt;
         } else {
             bookmarkedOffsetInPktBit = this->_appState().curOffsetInPktBits();
         }
@@ -365,7 +365,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     }
 
     if (key != KEY_DOWN && key != KEY_UP) {
-        _lastOffsetInRowBits = boost::none;
+        _lastOffsetInRowBits = std::nullopt;
     }
 
     switch (key) {

@@ -13,7 +13,7 @@
 #include <functional>
 #include <vector>
 #include <utility>
-#include <boost/optional.hpp>
+#include <optional>
 #include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
@@ -253,7 +253,7 @@ public:
         return _checkpoints.end();
     }
 
-    const boost::optional<PktDecodingError>& error() const noexcept
+    const std::optional<PktDecodingError>& error() const noexcept
     {
         return _error;
     }
@@ -364,8 +364,8 @@ private:
 
 private:
     Checkpoints _checkpoints;
-    boost::optional<PktDecodingError> _error;
-    boost::optional<Index> _pktCtxOffsetInPktBits;
+    std::optional<PktDecodingError> _error;
+    std::optional<Index> _pktCtxOffsetInPktBits;
 };
 
 } // namespace jacques

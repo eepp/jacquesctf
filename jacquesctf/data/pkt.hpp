@@ -285,7 +285,7 @@ public:
         return _checkpoints.erCount();
     }
 
-    const boost::optional<PktDecodingError>& error() const noexcept
+    const std::optional<PktDecodingError>& error() const noexcept
     {
         return _checkpoints.error();
     }
@@ -617,13 +617,13 @@ private:
 
         auto curIndex = cp->first->indexInPkt();
         auto inEr = false;
-        boost::optional<Ts> ts;
-        boost::optional<Index> indexInPkt;
+        std::optional<Ts> ts;
+        std::optional<Index> indexInPkt;
 
         while (_it != _endIt) {
             if (_it->isEventRecordBeginningElement()) {
                 inEr = true;
-                ts = boost::none;
+                ts = std::nullopt;
                 ++_it;
             } else if (_it->isDefaultClockValueElement()) {
                 if (inEr) {

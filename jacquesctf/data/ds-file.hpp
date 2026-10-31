@@ -119,15 +119,15 @@ private:
     {
         void reset();
 
-        boost::optional<Index> pktCtxOffsetInPktBits;
-        boost::optional<DataLen> preambleLen;
-        boost::optional<DataLen> expectedTotalLen;
-        boost::optional<DataLen> expectedContentLen;
-        boost::optional<Ts> beginTs;
-        boost::optional<Ts> endTs;
-        boost::optional<Index> dsId;
-        boost::optional<Index> seqNum;
-        boost::optional<Size> discErCounterSnap;
+        std::optional<Index> pktCtxOffsetInPktBits;
+        std::optional<DataLen> preambleLen;
+        std::optional<DataLen> expectedTotalLen;
+        std::optional<DataLen> expectedContentLen;
+        std::optional<Ts> beginTs;
+        std::optional<Ts> endTs;
+        std::optional<Index> dsId;
+        std::optional<Index> seqNum;
+        std::optional<Size> discErCounterSnap;
         const yactfr::DataStreamType *dst = nullptr;
         bool inPktCtxScope = false;
     };

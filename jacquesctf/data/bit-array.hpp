@@ -9,7 +9,7 @@
 #define _JACQUES_DATA_BIT_ARRAY_HPP
 
 #include <cstdint>
-#include <boost/optional.hpp>
+#include <optional>
 
 #include "aliases.hpp"
 #include "data-len.hpp"
@@ -31,7 +31,7 @@ class BitArray final
 {
 public:
     explicit BitArray(const std::uint8_t * const buf, const Index offsetInFirstByteBits,
-                      const DataLen& len, const OptBo& bo = boost::none) noexcept :
+                      const DataLen& len, const OptBo& bo = std::nullopt) noexcept :
         _buf {buf},
         _offsetInFirstByteBits {offsetInFirstByteBits},
         _len {len},

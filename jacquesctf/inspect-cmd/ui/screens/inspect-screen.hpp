@@ -31,7 +31,7 @@ class InspectScreen final :
     public Screen
 {
 public:
-    using PktBookmarks = std::array<boost::optional<Index>, 4>;
+    using PktBookmarks = std::array<std::optional<Index>, 4>;
     using DsFileBookmarks = std::unordered_map<Index, PktBookmarks>;
     using Bookmarks = std::unordered_map<Index, DsFileBookmarks>;
 
@@ -44,7 +44,7 @@ private:
     struct _StateSnapshot
     {
         Index dsfStateIndex;
-        boost::optional<Index> pktIndexInDsFile;
+        std::optional<Index> pktIndexInDsFile;
         Index offsetInPktBits;
 
         bool operator==(const _StateSnapshot& other)
@@ -106,7 +106,7 @@ private:
     bool _sdteViewIsVisible = true;
     Bookmarks _bookmarks;
     bool _goingToBookmark = false;
-    boost::optional<Index> _lastOffsetInRowBits;
+    std::optional<Index> _lastOffsetInRowBits;
 };
 
 } // namespace jacques

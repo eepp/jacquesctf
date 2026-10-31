@@ -20,7 +20,7 @@ OptBo boFromDt(const yactfr::DataType& dt)
         return dt.asFixedLengthBitArrayType().byteOrder();
     }
 
-    return boost::none;
+    return std::nullopt;
 }
 
 #ifndef NDEBUG
@@ -45,7 +45,7 @@ bool arrayIndexesLenIsExpected(const DtPath& dtPath,
 
 ContentPktRegion::ContentPktRegion(const PktSegment& segment, Scope::SP scope,
                                    const yactfr::DataType& dt, const DtPath& dtPath,
-                                   ArrayIndexes arrayIndexes, boost::optional<Val> val) noexcept :
+                                   ArrayIndexes arrayIndexes, std::optional<Val> val) noexcept :
     PktRegion {
         segment,
         std::move(scope)

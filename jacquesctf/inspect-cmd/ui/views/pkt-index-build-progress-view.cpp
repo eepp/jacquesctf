@@ -40,7 +40,7 @@ void PktIndexBuildProgressView::dsFile(const DsFile& dsf)
     this->_drawFile();
     _index = 0;
     _offsetBytes = 0;
-    _seqNum = boost::none;
+    _seqNum = std::nullopt;
     this->_drawProgress();
 }
 

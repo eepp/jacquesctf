@@ -9,8 +9,8 @@
 #define _JACQUES_DATA_PKT_SEGMENT_HPP
 
 #include <cstdint>
+#include <optional>
 #include <boost/operators.hpp>
-#include <boost/optional.hpp>
 
 #include "aliases.hpp"
 #include "data-len.hpp"
@@ -37,7 +37,8 @@ class PktSegment final :
 {
 public:
     explicit PktSegment() noexcept = default;
-    explicit PktSegment(Index offsetInPktBits, const DataLen& len, OptBo bo = boost::none) noexcept;
+    explicit PktSegment(Index offsetInPktBits, const DataLen& len,
+                        OptBo bo = std::nullopt) noexcept;
     PktSegment(const PktSegment&) noexcept = default;
     PktSegment& operator=(const PktSegment&) noexcept = default;
 
@@ -46,10 +47,10 @@ public:
         return _offsetInPktBits;
     }
 
-    boost::optional<Index> endOffsetInPktBits() const noexcept
+    std::optional<Index> endOffsetInPktBits() const noexcept
     {
         if (!_len) {
-            return boost::none;
+            return std::nullopt;
         }
 
         return _offsetInPktBits + _len->bits();
@@ -65,7 +66,7 @@ public:
         return _offsetInPktBits & 7;
     }
 
-    const boost::optional<DataLen>& len() const noexcept
+    const std::optional<DataLen>& len() const noexcept
     {
         return _len;
     }
@@ -97,7 +98,7 @@ public:
 
 private:
     Index _offsetInPktBits = 0;
-    boost::optional<DataLen> _len;
+    std::optional<DataLen> _len;
     OptBo _bo;
 };
 

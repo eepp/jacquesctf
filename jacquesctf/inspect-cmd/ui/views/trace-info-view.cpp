@@ -56,10 +56,10 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
     DataLen totalEffectivePktsContentLen = 0;
     DataLen totalExpectedPktsTotalLen = 0;
     DataLen totalExpectedPktsContentLen = 0;
-    boost::optional<Ts> firstTs;
-    boost::optional<Ts> lastTs;
-    boost::optional<Ts> intersectFirstTs;
-    boost::optional<Ts> intersectLastTs;
+    std::optional<Ts> firstTs;
+    std::optional<Ts> lastTs;
+    std::optional<Ts> intersectFirstTs;
+    std::optional<Ts> intersectLastTs;
     Size pktCount = 0;
     std::set<std::pair<Index, Index>> dsIds;
 

@@ -130,15 +130,15 @@ void DsFile::_addPktIndexEntry(const Index offsetInDsFileBytes, const Index offs
 void DsFile::_IndexBuildingState::reset()
 {
     inPktCtxScope = false;
-    preambleLen = boost::none;
-    pktCtxOffsetInPktBits = boost::none;
-    expectedTotalLen = boost::none;
-    expectedContentLen = boost::none;
-    beginTs = boost::none;
-    endTs = boost::none;
-    seqNum = boost::none;
-    dsId = boost::none;
-    discErCounterSnap = boost::none;
+    preambleLen = std::nullopt;
+    pktCtxOffsetInPktBits = std::nullopt;
+    expectedTotalLen = std::nullopt;
+    expectedContentLen = std::nullopt;
+    beginTs = std::nullopt;
+    endTs = std::nullopt;
+    seqNum = std::nullopt;
+    dsId = std::nullopt;
+    discErCounterSnap = std::nullopt;
     dst = nullptr;
 }
 
@@ -149,7 +149,7 @@ void DsFile::_buildIndex(const BuildIndexProgressFunc& progressFunc, const Size 
     Index offsetBytes = 0;
     _IndexBuildingState state;
     bool pktStarted = false;
-    boost::optional<Ts> curBeginTs;
+    std::optional<Ts> curBeginTs;
 
     try {
         while (it != endIt) {
@@ -157,7 +157,7 @@ void DsFile::_buildIndex(const BuildIndexProgressFunc& progressFunc, const Size 
             case yactfr::Element::Kind::PacketBeginning:
                 offsetBytes = it.offset() / 8;
                 pktStarted = true;
-                curBeginTs = boost::none;
+                curBeginTs = std::nullopt;
                 break;
 
             case yactfr::Element::Kind::ScopeBeginning:

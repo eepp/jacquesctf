@@ -20,7 +20,7 @@ namespace jacques {
 
 namespace bfs = boost::filesystem;
 
-MemMappedFile::MemMappedFile(bfs::path path, const boost::optional<int>& fd) :
+MemMappedFile::MemMappedFile(bfs::path path, const std::optional<int>& fd) :
     _path {std::move(path)}
 {
     if (fd) {

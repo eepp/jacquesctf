@@ -7,10 +7,10 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <optional>
 #include <curses.h>
 #include <signal.h>
 #include <unistd.h>
-#include <boost/optional.hpp>
 
 #include "inspect-cmd.hpp"
 #include "cfg.hpp"

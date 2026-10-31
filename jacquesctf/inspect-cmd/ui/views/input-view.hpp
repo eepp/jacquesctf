@@ -10,7 +10,7 @@
 
 #include <string>
 #include <vector>
-#include <boost/optional.hpp>
+#include <optional>
 
 #include "view.hpp"
 

@@ -442,7 +442,7 @@ protected:
     }
 
 private:
-    void _drawIfChanged(_Change change, const boost::optional<Index>& oldSelRow);
+    void _drawIfChanged(_Change change, const std::optional<Index>& oldSelRow);
     void _clearRow(Index y);
     void _clearCell(const Point& pos, Size cellWidth);
 

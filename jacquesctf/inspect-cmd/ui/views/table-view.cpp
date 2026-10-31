@@ -599,7 +599,7 @@ void TableView::_resized()
     this->_updateCounts();
 }
 
-void TableView::_drawIfChanged(const _Change change, const boost::optional<Index>& oldSelRow)
+void TableView::_drawIfChanged(const _Change change, const std::optional<Index>& oldSelRow)
 {
     if (change == _Change::FIRST_VISIBLE_ROW) {
         this->_redrawRows();

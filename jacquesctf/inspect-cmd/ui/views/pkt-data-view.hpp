@@ -212,9 +212,9 @@ private:
     // current packet regions (owned here)
     std::vector<PktRegion::SPC> _pktRegions;
 
-    boost::optional<Index> _prevOffsetInPktBits;
+    std::optional<Index> _prevOffsetInPktBits;
     Index _curOffsetInPktBits = 0;
-    boost::optional<Index> _nextOffsetInPktBits;
+    std::optional<Index> _nextOffsetInPktBits;
     bool _isAsciiVisible = true;
     bool _isPrevNextVisible = true;
     bool _isErFirstPktRegionEmphasized = true;

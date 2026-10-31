@@ -12,7 +12,7 @@
 namespace jacques {
 
 Er::Er(const yactfr::EventRecordType& type, const Index indexInPkt,
-       boost::optional<Ts> ts, const PktSegment& segment) noexcept :
+       std::optional<Ts> ts, const PktSegment& segment) noexcept :
     _type {&type},
     _indexInPkt {indexInPkt},
     _ts {std::move(ts)},
@@ -30,7 +30,7 @@ Er::SP Er::createFromElemSeqIt(yactfr::ElementSequenceIterator& it,
 {
     const auto pktOffsetInDsFileBits = pktIndexEntry.offsetInDsFileBytes() * 8;
     Er::SP er;
-    boost::optional<Ts> curTs;
+    std::optional<Ts> curTs;
 
     try {
         while (true) {

@@ -174,15 +174,15 @@ void DsFileState::gotoLastPktRegion()
 }
 
 bool DsFileState::_gotoNextErWithProp(const std::function<bool (const Er&)>& cmpFunc,
-                                      const boost::optional<Index>& initPktIndex,
-                                      const boost::optional<Index>& initErIndex)
+                                      const std::optional<Index>& initPktIndex,
+                                      const std::optional<Index>& initErIndex)
 {
     if (!_activePktState) {
         return false;
     }
 
     Index startPktIndex = _activePktStateIndex + 1;
-    boost::optional<Index> startErIndex = 0;
+    std::optional<Index> startErIndex = 0;
 
     if (initPktIndex) {
         startPktIndex = *initPktIndex;
@@ -194,7 +194,7 @@ bool DsFileState::_gotoNextErWithProp(const std::function<bool (const Er&)>& cmp
 
     if (_activePktState->pkt().erCount() > 0 && !initPktIndex && !initErIndex) {
         const auto curEr = _activePktState->curEr();
-        boost::optional<Index> erIndex;
+        std::optional<Index> erIndex;
 
         if (curEr) {
             if (curEr->indexInPkt() < _activePktState->pkt().erCount() - 1) {
@@ -218,7 +218,7 @@ bool DsFileState::_gotoNextErWithProp(const std::function<bool (const Er&)>& cmp
 
         const auto itStartErIndex = startErIndex ? *startErIndex : 0;
 
-        startErIndex = boost::none;
+        startErIndex = std::nullopt;
         assert(itStartErIndex < pkt.erCount());
 
         for (Index erIndex = itStartErIndex; erIndex < pkt.erCount(); ++erIndex) {

@@ -10,7 +10,7 @@
 
 #include <memory>
 #include <string>
-#include <boost/optional.hpp>
+#include <optional>
 
 #include "utils.hpp"
 

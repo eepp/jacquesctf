@@ -10,7 +10,7 @@
 
 #include <string>
 #include <cstdlib>
-#include <boost/optional.hpp>
+#include <optional>
 #include <boost/filesystem.hpp>
 #include <sys/mman.h>
 
@@ -23,7 +23,7 @@ class MemMappedFile final
 {
 public:
     explicit MemMappedFile(boost::filesystem::path path,
-                           const boost::optional<int>& fd = boost::none);
+                           const std::optional<int>& fd = std::nullopt);
     ~MemMappedFile();
 
     MemMappedFile(const MemMappedFile&) = delete;

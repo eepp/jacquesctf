@@ -8,7 +8,7 @@
 #ifndef _JACQUES_DATA_PKT_INDEX_ENTRY_HPP
 #define _JACQUES_DATA_PKT_INDEX_ENTRY_HPP
 
-#include <boost/optional.hpp>
+#include <optional>
 #include <boost/operators.hpp>
 #include <yactfr/yactfr.hpp>
 
@@ -23,14 +23,14 @@ class PktIndexEntry :
 {
 public:
     explicit PktIndexEntry(Index indexInDsFile, Index offsetInDsFileBytes,
-                           boost::optional<Index> pktCtxOffsetInPktBits,
-                           boost::optional<DataLen> preambleLen,
-                           boost::optional<DataLen> expectedTotalLen,
-                           boost::optional<DataLen> expectedContentLen,
+                           std::optional<Index> pktCtxOffsetInPktBits,
+                           std::optional<DataLen> preambleLen,
+                           std::optional<DataLen> expectedTotalLen,
+                           std::optional<DataLen> expectedContentLen,
                            const DataLen& effectiveTotalLen, const DataLen& effectiveContentLen,
-                           const yactfr::DataStreamType *dst, boost::optional<Index> dsId,
-                           boost::optional<Ts> beginTs, boost::optional<Ts> endTs,
-                           boost::optional<Index> seqNum, boost::optional<Size> discErCounterSnap,
+                           const yactfr::DataStreamType *dst, std::optional<Index> dsId,
+                           std::optional<Ts> beginTs, std::optional<Ts> endTs,
+                           std::optional<Index> seqNum, std::optional<Size> discErCounterSnap,
                            bool isInvalid) noexcept;
 
     PktIndexEntry(const PktIndexEntry&) = default;
@@ -55,22 +55,22 @@ public:
         return this->endOffsetInDsFileBytes() * 8;
     }
 
-    const boost::optional<DataLen>& preambleLen() const noexcept
+    const std::optional<DataLen>& preambleLen() const noexcept
     {
         return _preambleLen;
     }
 
-    const boost::optional<Index>& pktCtxOffsetInPktBits() const noexcept
+    const std::optional<Index>& pktCtxOffsetInPktBits() const noexcept
     {
         return _pktCtxOffsetInPktBits;
     }
 
-    const boost::optional<DataLen>& expectedTotalLen() const noexcept
+    const std::optional<DataLen>& expectedTotalLen() const noexcept
     {
         return _expectedTotalLen;
     }
 
-    const boost::optional<DataLen>& expectedContentLen() const noexcept
+    const std::optional<DataLen>& expectedContentLen() const noexcept
     {
         return _expectedContentLen;
     }
@@ -85,27 +85,27 @@ public:
         return _effectiveContentLen;
     }
 
-    const boost::optional<Ts>& beginTs() const noexcept
+    const std::optional<Ts>& beginTs() const noexcept
     {
         return _beginTs;
     }
 
-    const boost::optional<Ts>& endTs() const noexcept
+    const std::optional<Ts>& endTs() const noexcept
     {
         return _endTs;
     }
 
-    const boost::optional<Index>& seqNum() const noexcept
+    const std::optional<Index>& seqNum() const noexcept
     {
         return _seqNum;
     }
 
-    const boost::optional<Index>& dsId() const noexcept
+    const std::optional<Index>& dsId() const noexcept
     {
         return _dsId;
     }
 
-    const boost::optional<Size>& discErCounterSnap() const noexcept
+    const std::optional<Size>& discErCounterSnap() const noexcept
     {
         return _discErCounterSnap;
     }
@@ -136,12 +136,12 @@ public:
         _isInvalid = isInvalid;
     }
 
-    const boost::optional<Size>& erCount() const noexcept
+    const std::optional<Size>& erCount() const noexcept
     {
         return _erCount;
     }
 
-    void erCount(const boost::optional<Size>& erCount) noexcept
+    void erCount(const std::optional<Size>& erCount) noexcept
     {
         _erCount = erCount;
     }
@@ -159,20 +159,20 @@ public:
 private:
     const Index _indexInDsFile;
     const Size _offsetInDsFileBytes;
-    const boost::optional<Index> _pktCtxOffsetInPktBits;
-    const boost::optional<DataLen> _preambleLen;
-    const boost::optional<DataLen> _expectedTotalLen;
-    const boost::optional<DataLen> _expectedContentLen;
+    const std::optional<Index> _pktCtxOffsetInPktBits;
+    const std::optional<DataLen> _preambleLen;
+    const std::optional<DataLen> _expectedTotalLen;
+    const std::optional<DataLen> _expectedContentLen;
     const DataLen _effectiveTotalLen;
     const DataLen _effectiveContentLen;
     const yactfr::DataStreamType *_dst;
-    const boost::optional<Index> _dsId;
-    const boost::optional<Ts> _beginTs;
-    const boost::optional<Ts> _endTs;
-    const boost::optional<Index> _seqNum;
-    const boost::optional<Size> _discErCounterSnap;
+    const std::optional<Index> _dsId;
+    const std::optional<Ts> _beginTs;
+    const std::optional<Ts> _endTs;
+    const std::optional<Index> _seqNum;
+    const std::optional<Size> _discErCounterSnap;
     bool _isInvalid;
-    boost::optional<Size> _erCount;
+    std::optional<Size> _erCount;
 };
 
 } // namespace jacques

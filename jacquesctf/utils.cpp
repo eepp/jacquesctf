@@ -292,7 +292,7 @@ endOfPattern:
 }
 
 std::pair<std::string, std::string> formatLen(const Size lenBits, const LenFmtMode fmtMode,
-                                              const boost::optional<char>& sep)
+                                              const std::optional<char>& sep)
 {
     std::array<char, 64> buf;
     const char *unit = nullptr;
@@ -368,7 +368,7 @@ std::pair<std::string, std::string> formatLen(const Size lenBits, const LenFmtMo
     return {buf.data(), unit};
 }
 
-std::pair<std::string, std::string> formatNs(long long ns, const boost::optional<char>& sep)
+std::pair<std::string, std::string> formatNs(long long ns, const std::optional<char>& sep)
 {
     constexpr auto nsInS = 1'000'000'000LL;
     const auto absNs = std::abs(ns);

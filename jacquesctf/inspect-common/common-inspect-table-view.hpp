@@ -11,7 +11,7 @@
 #include <cassert>
 #include <utility>
 #include <tuple>
-#include <boost/optional.hpp>
+#include <optional>
 
 #include "aliases.hpp"
 
@@ -63,7 +63,7 @@ protected:
         return _theMaxVisibleRowCount;
     }
 
-    const boost::optional<Index>& _selRow() const noexcept
+    const std::optional<Index>& _selRow() const noexcept
     {
         return _theSelRow;
     }
@@ -102,7 +102,7 @@ private:
     Size _theRowCount = 0;
     Size _theMaxVisibleRowCount = 0;
     Index _theFirstVisibleRow = 0;
-    boost::optional<Index> _theSelRow;
+    std::optional<Index> _theSelRow;
 };
 
 } // namespace jacques

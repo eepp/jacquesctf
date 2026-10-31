@@ -12,8 +12,8 @@
 #include <cstdint>
 #include <set>
 #include <string>
+#include <optional>
 #include <boost/variant.hpp>
-#include <boost/optional.hpp>
 #include <yactfr/yactfr.hpp>
 
 #include "dt-path.hpp"
@@ -38,7 +38,7 @@ public:
      */
     explicit ContentPktRegion(const PktSegment& segment, Scope::SP scope,
                               const yactfr::DataType& dt, const DtPath& dtPath,
-                              ArrayIndexes arrayIndexes, boost::optional<Val> val) noexcept;
+                              ArrayIndexes arrayIndexes, std::optional<Val> val) noexcept;
 
     const yactfr::DataType& dt() const noexcept
     {
@@ -55,7 +55,7 @@ public:
         return _arrayIndexes;
     }
 
-    const boost::optional<Val>& val() const noexcept
+    const std::optional<Val>& val() const noexcept
     {
         return _val;
     }
@@ -87,7 +87,7 @@ private:
     const yactfr::DataType *_dt;
     const DtPath *_dtPath;
     ArrayIndexes _arrayIndexes;
-    boost::optional<Val> _val;
+    std::optional<Val> _val;
 };
 
 } // namespace jacques

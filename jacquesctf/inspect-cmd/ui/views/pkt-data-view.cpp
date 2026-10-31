@@ -96,14 +96,14 @@ void PktDataView::_setPrevCurNextOffsetInPktBits()
     if (prevPktRegion) {
         _prevOffsetInPktBits = prevPktRegion->segment().offsetInPktBits();
     } else {
-        _prevOffsetInPktBits = boost::none;
+        _prevOffsetInPktBits = std::nullopt;
     }
 
     // next
     if (*curPktRegion->segment().endOffsetInPktBits() < pkt.indexEntry().effectiveTotalLen()) {
         _nextOffsetInPktBits = *curPktRegion->segment().endOffsetInPktBits();
     } else {
-        _nextOffsetInPktBits = boost::none;
+        _nextOffsetInPktBits = std::nullopt;
     }
 }
 

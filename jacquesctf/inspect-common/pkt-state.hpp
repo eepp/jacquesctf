@@ -9,8 +9,8 @@
 #define _JACQUES_INSPECT_COMMON_PKT_STATE_HPP
 
 #include <vector>
+#include <optional>
 #include <boost/filesystem.hpp>
-#include <boost/optional.hpp>
 
 #include "data/pkt.hpp"
 #include "aliases.hpp"

@@ -9,8 +9,8 @@
 #define _JACQUES_INSPECT_COMMON_DS_FILE_STATE_HPP
 
 #include <vector>
+#include <optional>
 #include <boost/filesystem.hpp>
-#include <boost/optional.hpp>
 #include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
@@ -171,8 +171,8 @@ private:
     PktState& _pktState(Index index);
     void _gotoPkt(Index index, bool notify);
     bool _gotoNextErWithProp(const std::function<bool (const Er&)>& cmpFunc,
-                             const boost::optional<Index>& initPktIndex = boost::none,
-                             const boost::optional<Index>& initErIndex = boost::none);
+                             const std::optional<Index>& initPktIndex = std::nullopt,
+                             const std::optional<Index>& initErIndex = std::nullopt);
 
 private:
     AppState *_appState;
