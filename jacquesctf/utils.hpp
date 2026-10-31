@@ -9,6 +9,7 @@
 #define _JACQUES_UTILS_HPP
 
 #include <string>
+#include <string_view>
 #include <iostream>
 #include <utility>
 #include <sstream>
@@ -42,13 +43,13 @@ std::pair<std::string, std::string> formatPath(const boost::filesystem::path& pa
  * Normalizes a globbing pattern, that is, removes consecutive `*`
  * characters.
  */
-[[ nodiscard ]] std::string normalizeGlobPattern(const std::string& pattern);
+[[ nodiscard ]] std::string normalizeGlobPattern(std::string_view pattern);
 
 /*
  * Returns whether or not `candidate` matches the globbing pattern
  * `pattern`. Only the `*` special character works as of this version.
  */
-bool globMatch(const std::string& pattern, const std::string& candidate);
+bool globMatch(std::string_view pattern, std::string_view candidate);
 
 /*
  * Does pretty much what the fold(1) command does.
@@ -64,7 +65,7 @@ std::vector<std::string> wrapTextLines(const std::string& text, Size lineLen);
  * Escapes a string, replacing special characters with typical escape
  * sequences.
  */
-std::string escapeStr(const std::string& str);
+std::string escapeStr(std::string_view str);
 
 /*
  * Creates a string which has "thousands separators" from a value,
@@ -122,7 +123,7 @@ std::pair<std::string, std::string> formatLen(Size lenBits,
 std::pair<std::string, std::string> formatNs(long long ns,
                                              const std::optional<char>& sep = std::nullopt);
 
-void printTextParseError(std::ostream& os, const std::string& path,
+void printTextParseError(std::ostream& os, std::string_view path,
                          const yactfr::TextParseError& error);
 
 namespace internal {
@@ -138,7 +139,7 @@ static inline void maybeAppendPeriod(std::string& str)
     }
 }
 
-static inline std::string formatTextParseError(const std::string& path,
+static inline std::string formatTextParseError(const std::string_view path,
                                                const yactfr::TextParseError& error)
 {
     std::ostringstream ss;

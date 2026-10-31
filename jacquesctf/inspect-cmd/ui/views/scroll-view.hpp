@@ -16,7 +16,7 @@ class ScrollView :
     public View
 {
 protected:
-    explicit ScrollView(const Rect& rect, const std::string& title, DecorationStyle decoStyle,
+    explicit ScrollView(const Rect& rect, std::string_view title, DecorationStyle decoStyle,
                         const Stylist& stylist);
 
 public:

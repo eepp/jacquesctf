@@ -122,7 +122,7 @@ private:
     struct _StrPropRow :
         public _PropRow
     {
-        _StrPropRow(std::string key, const std::string& val) :
+        _StrPropRow(std::string key, const std::string_view val) :
             _PropRow {std::move(key)},
             val {utils::escapeStr(val)}
         {

@@ -17,7 +17,7 @@
 
 namespace jacques {
 
-View::View(const Rect& rect, const std::string& title, const DecorationStyle decoStyle,
+View::View(const Rect& rect, const std::string_view title, const DecorationStyle decoStyle,
            const Stylist& stylist) :
     _rect {rect},
     _theTitle {utils::escapeStr(title)},

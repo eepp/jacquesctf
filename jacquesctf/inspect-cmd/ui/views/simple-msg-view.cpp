@@ -14,7 +14,7 @@ SimpleMsgView::SimpleMsgView(const Rect& rect, const Stylist& stylist) :
 {
 }
 
-void SimpleMsgView::msg(const std::string& msg)
+void SimpleMsgView::msg(const std::string_view msg)
 {
     _msg = utils::escapeStr(msg);
     this->_redrawContent();

@@ -125,7 +125,7 @@ public:
         return _pattern;
     }
 
-    bool matches(const std::string& candidate) const noexcept
+    bool matches(const std::string_view candidate) const noexcept
     {
         return utils::globMatch(_pattern, candidate);
     }

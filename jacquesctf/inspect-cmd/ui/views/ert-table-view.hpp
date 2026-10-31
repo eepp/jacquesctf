@@ -25,7 +25,7 @@ public:
     explicit ErtTableView(const Rect& rect, const Stylist& stylist, const InspectCmdState& appState);
     void dst(const yactfr::DataStreamType& dst);
     const yactfr::EventRecordType *ert() const noexcept;
-    void selectErt(const std::string& pattern, bool relative = false);
+    void selectErt(std::string_view pattern, bool relative = false);
     void selectErt(yactfr::TypeId id);
 
     Size ertCount() const noexcept

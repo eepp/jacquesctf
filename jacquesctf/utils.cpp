@@ -161,7 +161,7 @@ std::vector<std::string> wrapTextLines(const std::string& text, const Size lineL
     return lines;
 }
 
-std::string normalizeGlobPattern(const std::string& pattern)
+std::string normalizeGlobPattern(const std::string_view pattern)
 {
     std::string normPat;
     auto gotStar = false;
@@ -193,17 +193,17 @@ std::string normalizeGlobPattern(const std::string& pattern)
 
 namespace {
 
-inline bool atEndOfPattern(const char * const p, const std::string& pattern) noexcept
+inline bool atEndOfPattern(const char * const p, const std::string_view pattern) noexcept
 {
-    return static_cast<Size>(p - pattern.c_str()) == pattern.size() || *p == '\0';
+    return static_cast<Size>(p - pattern.data()) == pattern.size() || *p == '\0';
 }
 
 } // namespace
 
-bool globMatch(const std::string& pattern, const std::string& candidate)
+bool globMatch(const std::string_view pattern, const std::string_view candidate)
 {
-    auto retryC = candidate.c_str();
-    auto retryP = pattern.c_str();
+    auto retryC = candidate.data();
+    auto retryP = pattern.data();
     const char *c, *p;
     auto gotAStar = false;
     const auto candidateLen = candidate.size();
@@ -212,7 +212,7 @@ retry:
     c = retryC;
     p = retryP;
 
-    while (static_cast<Size>(c - candidate.c_str()) < candidateLen && *c != '\0') {
+    while (static_cast<Size>(c - candidate.data()) < candidateLen && *c != '\0') {
         assert(*c);
 
         if (atEndOfPattern(p, pattern)) {
@@ -387,13 +387,13 @@ std::pair<std::string, std::string> formatNs(long long ns, const std::optional<c
     return {sStr, nsStr};
 }
 
-void printTextParseError(std::ostream& os, const std::string& path,
+void printTextParseError(std::ostream& os, const std::string_view path,
                          const yactfr::TextParseError& error)
 {
     os << internal::formatTextParseError(path, error);
 }
 
-std::string escapeStr(const std::string& str)
+std::string escapeStr(const std::string_view str)
 {
     std::string outStr;
 

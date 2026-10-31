@@ -11,8 +11,8 @@
 
 namespace jacques {
 
-ScrollView::ScrollView(const Rect& rect, const std::string& title, const DecorationStyle decoStyle,
-                       const Stylist& stylist) :
+ScrollView::ScrollView(const Rect& rect, const std::string_view title,
+                       const DecorationStyle decoStyle, const Stylist& stylist) :
     View {rect, title, decoStyle, stylist}
 {
 }

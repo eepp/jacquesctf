@@ -136,7 +136,7 @@ const yactfr::EventRecordType *ErtTableView::ert() const noexcept
     return (*_erts)[*this->_selRow()];
 }
 
-void ErtTableView::selectErt(const std::string& pattern, const bool relative)
+void ErtTableView::selectErt(const std::string_view pattern, const bool relative)
 {
     if (!_erts || _erts->empty()) {
         return;

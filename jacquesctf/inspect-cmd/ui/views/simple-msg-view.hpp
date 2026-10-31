@@ -17,7 +17,7 @@ class SimpleMsgView final :
 {
 public:
     explicit SimpleMsgView(const Rect& rect, const Stylist& stylist);
-    void msg(const std::string& msg);
+    void msg(std::string_view msg);
 
 protected:
     void _resized() override;

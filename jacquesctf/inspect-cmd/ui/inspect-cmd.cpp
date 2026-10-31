@@ -149,7 +149,7 @@ void buildIndexes(InspectCmdState& appState, const Stylist& stylist)
     }
 }
 
-void showFullScreenMessage(const std::string& msg, const Stylist& stylist)
+void showFullScreenMessage(const std::string_view msg, const Stylist& stylist)
 {
     const auto screenRect = Rect {{0, 0}, static_cast<Size>(COLS), static_cast<Size>(LINES)};
     const auto view = std::make_unique<SimpleMsgView>(screenRect, stylist);

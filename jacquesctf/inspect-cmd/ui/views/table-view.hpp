@@ -123,7 +123,7 @@ public:
         return _text;
     }
 
-    void text(const std::string& text)
+    void text(const std::string_view text)
     {
         _text = utils::escapeStr(text);
     }
@@ -410,7 +410,7 @@ public:
     void highlightSel(bool highlight);
 
 protected:
-    explicit TableView(const Rect& rect, const std::string& title, DecorationStyle decoStyle,
+    explicit TableView(const Rect& rect, std::string_view title, DecorationStyle decoStyle,
                        const Stylist& stylist);
 
     virtual void _drawRow(Index row) = 0;

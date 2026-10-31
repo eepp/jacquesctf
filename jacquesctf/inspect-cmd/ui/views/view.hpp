@@ -77,7 +77,7 @@ protected:
      *
      * `rect` is the rectangle of the view within the terminal screen.
      */
-    explicit View(const Rect& rect, const std::string& title, DecorationStyle decoStyle,
+    explicit View(const Rect& rect, std::string_view title, DecorationStyle decoStyle,
                   const Stylist& stylist);
 
 public:
@@ -216,7 +216,7 @@ protected:
      * This only applies when the decoration style of this view isn't
      * `DecorationStyle::BORDERLESS`.
      */
-    void _title(const std::string& title) noexcept
+    void _title(const std::string_view title) noexcept
     {
         _theTitle = utils::escapeStr(title);
     }
