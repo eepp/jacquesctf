@@ -58,8 +58,8 @@ public:
         }
 
         assert(!this->contains(key));
-        _entries.push_front(std::make_pair(key, std::move(val)));
-        _keyToEntryIt.insert(std::make_pair(std::move(key), _entries.begin()));
+        _entries.emplace_front(key, std::move(val));
+        _keyToEntryIt.emplace(std::move(key), _entries.begin());
     }
 
     /*

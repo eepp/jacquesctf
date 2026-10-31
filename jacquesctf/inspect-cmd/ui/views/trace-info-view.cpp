@@ -85,7 +85,7 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
             const auto dst = dsFile->pktIndexEntry(0).dst();
 
             if (dsId && dst) {
-                dsIds.insert({dst->id(), *dsId});
+                dsIds.emplace(dst->id(), *dsId);
             } else {
                 ++dsfWithoutDsIdCount;
             }

@@ -52,11 +52,13 @@ void DstTableView::_buildRows(const InspectCmdState& appState)
         auto& metadata = dsFileState->metadata();
         auto& traceType = metadata.traceType();
 
-        if (_rows.find(&traceType) != _rows.end()) {
+        const auto [it, inserted] = _rows.try_emplace(&traceType);
+
+        if (!inserted) {
             continue;
         }
 
-        auto& dstVec = _rows[&traceType];
+        auto& dstVec = it->second;
 
         for (auto& dst : traceType) {
             dstVec.push_back(dst.get());

@@ -60,13 +60,13 @@ void ErtTableView::_buildRows(const InspectCmdState& appState)
         auto& metadata = dsFileState->metadata();
 
         for (auto& dst : metadata.traceType()) {
-            const auto it = _rows.find(dst.get());
+            const auto [it, inserted] = _rows.try_emplace(dst.get());
 
-            if (it != _rows.end()) {
+            if (!inserted) {
                 continue;
             }
 
-            auto& ertVec = _rows[dst.get()];
+            auto& ertVec = it->second;
 
             for (auto& ert : *dst) {
                 ertVec.push_back(ert.get());

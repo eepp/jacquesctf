@@ -329,9 +329,9 @@ void PktRegionInfoView::_setMaxDtPathSize(const Trace& trace)
         return totalDtPathItSizeFunc(pairA) < totalDtPathItSizeFunc(pairB);
     });
 
-    _maxDtPathSizes.insert(std::make_pair(&trace,
-                                          maxDtPathIt == trace.metadata().dtPaths().end() ? 0ULL :
-                                          totalDtPathItSizeFunc(*maxDtPathIt)));
+    _maxDtPathSizes.emplace(&trace,
+                            maxDtPathIt == trace.metadata().dtPaths().end() ? 0ULL :
+                            totalDtPathItSizeFunc(*maxDtPathIt));
 }
 
 void PktRegionInfoView::_setMaxDtPathSizes()

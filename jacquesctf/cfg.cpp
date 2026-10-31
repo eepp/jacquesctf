@@ -145,11 +145,9 @@ std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFilePaths,
     while (it != tmpFilePaths.end()) {
         const auto nextIt = std::next(it);
 
-        if (pathSet.count(it->string()) > 0) {
+        if (!pathSet.emplace(it->string()).second) {
             // remove duplicate
             tmpFilePaths.erase(it);
-        } else {
-            pathSet.insert(it->string());
         }
 
         it = nextIt;

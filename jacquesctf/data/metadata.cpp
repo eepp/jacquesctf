@@ -219,7 +219,7 @@ private:
             return entry.pathItem;
         });
 
-        _dtPathMap->insert(std::make_pair(&dt, DtPath {_scope, std::move(items)}));
+        _dtPathMap->emplace(&dt, DtPath {_scope, std::move(items)});
     }
 
 private:
