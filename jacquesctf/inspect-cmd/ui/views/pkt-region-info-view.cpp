@@ -14,6 +14,7 @@
 #include <string>
 #include <cassert>
 #include <variant>
+#include <functional>
 #include <curses.h>
 #include <signal.h>
 #include <unistd.h>
@@ -96,7 +97,7 @@ private:
     Result _itemStr(const DtPath::VarOptItem& item) const
     {
         return std::make_pair(std::string {},
-                              utils::call([&item] {
+                              std::invoke([&item] {
             if (item.name) {
                 return std::string {'<'} + utils::escapeStr(*item.name) + '>';
             } else {
@@ -240,7 +241,7 @@ void PktRegionInfoView::_redrawContent()
         } else if (const auto val = std::get_if<long long>(&varVal)) {
             this->_safePrint("%s", utils::sepNumber(*val, ',').c_str());
         } else if (const auto val = std::get_if<unsigned long long>(&varVal)) {
-            const auto prefDispBase = utils::call([cPktRegion] {
+            const auto prefDispBase = std::invoke([cPktRegion] {
                 if (cPktRegion->dt().isIntegerType()) {
                     return utils::intTypePrefDispBase(cPktRegion->dt());
                 } else if (cPktRegion->dt().isFixedLengthBitArrayType()) {

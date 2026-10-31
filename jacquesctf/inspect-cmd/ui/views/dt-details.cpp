@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
+#include <functional>
 #include <yactfr/yactfr.hpp>
 
 #include "dt-details.hpp"
@@ -100,7 +101,7 @@ void DtDetails::_tryRenderPrefDispBaseProp(const yactfr::DataType& dt, WINDOW * 
         return;
     }
 
-    this->_renderProp(window, remWidth, stylize, "pref-disp-base", utils::call([prefDispBase] {
+    this->_renderProp(window, remWidth, stylize, "pref-disp-base", std::invoke([prefDispBase] {
         switch (prefDispBase) {
         case yactfr::DisplayBase::Binary:
             return "bin";
@@ -331,7 +332,7 @@ void DtDetails::_renderDt(const yactfr::OptionalType& dt, WINDOW * const window,
 {
     std::ostringstream ss;
 
-    ss << "{opt-" << utils::call([&dt] {
+    ss << "{opt-" << std::invoke([&dt] {
         if (dt.isOptionalWithBooleanSelectorType()) {
             return 'b';
         } else if (dt.isOptionalWithUnsignedIntegerSelectorType()) {

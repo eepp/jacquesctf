@@ -9,6 +9,7 @@
 #include <iostream>
 #include <thread>
 #include <atomic>
+#include <functional>
 #include <curses.h>
 #include <signal.h>
 #include <unistd.h>
@@ -586,7 +587,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
     case '*':
     case 'P':
     {
-        const auto init = utils::call([key]() {
+        const auto init = std::invoke([key]() {
             switch (key) {
             case 'N':
             case '*':

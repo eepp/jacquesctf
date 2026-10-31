@@ -8,6 +8,7 @@
 #include <cassert>
 #include <cstdarg>
 #include <cstdio>
+#include <functional>
 #include <curses.h>
 
 #include "view.hpp"
@@ -124,7 +125,7 @@ void View::_decorate() const
     box(_curWindow, 0, 0);
 
     const auto maxWidth = _rect.w - 4;
-    const auto title = utils::call([this, maxWidth] {
+    const auto title = std::invoke([this, maxWidth] {
         if (_theTitle.size() > maxWidth) {
             return _theTitle.substr(0, maxWidth - 3) + "...";
         } else {

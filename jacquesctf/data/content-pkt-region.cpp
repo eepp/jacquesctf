@@ -6,6 +6,7 @@
  */
 
 #include <cassert>
+#include <functional>
 
 #include "content-pkt-region.hpp"
 #include "aliases.hpp"
@@ -27,7 +28,7 @@ OptBo boFromDt(const yactfr::DataType& dt)
 bool arrayIndexesLenIsExpected(const DtPath& dtPath,
                                const ContentPktRegion::ArrayIndexes& arrayIndexes)
 {
-    return utils::call([&dtPath] {
+    return std::invoke([&dtPath] {
         Size count = 0;
 
         for (auto& item : dtPath.items()) {

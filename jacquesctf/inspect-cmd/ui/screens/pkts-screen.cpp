@@ -6,6 +6,7 @@
  */
 
 #include <iostream>
+#include <functional>
 #include <curses.h>
 #include <signal.h>
 #include <unistd.h>
@@ -170,7 +171,7 @@ KeyHandlingReaction PktsScreen::_handleKey(const int key)
     case '*':
     case 'P':
     {
-        auto query = _searchCtrl.start(utils::call([key]() -> std::string {
+        auto query = _searchCtrl.start(std::invoke([key]() -> std::string {
             switch (key) {
             case 'N':
             case '*':

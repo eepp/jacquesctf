@@ -6,6 +6,7 @@
  */
 
 #include <algorithm>
+#include <functional>
 #include <yactfr/yactfr.hpp>
 
 #include "pkt.hpp"
@@ -243,7 +244,7 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope,
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdangling-reference"
         // get corresponding data type
-        auto& dt = utils::call([this]() -> const yactfr::DataType& {
+        auto& dt = std::invoke([this]() -> const yactfr::DataType& {
             if (_it->isNullTerminatedStringBeginningElement()) {
                 return _it->asNullTerminatedStringBeginningElement().type();
             } else if (_it->isStaticLengthStringBeginningElement()) {
@@ -271,7 +272,7 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope,
             ++_it;
         }
 
-        auto str = utils::call([&dt, &bufStart, &bufEnd] {
+        auto str = std::invoke([&dt, &bufStart, &bufEnd] {
             if (dt.isStringType() &&
                     dt.asStringType().encoding() == yactfr::StringEncoding::Utf8) {
                 /*
@@ -313,7 +314,7 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope,
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdangling-reference"
         // get corresponding data type
-        auto& dt = utils::call([this]() -> const yactfr::DataType& {
+        auto& dt = std::invoke([this]() -> const yactfr::DataType& {
             if (_it->isStaticLengthBlobBeginningElement()) {
                 return _it->asStaticLengthBlobBeginningElement().type();
             } else {

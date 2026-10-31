@@ -11,6 +11,7 @@
 #include <string>
 #include <sstream>
 #include <optional>
+#include <functional>
 #include <yactfr/yactfr.hpp>
 
 #include "abstract-dt-details.hpp"
@@ -164,7 +165,7 @@ private:
     void _renderRoleFlags(const DtT& dt, WINDOW * const window, Size& remWidth, const bool stylize) const
     {
         for (const auto role : dt.roles()) {
-            const auto roleStr = utils::call([role] {
+            const auto roleStr = std::invoke([role] {
                 switch (role) {
                 case yactfr::UnsignedIntegerTypeRole::PacketMagicNumber:
                     return "pkt-magic-number";
