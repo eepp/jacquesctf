@@ -23,8 +23,7 @@
 #include "aliases.hpp"
 #include "cfg.hpp"
 
-namespace jacques {
-namespace utils {
+namespace jacques::utils {
 
 /*
  * Formats the path `path`, considering that the total length of the
@@ -244,7 +243,6 @@ std::string csvListStr(const ContainerT& container, const bool withBackticks = t
     return ss.str();
 }
 
-} // namespace utils
-} // namespace jacques
+} // namespace jacques::utils
 
 #endif // _JACQUES_UTILS_HPP

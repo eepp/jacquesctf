@@ -18,8 +18,7 @@
 #include "utils.hpp"
 #include "cfg.hpp"
 
-namespace jacques {
-namespace utils {
+namespace jacques::utils {
 
 namespace bfs = boost::filesystem;
 
@@ -494,5 +493,4 @@ yactfr::DisplayBase intTypePrefDispBase(const yactfr::DataType& dt) noexcept
     }
 }
 
-} // namespace utils
-} // namespace jacques
+} // namespace jacques::utils
