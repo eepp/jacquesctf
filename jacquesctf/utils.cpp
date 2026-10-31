@@ -12,7 +12,6 @@
 #include <string>
 #include <sstream>
 #include <boost/filesystem.hpp>
-#include <boost/utility.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <algorithm>
 

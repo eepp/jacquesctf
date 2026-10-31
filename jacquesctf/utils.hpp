@@ -14,7 +14,6 @@
 #include <sstream>
 #include <iterator>
 #include <boost/filesystem.hpp>
-#include <boost/utility.hpp>
 #include <boost/optional.hpp>
 #include <yactfr/yactfr.hpp>
 

@@ -10,7 +10,6 @@
 #include <numeric>
 #include <unordered_set>
 #include <variant>
-#include <boost/type_traits/remove_cv.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <yactfr/yactfr.hpp>
 
