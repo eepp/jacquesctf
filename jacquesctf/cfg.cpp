@@ -121,9 +121,8 @@ std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFilePaths,
         if (bfs::is_directory(path)) {
             expandDir(tmpFilePaths, path);
         } else {
-            const auto metadataPath = path.parent_path() / "metadata";
-
-            if (!bfs::exists(metadataPath)) {
+            if (const auto metadataPath = path.parent_path() / "metadata";
+                    !bfs::exists(metadataPath)) {
                 std::ostringstream ss;
 
                 ss << "File `" << path.string() <<

@@ -110,9 +110,8 @@ void Pkt::_ensureOffsetInPktBitsIsCached(const Index offsetInPktBits)
 
     assert(_checkpoints.erCount() > 0);
 
-    const auto& lastEr = *_checkpoints.lastEr();
-
-    if (offsetInPktBits >= lastEr.segment().offsetInPktBits()) {
+    if (const auto& lastEr = *_checkpoints.lastEr();
+            offsetInPktBits >= lastEr.segment().offsetInPktBits()) {
         // last event record or after
         this->_ensureErIsCached(lastEr.indexInPkt());
         return;
@@ -733,9 +732,7 @@ void Pkt::_cacheRegionsAtCurIt(const yactfr::Element::Kind endElemKind, Index er
 
         case ElemKind::EventRecordInfo:
         {
-            auto& elem = _it->asEventRecordInfoElement();
-
-            if (curEr && elem.type()) {
+            if (auto& elem = _it->asEventRecordInfoElement(); curEr && elem.type()) {
                 curEr->type(*elem.type());
             }
 
@@ -868,9 +865,7 @@ void Pkt::_cacheRegionsFromErsAtCurIt(const Index erIndexInPkt, const Size erCou
 
 const PktRegion& Pkt::regionAtOffsetInPktBits(const Index offsetInPktBits)
 {
-    auto regionFromLru = _lruRegionCache.get(offsetInPktBits);
-
-    if (regionFromLru) {
+    if (auto regionFromLru = _lruRegionCache.get(offsetInPktBits)) {
         return **regionFromLru;
     }
 
@@ -888,9 +883,8 @@ const PktRegion& Pkt::regionAtOffsetInPktBits(const Index offsetInPktBits)
         _lruRegionCache.insert(offsetInPktBits, *it);
     }
 
-    const auto drOffsetInPktBits = region.segment().offsetInPktBits();
-
-    if (!_lruRegionCache.contains(drOffsetInPktBits)) {
+    if (const auto drOffsetInPktBits = region.segment().offsetInPktBits();
+            !_lruRegionCache.contains(drOffsetInPktBits)) {
         _lruRegionCache.insert(drOffsetInPktBits, *it);
     }
 

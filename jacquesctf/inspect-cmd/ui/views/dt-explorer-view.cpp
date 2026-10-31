@@ -30,9 +30,7 @@ void DtExplorerView::dst(const yactfr::DataStreamType& dst, const bool showErts)
     _singleDt = nullptr;
     _ert = nullptr;
 
-    const auto traceType = dst.traceType();
-
-    if (traceType->packetHeaderType()) {
+    if (const auto traceType = dst.traceType(); traceType->packetHeaderType()) {
         _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::PacketHeader});
         this->_appendDetailsRow(*traceType->packetHeaderType(), _details.pktHeader);
         _rows.push_back(_EmptyRow {});

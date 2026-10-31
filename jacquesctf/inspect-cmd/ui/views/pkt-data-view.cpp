@@ -65,9 +65,8 @@ void PktDataView::_setBaseAndEndOffsetInPktBitsFromOffset(const Index offsetInPk
     assert(_appState->hasActivePktState());
     assert(offsetInPktBits < _appState->activePktState().pkt().indexEntry().effectiveTotalLen());
 
-    const auto rowOffsetInPktBits = offsetInPktBits - (offsetInPktBits % _rowSize.bits());
-
-    if (rowOffsetInPktBits < this->_halfPageLen()) {
+    if (const auto rowOffsetInPktBits = offsetInPktBits - (offsetInPktBits % _rowSize.bits());
+            rowOffsetInPktBits < this->_halfPageLen()) {
         _baseOffsetInPktBits = 0;
     } else {
         _baseOffsetInPktBits = rowOffsetInPktBits - this->_halfPageLen().bits();
@@ -91,9 +90,7 @@ void PktDataView::_setPrevCurNextOffsetInPktBits()
     assert(curPktRegion);
 
     // previous
-    const auto prevPktRegion = pkt.previousRegion(*curPktRegion);
-
-    if (prevPktRegion) {
+    if (const auto prevPktRegion = pkt.previousRegion(*curPktRegion)) {
         _prevOffsetInPktBits = prevPktRegion->segment().offsetInPktBits();
     } else {
         _prevOffsetInPktBits = std::nullopt;
@@ -431,9 +428,8 @@ void PktDataView::_drawUnselChar(const _Char& ch) const
 
 void PktDataView::_drawChar(const _Char& ch) const
 {
-    const auto selPktRegionIt = ch.pktRegionIt(_curOffsetInPktBits);
-
-    if (selPktRegionIt != ch.pktRegions.end()) {
+    if (const auto selPktRegionIt = ch.pktRegionIt(_curOffsetInPktBits);
+            selPktRegionIt != ch.pktRegions.end()) {
         if (ch.pktRegions.size() == 1) {
             this->_stylist().pktDataViewSel(*this, Stylist::PktDataViewSelType::CUR);
         } else {
@@ -582,9 +578,8 @@ void PktDataView::_setHexChars()
 
             // times two because `_chars` contains nibbles, not bytes
             auto charIndex = ((bitOffsetInPkt / 8) - (_baseOffsetInPktBits / 8)) * 2;
-            const auto bitLoc = bitArray.bitLoc(indexInBitArray);
 
-            if (bitLoc.bitIndexInByte() < 4) {
+            if (const auto bitLoc = bitArray.bitLoc(indexInBitArray); bitLoc.bitIndexInByte() < 4) {
                 // low nibble
                 ++charIndex;
             }
@@ -621,9 +616,8 @@ void PktDataView::_setAsciiChars()
         ch.pt.y = (offsetInPktBits - _baseOffsetInPktBits) / _rowSize.bits();
         ch.pt.x = _asciiCharsX + (offsetInPktBits % _rowSize.bits()) / 8;
 
-        const auto val = static_cast<chtype>(*pkt.data(offsetInPktBits / 8));
-
-        if (!std::isprint(val)) {
+        if (const auto val = static_cast<chtype>(*pkt.data(offsetInPktBits / 8));
+                !std::isprint(val)) {
             ch.isPrintable = false;
             ch.val = ACS_BULLET;
         } else {
@@ -784,9 +778,7 @@ void PktDataView::pageUp()
         return;
     }
 
-    const auto halfPageLen = this->_halfPageLen();
-
-    if (_baseOffsetInPktBits < halfPageLen.bits()) {
+    if (const auto halfPageLen = this->_halfPageLen(); _baseOffsetInPktBits < halfPageLen.bits()) {
         _baseOffsetInPktBits = 0;
     } else {
         _baseOffsetInPktBits -= halfPageLen.bits();

@@ -44,9 +44,7 @@ std::unique_ptr<const SearchQuery> SearchCtrl::startLive(const std::string& init
     bool accepted = false;
 
     while (true) {
-        const auto ch = getch();
-
-        if (ch == '\t') {
+        if (const auto ch = getch(); ch == '\t') {
             continue;
         } else if (ch == '\n' || ch == '\r') {
             // enter

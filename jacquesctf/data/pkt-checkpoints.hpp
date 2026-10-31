@@ -316,9 +316,7 @@ private:
             return nullptr;
         }
 
-        const auto& er = *it->first;
-
-        if (eqFunc(er, prop)) {
+        if (const auto& er = *it->first; eqFunc(er, prop)) {
             // equal
             return &(*it);
         }

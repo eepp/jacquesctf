@@ -43,9 +43,7 @@ Er::SP Er::createFromElemSeqIt(yactfr::ElementSequenceIterator& it,
 
             case yactfr::Element::Kind::EventRecordInfo:
             {
-                auto& elem = it->asEventRecordInfoElement();
-
-                if (elem.type()) {
+                if (auto& elem = it->asEventRecordInfoElement(); elem.type()) {
                     er->type(*elem.type());
                 }
 

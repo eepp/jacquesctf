@@ -212,9 +212,7 @@ void ErTableView::_appStateChanged(const Message msg)
         assert(_appState->activePktState().pkt().firstEr());
         assert(_appState->activePktState().pkt().lastEr());
 
-        const auto curEr = _appState->curEr();
-
-        if (curEr) {
+        if (const auto curEr = _appState->curEr()) {
             this->_selRowAndDraw(curEr->indexInPkt(), false);
         } else {
             const auto& indexEntry = _appState->activePktState().pktIndexEntry();

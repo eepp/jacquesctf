@@ -80,9 +80,7 @@ void InspectScreen::_toggleBookmark(const unsigned int id)
 
     assert(id < bookmarks.size());
 
-    auto& bookmarkedOffsetInPktBit = bookmarks[id];
-
-    if (bookmarkedOffsetInPktBit) {
+    if (auto& bookmarkedOffsetInPktBit = bookmarks[id]) {
         if (bookmarkedOffsetInPktBit == this->_appState().curOffsetInPktBits()) {
             bookmarkedOffsetInPktBit = std::nullopt;
         } else {
