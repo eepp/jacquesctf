@@ -27,24 +27,18 @@ find_package (
         filesystem
 )
 
-# find yactfr
-find_library (YACTFR_LIB yactfr)
-
-if (NOT YACTFR_LIB)
-    message (FATAL_ERROR "Cannot find the yactfr library")
-else ()
-    message (STATUS "yactfr library: ${YACTFR_LIB}")
-endif ()
-
-find_file (YACTFR_INCLUDE_FILE yactfr/yactfr.hpp)
-
-if (NOT YACTFR_INCLUDE_FILE)
-    message (FATAL_ERROR "Cannot find the yactfr include directory")
-else ()
-    get_filename_component (YACTFR_INCLUDE_DIR "${YACTFR_INCLUDE_FILE}" DIRECTORY)
-    get_filename_component (YACTFR_INCLUDE_DIR "${YACTFR_INCLUDE_DIR}" DIRECTORY)
-    message (STATUS "yactfr include directory: ${YACTFR_INCLUDE_DIR}")
-endif ()
+# fetch and build a pinned version of yactfr (static library, linked
+# into the `jacquesctf` executable)
+#
+# Set `FETCHCONTENT_SOURCE_DIR_YACTFR` to the path of a local yactfr
+# source tree to use it instead.
+include (FetchContent)
+FetchContent_Declare (
+    yactfr
+    GIT_REPOSITORY https://github.com/eepp/yactfr.git
+    GIT_TAG 296fe8a8acea81550e04a55d440d229bacc1b5b8
+)
+FetchContent_MakeAvailable (yactfr)
 
 # threading
 find_package (Threads REQUIRED)
@@ -141,7 +135,6 @@ target_include_directories (
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CURSES_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
-    ${YACTFR_INCLUDE_DIR}
 )
 target_link_libraries (
     jacquesctf
@@ -149,7 +142,7 @@ target_link_libraries (
     Boost::program_options
     Boost::filesystem
     Threads::Threads
-    ${YACTFR_LIB}
+    yactfr::yactfr
 )
 target_compile_definitions (
     jacquesctf PRIVATE

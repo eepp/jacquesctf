@@ -87,11 +87,17 @@ packets.
 Make sure you have the build time requirements:
 
 * Linux/Unix platform
-* https://cmake.org/[CMake] ≥ 3.12.0
+* https://cmake.org/[CMake] ≥ 3.14.0
 * pass:[C++17] compiler
 * http://www.boost.org/[Boost] ≥ 1.58
 * https://www.gnu.org/software/ncurses/[ncurses]
-* Latest version of https://github.com/eepp/yactfr[yactfr]
+* Git and network access
+
+The build system fetches and builds a pinned version of
+https://github.com/eepp/yactfr[yactfr] and links it statically.
+
+To use a local yactfr source tree instead, pass
+`-DFETCHCONTENT_SOURCE_DIR_YACTFR=_PATH_` to `cmake`.
 
 .Build and install Jacques CTF from source
 ----
