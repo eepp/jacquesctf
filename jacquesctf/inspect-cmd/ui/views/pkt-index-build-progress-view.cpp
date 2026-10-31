@@ -61,10 +61,8 @@ void PktIndexBuildProgressView::_drawFile()
     constexpr auto y = 1;
 
     this->_clearRow(y);
-    std::string dirName, filename;
-
-    std::tie(dirName, filename) = utils::formatPath(utils::escapeStr(_dsf->path().string()),
-                                                    this->contentRect().w - 2);
+    const auto [dirName, filename] = utils::formatPath(utils::escapeStr(_dsf->path().string()),
+                                                       this->contentRect().w - 2);
 
     Index filenameX = 1;
 
@@ -134,11 +132,11 @@ void PktIndexBuildProgressView::_drawProgress()
     this->_stylist().std(*this, true);
 
     {
-        const auto lenUnit = utils::formatLen(_offsetBytes * 8,
-                                              utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS, ',');
+        const auto [len, unit] = utils::formatLen(_offsetBytes * 8,
+                                                  utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
+                                                  ',');
 
-        this->_moveAndPrint({infoX, offsetY}, "%s %s", lenUnit.first.c_str(),
-                            lenUnit.second.c_str());
+        this->_moveAndPrint({infoX, offsetY}, "%s %s", len.c_str(), unit.c_str());
     }
 
     this->_clearRow(sizeY);
@@ -147,10 +145,10 @@ void PktIndexBuildProgressView::_drawProgress()
     this->_stylist().std(*this, true);
 
     {
-        const auto lenUnit = _dsf->fileLen().format(utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
-                                                    ',');
+        const auto [len, unit] = _dsf->fileLen().format(utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
+                                                        ',');
 
-        this->_moveAndPrint({infoX, sizeY}, "%s %s", lenUnit.first.c_str(), lenUnit.second.c_str());
+        this->_moveAndPrint({infoX, sizeY}, "%s %s", len.c_str(), unit.c_str());
     }
 
     // sequence number

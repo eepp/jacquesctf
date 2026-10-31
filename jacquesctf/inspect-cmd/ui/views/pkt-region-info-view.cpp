@@ -179,17 +179,17 @@ void PktRegionInfoView::_redrawContent()
         auto arrayIndexesIt = cPktRegion->arrayIndexes().begin();
 
         for (auto it = cPktRegion->dtPath().items().begin(); it != cPktRegion->dtPath().items().end(); ++it) {
-            const auto itemStr = dtPathItemStr(*it, &arrayIndexesIt);
+            const auto [prefix, str] = dtPathItemStr(*it, &arrayIndexesIt);
 
-            if (!itemStr.first.empty()) {
-                this->_safePrint(itemStr.first.c_str());
+            if (!prefix.empty()) {
+                this->_safePrint(prefix.c_str());
             }
 
             if (it == cPktRegion->dtPath().items().end() - 1) {
                 this->_stylist().pktRegionInfoViewStd(*this, true);
             }
 
-            this->_safePrint("%s", itemStr.second.c_str());
+            this->_safePrint("%s", str.c_str());
         }
     } else if (dynamic_cast<const PaddingPktRegion *>(pktRegion)) {
         if (pktRegion->scope()) {
@@ -307,9 +307,9 @@ void PktRegionInfoView::_redrawContent()
 void PktRegionInfoView::_setMaxDtPathSize(const Trace& trace)
 {
     const auto accFunc = [](const auto total, auto& item) {
-        const auto itemStr = dtPathItemStr(item, nullptr);
+        const auto [prefix, str] = dtPathItemStr(item, nullptr);
 
-        return total + itemStr.first.size() + itemStr.second.size();
+        return total + prefix.size() + str.size();
     };
 
     const auto totalDtPathItSizeFunc = [&accFunc](auto& dtDtPathPair) {

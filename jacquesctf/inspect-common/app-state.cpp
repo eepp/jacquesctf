@@ -30,8 +30,8 @@ AppState::AppState(const std::vector<bfs::path>& paths,
     }
 
     // create traces
-    for (const auto& tracePathPathsPair : tracePaths) {
-        auto trace = std::make_unique<Trace>(tracePathPathsPair.second);
+    for (const auto& [tracePath, paths] : tracePaths) {
+        auto trace = std::make_unique<Trace>(paths);
 
         for (auto& dsFile : trace->dsFiles()) {
             _dsFileStates.push_back(std::make_unique<DsFileState>(*this, *dsFile,

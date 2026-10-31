@@ -166,9 +166,9 @@ void createLttngIndexCmd(const CreateLttngIndexCfg& cfg)
     }
 
     // create indexes
-    for (const auto& traceDirDsFilePathsPair : groupedDsFilePaths) {
+    for (const auto& [traceDir, dsFilePaths] : groupedDsFilePaths) {
         // create trace with specific data stream files
-        Trace trace {traceDirDsFilePathsPair.second};
+        Trace trace {dsFilePaths};
 
         for (auto& dsf : trace.dsFiles()) {
             dsf->buildIndex();

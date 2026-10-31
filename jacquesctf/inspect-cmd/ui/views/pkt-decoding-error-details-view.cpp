@@ -51,17 +51,18 @@ void PktDecodingErrorDetailsView::_redrawContent()
     this->_stylist().pktDecodingErrorDetailsView(*this, false);
 
     {
-        const auto lenUnit = utils::formatLen(error.decodingError().offset(),
-                                              utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS, ',');
+        const auto [len, unit] = utils::formatLen(error.decodingError().offset(),
+                                                  utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
+                                                  ',');
 
-        this->_print("%s %s", lenUnit.first.c_str(), lenUnit.second.c_str());
+        this->_print("%s %s", len.c_str(), unit.c_str());
     }
 
     {
-        const auto lenUnit = utils::formatLen(error.decodingError().offset(),
-                                              utils::LenFmtMode::BITS, ',');
+        const auto [len, unit] = utils::formatLen(error.decodingError().offset(),
+                                                  utils::LenFmtMode::BITS, ',');
 
-        this->_print(" (%s %s)", lenUnit.first.c_str(), lenUnit.second.c_str());
+        this->_print(" (%s %s)", len.c_str(), unit.c_str());
     }
 
     // offset in packet
@@ -73,16 +74,17 @@ void PktDecodingErrorDetailsView::_redrawContent()
                                  pktIndexEntry.offsetInDsFileBits();
 
     {
-        const auto lenUnit = utils::formatLen(offsetInPktBits,
-                                              utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS, ',');
+        const auto [len, unit] = utils::formatLen(offsetInPktBits,
+                                                  utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
+                                                  ',');
 
-        this->_print("%s %s", lenUnit.first.c_str(), lenUnit.second.c_str());
+        this->_print("%s %s", len.c_str(), unit.c_str());
     }
 
     {
-        const auto lenUnit = utils::formatLen(offsetInPktBits, utils::LenFmtMode::BITS, ',');
+        const auto [len, unit] = utils::formatLen(offsetInPktBits, utils::LenFmtMode::BITS, ',');
 
-        this->_print(" (%s %s)", lenUnit.first.c_str(), lenUnit.second.c_str());
+        this->_print(" (%s %s)", len.c_str(), unit.c_str());
     }
 
     // message

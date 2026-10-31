@@ -119,9 +119,8 @@ private:
 
 static inline std::ostream& operator<<(std::ostream& stream, const DataLen& dataLen)
 {
-    std::string qty, units;
+    const auto [qty, units] = dataLen.format(utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS, ',');
 
-    std::tie(qty, units) = dataLen.format(utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS, ',');
     stream << qty << ' ' << units;
     return stream;
 }

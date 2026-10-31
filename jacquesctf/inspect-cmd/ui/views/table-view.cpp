@@ -206,7 +206,7 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
         this->_drawCellAlignedText(contentPos, descr.contentWidth(), rCell->val() ? "Yes" : "No",
                                    rCell->val() ? 3 : 2, customStyle, cell.textAlign());
     } else if (const auto dsCell = dynamic_cast<const DataLenTableViewCell *>(&cell)) {
-        const auto parts = dsCell->len().format(dsCell->fmtMode(), ',');
+        const auto [len, unit] = dsCell->len().format(dsCell->fmtMode(), ',');
         const char *fmt = "%s %s";
         std::array<char, 32> buf;
 
@@ -215,7 +215,7 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
             fmt = "%s%4s";
         }
 
-        std::sprintf(buf.data(), fmt, parts.first.c_str(), parts.second.c_str());
+        std::sprintf(buf.data(), fmt, len.c_str(), unit.c_str());
 
         if (customStyle) {
             this->_stylist().tableViewTextCell(*this, cell.emphasized());
@@ -294,8 +294,8 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
 
         case TsFmtMode::NS_FROM_ORIGIN:
         {
-            const auto parts = utils::formatNs(rCell->ts().nsFromOrigin(), ',');
-            const auto partsWidth = parts.first.size() + parts.second.size() + 4;
+            const auto [sPart, nsPart] = utils::formatNs(rCell->ts().nsFromOrigin(), ',');
+            const auto partsWidth = sPart.size() + nsPart.size() + 4;
             const auto startPos = Point {
                 contentPos.x + descr.contentWidth() - partsWidth, contentPos.y
             };
@@ -305,13 +305,13 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
             }
 
             this->_clearCell(contentPos, descr.contentWidth());
-            this->_moveAndPrint(startPos, "%s,", parts.first.c_str());
+            this->_moveAndPrint(startPos, "%s,", sPart.c_str());
 
             if (customStyle) {
                 this->_stylist().tableViewTsCellNsPart(*this, cell.emphasized());
             }
 
-            this->_print("%s", parts.second.c_str());
+            this->_print("%s", nsPart.c_str());
 
             if (customStyle) {
                 this->_stylist().tableViewTextCell(*this, cell.emphasized());
@@ -362,8 +362,8 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
 
         case TsFmtMode::NS_FROM_ORIGIN:
         {
-            const auto parts = utils::formatNs(rCell->absDuration().ns(), ',');
-            const auto partsWidth = parts.first.size() + parts.second.size() + 4;
+            const auto [sPart, nsPart] = utils::formatNs(rCell->absDuration().ns(), ',');
+            const auto partsWidth = sPart.size() + nsPart.size() + 4;
             const auto startPos = Point {
                 contentPos.x + descr.contentWidth() - partsWidth - (rCell->isNegative() ? 1 : 0),
                 contentPos.y
@@ -380,13 +380,13 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
                 this->_appendChar('-');
             }
 
-            this->_safePrint("%s,", parts.first.c_str());
+            this->_safePrint("%s,", sPart.c_str());
 
             if (customStyle) {
                 this->_stylist().tableViewTsCellNsPart(*this, cell.emphasized());
             }
 
-            this->_safePrint("%s", parts.second.c_str());
+            this->_safePrint("%s", nsPart.c_str());
 
             if (customStyle) {
                 this->_stylist().tableViewTextCell(*this, cell.emphasized());
@@ -420,10 +420,9 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
                                        std::strlen(buf.data()), customStyle, cell.textAlign());
         }
     } else if (const auto pCell = dynamic_cast<const PathTableViewCell *>(&cell)) {
-        std::string dirName, filename;
-
         assert(!pCell->path().empty());
-        std::tie(dirName, filename) = utils::formatPath(pCell->path(), descr.contentWidth());
+
+        const auto [dirName, filename] = utils::formatPath(pCell->path(), descr.contentWidth());
 
         auto curPos = contentPos;
 

@@ -263,11 +263,11 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
         rows.push_back(std::make_unique<_EmptyRow>());
         rows.push_back(std::make_unique<_SectionRow>("Trace environment"));
 
-        for (auto& entryPair : traceType.environment().entries()) {
-            if (const auto intEntry = std::get_if<long long>(&entryPair.second)) {
-                rows.push_back(std::make_unique<_SIntPropRow>(entryPair.first, *intEntry));
-            } else if (const auto strEntry = std::get_if<std::string>(&entryPair.second)) {
-                rows.push_back(std::make_unique<_StrPropRow>(entryPair.first, *strEntry));
+        for (auto& [key, val] : traceType.environment().entries()) {
+            if (const auto intEntry = std::get_if<long long>(&val)) {
+                rows.push_back(std::make_unique<_SIntPropRow>(key, *intEntry));
+            } else if (const auto strEntry = std::get_if<std::string>(&val)) {
+                rows.push_back(std::make_unique<_StrPropRow>(key, *strEntry));
             }
         }
     }
@@ -387,9 +387,9 @@ void TraceInfoView::_buildRows()
         this->_buildTraceInfoRows(dsfState->dsFile().trace());
     }
 
-    for (const auto& traceInfo : _traceInfo) {
+    for (const auto& [trace, rows] : _traceInfo) {
         Size longestKeySize = 0;
-        auto it = traceInfo.second.begin();
+        auto it = rows.begin();
         auto lastSectionIt = it;
 
         const auto setValOffsets = [&longestKeySize, &lastSectionIt, &it]() {
@@ -405,7 +405,7 @@ void TraceInfoView::_buildRows()
             lastSectionIt = it;
         };
 
-        while (it != traceInfo.second.end()) {
+        while (it != rows.end()) {
             const auto& row = *it;
 
             if (const auto sRow = dynamic_cast<const _SectionRow *>(row.get())) {
@@ -458,10 +458,8 @@ void TraceInfoView::_drawRows()
             } else if (const auto vRow = dynamic_cast<const _StrPropRow *>(row.get())) {
                 this->_safePrint("%s", vRow->val.c_str());
             } else if (const auto vRow = dynamic_cast<const _DataLenPropRow *>(row.get())) {
-                std::string len;
-                std::string unit;
+                const auto [len, unit] = vRow->len.format();
 
-                std::tie(len, unit) = vRow->len.format();
                 this->_safePrint("%s %s", len.c_str(), unit.c_str());
             } else if (const auto vRow = dynamic_cast<const _TsPropRow *>(row.get())) {
                 this->_safePrint("%s", vRow->ts.format().c_str());

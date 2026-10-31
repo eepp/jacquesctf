@@ -27,9 +27,8 @@ template <typename DtT>
 void _mappingOrFlagDetailsFromDt(const DtT& dt, const Size indent, const Stylist& stylist,
                                  std::vector<std::unique_ptr<const AbstractDtDetails>>& vec)
 {
-    for (auto& nameRangesPair : dt) {
-        auto& name = nameRangesPair.first;
-        auto rangesStr = intRangeSetStr(nameRangesPair.second);
+    for (auto& [name, ranges] : dt) {
+        auto rangesStr = intRangeSetStr(ranges);
 
         vec.push_back(std::make_unique<const MappingOrFlagDetails>(name, std::move(rangesStr),
                                                                    indent, stylist));

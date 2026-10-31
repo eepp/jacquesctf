@@ -44,12 +44,11 @@ void Trace::_createMetadata(const bfs::path& metadataPath)
 
     try {
         auto metadataStream = yactfr::createMetadataStream(metadataFileStream);
-        auto traceTypeMetadataStreamUuidPair = yactfr::fromMetadataText(metadataStream->text());
+        auto [traceType, metadataStreamUuid] = yactfr::fromMetadataText(metadataStream->text());
 
-        _metadata = std::make_unique<Metadata>(metadataPath,
-                                               std::move(traceTypeMetadataStreamUuidPair.first),
+        _metadata = std::make_unique<Metadata>(metadataPath, std::move(traceType),
                                                std::move(metadataStream),
-                                               std::move(traceTypeMetadataStreamUuidPair.second));
+                                               std::move(metadataStreamUuid));
     } catch (const yactfr::InvalidMetadataStream& exc) {
         throw MetadataError<yactfr::InvalidMetadataStream> {metadataPath, exc};
     } catch (const yactfr::TextParseError& exc) {

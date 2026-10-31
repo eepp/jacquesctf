@@ -158,9 +158,8 @@ void StatusView::_redrawContent()
 
     const auto& path = utils::escapeStr(_appState->activeDsFileState().dsFile().path().string());
     const auto pathMaxLen = this->contentRect().w - _curEndPositions->dsfPath;
-    std::string dirNameStr, filenameStr;
+    const auto [dirNameStr, filenameStr] = utils::formatPath(path, pathMaxLen);
 
-    std::tie(dirNameStr, filenameStr) = utils::formatPath(path, pathMaxLen);
     this->_moveCursor({0, 0});
 
     if (!dirNameStr.empty()) {
