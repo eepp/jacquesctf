@@ -8,7 +8,6 @@
 #include <cassert>
 #include <sstream>
 #include <yactfr/yactfr.hpp>
-#include <boost/variant.hpp>
 
 #include "abstract-dt-details.hpp"
 #include "dt-explorer-view.hpp"
@@ -225,7 +224,7 @@ void DtExplorerView::centerHighlight()
     for (highlightedRow = 0; highlightedRow < _rows.size(); ++highlightedRow) {
         auto& row = _rows[highlightedRow];
 
-        if (const auto detailsRow = boost::get<const AbstractDtDetails *>(&row)) {
+        if (const auto detailsRow = std::get_if<const AbstractDtDetails *>(&row)) {
             const auto details = *detailsRow;
 
             if (const auto dtDetails = dynamic_cast<const DtDetails *>(details)) {
@@ -291,7 +290,7 @@ void DtExplorerView::_drawRows()
         const auto y = this->_contentRectYFromIndex(index);
         auto& row = _rows[index];
 
-        if (const auto subRow = boost::get<_ScopeSubtitleRow>(&row)) {
+        if (const auto subRow = std::get_if<_ScopeSubtitleRow>(&row)) {
             this->_moveCursor({0, y});
             this->_stylist().sectionTitle(*this);
 
@@ -322,7 +321,7 @@ void DtExplorerView::_drawRows()
             }
 
             this->_print(" type:");
-        } else if (const auto detailsRow = boost::get<const AbstractDtDetails *>(&row)) {
+        } else if (const auto detailsRow = std::get_if<const AbstractDtDetails *>(&row)) {
             const auto details = *detailsRow;
             bool highlighted = false;
 

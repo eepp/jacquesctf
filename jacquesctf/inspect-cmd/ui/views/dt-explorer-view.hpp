@@ -8,8 +8,8 @@
 #ifndef _JACQUES_INSPECT_CMD_UI_VIEWS_DT_EXPLORER_VIEW_HPP
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_DT_EXPLORER_VIEW_HPP
 
+#include <variant>
 #include <yactfr/metadata/fwd.hpp>
-#include <boost/variant.hpp>
 
 #include "scroll-view.hpp"
 #include "data/metadata.hpp"
@@ -42,7 +42,7 @@ private:
 
 private:
     using _Details = std::vector<AbstractDtDetails::UP>;
-    using _Row = boost::variant<_ScopeSubtitleRow, _EmptyRow, const AbstractDtDetails *>;
+    using _Row = std::variant<_ScopeSubtitleRow, _EmptyRow, const AbstractDtDetails *>;
 
 private:
     void _drawRows() override;

@@ -7,7 +7,6 @@
 
 #include <cassert>
 #include <algorithm>
-#include <boost/variant/get.hpp>
 
 #include "help-view.hpp"
 #include "../stylist.hpp"
@@ -234,22 +233,22 @@ void HelpView::_buildRows()
     _longestRowWidth = 0;
 
     for (const auto& row : _rows) {
-        if (const auto ssRow = boost::get<_SearchSyntaxRow>(&row)) {
+        if (const auto ssRow = std::get_if<_SearchSyntaxRow>(&row)) {
             _ssRowFmtPos = std::max(_ssRowFmtPos, static_cast<Size>(ssRow->descr.size() + 4));
         }
     }
 
     for (const auto& row : _rows) {
-        if (const auto sectRow = boost::get<_SectionRow>(&row)) {
+        if (const auto sectRow = std::get_if<_SectionRow>(&row)) {
             _longestRowWidth = std::max(_longestRowWidth, static_cast<Size>(sectRow->title.size()));
-        } else if (const auto sectRow = boost::get<_SubSectionRow>(&row)) {
+        } else if (const auto sectRow = std::get_if<_SubSectionRow>(&row)) {
             _longestRowWidth = std::max(_longestRowWidth, static_cast<Size>(sectRow->title.size()));
-        } else if (const auto keyRow = boost::get<_KeyRow>(&row)) {
+        } else if (const auto keyRow = std::get_if<_KeyRow>(&row)) {
             _longestRowWidth = std::max(_longestRowWidth,
                                         static_cast<Size>(keyWidth + keyRow->descr.size() + 2));
-        } else if (const auto textRow = boost::get<_TextRow>(&row)) {
+        } else if (const auto textRow = std::get_if<_TextRow>(&row)) {
             _longestRowWidth = std::max(_longestRowWidth, static_cast<Size>(textRow->line.size()));
-        } else if (const auto ssRow = boost::get<_SearchSyntaxRow>(&row)) {
+        } else if (const auto ssRow = std::get_if<_SearchSyntaxRow>(&row)) {
             _longestRowWidth = std::max(_longestRowWidth,
                                         static_cast<Size>(ssRow->fmt.size() + _ssRowFmtPos));
         }
@@ -273,13 +272,13 @@ void HelpView::_drawRows()
 
         const auto& row = _rows[rowIdx];
 
-        if (const auto sectRow = boost::get<_SectionRow>(&row)) {
+        if (const auto sectRow = std::get_if<_SectionRow>(&row)) {
             this->_stylist().sectionTitle(*this);
             this->_moveAndPrint({startX, y}, "%s", sectRow->title.c_str());
-        } else if (const auto sectRow = boost::get<_SubSectionRow>(&row)) {
+        } else if (const auto sectRow = std::get_if<_SubSectionRow>(&row)) {
             this->_stylist().subsectionTitle(*this);
             this->_moveAndPrint({startX + 2, y}, "%s", sectRow->title.c_str());
-        } else if (const auto keyRow = boost::get<_KeyRow>(&row)) {
+        } else if (const auto keyRow = std::get_if<_KeyRow>(&row)) {
             this->_moveCursor({startX + 2, y});
 
             for (const auto ch : keyRow->key) {
@@ -294,7 +293,7 @@ void HelpView::_drawRows()
 
             this->_stylist().std(*this);
             this->_moveAndPrint({startX + keyWidth, y}, "%s", keyRow->descr.c_str());
-        } else if (const auto textRow = boost::get<_TextRow>(&row)) {
+        } else if (const auto textRow = std::get_if<_TextRow>(&row)) {
             this->_stylist().std(*this);
             this->_moveCursor({startX + 2, y});
             this->_stylist().std(*this, textRow->bold);
@@ -307,7 +306,7 @@ void HelpView::_drawRows()
 
                 this->_appendChar(ch);
             }
-        } else if (const auto ssRow = boost::get<_SearchSyntaxRow>(&row)) {
+        } else if (const auto ssRow = std::get_if<_SearchSyntaxRow>(&row)) {
             this->_stylist().std(*this);
             this->_moveCursor({startX + 2, y});
 

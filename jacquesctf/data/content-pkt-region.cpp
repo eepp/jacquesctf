@@ -31,7 +31,7 @@ bool arrayIndexesLenIsExpected(const DtPath& dtPath,
         Size count = 0;
 
         for (auto& item : dtPath.items()) {
-            if (boost::get<DtPath::CurArrayElemItem>(&item)) {
+            if (std::get_if<DtPath::CurArrayElemItem>(&item)) {
                 ++count;
             }
         }
@@ -66,7 +66,7 @@ std::set<std::string> ContentPktRegion::flagOrMappingNames() const
     std::unordered_set<const std::string *> names;
 
     if (_dt->isFixedLengthBitMapType()) {
-        _dt->asFixedLengthBitMapType().activeFlagNamesForUnsignedIntegerValue(boost::get<unsigned long long>(*_val),
+        _dt->asFixedLengthBitMapType().activeFlagNamesForUnsignedIntegerValue(std::get<unsigned long long>(*_val),
                                                                               names);
     } else if (_dt->isFixedLengthUnsignedIntegerType()) {
         names = this->_mappingNamesOfVal(_dt->asFixedLengthUnsignedIntegerType());

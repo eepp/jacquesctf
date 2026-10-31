@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 #include <optional>
-#include <boost/variant.hpp>
+#include <variant>
 #include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
@@ -41,7 +41,7 @@ public:
     {
     };
 
-    using Item = boost::variant<StructMemberItem, VarOptItem, CurArrayElemItem, CurOptDataItem>;
+    using Item = std::variant<StructMemberItem, VarOptItem, CurArrayElemItem, CurOptDataItem>;
     using Items = std::vector<Item>;
 
 public:

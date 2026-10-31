@@ -8,7 +8,7 @@
 #ifndef _JACQUES_INSPECT_CMD_UI_VIEWS_HELP_VIEW_HPP
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_HELP_VIEW_HPP
 
-#include <boost/variant.hpp>
+#include <variant>
 
 #include "scroll-view.hpp"
 
@@ -60,8 +60,8 @@ private:
     };
 
 private:
-    std::vector<boost::variant<_SectionRow, _SubSectionRow, _EmptyRow, _TextRow,
-                               _KeyRow, _SearchSyntaxRow>> _rows;
+    std::vector<std::variant<_SectionRow, _SubSectionRow, _EmptyRow, _TextRow,
+                             _KeyRow, _SearchSyntaxRow>> _rows;
     Size _longestRowWidth;
     Size _ssRowFmtPos;
 };

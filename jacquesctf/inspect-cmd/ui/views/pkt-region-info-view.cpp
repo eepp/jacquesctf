@@ -13,6 +13,7 @@
 #include <set>
 #include <string>
 #include <cassert>
+#include <variant>
 #include <curses.h>
 #include <signal.h>
 #include <unistd.h>
@@ -69,9 +70,11 @@ const char *scopeStr(const yactfr::Scope scope) noexcept
     }
 }
 
-class DtPathItemStrVisitor final :
-    public boost::static_visitor<std::pair<std::string, std::string>>
+class DtPathItemStrVisitor final
 {
+public:
+    using Result = std::pair<std::string, std::string>;
+
 public:
     explicit DtPathItemStrVisitor(ContentPktRegion::ArrayIndexes::const_iterator * const arrayIndexesIt) :
         _arrayIndexesIt {arrayIndexesIt}
@@ -79,18 +82,18 @@ public:
     }
 
     template <typename ItemT>
-    result_type operator()(const ItemT& item) const
+    Result operator()(const ItemT& item) const
     {
         return this->_itemStr(item);
     }
 
 private:
-    result_type _itemStr(const DtPath::StructMemberItem& item) const
+    Result _itemStr(const DtPath::StructMemberItem& item) const
     {
         return std::make_pair(std::string {"/"}, utils::escapeStr(item.name));
     }
 
-    result_type _itemStr(const DtPath::VarOptItem& item) const
+    Result _itemStr(const DtPath::VarOptItem& item) const
     {
         return std::make_pair(std::string {},
                               utils::call([&item] {
@@ -102,7 +105,7 @@ private:
         }));
     }
 
-    result_type _itemStr(const DtPath::CurArrayElemItem&) const
+    Result _itemStr(const DtPath::CurArrayElemItem&) const
     {
         /*
          * A bit of a hack here: we also use this visitor to compute the
@@ -121,7 +124,7 @@ private:
         return std::make_pair(std::string {}, str);
     }
 
-    result_type _itemStr(const DtPath::CurOptDataItem&) const
+    Result _itemStr(const DtPath::CurOptDataItem&) const
     {
         return std::make_pair(std::string {}, std::string {"<%>"});
     }
@@ -130,10 +133,10 @@ private:
     ContentPktRegion::ArrayIndexes::const_iterator *_arrayIndexesIt;
 };
 
-DtPathItemStrVisitor::result_type dtPathItemStr(const DtPath::Item& item,
-                                                ContentPktRegion::ArrayIndexes::const_iterator * const arrayIndexesIt)
+DtPathItemStrVisitor::Result dtPathItemStr(const DtPath::Item& item,
+                                           ContentPktRegion::ArrayIndexes::const_iterator * const arrayIndexesIt)
 {
-    return boost::apply_visitor(DtPathItemStrVisitor {arrayIndexesIt}, item);
+    return std::visit(DtPathItemStrVisitor {arrayIndexesIt}, item);
 }
 
 } // namespace
@@ -232,11 +235,11 @@ void PktRegionInfoView::_redrawContent()
         this->_safePrint("    ");
         this->_stylist().pktRegionInfoViewVal(*this);
 
-        if (const auto val = boost::get<bool>(&varVal)) {
+        if (const auto val = std::get_if<bool>(&varVal)) {
             this->_safePrint("%s", *val ? "true" : "false");
-        } else if (const auto val = boost::get<long long>(&varVal)) {
+        } else if (const auto val = std::get_if<long long>(&varVal)) {
             this->_safePrint("%s", utils::sepNumber(*val, ',').c_str());
-        } else if (const auto val = boost::get<unsigned long long>(&varVal)) {
+        } else if (const auto val = std::get_if<unsigned long long>(&varVal)) {
             const auto prefDispBase = utils::call([cPktRegion] {
                 if (cPktRegion->dt().isIntegerType()) {
                     return utils::intTypePrefDispBase(cPktRegion->dt());
@@ -267,9 +270,9 @@ void PktRegionInfoView::_redrawContent()
             } else {
                 this->_safePrint(intFmt.c_str(), *val);
             }
-        } else if (const auto val = boost::get<double>(&varVal)) {
+        } else if (const auto val = std::get_if<double>(&varVal)) {
             this->_safePrint("%f", *val);
-        } else if (const auto val = boost::get<std::string>(&varVal)) {
+        } else if (const auto val = std::get_if<std::string>(&varVal)) {
             this->_safePrint("%s", utils::escapeStr(*val).c_str());
         }
 

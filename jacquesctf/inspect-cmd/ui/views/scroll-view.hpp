@@ -8,8 +8,6 @@
 #ifndef _JACQUES_INSPECT_CMD_UI_VIEWS_SCROLL_VIEW_HPP
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_SCROLL_VIEW_HPP
 
-#include <boost/variant.hpp>
-
 #include "view.hpp"
 
 namespace jacques {

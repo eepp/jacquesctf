@@ -13,7 +13,7 @@
 #include <set>
 #include <string>
 #include <optional>
-#include <boost/variant.hpp>
+#include <variant>
 #include <yactfr/yactfr.hpp>
 
 #include "dt-path.hpp"
@@ -26,7 +26,7 @@ class ContentPktRegion final :
     public PktRegion
 {
 public:
-    using Val = boost::variant<std::nullptr_t, bool, unsigned long long, long long, double, std::string>;
+    using Val = std::variant<std::nullptr_t, bool, unsigned long long, long long, double, std::string>;
     using ArrayIndexes = std::vector<Index>;
 
 public:
@@ -79,7 +79,7 @@ private:
     {
         std::unordered_set<const std::string *> names;
 
-        intType.mappingNamesForValue(boost::get<typename IntTypeT::MappingValue>(*_val), names);
+        intType.mappingNamesForValue(std::get<typename IntTypeT::MappingValue>(*_val), names);
         return names;
     }
 
