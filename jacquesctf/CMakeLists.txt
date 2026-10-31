@@ -21,14 +21,14 @@ endif ()
 
 # find Boost
 find_package (
-    Boost 1.58 REQUIRED
+    Boost 1.70 REQUIRED
     COMPONENTS
         program_options
         filesystem
 )
 
-# fetch and build a pinned version of yactfr (static library, linked
-# into the `jacquesctf` executable)
+# Fetch and build a pinned version of yactfr (static library, linked
+# into the `jacquesctf` executable).
 #
 # Set `FETCHCONTENT_SOURCE_DIR_YACTFR` to the path of a local yactfr
 # source tree to use it instead.
@@ -36,7 +36,7 @@ include (FetchContent)
 FetchContent_Declare (
     yactfr
     GIT_REPOSITORY https://github.com/eepp/yactfr.git
-    GIT_TAG 296fe8a8acea81550e04a55d440d229bacc1b5b8
+    GIT_TAG 403c1c12f164e67f4d2bd59de6b92a261b01e477
 )
 FetchContent_MakeAvailable (yactfr)
 

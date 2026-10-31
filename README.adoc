@@ -87,9 +87,9 @@ packets.
 Make sure you have the build time requirements:
 
 * Linux/Unix platform
-* https://cmake.org/[CMake] ≥ 3.14.0
+* https://cmake.org/[CMake] ≥ 3.30.0
 * pass:[C++17] compiler
-* http://www.boost.org/[Boost] ≥ 1.58
+* http://www.boost.org/[Boost] ≥ 1.70
 * https://www.gnu.org/software/ncurses/[ncurses]
 * Git and network access
 
