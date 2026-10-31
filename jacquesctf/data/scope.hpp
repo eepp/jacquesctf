@@ -10,15 +10,13 @@
 
 #include <memory>
 #include <yactfr/yactfr.hpp>
-#include <boost/core/noncopyable.hpp>
 
 #include "er.hpp"
 #include "pkt-segment.hpp"
 
 namespace jacques {
 
-class Scope final :
-    boost::noncopyable
+class Scope final
 {
 public:
     using SP = std::shared_ptr<Scope>;
@@ -27,6 +25,9 @@ public:
 public:
     explicit Scope(yactfr::Scope scope) noexcept;
     explicit Scope(Er::SP er, yactfr::Scope scope, const PktSegment& segment = PktSegment {}) noexcept;
+
+    Scope(const Scope&) = delete;
+    Scope& operator=(const Scope&) = delete;
 
     const Er *er() const noexcept
     {

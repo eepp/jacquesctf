@@ -10,7 +10,6 @@
 
 #include <string>
 #include <cstdlib>
-#include <boost/core/noncopyable.hpp>
 #include <boost/optional.hpp>
 #include <boost/filesystem.hpp>
 #include <sys/mman.h>
@@ -20,13 +19,15 @@
 
 namespace jacques {
 
-class MemMappedFile final :
-    boost::noncopyable
+class MemMappedFile final
 {
 public:
     explicit MemMappedFile(boost::filesystem::path path,
                            const boost::optional<int>& fd = boost::none);
     ~MemMappedFile();
+
+    MemMappedFile(const MemMappedFile&) = delete;
+    MemMappedFile& operator=(const MemMappedFile&) = delete;
 
 public:
     enum class Advice {

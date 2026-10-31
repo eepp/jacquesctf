@@ -11,7 +11,6 @@
 #include <vector>
 #include <functional>
 #include <boost/filesystem.hpp>
-#include <boost/core/noncopyable.hpp>
 
 #include "msg.hpp"
 #include "inspect-common/app-state.hpp"

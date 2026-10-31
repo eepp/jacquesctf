@@ -11,7 +11,6 @@
 #include <vector>
 #include <functional>
 #include <boost/filesystem.hpp>
-#include <boost/core/noncopyable.hpp>
 
 #include "ds-file-state.hpp"
 #include "search-query.hpp"
@@ -51,8 +50,7 @@ namespace jacques {
  * _curOffsetInPktChanged():
  *     Called when the current offset in the active packet changed.
  */
-class AppState :
-    boost::noncopyable
+class AppState
 {
     friend class DsFileState;
     friend class PktState;
@@ -63,6 +61,10 @@ protected:
 
 public:
     virtual ~AppState() = default;
+
+    AppState(const AppState&) = delete;
+    AppState& operator=(const AppState&) = delete;
+
     void gotoDsFile(Index index);
     void gotoPrevDsFile();
     void gotoNextDsFile();

@@ -11,7 +11,6 @@
 #include <vector>
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
-#include <boost/core/noncopyable.hpp>
 
 #include "data/pkt.hpp"
 #include "aliases.hpp"
@@ -20,11 +19,14 @@ namespace jacques {
 
 class AppState;
 
-class PktState final :
-    boost::noncopyable
+class PktState final
 {
 public:
     explicit PktState(AppState& appState, const Metadata& metadata, Pkt& pkt) noexcept;
+
+    PktState(const PktState&) = delete;
+    PktState& operator=(const PktState&) = delete;
+
     void gotoPrevEr(Size count = 1);
     void gotoNextEr(Size count = 1);
     void gotoPrevPktRegion();

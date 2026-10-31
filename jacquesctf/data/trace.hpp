@@ -10,7 +10,6 @@
 
 #include <memory>
 #include <vector>
-#include <boost/core/noncopyable.hpp>
 #include <boost/optional.hpp>
 #include <boost/filesystem.hpp>
 
@@ -22,8 +21,7 @@ namespace jacques {
 
 class DsFile;
 
-class Trace final :
-    boost::noncopyable
+class Trace final
 {
 public:
     using DsFiles = std::vector<std::unique_ptr<DsFile>>;
@@ -33,6 +31,9 @@ public:
                    const std::vector<boost::filesystem::path>& dsFilePaths);
 
     explicit Trace(const std::vector<boost::filesystem::path>& dsFilePaths);
+
+    Trace(const Trace&) = delete;
+    Trace& operator=(const Trace&) = delete;
 
 public:
     static std::unique_ptr<Trace> withoutDsFiles(const boost::filesystem::path& traceDir);

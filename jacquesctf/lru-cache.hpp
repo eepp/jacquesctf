@@ -12,7 +12,6 @@
 #include <unordered_map>
 #include <utility>
 #include <list>
-#include <boost/core/noncopyable.hpp>
 
 #include "aliases.hpp"
 
@@ -23,8 +22,7 @@ namespace jacques {
  * associated to keys of type `KeyT`.
  */
 template <typename KeyT, typename ValT>
-class LruCache final :
-    boost::noncopyable
+class LruCache final
 {
 public:
     /*
@@ -35,6 +33,9 @@ public:
     {
         assert(maxSize > 0);
     }
+
+    LruCache(const LruCache&) = delete;
+    LruCache& operator=(const LruCache&) = delete;
 
     // size of the cache (not its capacity)
     Size size() const noexcept

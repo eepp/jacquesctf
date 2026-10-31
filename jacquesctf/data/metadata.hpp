@@ -13,7 +13,6 @@
 #include <optional>
 #include <yactfr/yactfr.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/core/noncopyable.hpp>
 #include <boost/uuid/uuid.hpp>
 
 #include "aliases.hpp"
@@ -24,8 +23,7 @@
 
 namespace jacques {
 
-class Metadata final :
-    boost::noncopyable
+class Metadata final
 {
 public:
     using DtParentMap = std::unordered_map<const yactfr::DataType *, const yactfr::DataType *>;
@@ -36,6 +34,10 @@ public:
     explicit Metadata(boost::filesystem::path path, yactfr::TraceType::Up traceType,
                       std::unique_ptr<const yactfr::MetadataStream> stream,
                       std::optional<boost::uuids::uuid> streamUuid);
+
+    Metadata(const Metadata&) = delete;
+    Metadata& operator=(const Metadata&) = delete;
+
     const yactfr::DataType *dtParent(const yactfr::DataType& dt) const noexcept;
     yactfr::Scope dtScope(const yactfr::DataType& dt) const noexcept;
     const DtPath& dtPath(const yactfr::DataType& dt) const noexcept;

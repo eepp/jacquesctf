@@ -12,7 +12,6 @@
 #include <memory>
 #include <vector>
 #include <yactfr/yactfr.hpp>
-#include <boost/core/noncopyable.hpp>
 
 #include "pkt-index-entry.hpp"
 #include "pkt-checkpoints.hpp"
@@ -122,8 +121,7 @@ namespace jacques {
  * LRU cache. The LRU cache avoids performing a binary search by
  * _regionCacheItBeforeOrAtOffsetInPktBits() every time.
  */
-class Pkt final :
-    boost::noncopyable
+class Pkt final
 {
 public:
     using SP = std::shared_ptr<Pkt>;
@@ -133,6 +131,9 @@ public:
                  const Metadata& metadata, yactfr::DataSource::Up dataSrc,
                  std::unique_ptr<MemMappedFile> mmapFile,
                  PktCheckpointsBuildListener& pktCheckpointsBuildListener);
+
+    Pkt(const Pkt&) = delete;
+    Pkt& operator=(const Pkt&) = delete;
 
     /*
      * Appends packet regions to `regions` (calling

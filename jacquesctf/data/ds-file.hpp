@@ -12,7 +12,6 @@
 #include <vector>
 #include <functional>
 #include <boost/filesystem.hpp>
-#include <boost/core/noncopyable.hpp>
 #include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
@@ -27,8 +26,7 @@ namespace jacques {
 
 class Trace;
 
-class DsFile final :
-    boost::noncopyable
+class DsFile final
 {
     friend class Trace;
 
@@ -40,6 +38,10 @@ private:
 
 public:
     ~DsFile();
+
+    DsFile(const DsFile&) = delete;
+    DsFile& operator=(const DsFile&) = delete;
+
     void buildIndex();
     void buildIndex(const BuildIndexProgressFunc& progressFunc, Size step = 1);
     bool hasOffsetBits(Index offsetBits) const noexcept;

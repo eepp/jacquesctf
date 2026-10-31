@@ -12,7 +12,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 #include <yactfr/yactfr.hpp>
-#include <boost/core/noncopyable.hpp>
 
 #include "aliases.hpp"
 #include "data/ts.hpp"
@@ -27,14 +26,17 @@ namespace jacques {
 
 class AppState;
 
-class DsFileState final :
-    boost::noncopyable
+class DsFileState final
 {
     friend class AppState;
 
 public:
     explicit DsFileState(AppState& appState, DsFile& dsFile,
                          PktCheckpointsBuildListener& pktCheckpointsBuildListener);
+
+    DsFileState(const DsFileState&) = delete;
+    DsFileState& operator=(const DsFileState&) = delete;
+
     void gotoOffsetBits(Index offsetBits);
     void gotoPkt(Index index);
     void gotoPrevPkt();

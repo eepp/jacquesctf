@@ -9,14 +9,12 @@
 #define _JACQUES_INSPECT_COMMAND_UI_STYLIST_HPP
 
 #include <curses.h>
-#include <boost/core/noncopyable.hpp>
 
 #include "views/view.hpp"
 
 namespace jacques {
 
-class Stylist final :
-    boost::noncopyable
+class Stylist final
 {
 public:
     enum class PktDataViewSelType
@@ -35,6 +33,10 @@ public:
 
 public:
     Stylist();
+
+    Stylist(const Stylist&) = delete;
+    Stylist& operator=(const Stylist&) = delete;
+
     void viewBorder(const View& view, bool focused, bool emphasized) const;
     void viewTitle(const View& view, bool focused, bool emphasized) const;
     void viewHasMore(const View& view) const;

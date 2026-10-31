@@ -12,7 +12,6 @@
 #include <vector>
 #include <boost/operators.hpp>
 #include <boost/optional.hpp>
-#include <boost/core/noncopyable.hpp>
 
 #include "pkt-region-visitor.hpp"
 #include "pkt-segment.hpp"
@@ -43,8 +42,7 @@ namespace jacques {
  * the same packet: only their segments are compared.
  */
 class PktRegion :
-    public boost::totally_ordered<PktRegion>,
-    boost::noncopyable
+    public boost::totally_ordered<PktRegion>
 {
 public:
     using SP = std::shared_ptr<PktRegion>;
@@ -55,6 +53,9 @@ protected:
 
 public:
     virtual ~PktRegion() = default;
+
+    PktRegion(const PktRegion&) = delete;
+    PktRegion& operator=(const PktRegion&) = delete;
 
     void accept(PktRegionVisitor& visitor)
     {

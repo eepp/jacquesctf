@@ -11,7 +11,6 @@
 #include <memory>
 #include <boost/optional.hpp>
 #include <boost/operators.hpp>
-#include <boost/core/noncopyable.hpp>
 #include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
@@ -22,8 +21,7 @@
 namespace jacques {
 
 class Er final :
-    public boost::totally_ordered<Er>,
-    boost::noncopyable
+    public boost::totally_ordered<Er>
 {
 public:
     using SP = std::shared_ptr<Er>;
@@ -38,6 +36,9 @@ public:
 
     explicit Er(const yactfr::EventRecordType& type, const Index indexInPkt,
                 boost::optional<Ts> ts, const PktSegment& segment) noexcept;
+
+    Er(const Er&) = delete;
+    Er& operator=(const Er&) = delete;
 
     const yactfr::EventRecordType *type() const noexcept
     {

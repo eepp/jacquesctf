@@ -13,7 +13,6 @@
 #include <cassert>
 #include <cstdarg>
 #include <curses.h>
-#include <boost/core/noncopyable.hpp>
 
 #include "../rect.hpp"
 #include "../../state/msg.hpp"
@@ -55,8 +54,7 @@ class ViewInspectCmdStateObserverGuard;
  * to access its underlying ncurses window to change its current
  * attributes.
  */
-class View :
-    boost::noncopyable
+class View
 {
     friend class Stylist;
     friend class ViewInspectCmdStateObserverGuard;
@@ -84,6 +82,9 @@ protected:
 
 public:
     virtual ~View();
+
+    View(const View&) = delete;
+    View& operator=(const View&) = delete;
 
     /*
      * Refreshes this view, that is, copies the currently _changed_
