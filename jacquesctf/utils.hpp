@@ -42,7 +42,7 @@ std::pair<std::string, std::string> formatPath(const boost::filesystem::path& pa
  * Normalizes a globbing pattern, that is, removes consecutive `*`
  * characters.
  */
-std::string normalizeGlobPattern(const std::string& pattern);
+[[ nodiscard ]] std::string normalizeGlobPattern(const std::string& pattern);
 
 /*
  * Returns whether or not `candidate` matches the globbing pattern

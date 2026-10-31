@@ -316,13 +316,12 @@ std::optional<long long> parseInt(std::string::const_iterator& begin,
         return nullptr;
     }
 
-    std::string pattern {&(*it), static_cast<std::string::size_type>(end - it)};
+    const std::string pattern {&(*it), static_cast<std::string::size_type>(end - it)};
 
     it = end;
 
     // normalize pattern (no consecutive `*`)
-    utils::normalizeGlobPattern(pattern);
-    return std::make_unique<const ErtNameSearchQuery>(std::move(pattern));
+    return std::make_unique<const ErtNameSearchQuery>(utils::normalizeGlobPattern(pattern));
 }
 
 } // namespace
