@@ -5,8 +5,9 @@
  * prohibited. Proprietary and confidential.
  */
 
-#include <cstdlib>
 #include <cctype>
+#include <charconv>
+#include <limits>
 
 #include "search-query.hpp"
 
@@ -83,23 +84,42 @@ std::optional<long long> parseInt(std::string::const_iterator& begin,
         return std::nullopt;
     }
 
-    if (!std::isdigit(*begin)) {
+    if (!std::isdigit(static_cast<unsigned char>(*begin))) {
         return std::nullopt;
     }
 
-    auto rBegin = begin;
-    std::string buf;
-    auto nbCommas = 0U;
+    const auto strBegin = &(*begin);
+    const auto strEnd = strBegin + (end - begin);
 
-    if (*begin != '0') {
-        // remove commas
+    /*
+     * Parse an unsigned integer: std::from_chars() accepts a leading
+     * `-` with a signed integer type.
+     */
+    unsigned long long val;
+    std::from_chars_result res;
+    Size len;
+
+    if (*begin == '0' && strEnd - strBegin > 2 && (strBegin[1] == 'x' || strBegin[1] == 'X') &&
+            std::isxdigit(static_cast<unsigned char>(strBegin[2]))) {
+        // hexadecimal
+        res = std::from_chars(strBegin + 2, strEnd, val, 16);
+        len = res.ptr - strBegin;
+    } else if (*begin == '0') {
+        // octal (or zero)
+        res = std::from_chars(strBegin, strEnd, val, 8);
+        len = res.ptr - strBegin;
+    } else {
+        // decimal: remove commas
+        std::string buf;
+        auto nbCommas = 0U;
+
         for (auto it = begin; it != end; ++it) {
             if (*it == ',') {
                 ++nbCommas;
                 continue;
             }
 
-            if (!std::isdigit(*it)) {
+            if (!std::isdigit(static_cast<unsigned char>(*it))) {
                 break;
             }
 
@@ -107,18 +127,16 @@ std::optional<long long> parseInt(std::string::const_iterator& begin,
         }
 
         assert(!buf.empty());
-        rBegin = buf.begin();
+        res = std::from_chars(buf.data(), buf.data() + buf.size(), val);
+        len = (res.ptr - buf.data()) + nbCommas;
     }
 
-    char *strEnd;
-    const auto val = std::strtoll(&(*rBegin), &strEnd, 0);
-
-    if ((val == 0 && &(*rBegin) == strEnd) || errno == ERANGE) {
+    if (res.ec != std::errc {} || val > std::numeric_limits<long long>::max()) {
         return std::nullopt;
     }
 
-    begin += (strEnd - &(*rBegin)) + nbCommas;
-    return val;
+    begin += len;
+    return static_cast<long long>(val);
 }
 
 std::unique_ptr<const SearchQuery> parseIndex(std::string::const_iterator& it,
