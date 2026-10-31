@@ -139,9 +139,9 @@ std::optional<long long> parseInt(std::string::const_iterator& begin,
     return static_cast<long long>(val);
 }
 
-std::unique_ptr<const SearchQuery> parseIndex(std::string::const_iterator& it,
-                                              std::string::const_iterator end, const bool isDiff,
-                                              const long long mul)
+[[ nodiscard ]] std::unique_ptr<const SearchQuery> parseIndex(std::string::const_iterator& it,
+                                                              std::string::const_iterator end, const bool isDiff,
+                                                              const long long mul)
 {
     if (*it == '@') {
         ++it;
@@ -193,9 +193,9 @@ std::unique_ptr<const SearchQuery> parseIndex(std::string::const_iterator& it,
     return std::make_unique<const PktIndexSearchQuery>(isDiff, *val * mul);
 }
 
-std::unique_ptr<const SearchQuery> parseOffset(std::string::const_iterator& it,
-                                               std::string::const_iterator end, const bool isDiff,
-                                               const long long mul)
+[[ nodiscard ]] std::unique_ptr<const SearchQuery> parseOffset(std::string::const_iterator& it,
+                                                               std::string::const_iterator end, const bool isDiff,
+                                                               const long long mul)
 {
     if (it == end) {
         return nullptr;
@@ -236,9 +236,9 @@ std::unique_ptr<const SearchQuery> parseOffset(std::string::const_iterator& it,
     return std::make_unique<const OffsetSearchQuery>(isDiff, *val * mul, target);
 }
 
-std::unique_ptr<const SearchQuery> parseTs(std::string::const_iterator& it,
-                                           std::string::const_iterator end, const bool isDiff,
-                                           const long long mul)
+[[ nodiscard ]] std::unique_ptr<const SearchQuery> parseTs(std::string::const_iterator& it,
+                                                           std::string::const_iterator end, const bool isDiff,
+                                                           const long long mul)
 {
     if (it == end) {
         return nullptr;
@@ -271,8 +271,8 @@ std::unique_ptr<const SearchQuery> parseTs(std::string::const_iterator& it,
     return std::make_unique<const TimestampSearchQuery>(isDiff, *val * mul, unit);
 }
 
-std::unique_ptr<const SearchQuery> parseErtId(std::string::const_iterator& it,
-                                              std::string::const_iterator end, const bool isDiff)
+[[ nodiscard ]] std::unique_ptr<const SearchQuery> parseErtId(std::string::const_iterator& it,
+                                                              std::string::const_iterator end, const bool isDiff)
 {
     if (it == end) {
         return nullptr;
@@ -298,8 +298,8 @@ std::unique_ptr<const SearchQuery> parseErtId(std::string::const_iterator& it,
     return std::make_unique<const ErtIdSearchQuery>(*val);
 }
 
-std::unique_ptr<const SearchQuery> parseErtName(std::string::const_iterator& it,
-                                                std::string::const_iterator end, const bool isDiff)
+[[ nodiscard ]] std::unique_ptr<const SearchQuery> parseErtName(std::string::const_iterator& it,
+                                                                std::string::const_iterator end, const bool isDiff)
 {
     if (it == end) {
         return nullptr;

@@ -24,7 +24,7 @@ class DataLen final :
     public boost::totally_ordered<DataLen>
 {
 public:
-    static DataLen fromBytes(const Size lenBytes) noexcept
+    [[ nodiscard ]] static DataLen fromBytes(const Size lenBytes) noexcept
     {
         return {lenBytes * 8};
     }

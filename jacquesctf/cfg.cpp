@@ -170,7 +170,7 @@ std::vector<bfs::path> getExpandedPaths(const std::vector<std::string>& args)
     return expandPaths(origFilePaths);
 }
 
-std::unique_ptr<const Cfg> inspectCfgFromArgs(const std::vector<std::string>& args)
+[[ nodiscard ]] std::unique_ptr<const Cfg> inspectCfgFromArgs(const std::vector<std::string>& args)
 {
     bpo::options_description optDescr {""};
 
@@ -200,7 +200,7 @@ std::unique_ptr<const Cfg> inspectCfgFromArgs(const std::vector<std::string>& ar
     return std::make_unique<InspectCfg>(std::move(expandedPaths));
 }
 
-std::unique_ptr<const Cfg> createLttngIndexCfgFromArgs(const std::vector<std::string>& args)
+[[ nodiscard ]] std::unique_ptr<const Cfg> createLttngIndexCfgFromArgs(const std::vector<std::string>& args)
 {
     bpo::options_description optDescr {""};
 
@@ -243,7 +243,7 @@ void checkLooksLikeDsFile(const bfs::path& path)
     }
 }
 
-std::unique_ptr<const Cfg> listPktsCfgFromArgs(const std::vector<std::string>& args)
+[[ nodiscard ]] std::unique_ptr<const Cfg> listPktsCfgFromArgs(const std::vector<std::string>& args)
 {
     bpo::options_description optDescr {""};
 
@@ -285,7 +285,7 @@ std::unique_ptr<const Cfg> listPktsCfgFromArgs(const std::vector<std::string>& a
                                          vm.count("with-er-count") == 1);
 }
 
-std::unique_ptr<const Cfg> copyPktsCfgFromArgs(const std::vector<std::string>& args)
+[[ nodiscard ]] std::unique_ptr<const Cfg> copyPktsCfgFromArgs(const std::vector<std::string>& args)
 {
     bpo::options_description optDescr {""};
 

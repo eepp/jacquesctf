@@ -25,18 +25,18 @@ public:
 public:
     explicit SearchCtrl(const Screen& parentScreen, const Stylist& stylist);
 
-    std::unique_ptr<const SearchQuery> startLive(const std::string& init,
-                                                 const LiveUpdateFunc& liveUpdateFunc);
+    [[ nodiscard ]] std::unique_ptr<const SearchQuery> startLive(const std::string& init,
+                                                                 const LiveUpdateFunc& liveUpdateFunc);
 
     void parentScreenResized(const Screen& parentScreen);
     void animate(std::atomic_bool& stop) const;
 
-    std::unique_ptr<const SearchQuery> start(const std::string& init)
+    [[ nodiscard ]] std::unique_ptr<const SearchQuery> start(const std::string& init)
     {
         return this->startLive(init, [](const auto&) {});
     }
 
-    std::unique_ptr<const SearchQuery> start()
+    [[ nodiscard ]] std::unique_ptr<const SearchQuery> start()
     {
         return this->start(std::string {});
     }

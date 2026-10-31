@@ -141,7 +141,7 @@ public:
     explicit ErtIdSearchQuery(long long val) noexcept;
 };
 
-std::unique_ptr<const SearchQuery> parseSearchQuery(const std::string& input);
+[[ nodiscard ]] std::unique_ptr<const SearchQuery> parseSearchQuery(const std::string& input);
 
 } // namespace jacques
 

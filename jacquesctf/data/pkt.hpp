@@ -538,8 +538,8 @@ private:
      * not be `nullptr`).
      */
     template <typename ElemT, typename ValT>
-    ContentPktRegion::SP _contentRegionFromBitArrayElemAtCurIt(Scope::SP scope, const ValT val,
-                                                               const ContentPktRegion::ArrayIndexes& arrayIndexes)
+    [[ nodiscard ]] ContentPktRegion::SP _contentRegionFromBitArrayElemAtCurIt(Scope::SP scope, const ValT val,
+                                                                               const ContentPktRegion::ArrayIndexes& arrayIndexes)
     {
         assert(scope);
 
@@ -559,8 +559,8 @@ private:
      * `nullptr`).
      */
     template <typename ElemT>
-    ContentPktRegion::SP _contentRegionFromBitArrayElemAtCurIt(Scope::SP scope,
-                                                               const ContentPktRegion::ArrayIndexes& arrayIndexes)
+    [[ nodiscard ]] ContentPktRegion::SP _contentRegionFromBitArrayElemAtCurIt(Scope::SP scope,
+                                                                               const ContentPktRegion::ArrayIndexes& arrayIndexes)
     {
         auto& elem = static_cast<const ElemT&>(*_it);
 

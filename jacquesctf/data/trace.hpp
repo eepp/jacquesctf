@@ -36,7 +36,7 @@ public:
     Trace& operator=(const Trace&) = delete;
 
 public:
-    static std::unique_ptr<Trace> withoutDsFiles(const boost::filesystem::path& traceDir);
+    [[ nodiscard ]] static std::unique_ptr<Trace> withoutDsFiles(const boost::filesystem::path& traceDir);
 
     const Metadata& metadata() const noexcept
     {

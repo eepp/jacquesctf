@@ -167,7 +167,7 @@ public:
     explicit PrintVersionCfg() noexcept = default;
 };
 
-std::unique_ptr<const Cfg> cfgFromArgs(int argc, const char *argv[]);
+[[ nodiscard ]] std::unique_ptr<const Cfg> cfgFromArgs(int argc, const char *argv[]);
 
 } // namespace jacques
 

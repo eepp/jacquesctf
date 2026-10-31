@@ -28,8 +28,8 @@ public:
     using SPC = std::shared_ptr<const Er>;
 
 public:
-    static SP createFromElemSeqIt(yactfr::ElementSequenceIterator& it,
-                                  const PktIndexEntry& pktIndexEntry, Index indexInPkt);
+    [[ nodiscard ]] static SP createFromElemSeqIt(yactfr::ElementSequenceIterator& it,
+                                                  const PktIndexEntry& pktIndexEntry, Index indexInPkt);
 
 public:
     explicit Er(Index indexInPkt) noexcept;
