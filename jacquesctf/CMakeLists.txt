@@ -1,7 +1,5 @@
-# Copyright (C) 2018 Philippe Proulx <eepp.ca> - All Rights Reserved
-#
-# Unauthorized copying of this file, via any medium, is strictly
-# prohibited. Proprietary and confidential.
+# SPDX-FileCopyrightText: 2018 Philippe Proulx <eepp.ca>
+# SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
 
 # find ncurses (optional)
 option (OPT_WITHOUT_INSPECT_CMD "Don't build the `inspect` command")

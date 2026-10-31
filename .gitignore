@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2018 Philippe Proulx <eepp.ca>
+# SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
+
 build/
 *.html
 *.sublime*

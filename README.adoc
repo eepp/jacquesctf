@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2018 Philippe Proulx <eepp.ca>
+// SPDX-License-Identifier: CC-BY-4.0
+
 // Render with Asciidoctor
 
 = Jacques CTF

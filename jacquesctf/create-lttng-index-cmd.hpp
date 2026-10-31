@@ -1,8 +1,6 @@
 /*
- * Copyright (C) 2019 Philippe Proulx <eepp.ca> - All Rights Reserved
- *
- * Unauthorized copying of this file, via any medium, is strictly
- * prohibited. Proprietary and confidential.
+ * SPDX-FileCopyrightText: 2019 Philippe Proulx <eepp.ca>
+ * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
 #ifndef _JACQUES_CREATE_LTTNG_INDEX_CMD_HPP

@@ -1,8 +1,6 @@
 /*
- * Copyright (C) 2018 Philippe Proulx <eepp.ca> - All Rights Reserved
- *
- * Unauthorized copying of this file, via any medium, is strictly
- * prohibited. Proprietary and confidential.
+ * SPDX-FileCopyrightText: 2018 Philippe Proulx <eepp.ca>
+ * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
 #ifndef _JACQUES_INSPECT_CMD_STATE_MSG_HPP
