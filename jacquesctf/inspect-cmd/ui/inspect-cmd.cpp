@@ -6,11 +6,15 @@
 #include <iostream>
 #include <stdexcept>
 #include <optional>
-#include <curses.h>
+#include <memory>
+#include <mutex>
 #include <signal.h>
 #include <unistd.h>
+#include <notcurses/notcurses.h>
 
 #include "inspect-cmd.hpp"
+#include "key.hpp"
+#include "term.hpp"
 #include "cfg.hpp"
 #include "../state/inspect-cmd-state.hpp"
 #include "stylist.hpp"
@@ -36,73 +40,13 @@
 namespace jacques {
 namespace {
 
-auto screenInited = false;
-
-/*
- * Releases the terminal.
- */
-void finiScreen()
-{
-    if (screenInited) {
-        endwin();
-        screenInited = false;
-    }
-}
-
-/*
- * Returns true if the terminal size has the minimum dimension.
- */
-bool termSizeOk()
-{
-    return COLS >= 80 && LINES >= 16;
-}
-
-/*
- * Initializes and takes control of the terminal.
- */
-void initScreen()
-{
-    initscr();
-    screenInited = true;
-
-    if (!has_colors() || !termSizeOk()) {
-        finiScreen();
-
-        if (!has_colors()) {
-            throw CmdError {"Cannot continue: your terminal doesn't support colors."};
-        } else {
-            assert(!termSizeOk());
-
-            throw CmdError {"Cannot continue: terminal size must be at least 80×16."};
-        }
-    }
-
-    // do not print user keys
-    noecho();
-
-    // make keys immediately available (disable line buffering)
-    cbreak();
-
-    // faster cursor motion and detect return key
-    nonl();
-
-    // enable special keys
-    keypad(stdscr, TRUE);
-
-    // disable cursor block
-    curs_set(0);
-
-    // use colors
-    start_color();
-
-    // support user's foreground/background colors
-    use_default_colors();
-}
-
 void sigHandler(const int signo)
 {
     if (signo == SIGINT) {
-        finiScreen();
+        /*
+         * When the terminal is initialized, notcurses calls this
+         * handler after restoring the terminal.
+         */
         std::cerr << '\n';
         utils::error() << "Interrupted by user.\n";
 
@@ -111,6 +55,12 @@ void sigHandler(const int signo)
     }
 }
 
+/*
+ * Registers the signal handlers.
+ *
+ * Call this before term::init() so that notcurses chains its own
+ * handlers to them.
+ */
 void registerSignals()
 {
     [[maybe_unused]] const auto ret = signal(SIGINT, sigHandler);
@@ -121,22 +71,22 @@ void registerSignals()
 void init()
 {
     registerSignals();
-    initScreen();
+    term::init();
 }
 
 void buildIndexes(InspectCmdState& appState, const Stylist& stylist)
 {
-    const auto screenRect = Rect {{0, 0}, static_cast<Size>(COLS), static_cast<Size>(LINES)};
+    const auto screenRect = term::size();
     const auto view = std::make_unique<PktIndexBuildProgressView>(screenRect, stylist);
     auto func = [&view](const PktIndexEntry& entry) {
         view->pktIndexEntry(entry);
         view->refresh();
-        doupdate();
+        term::update();
     };
 
     view->focus();
     view->isVisible(true);
-    view->refresh(true);
+    view->refresh();
 
     for (auto& dsfStateUp : appState.dsFileStates()) {
         auto& dsf = dsfStateUp->dsFile();
@@ -146,16 +96,24 @@ void buildIndexes(InspectCmdState& appState, const Stylist& stylist)
     }
 }
 
-void showFullScreenMessage(const std::string_view msg, const Stylist& stylist)
+/*
+ * Shows the full screen message `msg`.
+ *
+ * The message remains on the terminal as long as the returned
+ * view exists.
+ */
+std::unique_ptr<SimpleMsgView> showFullScreenMessage(const std::string_view msg,
+                                                     const Stylist& stylist)
 {
-    const auto screenRect = Rect {{0, 0}, static_cast<Size>(COLS), static_cast<Size>(LINES)};
-    const auto view = std::make_unique<SimpleMsgView>(screenRect, stylist);
+    const auto screenRect = term::size();
+    auto view = std::make_unique<SimpleMsgView>(screenRect, stylist);
 
     view->msg(msg);
     view->focus();
     view->isVisible(true);
     view->refresh();
-    doupdate();
+    term::update();
+    return view;
 }
 
 class PktCheckpointsBuildProgressUpdater final :
@@ -169,26 +127,34 @@ public:
     }
 
 private:
+    /*
+     * This listener can be called from a thread other than the main one
+     * (see `InspectScreen::_search()`): lock the terminal.
+     */
     void _startBuild(const DsFile&, const PktIndexEntry& pktIndexEntry) override
     {
+        const std::lock_guard<std::recursive_mutex> lock {term::mutex()};
+
         if (pktIndexEntry.effectiveTotalLen() < 2_MiB) {
             // too fast anyway
             return;
         }
 
-        const auto rect = Rect {{4, 4}, static_cast<Size>(COLS) - 8, 13};
+        const auto rect = Rect {{4, 4}, term::size().w - 8, 13};
 
         _view = std::make_unique<PktCheckpointsBuildProgressView>(rect, *_stylist);
         _view->focus();
         _view->isVisible(true);
         _view->pktIndexEntry(pktIndexEntry);
-        _view->refresh(true);
-        doupdate();
+        _view->refresh();
+        term::update();
         _count = 0;
     }
 
     void _update(const Er& er) override
     {
+        const std::lock_guard<std::recursive_mutex> lock {term::mutex()};
+
         if (!_view) {
             return;
         }
@@ -199,11 +165,13 @@ private:
 
         _view->er(er);
         _view->refresh();
-        doupdate();
+        term::update();
     }
 
     void _endBuild() override
     {
+        const std::lock_guard<std::recursive_mutex> lock {term::mutex()};
+
         if (_view) {
             _view->isVisible(false);
             _view = nullptr;
@@ -224,7 +192,7 @@ void startInteractive(const InspectCfg& cfg)
 {
     auto stylist = std::make_unique<const Stylist>();
 
-    showFullScreenMessage("Opening data stream files...", *stylist);
+    auto msgView = showFullScreenMessage("Opening data stream files…", *stylist);
 
     Screen *curScreen = nullptr;
     bool redrawCurScreen = false;
@@ -235,7 +203,9 @@ void startInteractive(const InspectCfg& cfg)
         throw CmdError {"All data stream files to inspect are empty."};
     }
 
-    auto screenRect = Rect {{0, 0}, static_cast<Size>(COLS), static_cast<Size>(LINES) - 1};
+    auto screenRect = term::size();
+
+    --screenRect.h;
 
     /*
      * At this point, the state isn't ready: data stream files have no
@@ -249,7 +219,7 @@ void startInteractive(const InspectCfg& cfg)
      * Show this message because some views created by the screens below
      * can perform some "heavy" caching operations initially.
      */
-    showFullScreenMessage("Building caches...", *stylist);
+    msgView = showFullScreenMessage("Building caches…", *stylist);
 
     // status
     auto statusView = std::make_unique<StatusView>(Rect {{0, screenRect.h}, screenRect.w, 1},
@@ -274,11 +244,14 @@ void startInteractive(const InspectCfg& cfg)
     };
 
     // goto first packet if available: this creates it and shows the progress
-    showFullScreenMessage("Selecting initial packet...", *stylist);
+    msgView = showFullScreenMessage("Selecting initial packet…", *stylist);
 
     if (appState->activeDsFileState().dsFile().pktCount() > 0) {
         appState->gotoPkt(0);
     }
+
+    // remove the last message
+    msgView.reset();
 
     // draw status
     statusView->isVisible(true);
@@ -298,155 +271,204 @@ void startInteractive(const InspectCfg& cfg)
     }
 
     curScreen->isVisible(true);
-    doupdate();
+    term::update();
 
     Screen *prevScreen = nullptr;
     auto done = false;
-    auto wantsToQuit = false;
+    std::unique_ptr<SimpleMsgView> quitMsgView;
+    auto termIsTooSmall = false;
+
+    // `q` or Escape: quit the current screen or ask to quit the program
+    const auto quitCurScreen = [&] {
+        if (curScreen == inspectScreen.get()) {
+            curScreen->isVisible(false);
+            statusView->isVisible(false);
+            quitMsgView = showFullScreenMessage("Press `Y` to quit, or any other key to stay.",
+                                                *stylist);
+        } else if (curScreen == helpScreen.get()) {
+            curScreen->isVisible(false);
+            curScreen = prevScreen;
+            curScreen->isVisible(true);
+        } else {
+            curScreen->isVisible(false);
+            curScreen = inspectScreen.get();
+            curScreen->isVisible(true);
+        }
+    };
 
     while (!done) {
-        const auto ch = getch();
+        const auto key = term::readKey();
         auto refreshStatus = true;
 
-        if (wantsToQuit) {
-            if (ch == 'y' || ch == 'Y') {
+        if (termIsTooSmall && key.special() != SpecialKey::RESIZE &&
+                key.special() != SpecialKey::F10 && key.ch() != U'Q') {
+            // only accept a resize or an immediate quit
+            continue;
+        }
+
+        if (quitMsgView) {
+            if (key.ch() == U'y' || key.ch() == U'Y') {
                 done = true;
                 continue;
             } else {
-                wantsToQuit = false;
-                clear();
-                refresh();
+                quitMsgView.reset();
                 statusView->isVisible(true);
                 curScreen->isVisible(true);
                 statusView->redraw();
                 curScreen->redraw();
-                doupdate();
+                term::update();
             }
 
             continue;
         }
 
-        switch (ch) {
-        case KEY_RESIZE:
-            // it looks like clearing and refreshing `stdscr` is required
-            clear();
-            refresh();
+        auto passToCurScreen = false;
 
-            if (!termSizeOk()) {
-                stylist->error();
-                mvprintw(0, 0, "Terminal size must be at least 80×16 (currently %d×%d).", COLS,
-                         LINES);
-                refreshStatus = false;
+        if (const auto specialKey = key.special()) {
+            switch (*specialKey) {
+            case SpecialKey::RESIZE:
+            {
+                term::repaint();
+
+                auto& stdPlane = term::stdPlane();
+
+                if (!term::sizeOk()) {
+                    // hide everything and show an error on the standard plane
+                    curScreen->isVisible(false);
+                    statusView->isVisible(false);
+                    ncplane_erase(&stdPlane);
+                    stylist->error(&stdPlane);
+
+                    const auto termSize = term::size();
+
+                    ncplane_printf_yx(
+                        &stdPlane, 0, 0,
+                        "Terminal size must be at least 80×16 (currently %llu×%llu).",
+                        static_cast<unsigned long long>(termSize.w),
+                        static_cast<unsigned long long>(termSize.h)
+                    );
+                    termIsTooSmall = true;
+                    refreshStatus = false;
+                    break;
+                }
+
+                screenRect = term::size();
+                --screenRect.h;
+                statusView->moveAndResize(Rect {{0, screenRect.h}, screenRect.w, 1});
+
+                for (const auto screen : screens) {
+                    screen->resize(screenRect.w, screenRect.h);
+                }
+
+                if (termIsTooSmall) {
+                    ncplane_erase(&stdPlane);
+                    statusView->isVisible(true);
+                    curScreen->isVisible(true);
+                    termIsTooSmall = false;
+                }
+
+                curScreen->redraw();
+                statusView->redraw();
                 break;
             }
 
-            screenRect = Rect {{0, 0}, static_cast<Size>(COLS), static_cast<Size>(LINES) - 1};
-            statusView->moveAndResize(Rect {{0, screenRect.h}, screenRect.w, 1});
+            case SpecialKey::ESCAPE:
+                quitCurScreen();
+                break;
 
-            for (const auto screen : screens) {
-                screen->resize(screenRect.w, screenRect.h);
-            }
+            case SpecialKey::F10:
+                done = true;
+                break;
 
-            curScreen->redraw();
-            statusView->redraw();
-            break;
-
-        case 'r':
-        case 12:
-            clear();
-            refresh();
-            statusView->redraw();
-            curScreen->redraw();
-            break;
-
-        case 'p':
-            if (curScreen == pktsScreen.get()) {
+            default:
+                passToCurScreen = true;
                 break;
             }
-
-            curScreen->isVisible(false);
-            curScreen = pktsScreen.get();
-            curScreen->isVisible(true);
-            break;
-
-        case 'f':
-            if (curScreen == dsfScreen.get()) {
+        } else {
+            switch (*key.ch()) {
+            case 'r':
+            case ctrlCh('L'):
+                term::repaint();
+                statusView->redraw();
+                curScreen->redraw();
                 break;
-            }
 
-            curScreen->isVisible(false);
-            curScreen = dsfScreen.get();
-            curScreen->isVisible(true);
-            break;
+            case 'p':
+                if (curScreen == pktsScreen.get()) {
+                    break;
+                }
 
-        case 'd':
-            if (curScreen == dtsScreen.get()) {
-                break;
-            }
-
-            curScreen->isVisible(false);
-
-            if (curScreen == inspectScreen.get()) {
-                dtsScreen->highlightCurDt();
-            } else {
-                dtsScreen->clearHighlight();
-            }
-
-            curScreen = dtsScreen.get();
-            curScreen->isVisible(true);
-            break;
-
-        case 'i':
-            if (curScreen == traceInfoScreen.get()) {
-                break;
-            }
-
-            curScreen->isVisible(false);
-            curScreen = traceInfoScreen.get();
-            curScreen->isVisible(true);
-            break;
-
-        case 'h':
-        case 'H':
-        case '?':
-            if (curScreen == helpScreen.get()) {
-                break;
-            }
-
-            prevScreen = curScreen;
-            curScreen->isVisible(false);
-            curScreen = helpScreen.get();
-            curScreen->isVisible(true);
-            break;
-
-        case 'q':
-        case 27:
-            if (curScreen == inspectScreen.get()) {
                 curScreen->isVisible(false);
-                statusView->isVisible(false);
-                showFullScreenMessage("Press `Y` to quit, or any other key to stay.", *stylist);
-                wantsToQuit = true;
-            } else if (curScreen == helpScreen.get()) {
-                curScreen->isVisible(false);
-                curScreen = prevScreen;
+                curScreen = pktsScreen.get();
                 curScreen->isVisible(true);
-            } else {
+                break;
+
+            case 'f':
+                if (curScreen == dsfScreen.get()) {
+                    break;
+                }
+
                 curScreen->isVisible(false);
-                curScreen = inspectScreen.get();
+                curScreen = dsfScreen.get();
                 curScreen->isVisible(true);
+                break;
+
+            case 'd':
+                if (curScreen == dtsScreen.get()) {
+                    break;
+                }
+
+                curScreen->isVisible(false);
+
+                if (curScreen == inspectScreen.get()) {
+                    dtsScreen->highlightCurDt();
+                } else {
+                    dtsScreen->clearHighlight();
+                }
+
+                curScreen = dtsScreen.get();
+                curScreen->isVisible(true);
+                break;
+
+            case 'i':
+                if (curScreen == traceInfoScreen.get()) {
+                    break;
+                }
+
+                curScreen->isVisible(false);
+                curScreen = traceInfoScreen.get();
+                curScreen->isVisible(true);
+                break;
+
+            case 'h':
+            case 'H':
+            case '?':
+                if (curScreen == helpScreen.get()) {
+                    break;
+                }
+
+                prevScreen = curScreen;
+                curScreen->isVisible(false);
+                curScreen = helpScreen.get();
+                curScreen->isVisible(true);
+                break;
+
+            case 'q':
+                quitCurScreen();
+                break;
+
+            case 'Q':
+                done = true;
+                break;
+
+            default:
+                passToCurScreen = true;
+                break;
             }
+        }
 
-            break;
-
-        case KEY_F(10):
-        case 'Q':
-            done = true;
-            break;
-
-        default:
-            const auto reaction = curScreen->handleKey(ch);
-
-            switch (reaction) {
+        if (passToCurScreen) {
+            switch (curScreen->handleKey(key)) {
             case KeyHandlingReaction::RETURN_TO_INSPECT:
                 curScreen->isVisible(false);
                 curScreen = inspectScreen.get();
@@ -473,7 +495,7 @@ void startInteractive(const InspectCfg& cfg)
             statusView->refresh();
         }
 
-        doupdate();
+        term::update();
     }
 }
 
@@ -483,22 +505,15 @@ void inspectCmd(const InspectCfg& cfg)
 {
     init();
 
-    /*
-     * Initial refresh() because getch() implicitly calls refresh(),
-     * which dumps `stdscr` the first time, effectively clearing the
-     * screen.
-     */
-    refresh();
-
     // release the terminal whatever the outcome
     try {
         startInteractive(cfg);
     } catch (...) {
-        finiScreen();
+        term::fini();
         throw;
     }
 
-    finiScreen();
+    term::fini();
 }
 
 } // namespace jacques

@@ -10,7 +10,8 @@
 #include <cstring>
 #include <vector>
 #include <optional>
-#include <curses.h>
+#include <string_view>
+struct ncplane;
 #include <yactfr/metadata/fwd.hpp>
 
 #include "aliases.hpp"
@@ -18,6 +19,13 @@
 #include "../stylist.hpp"
 
 namespace jacques {
+
+/*
+ * Number of terminal columns which AbstractDtDetails::_renderStr()
+ * would use to render the string `str` (escaped; see
+ * utils::escapeStr()) without width limit.
+ */
+Size dtDetailsStrWidth(std::string_view str);
 
 class AbstractDtDetails
 {
@@ -29,7 +37,7 @@ protected:
 
 public:
     virtual ~AbstractDtDetails() = default;
-    void renderLine(WINDOW *window, Size maxWidth, bool stylize = false) const;
+    void renderLine(ncplane *plane, Size maxWidth, bool stylize = false) const;
 
 protected:
     Size _indent() const noexcept
@@ -42,13 +50,13 @@ protected:
         return *_theStylist;
     }
 
-    virtual void _renderLine(WINDOW *window, Size maxWidth, bool stylize) const = 0;
-    void _renderChar(WINDOW *window, Size& remWidth, char ch) const;
-    void _renderStr(WINDOW *window, Size& remWidth, const char *str) const;
+    virtual void _renderLine(ncplane *plane, Size maxWidth, bool stylize) const = 0;
+    void _renderChar(ncplane *plane, Size& remWidth, char ch) const;
+    void _renderStr(ncplane *plane, Size& remWidth, const char *str) const;
 
-    void _renderStr(WINDOW *window, Size& remWidth, const std::string& str) const
+    void _renderStr(ncplane *plane, Size& remWidth, const std::string& str) const
     {
-        this->_renderStr(window, remWidth, str.c_str());
+        this->_renderStr(plane, remWidth, str.c_str());
     }
 
 private:

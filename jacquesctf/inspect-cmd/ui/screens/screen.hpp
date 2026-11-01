@@ -9,6 +9,7 @@
 #include <memory>
 
 #include "../inspect-cmd.hpp"
+#include "../key.hpp"
 #include "../rect.hpp"
 #include "cfg.hpp"
 #include "../stylist.hpp"
@@ -95,7 +96,7 @@ public:
     /*
      * Handles a user key `key`.
      */
-    KeyHandlingReaction handleKey(const int key)
+    KeyHandlingReaction handleKey(const Key key)
     {
         return this->_handleKey(key);
     }
@@ -117,7 +118,7 @@ protected:
      * of the screen and can modify the state of the application. The
      * return value indicates what to do next.
      */
-    virtual KeyHandlingReaction _handleKey(int key) = 0;
+    virtual KeyHandlingReaction _handleKey(Key key) = 0;
 
     /*
      * Called when the screen needs to be resized. rect() is already

@@ -5,10 +5,11 @@
 
 #include <iostream>
 #include <functional>
-#include <curses.h>
 #include <signal.h>
 #include <unistd.h>
 
+#include "../key.hpp"
+#include "../term.hpp"
 #include "cfg.hpp"
 #include "../views/pkt-table-view.hpp"
 #include "../views/search-input-view.hpp"
@@ -68,7 +69,7 @@ public:
     explicit AnalyzeAllPktsProgressUpdater(const Stylist& stylist) :
         _view {
             std::make_unique<PktCheckpointsBuildProgressView>(
-                Rect {{4, 4}, static_cast<Size>(COLS) - 8, 12},
+                Rect {{4, 4}, term::size().w - 8, 12},
                 stylist
             )
         }
@@ -90,8 +91,8 @@ private:
         }
 
         _view->pktIndexEntry(pktIndexEntry);
-        _view->refresh(true);
-        doupdate();
+        _view->refresh();
+        term::update();
         _count = 0;
     }
 
@@ -107,7 +108,7 @@ private:
 
         _view->er(er);
         _view->refresh();
-        doupdate();
+        term::update();
     }
 
 private:
@@ -119,141 +120,149 @@ private:
 
 } // namespace
 
-KeyHandlingReaction PktsScreen::_handleKey(const int key)
+KeyHandlingReaction PktsScreen::_handleKey(const Key key)
 {
-    switch (key) {
-    case KEY_UP:
-        _ptView->prev();
-        break;
+    if (const auto specialKey = key.special()) {
+        switch (*specialKey) {
+        case SpecialKey::UP:
+            _ptView->prev();
+            break;
 
-    case KEY_DOWN:
-        _ptView->next();
-        break;
+        case SpecialKey::DOWN:
+            _ptView->next();
+            break;
 
-    case KEY_PPAGE:
-        _ptView->pageUp();
-        break;
+        case SpecialKey::PAGE_UP:
+            _ptView->pageUp();
+            break;
 
-    case KEY_NPAGE:
-        _ptView->pageDown();
-        break;
+        case SpecialKey::PAGE_DOWN:
+            _ptView->pageDown();
+            break;
 
-    case KEY_END:
-        _ptView->selectLast();
-        break;
+        case SpecialKey::END:
+            _ptView->selectLast();
+            break;
 
-    case KEY_HOME:
-        _ptView->selectFirst();
-        break;
+        case SpecialKey::HOME:
+            _ptView->selectFirst();
+            break;
 
-    case 'c':
-        _ptView->centerSelRow();
-        break;
-
-    case 't':
-        _tsFmtModeWheel.next();
-        _ptView->tsFmtMode(_tsFmtModeWheel.curVal());
-        break;
-
-    case 's':
-        _dataLenFmtModeWheel.next();
-        _ptView->dataLenFmtMode(_dataLenFmtModeWheel.curVal());
-        break;
-
-    case '/':
-    case 'g':
-    case 'N':
-    case 'k':
-    case ':':
-    case '$':
-    case '*':
-    case 'P':
-    {
-        auto query = _searchCtrl.start(std::invoke([key]() -> std::string {
-            switch (key) {
-            case 'N':
-            case '*':
-                return "*";
+        case SpecialKey::ENTER:
+            if (this->_appState().activeDsFileState().dsFile().pktCount() == 0) {
                 break;
-
-            case 'k':
-                return "**";
-                break;
-
-            case ':':
-                return ":";
-                break;
-
-            case 'P':
-                return "#";
-                break;
-
-            case '$':
-                return "$";
-                break;
-
-            default:
-                return {};
             }
-        }));
 
-        if (!query) {
-            // canceled or invalid
+            this->_appState().gotoPkt(_ptView->selPktIndex());
+            return KeyHandlingReaction::RETURN_TO_INSPECT;
+
+        case SpecialKey::F3:
+            this->_appState().gotoPrevDsFile();
+            break;
+
+        case SpecialKey::F4:
+            this->_appState().gotoNextDsFile();
+            break;
+
+        case SpecialKey::F5:
+            this->_appState().gotoPrevPkt();
+            break;
+
+        case SpecialKey::F6:
+            this->_appState().gotoNextPkt();
+            break;
+
+        default:
+            break;
+        }
+    } else {
+        const auto ch = *key.ch();
+
+        switch (ch) {
+        case 'c':
+            _ptView->centerSelRow();
+            break;
+
+        case 't':
+            _tsFmtModeWheel.next();
+            _ptView->tsFmtMode(_tsFmtModeWheel.curVal());
+            break;
+
+        case 's':
+            _dataLenFmtModeWheel.next();
+            _ptView->dataLenFmtMode(_dataLenFmtModeWheel.curVal());
+            break;
+
+        case '/':
+        case 'g':
+        case 'N':
+        case 'k':
+        case ':':
+        case '$':
+        case '*':
+        case 'P':
+        {
+            auto query = _searchCtrl.start(std::invoke([ch]() -> std::string {
+                switch (ch) {
+                case 'N':
+                case '*':
+                    return "*";
+                    break;
+
+                case 'k':
+                    return "**";
+                    break;
+
+                case ':':
+                    return ":";
+                    break;
+
+                case 'P':
+                    return "#";
+                    break;
+
+                case '$':
+                    return "$";
+                    break;
+
+                default:
+                    return {};
+                }
+            }));
+
+            if (!query) {
+                // canceled or invalid
+                this->_redraw();
+                break;
+            }
+
+            this->_appState().search(*query);
+            _lastQuery = std::move(query);
             this->_redraw();
             break;
         }
 
-        this->_appState().search(*query);
-        _lastQuery = std::move(query);
-        this->_redraw();
-        break;
-    }
+        case 'n':
+            if (!_lastQuery) {
+                break;
+            }
 
-    case 'n':
-        if (!_lastQuery) {
+            this->_appState().search(*_lastQuery);
+            _ptView->redraw();
+            break;
+
+        case 'a':
+        {
+            AnalyzeAllPktsProgressUpdater updater {this->_stylist()};
+
+            this->_appState().activeDsFileState().analyzeAllPkts(&updater);
+            _ptView->redraw();
             break;
         }
 
-        this->_appState().search(*_lastQuery);
-        _ptView->redraw();
-        break;
-
-    case '\n':
-    case '\r':
-        if (this->_appState().activeDsFileState().dsFile().pktCount() == 0) {
+        default:
             break;
         }
-
-        this->_appState().gotoPkt(_ptView->selPktIndex());
-        return KeyHandlingReaction::RETURN_TO_INSPECT;
-
-    case KEY_F(3):
-        this->_appState().gotoPrevDsFile();
-        break;
-
-    case KEY_F(4):
-        this->_appState().gotoNextDsFile();
-        break;
-
-    case KEY_F(5):
-        this->_appState().gotoPrevPkt();
-        break;
-
-    case KEY_F(6):
-        this->_appState().gotoNextPkt();
-        break;
-
-    case 'a':
-    {
-        AnalyzeAllPktsProgressUpdater updater {this->_stylist()};
-
-        this->_appState().activeDsFileState().analyzeAllPkts(&updater);
-        _ptView->redraw();
-        break;
-    }
-
-    default:
-        break;
     }
 
     _ptView->refresh();

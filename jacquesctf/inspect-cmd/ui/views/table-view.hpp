@@ -7,12 +7,12 @@
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_TABLE_VIEW_HPP
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <memory>
 #include <cassert>
 #include <cstdint>
 #include <boost/filesystem.hpp>
-#include <curses.h>
 
 #include "inspect-common/common-inspect-table-view.hpp"
 #include "view.hpp"
@@ -444,7 +444,7 @@ private:
     void _clearRow(Index y);
     void _clearCell(const Point& pos, Size cellWidth);
 
-    void _drawCellAlignedText(const Point& pos, Size cellWidth, const char *text, Size textWidth,
+    void _drawCellAlignedText(const Point& pos, Size cellWidth, std::string_view text,
                               bool customStyle, TableViewCell::TextAlign align);
 
     void _drawCell(const Point& pos, const TableViewColumnDescr& descr, const TableViewCell& cell,

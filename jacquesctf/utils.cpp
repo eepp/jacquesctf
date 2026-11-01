@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cstring>
 #include <cstdio>
+#include <cwctype>
 #include <array>
 #include <string>
 #include <sstream>
@@ -14,41 +15,12 @@
 #include <algorithm>
 
 #include "utils.hpp"
+#include "unicode.hpp"
 #include "cfg.hpp"
 
 namespace jacques::utils {
 
 namespace bfs = boost::filesystem;
-
-std::pair<std::string, std::string> formatPath(const bfs::path& path, const Size maxLen)
-{
-    const auto filename = path.filename().string();
-    const auto dirName = path.parent_path().string();
-    std::string filenameStr;
-
-    if (filename.size() > maxLen) {
-        filenameStr = "...";
-        filenameStr.append(filename.c_str() + filename.size() - maxLen + 3);
-    } else {
-        filenameStr = filename;
-    }
-
-    auto leftLen = maxLen - filenameStr.size();
-    std::string dirNameStr;
-
-    if (leftLen >= 4) {
-        // enough space for `...` and implicit `/`
-
-        if (dirName.size() < leftLen) {
-            dirNameStr = dirName;
-        } else {
-            dirNameStr = "...";
-            dirNameStr.append(dirName.c_str() + dirName.size() - leftLen + 4);
-        }
-    }
-
-    return std::pair {std::move(dirNameStr), std::move(filenameStr)};
-}
 
 namespace {
 
@@ -394,12 +366,13 @@ void printTextParseError(std::ostream& os, const std::string_view path,
 std::string escapeStr(const std::string_view str)
 {
     std::string outStr;
+    auto rest = str;
 
-    for (const auto ich : str) {
-        const auto uch = static_cast<std::uint8_t>(ich);
+    while (!rest.empty()) {
+        const auto cp = unicode::popFrontUtf8(rest);
 
-        if (uch < 32) {
-            switch (ich) {
+        if (cp < 32) {
+            switch (cp) {
             case '\a':
                 outStr += "\\a";
                 break;
@@ -432,16 +405,16 @@ std::string escapeStr(const std::string_view str)
             {
                 std::array<char, 8> buf;
 
-                std::sprintf(buf.data(), "\\x%02x", static_cast<unsigned int>(uch));
+                std::sprintf(buf.data(), "\\x%02x", static_cast<unsigned int>(cp));
                 outStr += buf.data();
             }
             }
-        } else if (ich == '\\') {
+        } else if (cp == U'\\') {
             outStr += "\\\\";
-        } else if (std::isprint(ich)) {
-            outStr += ich;
+        } else if (std::iswprint(static_cast<std::wint_t>(cp))) {
+            unicode::appendUtf8(outStr, cp);
         } else {
-            outStr += '?';
+            unicode::appendUtf8(outStr, unicode::replacementCh);
         }
     }
 

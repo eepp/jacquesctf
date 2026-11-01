@@ -4,10 +4,10 @@
  */
 
 #include <iostream>
-#include <curses.h>
 #include <signal.h>
 #include <unistd.h>
 
+#include "../key.hpp"
 #include "cfg.hpp"
 #include "trace-info-screen.hpp"
 #include "../views/trace-info-view.hpp"
@@ -42,34 +42,37 @@ void TraceInfoScreen::_visibilityChanged()
     }
 }
 
-KeyHandlingReaction TraceInfoScreen::_handleKey(const int key)
+KeyHandlingReaction TraceInfoScreen::_handleKey(const Key key)
 {
-    switch (key) {
-    case KEY_UP:
-        _view->prev();
-        break;
+    if (const auto specialKey = key.special()) {
+        switch (*specialKey) {
+        case SpecialKey::UP:
+            _view->prev();
+            break;
 
-    case KEY_DOWN:
-        _view->next();
-        break;
-    case KEY_PPAGE:
-        _view->pageUp();
-        break;
+        case SpecialKey::DOWN:
+            _view->next();
+            break;
 
-    case  KEY_NPAGE:
-        _view->pageDown();
-        break;
+        case SpecialKey::PAGE_UP:
+            _view->pageUp();
+            break;
 
-    case KEY_F(3):
-        this->_appState().gotoPrevDsFile();
-        break;
+        case SpecialKey::PAGE_DOWN:
+            _view->pageDown();
+            break;
 
-    case KEY_F(4):
-        this->_appState().gotoNextDsFile();
-        break;
+        case SpecialKey::F3:
+            this->_appState().gotoPrevDsFile();
+            break;
 
-    default:
-        break;
+        case SpecialKey::F4:
+            this->_appState().gotoNextDsFile();
+            break;
+
+        default:
+            break;
+        }
     }
 
     _view->refresh();

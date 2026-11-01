@@ -5,9 +5,13 @@
 
 #include <cassert>
 #include <chrono>
+#include <mutex>
 #include <thread>
-#include <curses.h>
+#include <utility>
 
+#include "key.hpp"
+#include "unicode.hpp"
+#include "term.hpp"
 #include "search-ctrl.hpp"
 #include "inspect-common/search-query.hpp"
 
@@ -27,56 +31,55 @@ std::unique_ptr<const SearchQuery> SearchCtrl::startLive(const std::string& init
     _searchView->redraw();
     _searchView->isVisible(true);
 
-    const auto startX = _searchView->rect().pos.x + 1;
-    const auto startY = _searchView->rect().pos.y + 1;
+    const auto prevCursorIsVisible = term::cursorIsVisible();
 
-    move(startY, startX);
-
-    const auto prevCurs = curs_set(1);
-
-    move(startY, startX + buf.size());
     this->_tryLiveUpdate(buf, liveUpdateFunc);
     _searchView->refresh();
-    doupdate();
+    term::update();
 
     bool accepted = false;
 
     while (true) {
-        if (const auto ch = getch(); ch == '\t') {
+        const auto key = term::readKey();
+
+        if (key.special() == SpecialKey::TAB) {
             continue;
-        } else if (ch == '\n' || ch == '\r') {
-            // enter
+        } else if (key.special() == SpecialKey::ENTER) {
             accepted = true;
             break;
-        } else if (ch == 127 || ch == 8 || ch == KEY_BACKSPACE) {
-            // backspace
+        } else if (key.special() == SpecialKey::BACKSPACE) {
             if (!buf.empty()) {
-                buf.pop_back();
+                unicode::popBackUtf8(buf);
                 this->_tryLiveUpdate(buf, liveUpdateFunc);
             }
-        } else if (ch == 23) {
-            // ctrl+w
+        } else if (key.ch() == ctrlCh('W')) {
             buf.clear();
             this->_tryLiveUpdate(buf, liveUpdateFunc);
-        } else if (ch == 4) {
-            // ctrl+d
+        } else if (key.ch() == ctrlCh('D')) {
             break;
-        } else if (std::isprint(ch)) {
-            if (buf.size() == lineLen - 1) {
+        } else if (const auto ch = key.printableCh()) {
+            auto newBuf = buf;
+
+            unicode::appendUtf8(newBuf, *ch);
+
+            if (term::strWidth(newBuf) > lineLen - 1) {
                 // no space
                 continue;
             }
 
-            buf.push_back(static_cast<char>(ch));
+            buf = std::move(newBuf);
             this->_tryLiveUpdate(buf, liveUpdateFunc);
         }
 
         _searchView->refresh();
-        doupdate();
+        term::update();
     }
 
     _searchView->isVisible(false);
-    curs_set(prevCurs);
+
+    if (!prevCursorIsVisible) {
+        term::hideCursor();
+    }
 
     if (!accepted || buf.empty()) {
         return nullptr;
@@ -103,10 +106,16 @@ void SearchCtrl::animate(std::atomic_bool& stop) const
             return;
         }
 
-        _searchView->animateBorder(animIndex);
-        ++animIndex;
-        _searchView->refresh(true);
-        doupdate();
+        {
+            // the search runs in another thread which can also draw
+            const std::lock_guard<std::recursive_mutex> lock {term::mutex()};
+
+            _searchView->animateBorder(animIndex);
+            ++animIndex;
+            _searchView->refresh();
+            term::update();
+        }
+
         std::this_thread::sleep_for(50ms);
     }
 
@@ -116,18 +125,18 @@ void SearchCtrl::animate(std::atomic_bool& stop) const
 void SearchCtrl::_tryLiveUpdate(const std::string& buf, const LiveUpdateFunc& liveUpdateFunc)
 {
     const auto query = parseSearchQuery(buf);
-    const auto startX = _searchView->rect().pos.x + 1;
-    const auto startY = _searchView->rect().pos.y + 1;
 
     if (query) {
-        curs_set(0);
+        term::hideCursor();
         liveUpdateFunc(*query);
     }
 
-    _searchView->redraw(true);
+    _searchView->redraw();
     _searchView->drawCurText(buf);
-    move(startY, startX + buf.size());
-    curs_set(1);
+    term::showCursor({
+        _searchView->rect().pos.x + 1 + term::strWidth(buf),
+        _searchView->rect().pos.y + 1
+    });
 }
 
 } // namespace jacques

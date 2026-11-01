@@ -253,7 +253,7 @@ void PktDataView::_drawSeparators() const
     this->_stylist().stdDim(*this);
 
     for (Index y = 0; y < yEnd; ++y) {
-        this->_putChar({_dataX - 1, y}, ACS_VLINE);
+        this->_putChar({_dataX - 1, y}, glyphs::VLINE);
     }
 
     if (!_isAsciiVisible) {
@@ -261,7 +261,7 @@ void PktDataView::_drawSeparators() const
     }
 
     for (Index y = 0; y < yEnd; ++y) {
-        this->_putChar({_asciiCharsX - 1, y}, ACS_VLINE);
+        this->_putChar({_asciiCharsX - 1, y}, glyphs::VLINE);
     }
 }
 
@@ -418,10 +418,19 @@ void PktDataView::_setCustomStyle(const _Char& ch) const
     }
 }
 
+void PktDataView::_putCharVal(const _Char& ch) const
+{
+    if (ch.isPrintable) {
+        this->_putChar(ch.pt, ch.val);
+    } else {
+        this->_putChar(ch.pt, glyphs::BULLET);
+    }
+}
+
 void PktDataView::_drawUnselChar(const _Char& ch) const
 {
     this->_setCustomStyle(ch);
-    this->_putChar(ch.pt, ch.val);
+    this->_putCharVal(ch);
 }
 
 void PktDataView::_drawChar(const _Char& ch) const
@@ -434,7 +443,7 @@ void PktDataView::_drawChar(const _Char& ch) const
             this->_stylist().pktDataViewAuxSel(*this);
         }
 
-        this->_putChar(ch.pt, ch.val);
+        this->_putCharVal(ch);
         return;
     }
 
@@ -450,7 +459,7 @@ void PktDataView::_drawChar(const _Char& ch) const
                 *_prevOffsetInPktBits == singlePktRegion.segment().offsetInPktBits()) {
             this->_stylist().pktDataViewSel(*this,
                                                      Stylist::PktDataViewSelType::PREV);
-            this->_putChar(ch.pt, ch.val);
+            this->_putCharVal(ch);
             return;
         }
 
@@ -458,7 +467,7 @@ void PktDataView::_drawChar(const _Char& ch) const
                 *_nextOffsetInPktBits == singlePktRegion.segment().offsetInPktBits()) {
             this->_stylist().pktDataViewSel(*this,
                                                      Stylist::PktDataViewSelType::NEXT);
-            this->_putChar(ch.pt, ch.val);
+            this->_putCharVal(ch);
             return;
         }
     }
@@ -504,7 +513,7 @@ void PktDataView::_redrawContent()
 
 namespace {
 
-inline chtype charFromNibble(const std::uint8_t nibble)
+inline char charFromNibble(const std::uint8_t nibble)
 {
     if (nibble < 10) {
         return '0' + nibble;
@@ -614,12 +623,12 @@ void PktDataView::_setAsciiChars()
         ch.pt.y = (offsetInPktBits - _baseOffsetInPktBits) / _rowSize.bits();
         ch.pt.x = _asciiCharsX + (offsetInPktBits % _rowSize.bits()) / 8;
 
-        if (const auto val = static_cast<chtype>(*pkt.data(offsetInPktBits / 8));
-                !std::isprint(val)) {
+        if (const auto val = static_cast<unsigned char>(*pkt.data(offsetInPktBits / 8));
+                val >= 0x80 || !std::isprint(val)) {
             ch.isPrintable = false;
-            ch.val = ACS_BULLET;
+            ch.val = ' ';
         } else {
-            ch.val = val;
+            ch.val = static_cast<char>(val);
         }
 
         _asciiChars.push_back(std::move(ch));

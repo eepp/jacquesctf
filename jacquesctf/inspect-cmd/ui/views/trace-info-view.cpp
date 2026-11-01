@@ -15,6 +15,7 @@
 #include "data/ts.hpp"
 #include "data/time-ops.hpp"
 #include "../stylist.hpp"
+#include "../term.hpp"
 #include "../../state/msg.hpp"
 
 namespace jacques {
@@ -386,20 +387,20 @@ void TraceInfoView::_buildRows()
     }
 
     for (const auto& [trace, rows] : _traceInfo) {
-        Size longestKeySize = 0;
+        Size longestKeyWidth = 0;
         auto it = rows.begin();
         auto lastSectionIt = it;
 
-        const auto setValOffsets = [&longestKeySize, &lastSectionIt, &it]() {
+        const auto setValOffsets = [&longestKeyWidth, &lastSectionIt, &it]() {
             while (lastSectionIt != it) {
                 if (const auto sRow = dynamic_cast<_PropRow *>(lastSectionIt->get())) {
-                    sRow->valOffset = longestKeySize + 2;
+                    sRow->valOffset = longestKeyWidth + 2;
                 }
 
                 ++lastSectionIt;
             }
 
-            longestKeySize = 0;
+            longestKeyWidth = 0;
             lastSectionIt = it;
         };
 
@@ -409,7 +410,7 @@ void TraceInfoView::_buildRows()
             if (const auto sRow = dynamic_cast<const _SectionRow *>(row.get())) {
                 setValOffsets();
             } else if (const auto sRow = dynamic_cast<const _PropRow *>(row.get())) {
-                longestKeySize = std::max(longestKeySize, static_cast<Index>(sRow->key.size()));
+                longestKeyWidth = std::max(longestKeyWidth, term::strWidth(sRow->key));
             }
 
             ++it;

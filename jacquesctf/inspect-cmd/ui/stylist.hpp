@@ -6,9 +6,13 @@
 #ifndef _JACQUES_INSPECT_COMMAND_UI_STYLIST_HPP
 #define _JACQUES_INSPECT_COMMAND_UI_STYLIST_HPP
 
-#include <curses.h>
+#include <cstdint>
+#include <vector>
 
+#include "color.hpp"
 #include "views/view.hpp"
+
+struct ncplane;
 
 namespace jacques {
 
@@ -49,18 +53,18 @@ public:
     void tableViewCell(const View& view, TableViewCellStyle style = TableViewCellStyle::NORMAL) const;
     void textMore(const View& view) const;
     void stdDim(const View& view) const;
-    void std(WINDOW *window, bool emphasized = false) const;
+    void std(ncplane *plane, bool emphasized = false) const;
 
     void std(const View& view, const bool emphasized = false) const
     {
-        this->std(view._window(), emphasized);
+        this->std(view._plane(), emphasized);
     }
 
-    void stdSel(WINDOW *window) const;
+    void stdSel(ncplane *plane) const;
 
     void stdSel(const View& view) const
     {
-        this->stdSel(view._window());
+        this->stdSel(view._plane());
     }
 
     void sectionTitle(const View& view) const;
@@ -74,22 +78,21 @@ public:
     void simpleInputViewBorder(const View& view) const;
     void pktIndexBuildProgressViewPath(const View& view, bool filename) const;
     void pktIndexBuildProgressViewBar(const View& view, bool on) const;
-    void detailsViewTypeInfo(WINDOW *window) const;
-    void detailsViewDtName(WINDOW *window) const;
-    void detailsViewDtExtra(WINDOW *window) const;
-    void detailsViewMappingOrFlagName(WINDOW *window) const;
-    void detailsViewMappingOrFlagRange(WINDOW *window) const;
-    void detailsViewPropKey(WINDOW *window) const;
-    void detailsViewPropVal(WINDOW *window) const;
+    void detailsViewTypeInfo(ncplane *plane) const;
+    void detailsViewDtName(ncplane *plane) const;
+    void detailsViewDtExtra(ncplane *plane) const;
+    void detailsViewMappingOrFlagName(ncplane *plane) const;
+    void detailsViewMappingOrFlagRange(ncplane *plane) const;
+    void detailsViewPropKey(ncplane *plane) const;
+    void detailsViewPropVal(ncplane *plane) const;
     void traceInfoViewPropKey(const View& view) const;
     void traceInfoViewPropVal(const View& view) const;
     void pktDecodingErrorDetailsView(const View& view, bool emphasized = false) const;
-    void error() const;
-    void error(WINDOW *window) const;
+    void error(ncplane *plane) const;
 
     void error(const View& view) const
     {
-        this->error(view._window());
+        this->error(view._plane());
     }
 
     void searchInputViewPrefix(const View& view) const;
@@ -107,9 +110,17 @@ public:
 
 private:
     struct _Style {
-        int colorPair;
-        bool fgIsBright;
+        // notcurses channels (foreground and background colors)
+        std::uint64_t channels;
+
+        // reversed version of `channels`
+        std::uint64_t revChannels;
     };
+
+    // extra attributes (bitmask) to apply with a style
+    static constexpr unsigned int _ATTR_BOLD = 1U << 0;
+    static constexpr unsigned int _ATTR_UNDERLINE = 1U << 1;
+    static constexpr unsigned int _ATTR_REVERSE = 1U << 2;
 
 private:
     enum class _StyleId {
@@ -139,6 +150,7 @@ private:
         HELP_VIEW_KEY,
         STATUS_VIEW_STD,
         PKT_REGION_INFO_VIEW_STD,
+        PKT_REGION_INFO_VIEW_EMPHASIZED,
         PKT_REGION_INFO_VIEW_VAL,
         PKT_REGION_INFO_VIEW_ERROR,
         SIMPLE_INPUT_VIEW_BORDER,
@@ -171,25 +183,12 @@ private:
     };
 
 private:
-    bool _supportsBrightColors() const noexcept
+    void _registerStyle(_StyleId id, const Color& fg, const Color& bg);
+    void _applyStyle(ncplane *plane, _StyleId id, unsigned int extraAttrs = 0) const;
+
+    void _applyStyle(const View& view, const _StyleId id, const unsigned int extraAttrs = 0) const
     {
-        return COLORS >= 16;
-    }
-
-    void _initColor(int id, int fg, int bg) const;
-    void _registerStyle(_StyleId id, int fg, bool fgIsBright, int bg);
-    void _applyStyle(WINDOW *window, _StyleId id, int extraAttrs = 0) const;
-
-    void _applyStyle(const View& view, _StyleId id, int extraAttrs = 0) const
-    {
-        this->_applyStyle(view._window(), id, extraAttrs);
-    }
-
-    void _color(WINDOW *window, int pair) const;
-
-    void _color(const View& view, const int pair) const
-    {
-        this->_color(view._window(), pair);
+        this->_applyStyle(view._plane(), id, extraAttrs);
     }
 
 private:

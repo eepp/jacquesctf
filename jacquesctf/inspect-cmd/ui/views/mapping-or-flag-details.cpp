@@ -20,26 +20,26 @@ MappingOrFlagDetails::MappingOrFlagDetails(std::string name, std::string rangesS
 {
 }
 
-void MappingOrFlagDetails::_renderLine(WINDOW * const window, const Size maxWidth,
+void MappingOrFlagDetails::_renderLine(ncplane * const plane, const Size maxWidth,
                                        const bool stylize) const
 {
     auto remWidth = maxWidth;
 
     if (stylize) {
-        this->_stylist().detailsViewMappingOrFlagName(window);
+        this->_stylist().detailsViewMappingOrFlagName(plane);
     }
 
-    this->_renderStr(window, remWidth, _name + ' ');
+    this->_renderStr(plane, remWidth, _name + ' ');
 
     if (remWidth == 0) {
         return;
     }
 
     if (stylize) {
-        this->_stylist().detailsViewMappingOrFlagRange(window);
+        this->_stylist().detailsViewMappingOrFlagRange(plane);
     }
 
-    this->_renderStr(window, remWidth, _rangesStrs);
+    this->_renderStr(plane, remWidth, _rangesStrs);
 }
 
 } // namespace jacques

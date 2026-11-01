@@ -9,11 +9,11 @@
 #include <cinttypes>
 #include <cstring>
 #include <cstdio>
-#include <curses.h>
 
 #include "table-view.hpp"
 #include "utils.hpp"
 #include "../stylist.hpp"
+#include "../term.hpp"
 
 namespace jacques {
 
@@ -63,7 +63,7 @@ void TableView::_drawHeader()
         }
 
         x += it->contentWidth();
-        this->_putChar({x, 0}, ACS_VLINE);
+        this->_putChar({x, 0}, glyphs::VLINE);
         x += 1;
     }
 }
@@ -143,37 +143,40 @@ void TableView::_clearCell(const Point& pos, Size cellWidth)
 }
 
 void TableView::_drawCellAlignedText(const Point& contentPos, const Size cellWidth,
-                                     const char * const text, Size textWidth,
-                                     const bool customStyle, const TableViewCell::TextAlign align)
+                                     const std::string_view text, const bool customStyle,
+                                     const TableViewCell::TextAlign align)
 {
-    bool textMore = false;
-
-    if (textWidth > cellWidth) {
-        textWidth = cellWidth;
-        textMore = true;
-    }
-
-    Index startX = contentPos.x;
-
-    if (align == TableViewCell::TextAlign::RIGHT) {
-        startX = contentPos.x + cellWidth - textWidth;
-    }
-
     // clear cell first because we might have a background color to apply
     this->_clearCell(contentPos, cellWidth);
 
-    // write text
-    for (Index at = 0; at < textWidth; ++at) {
-        this->_putChar({startX + at, contentPos.y}, text[at]);
+    if (cellWidth == 0) {
+        return;
     }
 
-    if (textMore) {
-        if (customStyle) {
-            this->_stylist().textMore(*this);
-        }
+    const auto textWidth = term::strWidth(text);
 
-        this->_putChar({startX + textWidth - 1, contentPos.y}, ACS_RARROW);
+    if (textWidth <= cellWidth) {
+        const auto startX = align == TableViewCell::TextAlign::RIGHT ?
+                            contentPos.x + cellWidth - textWidth : contentPos.x;
+
+        this->_putStr({startX, contentPos.y}, text);
+        return;
     }
+
+    /*
+     * Text doesn't fit: write what fits before the last column, which
+     * is for the "more" indicator.
+     *
+     * The written text can occupy one column less than that when the
+     * next character is a double-width one: the cell is already clear.
+     */
+    this->_putStr(contentPos, term::strFittingPrefix(text, cellWidth - 1));
+
+    if (customStyle) {
+        this->_stylist().textMore(*this);
+    }
+
+    this->_putChar({contentPos.x + cellWidth - 1, contentPos.y}, glyphs::RARROW);
 }
 
 void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& descr,
@@ -184,7 +187,7 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
             this->_stylist().tableViewNaCell(*this, cell.emphasized());
         }
 
-        this->_drawCellAlignedText(contentPos, descr.contentWidth(), "N/A", 3, customStyle,
+        this->_drawCellAlignedText(contentPos, descr.contentWidth(), "N/A", customStyle,
                                    cell.textAlign());
         return;
     }
@@ -194,15 +197,15 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
             this->_stylist().tableViewTextCell(*this, cell.emphasized());
         }
 
-        this->_drawCellAlignedText(contentPos, descr.contentWidth(), rCell->text().c_str(),
-                                   rCell->text().size(), customStyle, cell.textAlign());
+        this->_drawCellAlignedText(contentPos, descr.contentWidth(), rCell->text(), customStyle,
+                                   cell.textAlign());
     } else if (const auto rCell = dynamic_cast<const BoolTableViewCell *>(&cell)) {
         if (customStyle) {
             this->_stylist().tableViewBoolCell(*this, rCell->val(), cell.emphasized());
         }
 
         this->_drawCellAlignedText(contentPos, descr.contentWidth(), rCell->val() ? "Yes" : "No",
-                                   rCell->val() ? 3 : 2, customStyle, cell.textAlign());
+                                   customStyle, cell.textAlign());
     } else if (const auto dsCell = dynamic_cast<const DataLenTableViewCell *>(&cell)) {
         const auto [len, unit] = dsCell->len().format(dsCell->fmtMode(), ',');
         const char *fmt = "%s %s";
@@ -219,8 +222,8 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
             this->_stylist().tableViewTextCell(*this, cell.emphasized());
         }
 
-        this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(),
-                                   std::strlen(buf.data()), customStyle, cell.textAlign());
+        this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(), customStyle,
+                                   cell.textAlign());
     } else if (const auto rCell = dynamic_cast<const IntTableViewCell *>(&cell)) {
         std::array<char, 32> buf;
         const char *fmt = nullptr;
@@ -272,8 +275,8 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
             this->_stylist().tableViewTextCell(*this, cell.emphasized());
         }
 
-        this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(),
-                                   std::strlen(buf.data()), customStyle, cell.textAlign());
+        this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(), customStyle,
+                                   cell.textAlign());
     } else if (const auto rCell = dynamic_cast<const TsTableViewCell *>(&cell)) {
         std::array<char, 32> buf;
 
@@ -286,8 +289,8 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
                 this->_stylist().tableViewTextCell(*this, cell.emphasized());
             }
 
-            this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(),
-                                       std::strlen(buf.data()), customStyle, cell.textAlign());
+            this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(), customStyle,
+                                       cell.textAlign());
             break;
 
         case TsFmtMode::NS_FROM_ORIGIN:
@@ -327,8 +330,8 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
                 this->_stylist().tableViewTextCell(*this, cell.emphasized());
             }
 
-            this->_drawCellAlignedText(contentPos, descr.contentWidth(), str.c_str(), str.size(),
-                                       customStyle, cell.textAlign());
+            this->_drawCellAlignedText(contentPos, descr.contentWidth(), str, customStyle,
+                                       cell.textAlign());
             break;
         }
         }
@@ -400,7 +403,7 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
                     this->_stylist().tableViewNaCell(*this, cell.emphasized());
                 }
 
-                this->_drawCellAlignedText(contentPos, descr.contentWidth(), "N/A", 3, customStyle,
+                this->_drawCellAlignedText(contentPos, descr.contentWidth(), "N/A", customStyle,
                                            cell.textAlign());
                 break;
             }
@@ -414,13 +417,14 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
         }
 
         if (std::strlen(buf.data()) > 0) {
-            this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(),
-                                       std::strlen(buf.data()), customStyle, cell.textAlign());
+            this->_drawCellAlignedText(contentPos, descr.contentWidth(), buf.data(), customStyle,
+                                       cell.textAlign());
         }
     } else if (const auto pCell = dynamic_cast<const PathTableViewCell *>(&cell)) {
         assert(!pCell->path().empty());
 
-        const auto [dirName, filename] = utils::formatPath(pCell->path(), descr.contentWidth());
+        const auto [dirName, filename] = _formatPath(utils::escapeStr(pCell->path().string()),
+                                                     descr.contentWidth());
 
         auto curPos = contentPos;
 
@@ -429,10 +433,10 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
                 this->_stylist().tableViewTextCell(*this, false);
             }
 
-            this->_drawCellAlignedText(curPos, descr.contentWidth(), dirName.c_str(),
-                                       dirName.size(), customStyle, TableViewCell::TextAlign::LEFT);
-            curPos.x += dirName.size();
-            this->_drawCellAlignedText(curPos, descr.contentWidth(), "/", 1, customStyle,
+            this->_drawCellAlignedText(curPos, descr.contentWidth(), dirName, customStyle,
+                                       TableViewCell::TextAlign::LEFT);
+            curPos.x += term::strWidth(dirName);
+            this->_drawCellAlignedText(curPos, descr.contentWidth(), "/", customStyle,
                                        TableViewCell::TextAlign::LEFT);
             curPos.x += 1;
         }
@@ -441,8 +445,8 @@ void TableView::_drawCell(const Point& contentPos, const TableViewColumnDescr& d
             this->_stylist().tableViewTextCell(*this, cell.emphasized());
         }
 
-        this->_drawCellAlignedText(curPos, descr.contentWidth(), filename.c_str(), filename.size(),
-                                   customStyle, TableViewCell::TextAlign::LEFT);
+        this->_drawCellAlignedText(curPos, descr.contentWidth(), filename, customStyle,
+                                   TableViewCell::TextAlign::LEFT);
     } else {
         std::abort();
     }
@@ -512,7 +516,7 @@ void TableView::_drawCells(const Index row,
             this->_stylist().tableViewSep(*this);
         }
 
-        this->_putChar({x, y}, ACS_VLINE);
+        this->_putChar({x, y}, glyphs::VLINE);
         x += 1;
     }
 }

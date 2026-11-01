@@ -25,19 +25,6 @@
 namespace jacques::utils {
 
 /*
- * Formats the path `path`, considering that the total length of the
- * output must not exceed `maxLen`.
- *
- * The first element of the returned pair is the directory name
- * (possibly with ellipses if, due to `maxLen`, it's incomplete), and
- * the second element is the file name.
- *
- * The lengths of both returned elements plus one (to add a path
- * separator between them) is always less than or equal to `maxLen`.
- */
-std::pair<std::string, std::string> formatPath(const boost::filesystem::path& path, Size maxLen);
-
-/*
  * Normalizes a globbing pattern, that is, removes consecutive `*`
  * characters.
  */
@@ -60,8 +47,12 @@ std::string wrapText(const std::string& text, Size lineLen);
 std::vector<std::string> wrapTextLines(const std::string& text, Size lineLen);
 
 /*
- * Escapes a string, replacing special characters with typical escape
- * sequences.
+ * Escapes the UTF-8 string `str`, replacing control characters with
+ * typical escape sequences.
+ *
+ * The returned string is valid UTF-8: this function replaces invalid
+ * sequences and characters which aren't printable according to the
+ * current locale (see std::iswprint()) with `unicode::replacementCh`.
  */
 std::string escapeStr(std::string_view str);
 

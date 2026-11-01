@@ -7,7 +7,6 @@
 #include <cinttypes>
 #include <algorithm>
 #include <cstdio>
-#include <curses.h>
 #include <signal.h>
 #include <unistd.h>
 
@@ -156,7 +155,7 @@ void StatusView::_redrawContent()
 
     const auto& path = utils::escapeStr(_appState->activeDsFileState().dsFile().path().string());
     const auto pathMaxLen = this->contentRect().w - _curEndPositions->dsfPath;
-    const auto [dirNameStr, filenameStr] = utils::formatPath(path, pathMaxLen);
+    const auto [dirNameStr, filenameStr] = _formatPath(path, pathMaxLen);
 
     this->_moveCursor({0, 0});
 

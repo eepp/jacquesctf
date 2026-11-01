@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <vector>
 #include <memory>
+#include <string_view>
 #include <yactfr/metadata/fwd.hpp>
 
 #include "scroll-view.hpp"
@@ -59,8 +60,8 @@ private:
     struct _PropRow :
         public _Row
     {
-        _PropRow(std::string key) :
-            key {std::move(key)}
+        _PropRow(const std::string_view key) :
+            key {utils::escapeStr(key)}
         {
         }
 

@@ -1,19 +1,22 @@
 # SPDX-FileCopyrightText: 2018 Philippe Proulx <eepp.ca>
 # SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
 
-# find ncurses (optional)
+# find notcurses (optional)
 option (OPT_WITHOUT_INSPECT_CMD "Don't build the `inspect` command")
 
 if (NOT OPT_WITHOUT_INSPECT_CMD)
-    set (CURSES_NEED_NCURSES TRUE)
-    find_package (Curses)
+    find_package (PkgConfig)
 
-    if (CURSES_FOUND)
+    if (PkgConfig_FOUND)
+        pkg_check_modules (NOTCURSES_CORE IMPORTED_TARGET notcurses-core>=3.0)
+    endif ()
+
+    if (NOTCURSES_CORE_FOUND)
         set (JACQUES_HAS_INSPECT_CMD ON)
         add_compile_definitions (JACQUES_HAS_INSPECT_CMD)
         message (STATUS "Will build the `inspect` command")
     else ()
-        message (WARNING "Missing ncurses dependency: won't build the `inspect` command.")
+        message (WARNING "Missing notcurses-core (≥ 3.0) dependency: won't build the `inspect` command.")
     endif ()
 endif ()
 
@@ -46,6 +49,7 @@ if (JACQUES_HAS_INSPECT_CMD)
     set (
         JACQUES_INSPECT_CMD_SOURCES
         inspect-cmd/state/inspect-cmd-state.cpp
+        inspect-cmd/ui/color.cpp
         inspect-cmd/ui/inspect-cmd.cpp
         inspect-cmd/ui/screens/ds-files-screen.cpp
         inspect-cmd/ui/screens/dts-screen.cpp
@@ -56,6 +60,7 @@ if (JACQUES_HAS_INSPECT_CMD)
         inspect-cmd/ui/screens/trace-info-screen.cpp
         inspect-cmd/ui/search-ctrl.cpp
         inspect-cmd/ui/stylist.cpp
+        inspect-cmd/ui/term.cpp
         inspect-cmd/ui/views/abstract-dt-details.cpp
         inspect-cmd/ui/views/ds-file-table-view.cpp
         inspect-cmd/ui/views/dst-table-view.cpp
@@ -126,22 +131,24 @@ add_executable (
     jacques.cpp
     list-pkts-cmd.cpp
     print-metadata-text-cmd.cpp
+    unicode.cpp
     utils.cpp
 )
 target_include_directories (
     jacquesctf PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CURSES_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
 )
 target_link_libraries (
     jacquesctf
-    ${CURSES_LIBRARIES}
     Boost::program_options
     Boost::filesystem
     Threads::Threads
     yactfr::yactfr
 )
+if (JACQUES_HAS_INSPECT_CMD)
+    target_link_libraries (jacquesctf PkgConfig::NOTCURSES_CORE)
+endif ()
 target_compile_definitions (
     jacquesctf PRIVATE
     "-DJACQUES_VERSION=\"${PROJECT_VERSION}\""

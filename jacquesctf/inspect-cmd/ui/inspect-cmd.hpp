@@ -20,7 +20,7 @@ enum class KeyHandlingReaction
 class InspectCfg;
 
 /*
- * Stats the interactive (ncurses) part of Jacques CTF.
+ * Starts the interactive (notcurses) part of Jacques CTF.
  *
  * This takes control of the terminal and returns only when the user
  * manually quits. The function eventually registers a handler for the

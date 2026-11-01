@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
+#include "../key.hpp"
 #include "dts-screen.hpp"
 #include "data/content-pkt-region.hpp"
 #include "inspect-common/search-query.hpp"
@@ -140,212 +141,220 @@ void DtsScreen::clearHighlight()
     _dtExplorerView->clearHighlight();
 }
 
-KeyHandlingReaction DtsScreen::_handleKey(const int key)
+KeyHandlingReaction DtsScreen::_handleKey(const Key key)
 {
-    switch (key) {
-    case KEY_UP:
-        if (_focusedView == _ertTableView.get()) {
-            _ertTableView->prev();
-        } else if (_focusedView == _dstTableView.get()) {
-            _dstTableView->prev();
-        } else if (_focusedView == _dtExplorerView.get()) {
-            _dtExplorerView->prev();
-        }
+    if (const auto specialKey = key.special()) {
+        switch (*specialKey) {
+        case SpecialKey::UP:
+            if (_focusedView == _ertTableView.get()) {
+                _ertTableView->prev();
+            } else if (_focusedView == _dstTableView.get()) {
+                _dstTableView->prev();
+            } else if (_focusedView == _dtExplorerView.get()) {
+                _dtExplorerView->prev();
+            }
 
-        this->_updateViews();
-        break;
+            this->_updateViews();
+            break;
 
-    case KEY_DOWN:
-        if (_focusedView == _ertTableView.get()) {
-            _ertTableView->next();
-        } else if (_focusedView == _dstTableView.get()) {
-            _dstTableView->next();
-        } else if (_focusedView == _dtExplorerView.get()) {
-            _dtExplorerView->next();
-        }
+        case SpecialKey::DOWN:
+            if (_focusedView == _ertTableView.get()) {
+                _ertTableView->next();
+            } else if (_focusedView == _dstTableView.get()) {
+                _dstTableView->next();
+            } else if (_focusedView == _dtExplorerView.get()) {
+                _dtExplorerView->next();
+            }
 
-        this->_updateViews();
-        break;
+            this->_updateViews();
+            break;
 
-    case KEY_PPAGE:
-        if (_focusedView == _ertTableView.get()) {
-            _ertTableView->pageUp();
-        } else if (_focusedView == _dstTableView.get()) {
-            _dstTableView->pageUp();
-        } else if (_focusedView == _dtExplorerView.get()) {
-            _dtExplorerView->pageUp();
-        }
+        case SpecialKey::PAGE_UP:
+            if (_focusedView == _ertTableView.get()) {
+                _ertTableView->pageUp();
+            } else if (_focusedView == _dstTableView.get()) {
+                _dstTableView->pageUp();
+            } else if (_focusedView == _dtExplorerView.get()) {
+                _dtExplorerView->pageUp();
+            }
 
-        this->_updateViews();
-        break;
+            this->_updateViews();
+            break;
 
-    case KEY_NPAGE:
-        if (_focusedView == _ertTableView.get()) {
-            _ertTableView->pageDown();
-        } else if (_focusedView == _dstTableView.get()) {
-            _dstTableView->pageDown();
-        } else if (_focusedView == _dtExplorerView.get()) {
-            _dtExplorerView->pageDown();
-        }
+        case SpecialKey::PAGE_DOWN:
+            if (_focusedView == _ertTableView.get()) {
+                _ertTableView->pageDown();
+            } else if (_focusedView == _dstTableView.get()) {
+                _dstTableView->pageDown();
+            } else if (_focusedView == _dtExplorerView.get()) {
+                _dtExplorerView->pageDown();
+            }
 
-        this->_updateViews();
-        break;
+            this->_updateViews();
+            break;
 
-    case KEY_END:
-        if (_focusedView == _ertTableView.get()) {
-            _ertTableView->selectLast();
-        } else if (_focusedView == _dstTableView.get()) {
-            _dstTableView->selectLast();
-        }
+        case SpecialKey::END:
+            if (_focusedView == _ertTableView.get()) {
+                _ertTableView->selectLast();
+            } else if (_focusedView == _dstTableView.get()) {
+                _dstTableView->selectLast();
+            }
 
-        this->_updateViews();
-        break;
+            this->_updateViews();
+            break;
 
-    case KEY_HOME:
-        if (_focusedView == _ertTableView.get()) {
-            _ertTableView->selectFirst();
-        } else if (_focusedView == _dstTableView.get()) {
-            _dstTableView->selectFirst();
-        }
+        case SpecialKey::HOME:
+            if (_focusedView == _ertTableView.get()) {
+                _ertTableView->selectFirst();
+            } else if (_focusedView == _dstTableView.get()) {
+                _dstTableView->selectFirst();
+            }
 
-        this->_updateViews();
-        break;
+            this->_updateViews();
+            break;
 
-    case 'c':
-        if (_focusedView == _ertTableView.get()) {
-            _ertTableView->centerSelRow();
-        } else if (_focusedView == _dstTableView.get()) {
-            _dstTableView->centerSelRow();
-        }
+        case SpecialKey::ENTER:
+        case SpecialKey::TAB:
+        {
+            if (!_tablesVisible) {
+                break;
+            }
 
-        break;
+            // change focus
+            const auto oldFocusedView = _focusedView;
 
-    case '\n':
-    case '\r':
-    case '\t':
-    {
-        if (!_tablesVisible) {
+            if (_focusedView == _ertTableView.get()) {
+                _focusedView = _dtExplorerView.get();
+            } else if (_focusedView == _dtExplorerView.get()) {
+                _focusedView = _dstTableView.get();
+            } else if (_focusedView == _dstTableView.get()) {
+                if (_ertTableView->isEmpty()) {
+                    _focusedView = _dtExplorerView.get();
+                } else {
+                    _focusedView = _ertTableView.get();
+                }
+            }
+
+            this->_updateViews();
+            oldFocusedView->blur();
+            _focusedView->focus();
             break;
         }
 
-        // change focus
-        const auto oldFocusedView = _focusedView;
+        case SpecialKey::LEFT:
+            if (!_tablesVisible) {
+                break;
+            }
 
-        if (_focusedView == _ertTableView.get()) {
-            _focusedView = _dtExplorerView.get();
-        } else if (_focusedView == _dtExplorerView.get()) {
-            _focusedView = _dstTableView.get();
-        } else if (_focusedView == _dstTableView.get()) {
+            _focusedView->blur();
+
             if (_ertTableView->isEmpty()) {
-                _focusedView = _dtExplorerView.get();
+                _focusedView = _dstTableView.get();
             } else {
                 _focusedView = _ertTableView.get();
             }
-        }
 
-        this->_updateViews();
-        oldFocusedView->blur();
-        _focusedView->focus();
-        break;
-    }
-
-    case KEY_LEFT:
-        if (!_tablesVisible) {
+            _focusedView->focus();
+            this->_updateViews();
             break;
-        }
 
-        _focusedView->blur();
+        case SpecialKey::RIGHT:
+            if (!_tablesVisible || _focusedView == _dtExplorerView.get()) {
+                break;
+            }
 
-        if (_ertTableView->isEmpty()) {
-            _focusedView = _dstTableView.get();
-        } else {
-            _focusedView = _ertTableView.get();
-        }
-
-        _focusedView->focus();
-        this->_updateViews();
-        break;
-
-    case KEY_RIGHT:
-        if (!_tablesVisible || _focusedView == _dtExplorerView.get()) {
-            break;
-        }
-
-        _focusedView->blur();
-        _focusedView = _dtExplorerView.get();
-        _focusedView->focus();
-        this->_updateViews();
-        break;
-
-    case '+':
-    {
-        _tablesVisible = !_tablesVisible;
-
-        const auto viewRects = this->_viewRects();
-
-        _dtExplorerView->moveAndResize(std::get<2>(viewRects));
-        _dstTableView->isVisible(this->isVisible() && _tablesVisible);
-        _ertTableView->isVisible(this->isVisible() && _tablesVisible);
-
-        if (!_tablesVisible) {
             _focusedView->blur();
             _focusedView = _dtExplorerView.get();
             _focusedView->focus();
-        }
+            this->_updateViews();
+            break;
 
-        _dstTableView->redraw();
-        _ertTableView->redraw();
-        _dtExplorerView->redraw();
-        break;
-    }
-
-    case '/':
-    case 'g':
-    {
-        if (!_tablesVisible || _focusedView != _ertTableView.get()) {
+        default:
             break;
         }
+    } else {
+        const auto ch = *key.ch();
 
-        auto query = _searchController.start();
+        switch (ch) {
+        case 'c':
+            if (_focusedView == _ertTableView.get()) {
+                _ertTableView->centerSelRow();
+            } else if (_focusedView == _dstTableView.get()) {
+                _dstTableView->centerSelRow();
+            }
 
-        if (!query) {
-            // canceled or invalid
+            break;
+
+        case '+':
+        {
+            _tablesVisible = !_tablesVisible;
+
+            const auto viewRects = this->_viewRects();
+
+            _dtExplorerView->moveAndResize(std::get<2>(viewRects));
+            _dstTableView->isVisible(this->isVisible() && _tablesVisible);
+            _ertTableView->isVisible(this->isVisible() && _tablesVisible);
+
+            if (!_tablesVisible) {
+                _focusedView->blur();
+                _focusedView = _dtExplorerView.get();
+                _focusedView->focus();
+            }
+
             _dstTableView->redraw();
             _ertTableView->redraw();
             _dtExplorerView->redraw();
             break;
         }
 
-        _lastQuery = nullptr;
+        case '/':
+        case 'g':
+        {
+            if (!_tablesVisible || _focusedView != _ertTableView.get()) {
+                break;
+            }
 
-        if (const auto sQuery = dynamic_cast<const ErtNameSearchQuery *>(query.get())) {
-            _ertTableView->selectErt(sQuery->pattern());
-            _lastQuery.reset(sQuery);
-            query.release();
-        } else if (const auto sQuery = dynamic_cast<const ErtIdSearchQuery *>(query.get())) {
-            _ertTableView->selectErt(static_cast<yactfr::TypeId>(sQuery->val()));
-        }
+            auto query = _searchController.start();
 
-        this->_updateViews();
-        _dstTableView->redraw();
-        _ertTableView->centerSelRow();
-        _ertTableView->redraw();
-        _dtExplorerView->redraw();
-        break;
-    }
+            if (!query) {
+                // canceled or invalid
+                _dstTableView->redraw();
+                _ertTableView->redraw();
+                _dtExplorerView->redraw();
+                break;
+            }
 
-    case 'n':
-        if (!_tablesVisible || _focusedView != _ertTableView.get() || !_lastQuery) {
+            _lastQuery = nullptr;
+
+            if (const auto sQuery = dynamic_cast<const ErtNameSearchQuery *>(query.get())) {
+                _ertTableView->selectErt(sQuery->pattern());
+                _lastQuery.reset(sQuery);
+                query.release();
+            } else if (const auto sQuery = dynamic_cast<const ErtIdSearchQuery *>(query.get())) {
+                _ertTableView->selectErt(static_cast<yactfr::TypeId>(sQuery->val()));
+            }
+
+            this->_updateViews();
+            _dstTableView->redraw();
+            _ertTableView->centerSelRow();
+            _ertTableView->redraw();
+            _dtExplorerView->redraw();
             break;
         }
 
-        _ertTableView->selectErt(_lastQuery->pattern(), true);
-        this->_updateViews();
-        _ertTableView->centerSelRow();
-        break;
+        case 'n':
+            if (!_tablesVisible || _focusedView != _ertTableView.get() || !_lastQuery) {
+                break;
+            }
 
-    default:
-        break;
+            _ertTableView->selectErt(_lastQuery->pattern(), true);
+            this->_updateViews();
+            _ertTableView->centerSelRow();
+            break;
+
+        default:
+            break;
+        }
     }
 
     _ertTableView->refresh();

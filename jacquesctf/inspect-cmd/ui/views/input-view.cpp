@@ -28,7 +28,19 @@ void InputView::_redrawContent()
 void InputView::_drawBorder() const
 {
     this->_stylist().simpleInputViewBorder(*this);
-    wborder(this->_window(), ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
+
+    // border made of spaces (borderless view: content rectangle is the rectangle)
+    const auto& rect = this->contentRect();
+
+    for (Index x = 0; x < rect.w; ++x) {
+        this->_putChar({x, 0}, ' ');
+        this->_putChar({x, rect.h - 1}, ' ');
+    }
+
+    for (Index y = 1; y < rect.h - 1; ++y) {
+        this->_putChar({0, y}, ' ');
+        this->_putChar({rect.w - 1, y}, ' ');
+    }
 }
 
 void InputView::drawCurText(const std::string& text)

@@ -39,7 +39,7 @@ namespace jacques {
  * ASCII characters use the same character class. An ASCII character can
  * have its `isPrintable` property set to false, in which case the view
  * must print an alternative (printable) character with a different
- * style. Hex editors typically use `.` for this (we use `ACS_BULLET`, a
+ * style. Hex editors typically use `.` for this (we use `glyphs::BULLET`, a
  * centered dot).
  */
 class PktDataView final :
@@ -123,7 +123,7 @@ private:
         }
 
         Point pt;
-        chtype val;
+        char val;
         std::vector<const PktRegion *> pktRegions;
         bool isErFirst = false;
         bool isPrintable = true;
@@ -140,6 +140,7 @@ private:
     void _setTitle();
     void _setCustomStyle(const _Char& ch) const;
     void _drawChar(const _Char& ch) const;
+    void _putCharVal(const _Char& ch) const;
     void _drawUnselChar(const _Char& ch) const;
     void _drawAllNumericChars() const;
     void _drawAllAsciiChars() const;

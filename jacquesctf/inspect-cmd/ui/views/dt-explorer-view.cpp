@@ -337,7 +337,7 @@ void DtExplorerView::_drawRows()
             }
 
             this->_moveCursor({2, y});
-            details->renderLine(this->_window(), this->contentRect().w - 2, !highlighted);
+            details->renderLine(this->_plane(), this->contentRect().w - 2, !highlighted);
         }
     }
 }

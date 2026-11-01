@@ -4,10 +4,10 @@
  */
 
 #include <iostream>
-#include <curses.h>
 #include <signal.h>
 #include <unistd.h>
 
+#include "../key.hpp"
 #include "cfg.hpp"
 #include "help-screen.hpp"
 #include "../views/help-view.hpp"
@@ -42,15 +42,15 @@ void HelpScreen::_visibilityChanged()
     }
 }
 
-KeyHandlingReaction HelpScreen::_handleKey(const int key)
+KeyHandlingReaction HelpScreen::_handleKey(const Key key)
 {
-    if (key == KEY_UP) {
+    if (key.special() == SpecialKey::UP) {
         _view->prev();
-    } else if (key == KEY_DOWN) {
+    } else if (key.special() == SpecialKey::DOWN) {
         _view->next();
-    } else if (key == KEY_PPAGE) {
+    } else if (key.special() == SpecialKey::PAGE_UP) {
         _view->pageUp();
-    } else if (key == KEY_NPAGE) {
+    } else if (key.special() == SpecialKey::PAGE_DOWN) {
         _view->pageDown();
     }
 

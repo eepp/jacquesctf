@@ -4,10 +4,10 @@
  */
 
 #include <iostream>
-#include <curses.h>
 #include <signal.h>
 #include <unistd.h>
 
+#include "../key.hpp"
 #include "cfg.hpp"
 #include "../views/ds-file-table-view.hpp"
 #include "ds-files-screen.hpp"
@@ -53,69 +53,77 @@ void DsFilesScreen::_visibilityChanged()
     }
 }
 
-KeyHandlingReaction DsFilesScreen::_handleKey(const int key)
+KeyHandlingReaction DsFilesScreen::_handleKey(const Key key)
 {
-    switch (key) {
-    case KEY_UP:
-        _view->prev();
-        break;
-
-    case KEY_DOWN:
-        _view->next();
-        break;
-
-    case KEY_PPAGE:
-        _view->pageUp();
-        break;
-
-    case KEY_NPAGE:
-        _view->pageDown();
-        break;
-
-    case KEY_END:
-        _view->selectLast();
-        break;
-
-    case KEY_HOME:
-        _view->selectFirst();
-        break;
-
-    case 'c':
-        _view->centerSelRow();
-        break;
-
-    case 't':
-        _tsFmtModeWheel.next();
-        _view->tsFmtMode(_tsFmtModeWheel.curVal());
-        break;
-
-    case 's':
-        _dataLenFmtModeWheel.next();
-        _view->dataLenFmtMode(_dataLenFmtModeWheel.curVal());
-        break;
-
-    case '\n':
-    case '\r':
-        this->_appState().gotoDsFile(_view->selDsFileIndex());
-
-        if (this->_appState().activeDsFileState().dsFile().pktCount() == 0) {
+    if (const auto specialKey = key.special()) {
+        switch (*specialKey) {
+        case SpecialKey::UP:
+            _view->prev();
             break;
-        } else if (this->_appState().activeDsFileState().dsFile().pktCount() == 1) {
-            return KeyHandlingReaction::RETURN_TO_INSPECT;
-        } else {
-            return KeyHandlingReaction::RETURN_TO_PKTS;
+
+        case SpecialKey::DOWN:
+            _view->next();
+            break;
+
+        case SpecialKey::PAGE_UP:
+            _view->pageUp();
+            break;
+
+        case SpecialKey::PAGE_DOWN:
+            _view->pageDown();
+            break;
+
+        case SpecialKey::END:
+            _view->selectLast();
+            break;
+
+        case SpecialKey::HOME:
+            _view->selectFirst();
+            break;
+
+        case SpecialKey::ENTER:
+            this->_appState().gotoDsFile(_view->selDsFileIndex());
+
+            if (this->_appState().activeDsFileState().dsFile().pktCount() == 0) {
+                break;
+            } else if (this->_appState().activeDsFileState().dsFile().pktCount() == 1) {
+                return KeyHandlingReaction::RETURN_TO_INSPECT;
+            } else {
+                return KeyHandlingReaction::RETURN_TO_PKTS;
+            }
+
+        case SpecialKey::F3:
+            this->_appState().gotoPrevDsFile();
+            break;
+
+        case SpecialKey::F4:
+            this->_appState().gotoNextDsFile();
+            break;
+
+        default:
+            break;
         }
+    } else {
+        const auto ch = *key.ch();
 
-    case KEY_F(3):
-        this->_appState().gotoPrevDsFile();
-        break;
+        switch (ch) {
+        case 'c':
+            _view->centerSelRow();
+            break;
 
-    case KEY_F(4):
-        this->_appState().gotoNextDsFile();
-        break;
+        case 't':
+            _tsFmtModeWheel.next();
+            _view->tsFmtMode(_tsFmtModeWheel.curVal());
+            break;
 
-    default:
-        break;
+        case 's':
+            _dataLenFmtModeWheel.next();
+            _view->dataLenFmtMode(_dataLenFmtModeWheel.curVal());
+            break;
+
+        default:
+            break;
+        }
     }
 
     _view->refresh();

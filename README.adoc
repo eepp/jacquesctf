@@ -93,7 +93,9 @@ Make sure you have the build time requirements:
 * https://cmake.org/[CMake] ≥ 3.30.0
 * pass:[C++17] compiler
 * http://www.boost.org/[Boost] ≥ 1.70
-* https://www.gnu.org/software/ncurses/[ncurses]
+* https://github.com/dankamongmen/notcurses[notcurses] ≥ 3.0 (only
+  the `notcurses-core` library), found with
+  https://www.freedesktop.org/wiki/Software/pkg-config/[pkg-config]
 * Git and network access
 
 The build system fetches and builds a pinned version of

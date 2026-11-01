@@ -9,11 +9,12 @@
 #include "data/pkt-index-entry.hpp"
 #include "pkt-index-build-progress-view.hpp"
 #include "../stylist.hpp"
+#include "../term.hpp"
 
 namespace jacques {
 
 PktIndexBuildProgressView::PktIndexBuildProgressView(const Rect& rect, const Stylist& stylist) :
-    View {rect, "Building packet indexes...", DecorationStyle::BORDERS_EMPHASIZED, stylist}
+    View {rect, "Building packet indexes…", DecorationStyle::BORDERS_EMPHASIZED, stylist}
 {
 }
 
@@ -59,15 +60,15 @@ void PktIndexBuildProgressView::_drawFile()
     constexpr auto y = 1;
 
     this->_clearRow(y);
-    const auto [dirName, filename] = utils::formatPath(utils::escapeStr(_dsf->path().string()),
-                                                       this->contentRect().w - 2);
+    const auto [dirName, filename] = _formatPath(utils::escapeStr(_dsf->path().string()),
+                                                 this->contentRect().w - 2);
 
     Index filenameX = 1;
 
     if (!dirName.empty()) {
         this->_stylist().pktIndexBuildProgressViewPath(*this, false);
         this->_moveAndPrint({filenameX, y}, "%s/", dirName.c_str());
-        filenameX += dirName.size() + 1;
+        filenameX += term::strWidth(dirName) + 1;
     }
 
     this->_stylist().pktIndexBuildProgressViewPath(*this, true);
@@ -112,7 +113,7 @@ void PktIndexBuildProgressView::_drawProgress()
     this->_stylist().pktIndexBuildProgressViewBar(*this, false);
 
     for (; x < 1 + barW; ++x) {
-        this->_putChar({x, barY}, ACS_CKBOARD);
+        this->_putChar({x, barY}, glyphs::CKBOARD);
     }
 
     // index

@@ -13,7 +13,7 @@
 #include <sstream>
 #include <algorithm>
 #include <type_traits>
-#include <curses.h>
+struct ncplane;
 #include <yactfr/yactfr.hpp>
 
 #include "abstract-dt-details.hpp"
@@ -28,7 +28,7 @@ public:
                                   const Stylist& stylist);
 
 private:
-    void _renderLine(WINDOW *window, Size maxWidth, bool stylize) const override;
+    void _renderLine(ncplane *plane, Size maxWidth, bool stylize) const override;
 
 private:
     const std::string _name;

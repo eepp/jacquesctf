@@ -34,9 +34,9 @@ void _mappingOrFlagDetailsFromDt(const DtT& dt, const Size indent, const Stylist
 }
 
 template <typename VarTypeOptT>
-Size _varTypeOptDispNameSize(const VarTypeOptT& opt) noexcept
+Size _varTypeOptDispNameWidth(const VarTypeOptT& opt)
 {
-    return opt.displayName() ? opt.displayName()->size() : 0;
+    return opt.displayName() ? dtDetailsStrWidth(*opt.displayName()) : 0;
 }
 
 template <typename VarTypeT>
@@ -47,10 +47,11 @@ void _dtDetailsFromVarType(const VarTypeT& varType, const Size indent, const Sty
         return;
     }
 
-    const auto maxDispNameSizeIt = std::max_element(varType.begin(), varType.end(),
-                                                    [](auto& optA, auto& optB) {
-        return _varTypeOptDispNameSize(*optA) < _varTypeOptDispNameSize(*optB);
-    });
+    Size maxDispNameWidth = 0;
+
+    for (auto& opt : varType) {
+        maxDispNameWidth = std::max(maxDispNameWidth, _varTypeOptDispNameWidth(*opt));
+    }
 
     std::vector<std::string> rangesStrs;
 
@@ -70,8 +71,7 @@ void _dtDetailsFromVarType(const VarTypeT& varType, const Size indent, const Sty
         auto& rangesStr = rangesStrs[i];
 
         _dtDetailsFromDt(opt.dataType(), indent + 2, stylist, opt.displayName(),
-                         _varTypeOptDispNameSize(**maxDispNameSizeIt), std::move(rangesStr),
-                         extraWidth, vec);
+                         maxDispNameWidth, std::move(rangesStr), extraWidth, vec);
     }
 }
 
@@ -117,15 +117,16 @@ void _dtDetailsFromDt(const yactfr::DataType& dt, const Size indent, const Styli
             return;
         }
 
-        const auto maxDispNameIt = std::max_element(structType.begin(), structType.end(),
-                                                    [](auto& memberTypeA, auto& memberTypeB) {
-            return memberTypeA->displayName()->size() < memberTypeB->displayName()->size();
-        });
+        Size maxDispNameWidth = 0;
+
+        for (auto& memberType : structType) {
+            maxDispNameWidth = std::max(maxDispNameWidth,
+                                        dtDetailsStrWidth(*memberType->displayName()));
+        }
 
         for (auto& memberType : structType) {
             _dtDetailsFromDt(memberType->dataType(), indent + 2, stylist,
-                             *memberType->displayName(), (*maxDispNameIt)->displayName()->size(),
-                             vec);
+                             *memberType->displayName(), maxDispNameWidth, vec);
         }
     } else if (dt.isVariantWithUnsignedIntegerSelectorType()) {
         _dtDetailsFromVarType(dt.asVariantWithUnsignedIntegerSelectorType(), indent, stylist, vec);

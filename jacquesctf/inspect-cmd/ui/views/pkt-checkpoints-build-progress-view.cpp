@@ -11,7 +11,7 @@ namespace jacques {
 
 PktCheckpointsBuildProgressView::PktCheckpointsBuildProgressView(const Rect& rect,
                                                                  const Stylist& stylist) :
-    View {rect, "Creating packet checkpoints...", DecorationStyle::BORDERS_EMPHASIZED, stylist}
+    View {rect, "Creating packet checkpoints…", DecorationStyle::BORDERS_EMPHASIZED, stylist}
 {
 }
 
@@ -88,7 +88,7 @@ void PktCheckpointsBuildProgressView::_drawProgress()
     this->_stylist().pktIndexBuildProgressViewBar(*this, false);
 
     for (; x < 1 + barW; ++x) {
-        this->_putChar({x, barY}, ACS_CKBOARD);
+        this->_putChar({x, barY}, glyphs::CKBOARD);
     }
 
     // index

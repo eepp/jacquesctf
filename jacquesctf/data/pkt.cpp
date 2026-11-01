@@ -8,6 +8,7 @@
 #include <yactfr/yactfr.hpp>
 
 #include "pkt.hpp"
+#include "unicode.hpp"
 #include "content-pkt-region.hpp"
 #include "padding-pkt-region.hpp"
 #include "error-pkt-region.hpp"
@@ -270,23 +271,10 @@ void Pkt::_cacheContentRegionAtCurIt(Scope::SP scope,
         }
 
         auto str = std::invoke([&dt, &bufStart, &bufEnd] {
-            if (dt.isStringType() &&
-                    dt.asStringType().encoding() == yactfr::StringEncoding::Utf8) {
-                /*
-                 * Find end of string in buffer. std::find() returns
-                 * either the location of the (first) null character or
-                 * `bufEnd`.
-                 */
-                const auto bufStrEnd = std::find(bufStart, bufEnd, 0);
-
-                // create string value
-                return std::string {
-                    reinterpret_cast<const char *>(bufStart),
-                    static_cast<std::string::size_type>(bufStrEnd - bufStart)
-                };
+            if (dt.isStringType()) {
+                return unicode::toUtf8(bufStart, bufEnd, dt.asStringType().encoding());
             } else {
-                // TODO: decode value, remove this temporary message
-                return std::string {"(not an UTF-8 string)"};
+                return std::string {"(not a string)"};
             }
         });
 

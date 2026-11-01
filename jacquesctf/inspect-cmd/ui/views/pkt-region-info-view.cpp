@@ -13,11 +13,11 @@
 #include <cassert>
 #include <variant>
 #include <functional>
-#include <curses.h>
 #include <signal.h>
 #include <unistd.h>
 
 #include "../stylist.hpp"
+#include "../term.hpp"
 #include "pkt-region-info-view.hpp"
 #include "utils.hpp"
 #include "../../state/msg.hpp"
@@ -306,7 +306,7 @@ void PktRegionInfoView::_setMaxDtPathSize(const Trace& trace)
     const auto accFunc = [](const auto total, auto& item) {
         const auto [prefix, str] = dtPathItemStr(item, nullptr);
 
-        return total + prefix.size() + str.size();
+        return total + prefix.size() + term::strWidth(str);
     };
 
     const auto totalDtPathItSizeFunc = [&accFunc](auto& dtDtPathPair) {

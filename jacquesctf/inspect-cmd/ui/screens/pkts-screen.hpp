@@ -26,7 +26,7 @@ public:
 protected:
     void _redraw() override;
     void _resized() override;
-    KeyHandlingReaction _handleKey(int key) override;
+    KeyHandlingReaction _handleKey(Key key) override;
     void _visibilityChanged() override;
 
 private:

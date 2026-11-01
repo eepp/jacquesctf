@@ -8,10 +8,10 @@
 #include <thread>
 #include <atomic>
 #include <functional>
-#include <curses.h>
 #include <signal.h>
 #include <unistd.h>
 
+#include "../key.hpp"
 #include "cfg.hpp"
 #include "../views/er-table-view.hpp"
 #include "inspect-screen.hpp"
@@ -213,7 +213,7 @@ void InspectScreen::_visibilityChanged()
 
         this->_redraw();
         this->_tryShowDecodingError();
-        _decErrorView->refresh(true);
+        _decErrorView->refresh();
     }
 }
 
@@ -349,7 +349,7 @@ void InspectScreen::_search(const SearchQuery& query, const bool animate)
     }
 }
 
-KeyHandlingReaction InspectScreen::_handleKey(const int key)
+KeyHandlingReaction InspectScreen::_handleKey(const Key key)
 {
     const auto goingToBookmark = _goingToBookmark;
     const auto decErrorViewWasVisible = _decErrorView->isVisible();
@@ -361,372 +361,384 @@ KeyHandlingReaction InspectScreen::_handleKey(const int key)
         this->_redraw();
     }
 
-    if (key != KEY_DOWN && key != KEY_UP) {
+    if (key.special() != SpecialKey::DOWN && key.special() != SpecialKey::UP) {
         _lastOffsetInRowBits = std::nullopt;
     }
 
-    switch (key) {
-    case 127:
-    case 8:
-    case '9':
-    case KEY_BACKSPACE:
-        this->_goBack();
-        break;
+    if (const auto specialKey = key.special()) {
+        switch (*specialKey) {
+        case SpecialKey::BACKSPACE:
+            this->_goBack();
+            break;
 
-    case '0':
-        this->_goForward();
-        break;
+        case SpecialKey::ENTER:
+            if (decErrorViewWasVisible) {
+                // use Enter to close the box in this case
+                break;
+            }
 
-    case '#':
-    case '`':
-        this->_tryShowDecodingError();
-        break;
+            _sdteViewIsVisible = !_sdteViewIsVisible;
+            this->_updateViews();
+            this->_redraw();
+            break;
 
-    case 't':
-        _tsFmtModeWheel.next();
-        _ertView->tsFmtMode(_tsFmtModeWheel.curVal());
-        break;
+        case SpecialKey::HOME:
+            this->_appState().gotoPktRegionAtOffsetInPktBits(0);
+            this->_snapshotState();
+            break;
 
-    case 's':
-        _dataLenFmtModeWheel.next();
-        _ertView->dataLenFmtMode(_dataLenFmtModeWheel.curVal());
-        break;
+        case SpecialKey::END:
+            this->_appState().gotoLastPktRegion();
+            this->_snapshotState();
+            this->_tryShowDecodingError();
+            break;
 
-    case 'e':
-        _ertViewDispModeWheel.next();
-        this->_updateViews();
-        this->_redraw();
-        break;
+        case SpecialKey::LEFT:
+            this->_appState().gotoPrevPktRegion();
+            this->_snapshotState();
+            break;
 
-    case 'E':
-        _pdView->isErFirstPktRegionEmphasized(!_pdView->isErFirstPktRegionEmphasized());
-        _pdView->redraw();
-        break;
+        case SpecialKey::RIGHT:
+            this->_appState().gotoNextPktRegion();
+            this->_snapshotState();
+            break;
 
-    case 'a':
-        _pdView->isAsciiVisible(!_pdView->isAsciiVisible());
-        break;
+        case SpecialKey::UP:
+        {
+            if (!this->_appState().hasActivePktState()) {
+                break;
+            }
 
-    case 'v':
-        _pdView->isPrevNextVisible(!_pdView->isPrevNextVisible());
-        break;
+            auto& pkt = this->_appState().activePktState().pkt();
 
-    case 'w':
-        _pdView->isRowSizePowerOfTwo(!_pdView->isRowSizePowerOfTwo());
-        break;
+            if (!this->_appState().activePktState().pkt().hasData()) {
+                break;
+            }
 
-    case 'x':
-        _pdView->isDataInHex(!_pdView->isDataInHex());
-        break;
+            Index reqOffsetInPktBits;
 
-    case 'D':
-        _pdView->isOffsetInPkt(!_pdView->isOffsetInPkt());
-        break;
+            if (this->_appState().curOffsetInPktBits() < _pdView->rowSize()) {
+                break;
+            } else {
+                const auto curOffsetInPktBits = this->_appState().curOffsetInPktBits();
+                const auto rowSizeBits = _pdView->rowSize().bits();
 
-    case 'o':
-        _pdView->isOffsetInHex(!_pdView->isOffsetInHex());
-        break;
+                this->_setLastOffsetInRowBits();
 
-    case 'O':
-        _pdView->isOffsetInBytes(!_pdView->isOffsetInBytes());
-        break;
+                const auto rowOffsetInPktBits = curOffsetInPktBits -
+                                                (curOffsetInPktBits % rowSizeBits);
 
-    case 'c':
-        _pdView->centerSel();
-        break;
+                reqOffsetInPktBits = rowOffsetInPktBits - rowSizeBits + *_lastOffsetInRowBits;
+            }
 
-    case '\n':
-    case '\r':
-        if (decErrorViewWasVisible) {
-            // use Enter to close the box in this case
+            const auto& reqPktRegion = pkt.regionAtOffsetInPktBits(reqOffsetInPktBits);
+
+            this->_appState().gotoPktRegionAtOffsetInPktBits(
+                reqPktRegion.segment().offsetInPktBits()
+            );
+            this->_snapshotState();
             break;
         }
 
-        _sdteViewIsVisible = !_sdteViewIsVisible;
-        this->_updateViews();
-        this->_redraw();
-        break;
+        case SpecialKey::DOWN:
+        {
+            if (!this->_appState().hasActivePktState()) {
+                break;
+            }
 
-    case 'C':
-        this->_appState().gotoPktCtx();
-        this->_snapshotState();
-        break;
+            auto& pkt = this->_appState().activePktState().pkt();
 
-    case 'z':
-        if (!this->_appState().hasActivePktState()) {
-            break;
-        }
-
-        this->_appState().activePktState().gotoPktRegionNextParent();
-        this->_snapshotState();
-        break;
-
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-        if (goingToBookmark) {
-            this->_gotoBookmark(key - '1');
-        } else {
-            this->_toggleBookmark(key - '1');
-        }
-
-        break;
-
-    case 'b':
-        _goingToBookmark = true;
-        break;
-
-    case KEY_HOME:
-        this->_appState().gotoPktRegionAtOffsetInPktBits(0);
-        this->_snapshotState();
-        break;
-
-    case KEY_END:
-        this->_appState().gotoLastPktRegion();
-        this->_snapshotState();
-        this->_tryShowDecodingError();
-        break;
-
-    case KEY_LEFT:
-        this->_appState().gotoPrevPktRegion();
-        this->_snapshotState();
-        break;
-
-    case KEY_RIGHT:
-        this->_appState().gotoNextPktRegion();
-        this->_snapshotState();
-        break;
-
-    case KEY_UP:
-    {
-        if (!this->_appState().hasActivePktState()) {
-            break;
-        }
-
-        auto& pkt = this->_appState().activePktState().pkt();
-
-        if (!this->_appState().activePktState().pkt().hasData()) {
-            break;
-        }
-
-        Index reqOffsetInPktBits;
-
-        if (this->_appState().curOffsetInPktBits() < _pdView->rowSize()) {
-            break;
-        } else {
-            const auto curOffsetInPktBits = this->_appState().curOffsetInPktBits();
-            const auto rowSizeBits = _pdView->rowSize().bits();
+            if (!pkt.hasData()) {
+                break;
+            }
 
             this->_setLastOffsetInRowBits();
 
-            const auto rowOffsetInPktBits = curOffsetInPktBits - (curOffsetInPktBits % rowSizeBits);
+            const auto& curPktRegion = *this->_appState().curPktRegion();
+            const auto nextOffsetInPktBits = this->_appState().curOffsetInPktBits() -
+                                             (this->_appState().curOffsetInPktBits() %
+                                              _pdView->rowSize().bits()) +
+                                             _pdView->rowSize().bits() + *_lastOffsetInRowBits;
+            const auto reqOffsetInPktBits = std::max(nextOffsetInPktBits,
+                                                     *curPktRegion.segment().endOffsetInPktBits());
 
-            reqOffsetInPktBits = rowOffsetInPktBits - rowSizeBits + *_lastOffsetInRowBits;
-        }
-
-        const auto& reqPktRegion = pkt.regionAtOffsetInPktBits(reqOffsetInPktBits);
-
-        this->_appState().gotoPktRegionAtOffsetInPktBits(reqPktRegion.segment().offsetInPktBits());
-        this->_snapshotState();
-        break;
-    }
-
-    case KEY_DOWN:
-    {
-        if (!this->_appState().hasActivePktState()) {
-            break;
-        }
-
-        auto& pkt = this->_appState().activePktState().pkt();
-
-        if (!pkt.hasData()) {
-            break;
-        }
-
-        this->_setLastOffsetInRowBits();
-
-        const auto& curPktRegion = *this->_appState().curPktRegion();
-        const auto nextOffsetInPktBits = this->_appState().curOffsetInPktBits() -
-                                         (this->_appState().curOffsetInPktBits() %
-                                          _pdView->rowSize().bits()) +
-                                         _pdView->rowSize().bits() + *_lastOffsetInRowBits;
-        const auto reqOffsetInPktBits = std::max(nextOffsetInPktBits,
-                                                 *curPktRegion.segment().endOffsetInPktBits());
-
-        if (reqOffsetInPktBits > pkt.lastRegion().segment().offsetInPktBits()) {
-            break;
-        }
-
-        const auto& reqPktRegion = pkt.regionAtOffsetInPktBits(reqOffsetInPktBits);
-
-        this->_appState().gotoPktRegionAtOffsetInPktBits(reqPktRegion.segment().offsetInPktBits());
-        this->_snapshotState();
-        break;
-    }
-
-    case KEY_PPAGE:
-        _pdView->pageUp();
-        break;
-
-    case KEY_NPAGE:
-        _pdView->pageDown();
-        break;
-
-    case '/':
-    case 'g':
-    case 'G':
-    case 'N':
-    case 'k':
-    case ':':
-    case '$':
-    case '*':
-    case 'P':
-    {
-        const auto init = std::invoke([key]() {
-            switch (key) {
-            case 'N':
-            case '*':
-                return "*";
+            if (reqOffsetInPktBits > pkt.lastRegion().segment().offsetInPktBits()) {
                 break;
-
-            case 'k':
-                return "**";
-                break;
-
-            case ':':
-                return ":";
-                break;
-
-            case 'P':
-                return "#";
-                break;
-
-            case '$':
-                return "$";
-                break;
-
-            default:
-                return "";
             }
-        });
 
-        std::unique_ptr<const SearchQuery> query;
+            const auto& reqPktRegion = pkt.regionAtOffsetInPktBits(reqOffsetInPktBits);
 
-        if (key == 'G') {
-            const auto snapshot = this->_takeStateSnapshot();
-            const auto liveUpdateFunc = [this, snapshot](const auto& query) {
-                // start from initial state
-                this->_restoreStateSnapshot(snapshot);
-
-                if (!dynamic_cast<const ErtNameSearchQuery *>(&query) &&
-                        !dynamic_cast<const ErtIdSearchQuery *>(&query)) {
-                    // this makes the appropriate views update and redraw
-                    this->_appState().search(query);
-                }
-
-                // refresh background views
-                this->_refreshViews();
-            };
-
-            query = _searchCtrl.startLive(init, liveUpdateFunc);
-
-            if (key == 'G') {
-                this->_restoreStateSnapshot(snapshot);
-            }
-        } else {
-            query = _searchCtrl.start(init);
+            this->_appState().gotoPktRegionAtOffsetInPktBits(
+                reqPktRegion.segment().offsetInPktBits()
+            );
+            this->_snapshotState();
+            break;
         }
 
-        if (!query) {
-            // canceled or invalid
+        case SpecialKey::PAGE_UP:
+            _pdView->pageUp();
+            break;
+
+        case SpecialKey::PAGE_DOWN:
+            _pdView->pageDown();
+            break;
+
+        case SpecialKey::F3:
+            this->_appState().gotoPrevDsFile();
+            this->_snapshotState();
+            this->_tryShowDecodingError();
+            break;
+
+        case SpecialKey::F4:
+            this->_appState().gotoNextDsFile();
+            this->_snapshotState();
+            this->_tryShowDecodingError();
+            break;
+
+        case SpecialKey::F5:
+            this->_appState().gotoPrevPkt();
+            this->_snapshotState();
+            this->_tryShowDecodingError();
+            break;
+
+        case SpecialKey::F6:
+            this->_appState().gotoNextPkt();
+            this->_snapshotState();
+            this->_tryShowDecodingError();
+            break;
+
+        case SpecialKey::F7:
+            this->_appState().gotoPrevEr(10);
+            this->_snapshotState();
+            break;
+
+        case SpecialKey::F8:
+            this->_appState().gotoNextEr(10);
+            this->_snapshotState();
+            break;
+
+        default:
+            break;
+        }
+    } else {
+        const auto ch = *key.ch();
+
+        switch (ch) {
+        case '9':
+            this->_goBack();
+            break;
+
+        case '0':
+            this->_goForward();
+            break;
+
+        case '#':
+        case '`':
+            this->_tryShowDecodingError();
+            break;
+
+        case 't':
+            _tsFmtModeWheel.next();
+            _ertView->tsFmtMode(_tsFmtModeWheel.curVal());
+            break;
+
+        case 's':
+            _dataLenFmtModeWheel.next();
+            _ertView->dataLenFmtMode(_dataLenFmtModeWheel.curVal());
+            break;
+
+        case 'e':
+            _ertViewDispModeWheel.next();
+            this->_updateViews();
             this->_redraw();
             break;
-        }
 
-        this->_search(*query);
+        case 'E':
+            _pdView->isErFirstPktRegionEmphasized(!_pdView->isErFirstPktRegionEmphasized());
+            _pdView->redraw();
+            break;
 
-        /*
-         * If we didn't move, the state snapshot will be identical and
-         * will be not be pushed to the state snapshot list.
-         */
-        this->_snapshotState();
+        case 'a':
+            _pdView->isAsciiVisible(!_pdView->isAsciiVisible());
+            break;
 
-        _lastQuery = std::move(query);
-        this->_redraw();
-        this->_tryShowDecodingError();
-        break;
-    }
+        case 'v':
+            _pdView->isPrevNextVisible(!_pdView->isPrevNextVisible());
+            break;
 
-    case 'n':
-        if (!_lastQuery) {
+        case 'w':
+            _pdView->isRowSizePowerOfTwo(!_pdView->isRowSizePowerOfTwo());
+            break;
+
+        case 'x':
+            _pdView->isDataInHex(!_pdView->isDataInHex());
+            break;
+
+        case 'D':
+            _pdView->isOffsetInPkt(!_pdView->isOffsetInPkt());
+            break;
+
+        case 'o':
+            _pdView->isOffsetInHex(!_pdView->isOffsetInHex());
+            break;
+
+        case 'O':
+            _pdView->isOffsetInBytes(!_pdView->isOffsetInBytes());
+            break;
+
+        case 'c':
+            _pdView->centerSel();
+            break;
+
+        case 'C':
+            this->_appState().gotoPktCtx();
+            this->_snapshotState();
+            break;
+
+        case 'z':
+            if (!this->_appState().hasActivePktState()) {
+                break;
+            }
+
+            this->_appState().activePktState().gotoPktRegionNextParent();
+            this->_snapshotState();
+            break;
+
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+            if (goingToBookmark) {
+                this->_gotoBookmark(ch - '1');
+            } else {
+                this->_toggleBookmark(ch - '1');
+            }
+
+            break;
+
+        case 'b':
+            _goingToBookmark = true;
+            break;
+
+        case '/':
+        case 'g':
+        case 'G':
+        case 'N':
+        case 'k':
+        case ':':
+        case '$':
+        case '*':
+        case 'P':
+        {
+            const auto init = std::invoke([ch]() {
+                switch (ch) {
+                case 'N':
+                case '*':
+                    return "*";
+                    break;
+
+                case 'k':
+                    return "**";
+                    break;
+
+                case ':':
+                    return ":";
+                    break;
+
+                case 'P':
+                    return "#";
+                    break;
+
+                case '$':
+                    return "$";
+                    break;
+
+                default:
+                    return "";
+                }
+            });
+
+            std::unique_ptr<const SearchQuery> query;
+
+            if (ch == 'G') {
+                const auto snapshot = this->_takeStateSnapshot();
+                const auto liveUpdateFunc = [this, snapshot](const auto& query) {
+                    // start from initial state
+                    this->_restoreStateSnapshot(snapshot);
+
+                    if (!dynamic_cast<const ErtNameSearchQuery *>(&query) &&
+                            !dynamic_cast<const ErtIdSearchQuery *>(&query)) {
+                        // this makes the appropriate views update and redraw
+                        this->_appState().search(query);
+                    }
+
+                    // refresh background views
+                    this->_refreshViews();
+                };
+
+                query = _searchCtrl.startLive(init, liveUpdateFunc);
+
+                if (ch == 'G') {
+                    this->_restoreStateSnapshot(snapshot);
+                }
+            } else {
+                query = _searchCtrl.start(init);
+            }
+
+            if (!query) {
+                // canceled or invalid
+                this->_redraw();
+                break;
+            }
+
+            this->_search(*query);
+
+            /*
+             * If we didn't move, the state snapshot will be identical and
+             * will be not be pushed to the state snapshot list.
+             */
+            this->_snapshotState();
+
+            _lastQuery = std::move(query);
+            this->_redraw();
+            this->_tryShowDecodingError();
             break;
         }
 
-        this->_search(*_lastQuery, false);
-        this->_snapshotState();
-        this->_tryShowDecodingError();
-        break;
+        case 'n':
+            if (!_lastQuery) {
+                break;
+            }
 
-    case '-':
-        this->_appState().gotoPrevEr();
-        this->_snapshotState();
-        break;
+            this->_search(*_lastQuery, false);
+            this->_snapshotState();
+            this->_tryShowDecodingError();
+            break;
 
-    case '+':
-    case '=':
-    case ' ':
-        this->_appState().gotoNextEr();
-        this->_snapshotState();
-        break;
+        case '-':
+            this->_appState().gotoPrevEr();
+            this->_snapshotState();
+            break;
 
-    case KEY_F(3):
-        this->_appState().gotoPrevDsFile();
-        this->_snapshotState();
-        this->_tryShowDecodingError();
-        break;
+        case '+':
+        case '=':
+        case ' ':
+            this->_appState().gotoNextEr();
+            this->_snapshotState();
+            break;
 
-    case KEY_F(4):
-        this->_appState().gotoNextDsFile();
-        this->_snapshotState();
-        this->_tryShowDecodingError();
-        break;
-
-    case KEY_F(5):
-        this->_appState().gotoPrevPkt();
-        this->_snapshotState();
-        this->_tryShowDecodingError();
-        break;
-
-    case KEY_F(6):
-        this->_appState().gotoNextPkt();
-        this->_snapshotState();
-        this->_tryShowDecodingError();
-        break;
-
-    case KEY_F(7):
-        this->_appState().gotoPrevEr(10);
-        this->_snapshotState();
-        break;
-
-    case KEY_F(8):
-        this->_appState().gotoNextEr(10);
-        this->_snapshotState();
-        break;
-
-    default:
-        break;
+        default:
+            break;
+        }
     }
 
     this->_refreshViews();
 
     /*
-     * Touch because the content could be unchanged from the last
-     * refresh, and since this is overlapping other views, and they were
-     * just refreshed, ncurses's optimization could ignore this refresh
-     * otherwise.
+     * Refresh last because this is overlapping other views, and they
+     * were just refreshed (put on top).
      */
-    _decErrorView->refresh(true);
+    _decErrorView->refresh();
     return KeyHandlingReaction::CONTINUE;
 }
 

@@ -7,14 +7,18 @@
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_VIEW_HPP
 
 #include <string>
+#include <string_view>
 #include <memory>
+#include <utility>
 #include <cassert>
 #include <cstdarg>
-#include <curses.h>
+#include <boost/filesystem/path.hpp>
 
 #include "../rect.hpp"
 #include "../../state/msg.hpp"
 #include "../../state/inspect-cmd-state.hpp"
+
+struct ncplane;
 
 namespace jacques {
 
@@ -22,9 +26,22 @@ class Stylist;
 class ViewInspectCmdStateObserverGuard;
 
 /*
+ * Some non-ASCII glyphs which views use.
+ */
+namespace glyphs {
+
+constexpr auto VLINE = "│";
+constexpr auto BULLET = "·";
+constexpr auto CKBOARD = "▒";
+constexpr auto RARROW = "→";
+constexpr auto ELLIPSIS = "…";
+
+} // namespace glyphs
+
+/*
  * Base class of all views.
  *
- * A view manages an ncurses window. The `View` class provides many
+ * A view manages a notcurses plane. The `View` class provides many
  * useful protected methods to its derived classes, like
  * _clearContent(), _moveCursor(), and _safeMoveAndPrint().
  *
@@ -39,8 +56,8 @@ class ViewInspectCmdStateObserverGuard;
  * refresh() and redraw() methods to learn more.
  *
  * The visibility (isVisible()) of a view controls whether or not this
- * view effectively refreshes its underlying ncurses window when you
- * call refresh().
+ * view effectively shows its underlying plane when you call refresh().
+ * An invisible view never shows its plane.
  *
  * A derived view can subscribe to the state of the application with a
  * ViewInspectCmdStateObserverGuard instance. This RAII helper has an
@@ -49,8 +66,7 @@ class ViewInspectCmdStateObserverGuard;
  *
  * The View class is friend with the Stylist class: the Stylist class
  * has a bunch of stylizing methods which apply to a view and it needs
- * to access its underlying ncurses window to change its current
- * attributes.
+ * to access its underlying plane to change its current attributes.
  */
 class View
 {
@@ -85,16 +101,14 @@ public:
     View& operator=(const View&) = delete;
 
     /*
-     * Refreshes this view, that is, copies the currently _changed_
-     * characters of theview since the last refresh to the screen
-     * buffer. If `touch` is true, touches this view before refreshing
-     * (see touch()).
+     * Refreshes this view, that is, shows its plane on top of the
+     * other planes on the next terminal update (term::update()).
      *
      * This method only applies if this view is visible.
      *
      * This method doesn't trigger a redraw.
      */
-    void refresh(bool touch = false) const;
+    void refresh() const;
 
     /*
      * Focuses this view (changes the decoration accordingly).
@@ -117,16 +131,9 @@ public:
     /*
      * Redraws this view. This method makes this view redraw every
      * character according to its current state, and then calls
-     * `refresh(touch)`.
+     * refresh().
      */
-    void redraw(bool touch = false);
-
-    /*
-     * Touches the window of this view: invalidates all the current
-     * characters so that the next call to refresh() copies _all_ the
-     * characters of this view to the screen buffer.
-     */
-    void touch() const;
+    void redraw();
 
     /*
      * Moves and resizes this view with the new rectangle `rect`.
@@ -136,12 +143,10 @@ public:
     /*
      * Sets the visibility of this view to `isVisible`.
      *
-     * When this view isn't visible, refresh() has no effect.
+     * When this view isn't visible, its plane is hidden and refresh()
+     * has no effect.
      */
-    void isVisible(const bool isVisible) noexcept
-    {
-        _isVisible = isVisible;
-    }
+    void isVisible(bool isVisible);
 
     bool isVisible() const
     {
@@ -220,11 +225,11 @@ protected:
     }
 
     /*
-     * Underlying ncurses window of this view.
+     * Underlying plane of this view.
      */
-    WINDOW *_window() const noexcept
+    ncplane *_plane() const noexcept
     {
-        return _curWindow;
+        return _curPlane;
     }
 
     /*
@@ -236,29 +241,68 @@ protected:
     }
 
     /*
-     * Puts a single character `ch` at `contentPos` relative to the
-     * top-left position of contentRect().
+     * Puts a single ASCII character `ch` at `contentPos` relative to
+     * the top-left position of contentRect().
      */
-    void _putChar(const Point& contentPos, const chtype ch) const
-    {
-        mvwaddch(_curWindow, _contentRect.pos.y + contentPos.y,
-                 _contentRect.pos.x + contentPos.x, ch);
-    }
+    void _putChar(const Point& contentPos, char ch) const;
 
     /*
-     * Appends a single character `ch` at the current cursor position.
+     * Puts a single glyph `glyph` (UTF-8; see `glyphs`) at
+     * `contentPos` relative to the top-left position of contentRect().
      */
-    void _appendChar(const chtype ch) const
-    {
-        waddch(_curWindow, ch);
-    }
+    void _putChar(const Point& contentPos, const char *glyph) const;
+
+    /*
+     * Appends a single ASCII character `ch` at the current cursor
+     * position.
+     */
+    void _appendChar(char ch) const;
+
+    /*
+     * Appends a single character `ch` (Unicode code point) at the
+     * current cursor position.
+     */
+    void _appendCh(char32_t ch) const;
+
+    /*
+     * Puts the UTF-8 string `str` at `contentPos` relative to the
+     * top-left position of contentRect().
+     *
+     * This method doesn't truncate `str` (see
+     * term::strFittingPrefix()).
+     */
+    void _putStr(const Point& contentPos, std::string_view str) const;
+
+    /*
+     * Appends the UTF-8 string `str` at the current cursor position.
+     *
+     * This method doesn't truncate `str` (see
+     * term::strFittingPrefix()).
+     */
+    void _appendStr(std::string_view str) const;
+
+    /*
+     * Formats the path `path` (escaped UTF-8; see utils::escapeStr())
+     * so that it occupies at most `maxWidth` terminal columns.
+     *
+     * The first element of the returned pair is the directory name and
+     * the second element is the file name. Each one starts with
+     * `glyphs::ELLIPSIS` if, due to `maxWidth`, it's incomplete.
+     *
+     * The widths of both returned elements plus one (to add a path
+     * separator between them) is always less than or equal to
+     * `maxWidth`.
+     */
+    static std::pair<std::string, std::string> _formatPath(const boost::filesystem::path& path,
+                                                           Size maxWidth);
 
     /*
      * Prints a formatted string at the current cursor position.
      *
-     * This method isn't safe and could print outside the view. Use
-     * _safePrint() for a safe version which truncates the formatted
-     * string.
+     * This method doesn't print outside the view, but there's no
+     * explicit truncation. Use _safePrint() for a safe version which
+     * truncates the formatted string so that it doesn't exceed the
+     * content rectangle.
      */
     int _print(const char *fmt, ...) const;
 
@@ -307,22 +351,12 @@ protected:
      */
     void _hasMoreBottom(bool hasMore);
 
-    /*
-     * Beeps/flashes the screen.
-     */
-    void _alert() const noexcept
-    {
-        beep();
-    }
-
 private:
     void _setContentRect();
     int _vSafePrint(const char * const fmt, va_list& args) const;
-
-    int _vPrint(const char * const fmt, va_list& args) const
-    {
-        return vw_printw(_curWindow, fmt, args);
-    }
+    int _vPrint(const char * const fmt, va_list& args) const;
+    void _show() const;
+    void _hide() const;
 
 private:
     Rect _rect;
@@ -331,9 +365,15 @@ private:
     Rect _contentRect;
     const Stylist * const _theStylist;
     bool _hasFocusMemb = false;
-    WINDOW* _curWindow;
+    ncplane *_curPlane;
+
+    /*
+     * True if `_curPlane` is bound to the standard plane (shown);
+     * otherwise, it's the root of its own pile (hidden).
+     */
+    mutable bool _isShown = false;
+
     bool _isVisible = false;
-    mutable std::vector<char> _lineBuf;
     bool _moreTop = false;
     bool _moreBottom = false;
 };
