@@ -19,6 +19,14 @@ class SearchInputView final :
 {
 public:
     explicit SearchInputView(const Rect& rect, const Stylist& stylist);
+
+    /*
+     * Draws the frame `index` of the border animation.
+     *
+     * Unlike the other view methods, this one draws immediately: call
+     * term::update() afterwards (not render(); see
+     * SearchCtrl::animateWhile()).
+     */
     void animateBorder(Index index);
 
 private:

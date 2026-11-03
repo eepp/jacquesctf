@@ -21,10 +21,8 @@ public:
                         InspectCmdState& appState);
 
 private:
-    void _redraw() override;
     void _resized() override;
     KeyHandlingReaction _handleKey(Key key) override;
-    void _visibilityChanged() override;
 
 private:
     std::unique_ptr<HelpView> _view;

@@ -38,7 +38,7 @@ PktRegionInfoView::PktRegionInfoView(const Rect& rect, const Stylist& stylist,
 
 void PktRegionInfoView::_appStateChanged(Message)
 {
-    this->redraw();
+    this->_invalidate();
 }
 
 namespace {

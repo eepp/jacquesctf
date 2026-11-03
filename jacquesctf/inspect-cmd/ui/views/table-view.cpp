@@ -33,15 +33,13 @@ TableViewColumnDescr::TableViewColumnDescr(std::string title, const Size content
 void TableView::_colDescrs(std::vector<TableViewColumnDescr>&& colDescrs)
 {
     _theColDescrs = std::move(colDescrs);
-    this->_drawHeader();
     this->_updateCounts();
-    this->_redrawRows();
 }
 
 void TableView::_redrawContent()
 {
     this->_drawHeader();
-    this->_redrawRows();
+    this->_drawRows();
 }
 
 void TableView::_drawHeader()
@@ -539,9 +537,10 @@ void TableView::_drawWarningRow(const Index row, const std::string& msg)
 void TableView::_updateCounts()
 {
     this->_updateCounts(this->_rowCount(), this->contentRect().h - 1);
+    this->_invalidate();
 }
 
-void TableView::_redrawRows()
+void TableView::_drawRows()
 {
     if (this->_rowCount() == 0) {
         this->_stylist().tableViewCell(*this);
@@ -569,51 +568,21 @@ void TableView::_redrawRows()
     this->_hasMoreBottom(this->_rowCount() > 0 && !this->_rowIsVisible(this->_rowCount() - 1));
 }
 
-void TableView::_selRowAndDraw(const Index row, const bool draw)
+void TableView::_selectRow(const Index row)
 {
-    const auto oldSelRow = this->_selRow();
-    const auto change = this->_selRow(row, true);
-
-    if (draw) {
-        this->_drawIfChanged(change, oldSelRow);
-    }
+    this->_selRow(row, true);
+    this->_invalidate();
 }
 
 void TableView::_removeSel()
 {
-    const auto oldSelRow = this->_selRow();
-
-    if (!oldSelRow) {
-        // already missing
-        return;
-    }
-
     CommonInspectTableView::_removeSel();
-
-    if (this->_rowIsVisible(*oldSelRow)) {
-        this->_drawIfChanged(_Change::SELECTED_ROW, oldSelRow);
-    }
+    this->_invalidate();
 }
 
 void TableView::_resized()
 {
     this->_updateCounts();
-}
-
-void TableView::_drawIfChanged(const _Change change, const std::optional<Index>& oldSelRow)
-{
-    if (change == _Change::FIRST_VISIBLE_ROW) {
-        this->_redrawRows();
-    } else if (change == _Change::SELECTED_ROW) {
-        // only redraw the affected rows
-        if (oldSelRow) {
-            this->_drawRow(*oldSelRow);
-        }
-
-        if (this->_selRow()) {
-            this->_drawRow(*this->_selRow());
-        }
-    }
 }
 
 void TableView::next()
@@ -622,9 +591,8 @@ void TableView::next()
         return;
     }
 
-    const auto oldSelRow = this->_selRow();
-
-    this->_drawIfChanged(this->_selNextRow(1, true), oldSelRow);
+    this->_selNextRow(1, true);
+    this->_invalidate();
 }
 
 void TableView::prev()
@@ -633,9 +601,8 @@ void TableView::prev()
         return;
     }
 
-    const auto oldSelRow = this->_selRow();
-
-    this->_drawIfChanged(this->_selPrevRow(1, true), oldSelRow);
+    this->_selPrevRow(1, true);
+    this->_invalidate();
 }
 
 void TableView::pageDown()
@@ -651,7 +618,7 @@ void TableView::pageDown()
                                this->_rowCount() - 1));
     }
 
-    this->_redrawRows();
+    this->_invalidate();
 }
 
 void TableView::pageUp()
@@ -670,32 +637,29 @@ void TableView::pageUp()
         }
     }
 
-    this->_redrawRows();
+    this->_invalidate();
 }
 
 void TableView::showFirstPage()
 {
-    if (this->_showFirstPage()) {
-        this->_redrawRows();
-    }
+    this->_showFirstPage();
+    this->_invalidate();
 }
 
 void TableView::showLastPage()
 {
-    if (this->_showLastPage()) {
-        this->_redrawRows();
-    }
+    this->_showLastPage();
+    this->_invalidate();
 }
 
-void TableView::centerSelRow(const bool draw)
+void TableView::centerSelRow()
 {
     if (this->_rowCount() == 0) {
         return;
     }
 
-    if (this->_centerOnSelRow() && draw) {
-        this->_redrawRows();
-    }
+    this->_centerOnSelRow();
+    this->_invalidate();
 }
 
 void TableView::selectFirst()
@@ -704,9 +668,8 @@ void TableView::selectFirst()
         return;
     }
 
-    const auto oldSelRow = this->_selRow();
-
-    this->_drawIfChanged(this->_selFirstRow(true), oldSelRow);
+    this->_selFirstRow(true);
+    this->_invalidate();
 }
 
 void TableView::selectLast()
@@ -715,19 +678,14 @@ void TableView::selectLast()
         return;
     }
 
-    const auto oldSelRow = this->_selRow();
-
-    this->_drawIfChanged(this->_selLastRow(true), oldSelRow);
+    this->_selLastRow(true);
+    this->_invalidate();
 }
 
 void TableView::highlightSel(const bool highlight)
 {
-    if (highlight == _highlightSel || !this->_selRow()) {
-        return;
-    }
-
     _highlightSel = highlight;
-    this->_drawIfChanged(_Change::SELECTED_ROW, *this->_selRow());
+    this->_invalidate();
 }
 
 } // namespace jacques

@@ -21,6 +21,16 @@ public:
     Index selPktIndex() const noexcept;
     void selPktIndex(Index index);
 
+    /*
+     * Call this when the packet index entries of the active data
+     * stream file change (for example, after analyzing all its
+     * packets).
+     */
+    void pktIndexEntriesChanged() noexcept
+    {
+        this->_invalidate();
+    }
+
 protected:
     void _drawRow(Index row) override;
     Size _rowCount() override;

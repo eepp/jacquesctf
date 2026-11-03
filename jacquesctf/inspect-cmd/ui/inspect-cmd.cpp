@@ -80,13 +80,11 @@ void buildIndexes(InspectCmdState& appState, const Stylist& stylist)
     const auto view = std::make_unique<PktIndexBuildProgressView>(screenRect, stylist);
     auto func = [&view](const PktIndexEntry& entry) {
         view->pktIndexEntry(entry);
-        view->refresh();
+        view->render();
         term::update();
     };
 
     view->focus();
-    view->isVisible(true);
-    view->refresh();
 
     for (auto& dsfStateUp : appState.dsFileStates()) {
         auto& dsf = dsfStateUp->dsFile();
@@ -110,8 +108,7 @@ std::unique_ptr<SimpleMsgView> showFullScreenMessage(const std::string_view msg,
 
     view->msg(msg);
     view->focus();
-    view->isVisible(true);
-    view->refresh();
+    view->render();
     term::update();
     return view;
 }
@@ -120,16 +117,18 @@ class PktCheckpointsBuildProgressUpdater final :
     public PktCheckpointsBuildListener
 {
 public:
-    explicit PktCheckpointsBuildProgressUpdater(const Stylist& stylist, bool& redrawCurScreen) :
-        _stylist {&stylist},
-        _redrawCurScreen {&redrawCurScreen}
+    explicit PktCheckpointsBuildProgressUpdater(const Stylist& stylist) :
+        _stylist {&stylist}
     {
     }
 
 private:
     /*
      * This listener can be called from a thread other than the main one
-     * (see `InspectScreen::_search()`): lock the terminal.
+     * (see SearchCtrl::animateWhile()): lock the terminal.
+     *
+     * Only render the progress view, on top of the current planes: the
+     * other views are rendered by the event loop which is running.
      */
     void _startBuild(const DsFile&, const PktIndexEntry& pktIndexEntry) override
     {
@@ -144,10 +143,8 @@ private:
 
         _view = std::make_unique<PktCheckpointsBuildProgressView>(rect, *_stylist);
         _view->focus();
-        _view->isVisible(true);
         _view->pktIndexEntry(pktIndexEntry);
-        _view->refresh();
-        term::update();
+        this->_render();
         _count = 0;
     }
 
@@ -164,28 +161,27 @@ private:
         }
 
         _view->er(er);
-        _view->refresh();
-        term::update();
+        this->_render();
     }
 
     void _endBuild() override
     {
         const std::lock_guard<std::recursive_mutex> lock {term::mutex()};
 
-        if (_view) {
-            _view->isVisible(false);
-            _view = nullptr;
-        }
+        // the next frame rendering reveals what's below
+        _view = nullptr;
+    }
 
-        // redraw current screen
-        *_redrawCurScreen = true;
+    void _render()
+    {
+        _view->render();
+        term::update();
     }
 
 private:
     Index _count = 0;
     std::unique_ptr<PktCheckpointsBuildProgressView> _view;
     const Stylist * const _stylist;
-    bool * const _redrawCurScreen;
 };
 
 void startInteractive(const InspectCfg& cfg)
@@ -195,8 +191,7 @@ void startInteractive(const InspectCfg& cfg)
     auto msgView = showFullScreenMessage("Opening data stream files…", *stylist);
 
     Screen *curScreen = nullptr;
-    bool redrawCurScreen = false;
-    PktCheckpointsBuildProgressUpdater updater {*stylist, redrawCurScreen};
+    PktCheckpointsBuildProgressUpdater updater {*stylist};
     auto appState = std::make_unique<InspectCmdState>(cfg.paths(), updater);
 
     if (appState->dsFileStates().empty()) {
@@ -225,13 +220,34 @@ void startInteractive(const InspectCfg& cfg)
     auto statusView = std::make_unique<StatusView>(Rect {{0, screenRect.h}, screenRect.w, 1},
                                                    *stylist, *appState);
 
+    std::unique_ptr<SimpleMsgView> quitMsgView;
+
+    /*
+     * Renders the whole terminal, from bottom to top: the status view,
+     * the current screen, and the quit message, if any.
+     */
+    const auto renderFrame = [&statusView, &curScreen, &quitMsgView] {
+        const std::lock_guard<std::recursive_mutex> lock {term::mutex()};
+
+        statusView->render();
+        curScreen->render();
+
+        if (quitMsgView) {
+            quitMsgView->render();
+        }
+
+        term::update();
+    };
+
     // create screens
     const auto inspectScreen = std::make_unique<InspectScreen>(screenRect, cfg, *stylist,
-                                                               *appState);
-    const auto pktsScreen = std::make_unique<PktsScreen>(screenRect, cfg, *stylist, *appState);
+                                                               *appState, renderFrame);
+    const auto pktsScreen = std::make_unique<PktsScreen>(screenRect, cfg, *stylist, *appState,
+                                                         renderFrame);
     const auto dsfScreen = std::make_unique<DsFilesScreen>(screenRect, cfg, *stylist, *appState);
     const auto helpScreen = std::make_unique<HelpScreen>(screenRect, cfg, *stylist, *appState);
-    const auto dtsScreen = std::make_unique<DtsScreen>(screenRect, cfg, *stylist, *appState);
+    const auto dtsScreen = std::make_unique<DtsScreen>(screenRect, cfg, *stylist, *appState,
+                                                       renderFrame);
     const auto traceInfoScreen = std::make_unique<TraceInfoScreen>(screenRect, cfg, *stylist,
                                                                    *appState);
     const std::vector<Screen *> screens {
@@ -253,10 +269,6 @@ void startInteractive(const InspectCfg& cfg)
     // remove the last message
     msgView.reset();
 
-    // draw status
-    statusView->isVisible(true);
-    statusView->redraw();
-
     // initial screen depends on the situation
     if (appState->dsFileStateCount() == 1) {
         if (appState->activeDsFileState().dsFile().pktCount() == 0) {
@@ -271,11 +283,9 @@ void startInteractive(const InspectCfg& cfg)
     }
 
     curScreen->isVisible(true);
-    term::update();
 
     Screen *prevScreen = nullptr;
     auto done = false;
-    std::unique_ptr<SimpleMsgView> quitMsgView;
     auto termIsTooSmall = false;
 
     // `q` or Escape: quit the current screen or ask to quit the program
@@ -297,8 +307,9 @@ void startInteractive(const InspectCfg& cfg)
     };
 
     while (!done) {
+        renderFrame();
+
         const auto key = term::readKey();
-        auto refreshStatus = true;
 
         if (termIsTooSmall && key.special() != SpecialKey::RESIZE &&
                 key.special() != SpecialKey::F10 && key.ch() != U'Q') {
@@ -314,9 +325,6 @@ void startInteractive(const InspectCfg& cfg)
                 quitMsgView.reset();
                 statusView->isVisible(true);
                 curScreen->isVisible(true);
-                statusView->redraw();
-                curScreen->redraw();
-                term::update();
             }
 
             continue;
@@ -348,7 +356,6 @@ void startInteractive(const InspectCfg& cfg)
                         static_cast<unsigned long long>(termSize.h)
                     );
                     termIsTooSmall = true;
-                    refreshStatus = false;
                     break;
                 }
 
@@ -367,8 +374,6 @@ void startInteractive(const InspectCfg& cfg)
                     termIsTooSmall = false;
                 }
 
-                curScreen->redraw();
-                statusView->redraw();
                 break;
             }
 
@@ -389,8 +394,6 @@ void startInteractive(const InspectCfg& cfg)
             case 'r':
             case ctrlCh('L'):
                 term::repaint();
-                statusView->redraw();
-                curScreen->redraw();
                 break;
 
             case 'p':
@@ -485,17 +488,6 @@ void startInteractive(const InspectCfg& cfg)
                 break;
             }
         }
-
-        if (redrawCurScreen) {
-            curScreen->redraw();
-            redrawCurScreen = false;
-        }
-
-        if (refreshStatus) {
-            statusView->refresh();
-        }
-
-        term::update();
     }
 }
 

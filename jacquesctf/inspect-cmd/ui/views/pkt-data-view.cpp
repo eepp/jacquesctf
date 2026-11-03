@@ -39,8 +39,6 @@ void PktDataView::_resized()
         this->_setPrevCurNextOffsetInPktBits();
         this->_setBaseAndEndOffsetInPktBitsFromOffset(_curOffsetInPktBits);
     }
-
-    this->_redrawContent();
 }
 
 void PktDataView::_appStateChanged(const Message msg)
@@ -52,7 +50,7 @@ void PktDataView::_appStateChanged(const Message msg)
             this->_setBaseAndEndOffsetInPktBitsFromOffset(_curOffsetInPktBits);
         }
 
-        this->_redrawContent();
+        this->_invalidate();
     } else if (msg == Message::CUR_OFFSET_IN_PKT_CHANGED) {
         this->_updateSel();
     }
@@ -102,86 +100,24 @@ void PktDataView::_setPrevCurNextOffsetInPktBits()
     }
 }
 
-bool PktDataView::_isCharSel(const _Char& ch) const
-{
-    auto selPktRegionIt = ch.pktRegionIt(_curOffsetInPktBits);
-
-    if (selPktRegionIt != ch.pktRegions.end()) {
-        return true;
-    }
-
-    if (_prevOffsetInPktBits) {
-        selPktRegionIt = ch.pktRegionIt(*_prevOffsetInPktBits);
-
-        if (selPktRegionIt != ch.pktRegions.end()) {
-            return true;
-        }
-    }
-
-    if (_nextOffsetInPktBits) {
-        selPktRegionIt = ch.pktRegionIt(*_nextOffsetInPktBits);
-
-        if (selPktRegionIt != ch.pktRegions.end()) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 void PktDataView::_updateSel()
 {
     assert(_appState->hasActivePktState());
 
     if (_appState->curOffsetInPktBits() < _baseOffsetInPktBits ||
-            _appState->curOffsetInPktBits() >= _endOffsetInPktBits || _chars.empty()) {
-        // outside the current character: reset base offset
+            _appState->curOffsetInPktBits() >= _endOffsetInPktBits) {
+        // outside the current page: reset base offset
         this->_setBaseAndEndOffsetInPktBitsFromOffset(_appState->curOffsetInPktBits());
-        this->_setPrevCurNextOffsetInPktBits();
-        this->_redrawContent();
-        return;
     }
 
-    // "erase" currently selected characters
-    // TODO: do not search linearly
-    for (const auto& ch : _chars) {
-        if (this->_isCharSel(ch)) {
-            this->_drawUnselChar(ch);
-        }
-    }
-
-    if (_isAsciiVisible) {
-        for (const auto& ch : _asciiChars) {
-            if (this->_isCharSel(ch)) {
-                this->_drawUnselChar(ch);
-            }
-        }
-    }
-
-    // draw new selected characters
-    // TODO: do not search linearly
     this->_setPrevCurNextOffsetInPktBits();
-
-    for (const auto& ch : _chars) {
-        if (this->_isCharSel(ch)) {
-            this->_drawChar(ch);
-        }
-    }
-
-    if (_isAsciiVisible) {
-        for (const auto& ch : _asciiChars) {
-            if (this->_isCharSel(ch)) {
-                this->_drawChar(ch);
-            }
-        }
-    }
-
-    // update offset
-    this->_drawOffsets();
+    this->_invalidate();
 }
 
 void PktDataView::_setDataXAndRowSize()
 {
+    _charsAreStale = true;
+
     if (!_appState->hasActivePktState()) {
         return;
     }
@@ -358,7 +294,6 @@ void PktDataView::_setTitle()
 
     title += ")";
     this->_title(title);
-    this->_decorate();
 }
 
 void PktDataView::_setCustomStyle(const _Char& ch) const
@@ -501,9 +436,13 @@ void PktDataView::_redrawContent()
         return;
     }
 
+    if (_charsAreStale) {
+        this->_setNumericCharsAndAsciiChars();
+        _charsAreStale = false;
+    }
+
     this->_drawOffsets();
     this->_drawSeparators();
-    this->_setNumericCharsAndAsciiChars();
     this->_drawAllNumericChars();
     this->_drawAllAsciiChars();
     this->_hasMoreTop(_baseOffsetInPktBits != 0);
@@ -776,7 +715,7 @@ void PktDataView::pageDown()
     }
 
     this->_setEndOffsetInPktBitsFromBaseOffset();
-    this->_redrawContent();
+    this->_invalidate();
 }
 
 void PktDataView::pageUp()
@@ -792,7 +731,7 @@ void PktDataView::pageUp()
     }
 
     this->_setEndOffsetInPktBitsFromBaseOffset();
-    this->_redrawContent();
+    this->_invalidate();
 }
 
 void PktDataView::isAsciiVisible(const bool isVisible)
@@ -804,19 +743,19 @@ void PktDataView::isAsciiVisible(const bool isVisible)
         this->_setBaseAndEndOffsetInPktBitsFromOffset(_curOffsetInPktBits);
     }
 
-    this->_redrawContent();
+    this->_invalidate();
 }
 
 void PktDataView::isPrevNextVisible(const bool isVisible)
 {
     _isPrevNextVisible = isVisible;
-    this->_redrawContent();
+    this->_invalidate();
 }
 
 void PktDataView::isErFirstPktRegionEmphasized(const bool isEmphasized)
 {
     _isErFirstPktRegionEmphasized = isEmphasized;
-    this->_redrawContent();
+    this->_invalidate();
 }
 
 void PktDataView::isDataInHex(const bool isDataInHex)
@@ -828,7 +767,7 @@ void PktDataView::isDataInHex(const bool isDataInHex)
         this->_setBaseAndEndOffsetInPktBitsFromOffset(_curOffsetInPktBits);
     }
 
-    this->_redrawContent();
+    this->_invalidate();
 }
 
 void PktDataView::centerSel()
@@ -838,7 +777,7 @@ void PktDataView::centerSel()
     }
 
     this->_setBaseAndEndOffsetInPktBitsFromOffset(_curOffsetInPktBits);
-    this->_redrawContent();
+    this->_invalidate();
 }
 
 void PktDataView::isOffsetInHex(const bool isOffsetInHex)
@@ -851,7 +790,7 @@ void PktDataView::isOffsetInHex(const bool isOffsetInHex)
     }
 
     this->_setTitle();
-    this->_redrawContent();
+    this->_invalidate();
 }
 
 void PktDataView::isOffsetInBytes(const bool isOffsetInBytes)
@@ -864,7 +803,7 @@ void PktDataView::isOffsetInBytes(const bool isOffsetInBytes)
     }
 
     this->_setTitle();
-    this->_redrawContent();
+    this->_invalidate();
 }
 
 void PktDataView::isRowSizePowerOfTwo(const bool isPowerOfTwo)
@@ -876,7 +815,7 @@ void PktDataView::isRowSizePowerOfTwo(const bool isPowerOfTwo)
         this->_setBaseAndEndOffsetInPktBitsFromOffset(_curOffsetInPktBits);
     }
 
-    this->_redrawContent();
+    this->_invalidate();
 }
 
 void PktDataView::isOffsetInPkt(const bool isOffsetInPkt)
@@ -889,7 +828,7 @@ void PktDataView::isOffsetInPkt(const bool isOffsetInPkt)
     }
 
     this->_setTitle();
-    this->_redrawContent();
+    this->_invalidate();
 }
 
 } // namespace jacques

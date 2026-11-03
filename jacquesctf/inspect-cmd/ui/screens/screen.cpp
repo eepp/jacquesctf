@@ -16,6 +16,34 @@ Screen::Screen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
 {
 }
 
+void Screen::isVisible(const bool isVisible)
+{
+    if (isVisible == _isVisible) {
+        return;
+    }
+
+    _isVisible = isVisible;
+
+    if (!isVisible) {
+        for (const auto view : _views) {
+            view->detach();
+        }
+    }
+
+    this->_visibilityChanged();
+}
+
+void Screen::render()
+{
+    if (!_isVisible) {
+        return;
+    }
+
+    for (const auto view : _views) {
+        view->render();
+    }
+}
+
 void Screen::_visibilityChanged()
 {
 }

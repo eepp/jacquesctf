@@ -20,14 +20,15 @@ class PktsScreen final :
     public Screen
 {
 public:
+    /*
+     * `renderFrameFunc` renders the whole terminal (see `SearchCtrl`).
+     */
     explicit PktsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                        InspectCmdState& appState);
+                        InspectCmdState& appState, SearchCtrl::RenderFrameFunc renderFrameFunc);
 
 protected:
-    void _redraw() override;
     void _resized() override;
     KeyHandlingReaction _handleKey(Key key) override;
-    void _visibilityChanged() override;
 
 private:
     std::unique_ptr<PktTableView> _ptView;

@@ -18,7 +18,6 @@ HelpView::HelpView(const Rect& rect, const Stylist& stylist) :
 {
     this->_buildRows();
     this->_rowCount(_rows.size());
-    this->_drawRows();
 }
 
 void HelpView::_buildRows()

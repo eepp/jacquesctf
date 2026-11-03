@@ -24,7 +24,7 @@ DsFileTableView::DsFileTableView(const Rect& rect, const Stylist& stylist,
 void DsFileTableView::_appStateChanged(const Message msg)
 {
     if (msg == Message::ACTIVE_DS_FILE_AND_PKT_CHANGED) {
-        this->_selRowAndDraw(_appState->activeDsFileStateIndex());
+        this->_selectRow(_appState->activeDsFileStateIndex());
     }
 }
 
@@ -203,14 +203,14 @@ void DsFileTableView::tsFmtMode(const TsFmtMode tsFmtMode)
     }
 
     _tsFmtMode = tsFmtMode;
-    this->_redrawRows();
+    this->_invalidate();
 }
 
 void DsFileTableView::dataLenFmtMode(const utils::LenFmtMode dataLenFmtMode)
 {
     static_cast<DataLenTableViewCell&>(*_row[1]).fmtMode(dataLenFmtMode);
     _dataLenFmtMode = dataLenFmtMode;
-    this->_redrawRows();
+    this->_invalidate();
 }
 
 Index DsFileTableView::selDsFileIndex() const
@@ -221,7 +221,7 @@ Index DsFileTableView::selDsFileIndex() const
 
 void DsFileTableView::selDsFileIndex(const Index index)
 {
-    this->_selRowAndDraw(index);
+    this->_selectRow(index);
 }
 
 } // namespace jacques

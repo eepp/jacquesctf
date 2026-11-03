@@ -34,8 +34,12 @@ public:
     using Bookmarks = std::unordered_map<Index, DsFileBookmarks>;
 
 public:
+    /*
+     * `renderFrameFunc` renders the whole terminal (see `SearchCtrl`).
+     */
     explicit InspectScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                           InspectCmdState& appState);
+                           InspectCmdState& appState,
+                           SearchCtrl::RenderFrameFunc renderFrameFunc);
     ~InspectScreen();
 
 private:
@@ -69,7 +73,6 @@ private:
     };
 
 private:
-    void _redraw() override;
     void _resized() override;
     KeyHandlingReaction _handleKey(Key key) override;
     void _visibilityChanged() override;
@@ -83,7 +86,6 @@ private:
     PktBookmarks& _curPktBookmarks() noexcept;
     void _toggleBookmark(unsigned int id);
     void _gotoBookmark(unsigned int id);
-    void _refreshViews();
     void _setLastOffsetInRowBits();
     void _search(const SearchQuery& query, bool animate = true);
 

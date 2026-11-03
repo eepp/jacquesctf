@@ -34,7 +34,7 @@ View::View(const Rect& rect, const std::string_view title, const DecorationStyle
     opts.rows = rect.h;
     opts.cols = rect.w;
 
-    // initially hidden: root of its own pile
+    // initially hidden (not attached): root of its own pile
     _curPlane = ncpile_create(&term::nc(), &opts);
     assert(_curPlane);
 
@@ -43,7 +43,6 @@ View::View(const Rect& rect, const std::string_view title, const DecorationStyle
      * spaces instead of transparent glyphs.
      */
     ncplane_set_base(_curPlane, " ", 0, 0);
-    this->redraw();
 }
 
 View::~View()
@@ -62,53 +61,41 @@ void View::_setContentRect()
     };
 }
 
-void View::_show() const
+void View::detach()
 {
-    if (!_isShown) {
-        ncplane_reparent(_curPlane, &term::stdPlane());
-        ncplane_move_yx(_curPlane, static_cast<int>(_rect.pos.y), static_cast<int>(_rect.pos.x));
-        _isShown = true;
-    }
-
-    ncplane_move_top(_curPlane);
-}
-
-void View::_hide() const
-{
-    if (!_isShown) {
+    if (!_isAttached) {
         return;
     }
 
     // make it the root of a new pile, which we never render
     ncplane_reparent(_curPlane, _curPlane);
-    _isShown = false;
+    _isAttached = false;
 }
 
-void View::isVisible(const bool isVisible)
-{
-    _isVisible = isVisible;
-
-    if (!isVisible) {
-        this->_hide();
-    }
-}
-
-void View::refresh() const
+void View::render()
 {
     if (!_isVisible) {
+        this->detach();
         return;
     }
 
-    this->_show();
-}
+    if (_isInvalidated) {
+        _theStylist->std(*this);
+        ncplane_erase(_curPlane);
+        this->_redrawContent();
 
-void View::redraw()
-{
-    _theStylist->std(*this);
-    ncplane_erase(_curPlane);
-    this->_decorate();
-    this->_redrawContent();
-    this->refresh();
+        // decorate last: _redrawContent() may change the "more" indicators
+        this->_decorate();
+        _isInvalidated = false;
+    }
+
+    if (!_isAttached) {
+        ncplane_reparent(_curPlane, &term::stdPlane());
+        ncplane_move_yx(_curPlane, static_cast<int>(_rect.pos.y), static_cast<int>(_rect.pos.x));
+        _isAttached = true;
+    }
+
+    ncplane_move_top(_curPlane);
 }
 
 void View::moveAndResize(const Rect& rect)
@@ -118,7 +105,7 @@ void View::moveAndResize(const Rect& rect)
     _rect = rect;
     this->_setContentRect();
     this->_resized();
-    this->redraw();
+    this->_invalidate();
 }
 
 void View::_appStateChanged(Message)
@@ -136,13 +123,13 @@ void View::_resized()
 void View::focus()
 {
     _hasFocusMemb = true;
-    this->_decorate();
+    this->_invalidate();
 }
 
 void View::blur()
 {
     _hasFocusMemb = false;
-    this->_decorate();
+    this->_invalidate();
 }
 
 void View::_decorate() const
@@ -151,7 +138,8 @@ void View::_decorate() const
         return;
     }
 
-    _theStylist->viewBorder(*this, _hasFocusMemb, _decoStyle == DecorationStyle::BORDERS_EMPHASIZED);
+    _theStylist->viewBorder(*this, _hasFocusMemb,
+                            _decoStyle == DecorationStyle::BORDERS_EMPHASIZED);
 
     {
         // draw the border cell by cell with the current plane style
@@ -174,8 +162,9 @@ void View::_decorate() const
         ncplane_putegc_yx(_curPlane, bottom, right, "┘", nullptr);
     }
 
-    const auto maxWidth = _rect.w - 4;
-    const auto title = std::invoke([this, maxWidth] {
+    const auto title = std::invoke([this] {
+        const auto maxWidth = _rect.w - 4;
+
         if (term::strWidth(_theTitle) > maxWidth) {
             return std::string {term::strFittingPrefix(_theTitle, maxWidth - 1)} + glyphs::ELLIPSIS;
         } else {
@@ -355,26 +344,6 @@ int View::_moveAndPrint(const Point& contentPos, const char * const fmt, ...) co
     return ret;
 }
 
-void View::_hasMoreTop(const bool hasMore)
-{
-    if (_moreTop == hasMore) {
-        return;
-    }
-
-    _moreTop = hasMore;
-    this->_decorate();
-}
-
-void View::_hasMoreBottom(const bool hasMore)
-{
-    if (_moreBottom == hasMore) {
-        return;
-    }
-
-    _moreBottom = hasMore;
-    this->_decorate();
-}
-
 int View::_vPrint(const char * const fmt, va_list& args) const
 {
     return ncplane_vprintf(_curPlane, fmt, args);
@@ -418,8 +387,8 @@ ViewInspectCmdStateObserverGuard::ViewInspectCmdStateObserverGuard(InspectCmdSta
     _observerGuard {appState, [&view](const Message msg) {
         /*
          * The state can change in a thread other than the main one (see
-         * `InspectScreen::_search()`): lock the terminal while the view
-         * modifies its plane.
+         * SearchCtrl::animateWhile()): lock the terminal while the view
+         * updates its own state, which View::render() reads.
          */
         const std::lock_guard<std::recursive_mutex> lock {term::mutex()};
 

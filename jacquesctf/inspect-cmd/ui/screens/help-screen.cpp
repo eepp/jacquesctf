@@ -20,26 +20,13 @@ HelpScreen::HelpScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& s
     Screen {rect, cfg, stylist, appState},
     _view {std::make_unique<HelpView>(rect, stylist)}
 {
+    this->_addView(*_view);
     _view->focus();
-}
-
-void HelpScreen::_redraw()
-{
-    _view->redraw();
 }
 
 void HelpScreen::_resized()
 {
     _view->moveAndResize(this->rect());
-}
-
-void HelpScreen::_visibilityChanged()
-{
-    _view->isVisible(this->isVisible());
-
-    if (this->isVisible()) {
-        _view->redraw();
-    }
 }
 
 KeyHandlingReaction HelpScreen::_handleKey(const Key key)
@@ -54,7 +41,6 @@ KeyHandlingReaction HelpScreen::_handleKey(const Key key)
         _view->pageDown();
     }
 
-    _view->refresh();
     return KeyHandlingReaction::CONTINUE;
 }
 

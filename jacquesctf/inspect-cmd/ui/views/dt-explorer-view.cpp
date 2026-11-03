@@ -67,7 +67,6 @@ void DtExplorerView::dst(const yactfr::DataStreamType& dst, const bool showErts)
 
     ss << "Data stream type data types: " << "(" << dst.id() << ")";
     this->_title(ss.str());
-    this->redraw();
 }
 
 void DtExplorerView::ert(const yactfr::EventRecordType& ert)
@@ -130,7 +129,6 @@ void DtExplorerView::ert(const yactfr::EventRecordType& ert)
 
     ss << "(" << ert.id() << ")";
     this->_title(ss.str());
-    this->redraw();
 }
 
 void DtExplorerView::singleDt(const yactfr::DataType& dt, const yactfr::Scope scope)
@@ -178,7 +176,6 @@ void DtExplorerView::singleDt(const yactfr::DataType& dt, const yactfr::Scope sc
     }
 
     this->_title(title);
-    this->redraw();
 }
 
 void DtExplorerView::reset()
@@ -189,19 +186,18 @@ void DtExplorerView::reset()
     _rows.clear();
     this->_rowCount(0);
     this->clearHighlight();
-    this->redraw();
 }
 
 void DtExplorerView::highlightDt(const yactfr::DataType& dt)
 {
     _highlight = &dt;
-    this->_redrawContent();
+    this->_invalidate();
 }
 
 void DtExplorerView::clearHighlight()
 {
     _highlight = nullptr;
-    this->_redrawContent();
+    this->_invalidate();
 }
 
 void DtExplorerView::centerHighlight()
@@ -251,7 +247,6 @@ void DtExplorerView::centerHighlight()
     }
 
     this->_index(static_cast<Index>(newIndex));
-    this->_redrawContent();
 }
 
 void DtExplorerView::_drawScopeSubtitleRow(const Index index, const std::string& text)

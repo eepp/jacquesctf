@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <functional>
+#include <utility>
 #include <signal.h>
 #include <unistd.h>
 
@@ -22,10 +23,10 @@
 namespace jacques {
 
 PktsScreen::PktsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                       InspectCmdState& appState) :
+                       InspectCmdState& appState, SearchCtrl::RenderFrameFunc renderFrameFunc) :
     Screen {rect, cfg, stylist, appState},
     _ptView {std::make_unique<PktTableView>(rect, stylist, appState)},
-    _searchCtrl {*this, stylist},
+    _searchCtrl {*this, stylist, std::move(renderFrameFunc)},
     _tsFmtModeWheel {
         TsFmtMode::LONG,
         TsFmtMode::NS_FROM_ORIGIN,
@@ -37,21 +38,9 @@ PktsScreen::PktsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& s
         utils::LenFmtMode::BITS,
     }
 {
+    this->_addView(*_ptView);
+    this->_addView(_searchCtrl.view());
     _ptView->focus();
-}
-
-void PktsScreen::_redraw()
-{
-    _ptView->redraw();
-}
-
-void PktsScreen::_visibilityChanged()
-{
-    _ptView->isVisible(this->isVisible());
-
-    if (this->isVisible()) {
-        _ptView->redraw();
-    }
 }
 
 void PktsScreen::_resized()
@@ -75,7 +64,6 @@ public:
         }
     {
         _view->focus();
-        _view->isVisible(true);
     }
 
 private:
@@ -91,8 +79,7 @@ private:
         }
 
         _view->pktIndexEntry(pktIndexEntry);
-        _view->refresh();
-        term::update();
+        this->_render();
         _count = 0;
     }
 
@@ -107,7 +94,13 @@ private:
         }
 
         _view->er(er);
-        _view->refresh();
+        this->_render();
+    }
+
+    // renders the progress view on top of the others
+    void _render()
+    {
+        _view->render();
         term::update();
     }
 
@@ -232,13 +225,11 @@ KeyHandlingReaction PktsScreen::_handleKey(const Key key)
 
             if (!query) {
                 // canceled or invalid
-                this->_redraw();
                 break;
             }
 
             this->_appState().search(*query);
             _lastQuery = std::move(query);
-            this->_redraw();
             break;
         }
 
@@ -248,7 +239,6 @@ KeyHandlingReaction PktsScreen::_handleKey(const Key key)
             }
 
             this->_appState().search(*_lastQuery);
-            _ptView->redraw();
             break;
 
         case 'a':
@@ -256,7 +246,9 @@ KeyHandlingReaction PktsScreen::_handleKey(const Key key)
             AnalyzeAllPktsProgressUpdater updater {this->_stylist()};
 
             this->_appState().activeDsFileState().analyzeAllPkts(&updater);
-            _ptView->redraw();
+
+            // the packet index entries now have more information
+            _ptView->pktIndexEntriesChanged();
             break;
         }
 
@@ -265,7 +257,6 @@ KeyHandlingReaction PktsScreen::_handleKey(const Key key)
         }
     }
 
-    _ptView->refresh();
     return KeyHandlingReaction::CONTINUE;
 }
 

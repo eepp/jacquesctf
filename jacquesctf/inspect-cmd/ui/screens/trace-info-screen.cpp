@@ -20,26 +20,13 @@ TraceInfoScreen::TraceInfoScreen(const Rect& rect, const InspectCfg& cfg, const 
     Screen {rect, cfg, stylist, appState},
     _view {std::make_unique<TraceInfoView>(rect, stylist, appState)}
 {
+    this->_addView(*_view);
     _view->focus();
-}
-
-void TraceInfoScreen::_redraw()
-{
-    _view->redraw();
 }
 
 void TraceInfoScreen::_resized()
 {
     _view->moveAndResize(this->rect());
-}
-
-void TraceInfoScreen::_visibilityChanged()
-{
-    _view->isVisible(this->isVisible());
-
-    if (this->isVisible()) {
-        _view->redraw();
-    }
 }
 
 KeyHandlingReaction TraceInfoScreen::_handleKey(const Key key)
@@ -75,7 +62,6 @@ KeyHandlingReaction TraceInfoScreen::_handleKey(const Key key)
         }
     }
 
-    _view->refresh();
     return KeyHandlingReaction::CONTINUE;
 }
 

@@ -31,26 +31,13 @@ DsFilesScreen::DsFilesScreen(const Rect& rect, const InspectCfg& cfg, const Styl
     }
 {
     _view->selectFirst();
+    this->_addView(*_view);
     _view->focus();
-}
-
-void DsFilesScreen::_redraw()
-{
-    _view->redraw();
 }
 
 void DsFilesScreen::_resized()
 {
     _view->moveAndResize(this->rect());
-}
-
-void DsFilesScreen::_visibilityChanged()
-{
-    _view->isVisible(this->isVisible());
-
-    if (this->isVisible()) {
-        _view->redraw();
-    }
 }
 
 KeyHandlingReaction DsFilesScreen::_handleKey(const Key key)
@@ -126,7 +113,6 @@ KeyHandlingReaction DsFilesScreen::_handleKey(const Key key)
         }
     }
 
-    _view->refresh();
     return KeyHandlingReaction::CONTINUE;
 }
 

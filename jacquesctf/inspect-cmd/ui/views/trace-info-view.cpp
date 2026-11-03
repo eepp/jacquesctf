@@ -28,7 +28,6 @@ TraceInfoView::TraceInfoView(const Rect& rect, const Stylist& stylist, InspectCm
     this->_buildRows();
     _rows = &_traceInfo[&appState.trace()];
     this->_rowCount(_rows->size());
-    this->_drawRows();
 }
 
 void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
@@ -482,7 +481,6 @@ void TraceInfoView::_appStateChanged(const Message msg)
         _rows = &_traceInfo[&_appState->trace()];
         this->_index(0);
         this->_rowCount(_rows->size());
-        this->_redrawContent();
     }
 }
 

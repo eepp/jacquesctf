@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
+#include <utility>
+
 #include "../key.hpp"
 #include "dts-screen.hpp"
 #include "data/content-pkt-region.hpp"
@@ -11,38 +13,29 @@
 namespace jacques {
 
 DtsScreen::DtsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                     InspectCmdState& appState) :
+                     InspectCmdState& appState, SearchCtrl::RenderFrameFunc renderFrameFunc) :
     Screen {rect, cfg, stylist, appState},
-    _searchController {*this, stylist}
+    _searchController {*this, stylist, std::move(renderFrameFunc)}
 {
     const auto viewRects = this->_viewRects();
 
     _dstTableView = std::make_unique<DstTableView>(std::get<0>(viewRects), stylist, appState);
     _ertTableView = std::make_unique<ErtTableView>(std::get<1>(viewRects), stylist, appState);
     _dtExplorerView = std::make_unique<DtExplorerView>(std::get<2>(viewRects), stylist);
+    this->_addView(*_dstTableView);
+    this->_addView(*_ertTableView);
+    this->_addView(*_dtExplorerView);
+    this->_addView(_searchController.view());
     _focusedView = _dstTableView.get();
     this->_updateViews();
     _focusedView->focus();
 }
 
-void DtsScreen::_redraw()
-{
-    _ertTableView->redraw();
-    _dstTableView->redraw();
-    _dtExplorerView->redraw();
-}
-
 void DtsScreen::_visibilityChanged()
 {
-    _dstTableView->isVisible(this->isVisible() && _tablesVisible);
-    _ertTableView->isVisible(this->isVisible() && _tablesVisible);
-    _dtExplorerView->isVisible(this->isVisible());
-
     if (this->isVisible()) {
+        // the active trace could have changed in the meantime
         this->_updateViews();
-        _ertTableView->redraw();
-        _dstTableView->redraw();
-        _dtExplorerView->redraw();
     }
 }
 
@@ -102,8 +95,8 @@ void DtsScreen::highlightCurDt()
         _dstTableView->selectDst(curDst->id());
         _ertTableView->dst(*curDst);
         _ertTableView->selectErt(curEr->type()->id());
-        _dstTableView->centerSelRow(true);
-        _ertTableView->centerSelRow(true);
+        _dstTableView->centerSelRow();
+        _ertTableView->centerSelRow();
         _dtExplorerView->ert(*curEr->type());
         _focusedView->blur();
         _focusedView = _ertTableView.get();
@@ -112,8 +105,8 @@ void DtsScreen::highlightCurDt()
         _dstTableView->selectDst(curDst->id());
         _ertTableView->dst(*curDst);
         _ertTableView->selectFirst();
-        _dstTableView->centerSelRow(true);
-        _ertTableView->centerSelRow(true);
+        _dstTableView->centerSelRow();
+        _ertTableView->centerSelRow();
         _dtExplorerView->dst(*curDst);
         _focusedView->blur();
         _focusedView = _dstTableView.get();
@@ -292,8 +285,8 @@ KeyHandlingReaction DtsScreen::_handleKey(const Key key)
             const auto viewRects = this->_viewRects();
 
             _dtExplorerView->moveAndResize(std::get<2>(viewRects));
-            _dstTableView->isVisible(this->isVisible() && _tablesVisible);
-            _ertTableView->isVisible(this->isVisible() && _tablesVisible);
+            _dstTableView->isVisible(_tablesVisible);
+            _ertTableView->isVisible(_tablesVisible);
 
             if (!_tablesVisible) {
                 _focusedView->blur();
@@ -301,9 +294,6 @@ KeyHandlingReaction DtsScreen::_handleKey(const Key key)
                 _focusedView->focus();
             }
 
-            _dstTableView->redraw();
-            _ertTableView->redraw();
-            _dtExplorerView->redraw();
             break;
         }
 
@@ -318,9 +308,6 @@ KeyHandlingReaction DtsScreen::_handleKey(const Key key)
 
             if (!query) {
                 // canceled or invalid
-                _dstTableView->redraw();
-                _ertTableView->redraw();
-                _dtExplorerView->redraw();
                 break;
             }
 
@@ -335,10 +322,7 @@ KeyHandlingReaction DtsScreen::_handleKey(const Key key)
             }
 
             this->_updateViews();
-            _dstTableView->redraw();
             _ertTableView->centerSelRow();
-            _ertTableView->redraw();
-            _dtExplorerView->redraw();
             break;
         }
 
@@ -357,9 +341,6 @@ KeyHandlingReaction DtsScreen::_handleKey(const Key key)
         }
     }
 
-    _ertTableView->refresh();
-    _dstTableView->refresh();
-    _dtExplorerView->refresh();
     return KeyHandlingReaction::CONTINUE;
 }
 

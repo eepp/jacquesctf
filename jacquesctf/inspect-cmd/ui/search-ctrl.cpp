@@ -4,6 +4,7 @@
  */
 
 #include <cassert>
+#include <atomic>
 #include <chrono>
 #include <mutex>
 #include <thread>
@@ -17,9 +18,12 @@
 
 namespace jacques {
 
-SearchCtrl::SearchCtrl(const Screen& parentScreen, const Stylist& stylist) :
-    _searchView {std::make_unique<SearchInputView>(SearchCtrl::_viewRect(parentScreen), stylist)}
+SearchCtrl::SearchCtrl(const Screen& parentScreen, const Stylist& stylist,
+                       RenderFrameFunc renderFrameFunc) :
+    _searchView {std::make_unique<SearchInputView>(SearchCtrl::_viewRect(parentScreen), stylist)},
+    _renderFrameFunc {std::move(renderFrameFunc)}
 {
+    _searchView->isVisible(false);
 }
 
 std::unique_ptr<const SearchQuery> SearchCtrl::startLive(const std::string& init,
@@ -27,24 +31,19 @@ std::unique_ptr<const SearchQuery> SearchCtrl::startLive(const std::string& init
 {
     const auto lineLen = _searchView->contentRect().w - 2;
     std::string buf = init;
-
-    _searchView->redraw();
-    _searchView->isVisible(true);
-
     const auto prevCursorIsVisible = term::cursorIsVisible();
 
+    _searchView->isVisible(true);
     this->_tryLiveUpdate(buf, liveUpdateFunc);
-    _searchView->refresh();
-    term::update();
 
-    bool accepted = false;
+    auto accepted = false;
 
     while (true) {
+        _renderFrameFunc();
+
         const auto key = term::readKey();
 
-        if (key.special() == SpecialKey::TAB) {
-            continue;
-        } else if (key.special() == SpecialKey::ENTER) {
+        if (key.special() == SpecialKey::ENTER) {
             accepted = true;
             break;
         } else if (key.special() == SpecialKey::BACKSPACE) {
@@ -70,9 +69,6 @@ std::unique_ptr<const SearchQuery> SearchCtrl::startLive(const std::string& init
             buf = std::move(newBuf);
             this->_tryLiveUpdate(buf, liveUpdateFunc);
         }
-
-        _searchView->refresh();
-        term::update();
     }
 
     _searchView->isVisible(false);
@@ -93,32 +89,41 @@ void SearchCtrl::parentScreenResized(const Screen& parentScreen)
     _searchView->moveAndResize(SearchCtrl::_viewRect(parentScreen));
 }
 
-void SearchCtrl::animate(std::atomic_bool& stop) const
+void SearchCtrl::animateWhile(const std::function<void ()>& func) const
 {
     using namespace std::chrono_literals;
 
-    Index animIndex = 0;
-
+    /*
+     * Show the search view now, while no other thread modifies the
+     * application state.
+     *
+     * While `func` runs in another thread, only draw the border
+     * animation of the search view and update the terminal: rendering
+     * the other views could read the application state while `func`
+     * modifies it.
+     */
     _searchView->isVisible(true);
+    _renderFrameFunc();
 
-    while (true) {
-        if (stop) {
-            return;
-        }
+    std::atomic_bool done {false};
 
+    std::thread thread {[&func, &done] {
+        func();
+        done = true;
+    }};
+
+    for (Index animIndex = 0; !done; ++animIndex) {
         {
-            // the search runs in another thread which can also draw
             const std::lock_guard<std::recursive_mutex> lock {term::mutex()};
 
             _searchView->animateBorder(animIndex);
-            ++animIndex;
-            _searchView->refresh();
             term::update();
         }
 
         std::this_thread::sleep_for(50ms);
     }
 
+    thread.join();
     _searchView->isVisible(false);
 }
 
@@ -131,8 +136,8 @@ void SearchCtrl::_tryLiveUpdate(const std::string& buf, const LiveUpdateFunc& li
         liveUpdateFunc(*query);
     }
 
-    _searchView->redraw();
-    _searchView->drawCurText(buf);
+    _searchView->text(buf);
+
     term::showCursor({
         _searchView->rect().pos.x + 1 + term::strWidth(buf),
         _searchView->rect().pos.y + 1

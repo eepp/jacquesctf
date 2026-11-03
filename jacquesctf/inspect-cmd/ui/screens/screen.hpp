@@ -7,12 +7,14 @@
 #define _JACQUES_INSPECT_COMMAND_UI_SCREENS_SCREEN_HPP
 
 #include <memory>
+#include <vector>
 
 #include "../inspect-cmd.hpp"
 #include "../key.hpp"
 #include "../rect.hpp"
 #include "cfg.hpp"
 #include "../stylist.hpp"
+#include "../views/view.hpp"
 #include "../../state/inspect-cmd-state.hpp"
 
 namespace jacques {
@@ -24,10 +26,12 @@ namespace jacques {
  * state or specific views accordingly (although most views are
  * autonomous, in that they react to state changes).
  *
- * A screen usually owns one or more specific views. There's never more
- * than one screen displayed on the terminal at a given time. However, a
- * screen is not necessarily full screen: there can be other,
- * "permanent" views on the top, bottom, or sides.
+ * A screen usually owns one or more specific views, which it adds with
+ * _addView(): render() renders them, in the order they were added, and
+ * hiding the screen hides them. There's never more than one screen
+ * displayed on the terminal at a given time. However, a screen is not
+ * necessarily full screen: there can be other, "permanent" views on the
+ * top, bottom, or sides.
  *
  * As a convenience, the base screen holds the stylist and state, which
  * are almost always needed by derived screens anyway.
@@ -36,7 +40,7 @@ class Screen
 {
 protected:
     /*
-     * Builds a base screen.
+     * Builds a base screen, initially not visible.
      *
      * `rect` is the rectangle of the screen within the terminal screen.
      */
@@ -49,49 +53,41 @@ public:
     /*
      * Resizes the screen.
      *
-     * The derived screen has the responsibility of resizing its views
-     * accordingly in the virtual _resized() method.
+     * The derived screen has the responsibility of moving and resizing
+     * its views accordingly in the virtual _resized() method.
      */
     void resize(const Size w, const Size h)
     {
         _curRect.w = w;
         _curRect.h = h;
         this->_resized();
-        this->redraw();
-    }
-
-    /*
-     * Redraws the screen.
-     *
-     * The derived screen has the responsibility of redrawing its views
-     * accordingly in the virtual _redraw() method.
-     */
-    void redraw()
-    {
-        this->_redraw();
     }
 
     /*
      * Sets the visibility of the screen to `isVisible`.
      *
-     * If the visibility changes, calls the virtual _visibilityChanged()
-     * method so that the derived screen can set the visibility of its
-     * views accordingly.
+     * Hiding the screen immediately hides all its views (see
+     * _addView()). Showing it shows its visible views on the
+     * next render().
+     *
+     * If the visibility changes, calls the virtual
+     * _visibilityChanged() method.
      */
-    void isVisible(const bool isVisible)
-    {
-        if (isVisible == _isVisible) {
-            return;
-        }
+    void isVisible(bool isVisible);
 
-        _isVisible = isVisible;
-        this->_visibilityChanged();
-    }
-
-    bool isVisible() const
+    bool isVisible() const noexcept
     {
         return _isVisible;
     }
+
+    /*
+     * If this screen is visible, then this method renders all its views
+     * (see _addView()) in the order they were added, the last one
+     * ending up on top.
+     *
+     * This doesn't update the terminal itself (see term::update()).
+     */
+    void render();
 
     /*
      * Handles a user key `key`.
@@ -108,34 +104,37 @@ public:
 
 protected:
     /*
-     * Implementation must redraw the whole content (rect()) of the
-     * screen.
+     * Adds the view `view` to the views which render() renders, on top
+     * of the previously added ones.
+     *
+     * `view` must exist as long as this screen may render.
      */
-    virtual void _redraw() = 0;
+    void _addView(View& view)
+    {
+        _views.push_back(&view);
+    }
 
     /*
      * Implementation can perform anything visual within the rectangle
-     * of the screen and can modify the state of the application. The
-     * return value indicates what to do next.
+     * of the screen and can modify the state of the application.
+     *
+     * The return value indicates what to do next.
      */
     virtual KeyHandlingReaction _handleKey(Key key) = 0;
 
     /*
-     * Called when the screen needs to be resized. rect() is already
-     * changed. Implementation must move/resize its views and make sure
-     * nothing is drawn outside rect().
+     * Called when the screen needs to be resized.
+     *
+     * rect() is already changed.
+     *
+     * Implementation must move/resize its views and make sure nothing
+     * is drawn outside rect().
      */
     virtual void _resized() = 0;
 
     /*
      * Called when the visibility of the screen changes (new visibility
-     * is given by isVisible()). Implementation can change the
-     * visibility of its views and perform any required updates before
-     * the terminal screen is updated.
-     *
-     * Usually, when isVisible() is true, then a full redraw of all the
-     * visible views is needed to overwrite the previously visible
-     * screen characters.
+     * is given by isVisible()).
      */
     virtual void _visibilityChanged();
 
@@ -165,6 +164,7 @@ private:
     const Stylist *_curStylist;
     InspectCmdState *_curAppState;
     bool _isVisible = false;
+    std::vector<View *> _views;
 };
 
 } // namespace jacques

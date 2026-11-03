@@ -50,8 +50,6 @@ void SubDtExplorerView::_appStateChanged(Message)
     } else {
         this->clearHighlight();
     }
-
-    this->redraw();
 }
 
 } // namespace jacques

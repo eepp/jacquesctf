@@ -22,7 +22,7 @@ void ScrollView::prev()
     }
 
     --_myIndex;
-    this->_drawRowsSetHasMore();
+    this->_invalidate();
 }
 
 void ScrollView::next()
@@ -32,7 +32,7 @@ void ScrollView::next()
     }
 
     ++_myIndex;
-    this->_drawRowsSetHasMore();
+    this->_invalidate();
 }
 
 void ScrollView::pageDown()
@@ -40,18 +40,20 @@ void ScrollView::pageDown()
     const auto maxIndex = _theRowCount - std::min(_theRowCount, this->contentRect().h);
 
     _myIndex = std::min(maxIndex, _myIndex + this->contentRect().h);
-    this->_drawRowsSetHasMore();
+    this->_invalidate();
 }
 
 void ScrollView::pageUp()
 {
     _myIndex -= std::min(_myIndex, this->contentRect().h);
-    this->_drawRowsSetHasMore();
+    this->_invalidate();
 }
 
 void ScrollView::_redrawContent()
 {
-    this->_drawRowsSetHasMore();
+    this->_drawRows();
+    this->_hasMoreTop(_myIndex > 0);
+    this->_hasMoreBottom(_myIndex + this->contentRect().h < _theRowCount);
 }
 
 void ScrollView::_resized()
@@ -63,13 +65,6 @@ void ScrollView::_resized()
             _myIndex = _theRowCount - this->contentRect().h;
         }
     }
-}
-
-void ScrollView::_drawRowsSetHasMore()
-{
-    this->_drawRows();
-    this->_hasMoreTop(_myIndex > 0);
-    this->_hasMoreBottom(_myIndex + this->contentRect().h < _theRowCount);
 }
 
 } // namespace jacques

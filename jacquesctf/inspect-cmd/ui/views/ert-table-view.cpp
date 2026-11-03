@@ -120,8 +120,8 @@ void ErtTableView::dst(const yactfr::DataStreamType& dst)
 
     _erts = erts;
     this->_updateCounts();
-    this->_selRowAndDraw(0, false);
-    this->_redrawRows();
+    this->_selectRow(0);
+    this->_invalidate();
 }
 
 const yactfr::EventRecordType *ErtTableView::ert() const noexcept
@@ -155,7 +155,7 @@ void ErtTableView::selectErt(const std::string_view pattern, const bool relative
         auto& ert = (*_erts)[index];
 
         if (ert->name() && utils::globMatch(pattern, *ert->name())) {
-            this->_selRowAndDraw(index);
+            this->_selectRow(index);
             return;
         }
     }
@@ -164,7 +164,7 @@ void ErtTableView::selectErt(const std::string_view pattern, const bool relative
         auto& ert = (*_erts)[index];
 
         if (ert->name() && utils::globMatch(pattern, *ert->name())) {
-            this->_selRowAndDraw(index);
+            this->_selectRow(index);
             return;
         }
     }
@@ -180,7 +180,7 @@ void ErtTableView::selectErt(const yactfr::TypeId id)
         auto& ert = (*_erts)[index];
 
         if (ert->id() == id) {
-            this->_selRowAndDraw(index);
+            this->_selectRow(index);
             return;
         }
     }

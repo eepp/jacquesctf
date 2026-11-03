@@ -23,13 +23,15 @@ class DtsScreen final :
     public Screen
 {
 public:
+    /*
+     * `renderFrameFunc` renders the whole terminal (see `SearchCtrl`).
+     */
     explicit DtsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                       InspectCmdState& appState);
+                       InspectCmdState& appState, SearchCtrl::RenderFrameFunc renderFrameFunc);
     void highlightCurDt();
     void clearHighlight();
 
 private:
-    void _redraw() override;
     void _resized() override;
     KeyHandlingReaction _handleKey(Key key) override;
     void _visibilityChanged() override;

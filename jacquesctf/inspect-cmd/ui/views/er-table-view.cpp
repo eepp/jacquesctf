@@ -184,7 +184,7 @@ void ErTableView::tsFmtMode(const TsFmtMode tsFmtMode)
     }
 
     _tsFmtMode = tsFmtMode;
-    this->_redrawRows();
+    this->_invalidate();
 }
 
 void ErTableView::dataLenFmtMode(const utils::LenFmtMode dataLenFmtMode)
@@ -192,7 +192,7 @@ void ErTableView::dataLenFmtMode(const utils::LenFmtMode dataLenFmtMode)
     static_cast<DataLenTableViewCell&>(*_row[1]).fmtMode(dataLenFmtMode);
     static_cast<DataLenTableViewCell&>(*_row[2]).fmtMode(dataLenFmtMode);
     _dataLenFmtMode = dataLenFmtMode;
-    this->_redrawRows();
+    this->_invalidate();
 }
 
 void ErTableView::_appStateChanged(const Message msg)
@@ -211,7 +211,7 @@ void ErTableView::_appStateChanged(const Message msg)
         assert(_appState->activePktState().pkt().lastEr());
 
         if (const auto curEr = _appState->curEr()) {
-            this->_selRowAndDraw(curEr->indexInPkt(), false);
+            this->_selectRow(curEr->indexInPkt());
         } else {
             const auto& indexEntry = _appState->activePktState().pktIndexEntry();
             const auto offsetInPktBits = _appState->curOffsetInPktBits();
@@ -227,10 +227,10 @@ void ErTableView::_appStateChanged(const Message msg)
             this->_removeSel();
         }
 
-        this->centerSelRow(false);
+        this->centerSelRow();
     }
 
-    this->_redrawRows();
+    this->_invalidate();
 }
 
 } // namespace jacques

@@ -175,7 +175,7 @@ std::optional<Color> paletteColor(unsigned int index) noexcept;
 
 /*
  * Mutex to lock while modifying planes or writing to the terminal when
- * more than one thread could do so (see InspectScreen::_search()).
+ * more than one thread could do so (see SearchCtrl::animateWhile()).
  *
  * update() and repaint() lock it themselves.
  */

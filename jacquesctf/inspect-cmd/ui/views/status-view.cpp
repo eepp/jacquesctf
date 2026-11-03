@@ -57,11 +57,9 @@ void StatusView::_appStateChanged(const Message msg)
 {
     if (msg == Message::ACTIVE_DS_FILE_AND_PKT_CHANGED || msg == Message::ACTIVE_PKT_CHANGED) {
         _curEndPositions = &_endPositions[&_appState->activeDsFileState()];
-        this->redraw();
-    } else if (msg == Message::CUR_OFFSET_IN_PKT_CHANGED) {
-        this->_drawOffset();
-        this->refresh();
     }
+
+    this->_invalidate();
 }
 
 void StatusView::_drawOffset()

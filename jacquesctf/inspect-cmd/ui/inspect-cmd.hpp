@@ -6,8 +6,6 @@
 #ifndef _JACQUES_INSPECT_COMMAND_UI_INSPECT_COMMAND_HPP
 #define _JACQUES_INSPECT_COMMAND_UI_INSPECT_COMMAND_HPP
 
-#include <stdexcept>
-
 namespace jacques {
 
 enum class KeyHandlingReaction

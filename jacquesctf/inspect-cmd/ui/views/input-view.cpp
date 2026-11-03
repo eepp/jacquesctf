@@ -23,6 +23,9 @@ void InputView::_redrawContent()
 {
     this->_clearContent();
     this->_drawBorder();
+    this->_stylist().std(*this);
+    this->_moveCursor({1, 1});
+    this->_drawCurText(_text);
 }
 
 void InputView::_drawBorder() const
@@ -41,19 +44,6 @@ void InputView::_drawBorder() const
         this->_putChar({0, y}, ' ');
         this->_putChar({rect.w - 1, y}, ' ');
     }
-}
-
-void InputView::drawCurText(const std::string& text)
-{
-    // clear input first
-    this->_stylist().std(*this);
-
-    for (Index x = 1; x < this->contentRect().w - 2; ++x) {
-        this->_putChar({x, 1}, ' ');
-    }
-
-    this->_moveCursor({1, 1});
-    this->_drawCurText(text);
 }
 
 } // namespace jacques

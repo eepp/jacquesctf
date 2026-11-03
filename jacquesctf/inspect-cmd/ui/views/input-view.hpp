@@ -22,7 +22,15 @@ protected:
 
 public:
     virtual ~InputView() = default;
-    void drawCurText(const std::string& text);
+
+    /*
+     * Sets the current text to `text`.
+     */
+    void text(std::string text)
+    {
+        _text = std::move(text);
+        this->_invalidate();
+    }
 
 protected:
     virtual void _drawCurText(const std::string& text) = 0;
@@ -30,6 +38,9 @@ protected:
 
 private:
     void _redrawContent() override;
+
+private:
+    std::string _text;
 };
 
 } // namespace jacques

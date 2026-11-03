@@ -402,7 +402,7 @@ public:
     void pageUp();
     void showFirstPage();
     void showLastPage();
-    void centerSelRow(bool draw = true);
+    void centerSelRow();
     void selectFirst();
     void selectLast();
     void highlightSel(bool highlight);
@@ -418,9 +418,8 @@ protected:
     void _drawCells(Index row, const std::vector<std::unique_ptr<TableViewCell>>& cells);
     void _drawWarningRow(Index row, const std::string& msg);
     void _colDescrs(std::vector<TableViewColumnDescr>&& columnDescriptions);
-    void _redrawRows();
     void _redrawContent() override;
-    void _selRowAndDraw(Index row, bool draw = true);
+    void _selectRow(Index row);
     void _removeSel();
     void _resized() override;
 
@@ -440,7 +439,7 @@ protected:
     }
 
 private:
-    void _drawIfChanged(_Change change, const std::optional<Index>& oldSelRow);
+    void _drawRows();
     void _clearRow(Index y);
     void _clearCell(const Point& pos, Size cellWidth);
 

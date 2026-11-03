@@ -34,13 +34,13 @@ void PktCheckpointsBuildProgressView::pktIndexEntry(const PktIndexEntry& pktInde
 {
     _pktIndexEntry = &pktIndexEntry;
     _er = nullptr;
-    this->_redrawContent();
+    this->_invalidate();
 }
 
 void PktCheckpointsBuildProgressView::er(const Er& er)
 {
     _er = &er;
-    this->_drawProgress();
+    this->_invalidate();
 }
 
 void PktCheckpointsBuildProgressView::_drawPktIndexEntry()

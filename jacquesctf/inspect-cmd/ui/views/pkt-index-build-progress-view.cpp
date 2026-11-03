@@ -36,11 +36,10 @@ void PktIndexBuildProgressView::_clearRow(const Index y)
 void PktIndexBuildProgressView::dsFile(const DsFile& dsf)
 {
     _dsf = &dsf;
-    this->_drawFile();
     _index = 0;
     _offsetBytes = 0;
     _seqNum = std::nullopt;
-    this->_drawProgress();
+    this->_invalidate();
 }
 
 void PktIndexBuildProgressView::pktIndexEntry(const PktIndexEntry& entry)
@@ -48,7 +47,7 @@ void PktIndexBuildProgressView::pktIndexEntry(const PktIndexEntry& entry)
     _index = entry.indexInDsFile();
     _offsetBytes = entry.offsetInDsFileBytes();
     _seqNum = entry.seqNum();
-    this->_drawProgress();
+    this->_invalidate();
 }
 
 void PktIndexBuildProgressView::_drawFile()

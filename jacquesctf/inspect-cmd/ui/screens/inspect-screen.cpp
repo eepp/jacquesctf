@@ -5,9 +5,9 @@
 
 #include <cassert>
 #include <iostream>
-#include <thread>
-#include <atomic>
 #include <functional>
+#include <initializer_list>
+#include <utility>
 #include <signal.h>
 #include <unistd.h>
 
@@ -22,12 +22,13 @@
 namespace jacques {
 
 InspectScreen::InspectScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                             InspectCmdState& appState) :
+                             InspectCmdState& appState,
+                             SearchCtrl::RenderFrameFunc renderFrameFunc) :
     Screen {rect, cfg, stylist, appState},
     _decErrorView {
         std::make_unique<PktDecodingErrorDetailsView>(rect, stylist, appState)
     },
-    _searchCtrl {*this, stylist},
+    _searchCtrl {*this, stylist, std::move(renderFrameFunc)},
     _tsFmtModeWheel {
         TsFmtMode::LONG,
         TsFmtMode::NS_FROM_ORIGIN,
@@ -51,6 +52,15 @@ InspectScreen::InspectScreen(const Rect& rect, const InspectCfg& cfg, const Styl
     _priView = std::make_unique<PktRegionInfoView>(Rect {{0, 0}, this->rect().w, 1}, stylist,
                                                    appState);
     _sdteView = std::make_unique<SubDtExplorerView>(this->rect(), stylist, appState);
+
+    // in stacking order: overlays last
+    for (const auto view : std::initializer_list<View *> {
+        _pdView.get(), _ertView.get(), _priView.get(), _sdteView.get(), _decErrorView.get(),
+        &_searchCtrl.view()
+    }) {
+        this->_addView(*view);
+    }
+
     _decErrorView->isVisible(false);
     _pdView->focus();
     this->_updateViews();
@@ -88,7 +98,7 @@ void InspectScreen::_toggleBookmark(const unsigned int id)
         bookmarkedOffsetInPktBit = this->_appState().curOffsetInPktBits();
     }
 
-    _pdView->redraw();
+    _pdView->bookmarksChanged();
 }
 
 void InspectScreen::_gotoBookmark(const unsigned int id)
@@ -106,91 +116,56 @@ void InspectScreen::_gotoBookmark(const unsigned int id)
 
 void InspectScreen::_updateViews()
 {
-    Size ertViewHeight = 0;
+    const auto& rect = this->rect();
+    const auto dispMode = _ertViewDispModeWheel.curVal();
 
-    switch (_ertViewDispModeWheel.curVal()) {
-    case _ErtViewDispMode::SHORT:
-        ertViewHeight = 8;
-        break;
+    _decErrorView->moveAndResize({{rect.pos.x + 4, rect.h - 14}, rect.w - 8, 12});
 
-    case _ErtViewDispMode::LONG:
-        ertViewHeight = this->rect().h / 2;
-        break;
-
-    case _ErtViewDispMode::FULL:
-        if (this->isVisible()) {
-            _pdView->isVisible(false);
-            _sdteView->isVisible(false);
-            _priView->isVisible(false);
-            _ertView->isVisible(true);
-        }
-
-        _ertView->moveAndResize(this->rect());
-        _ertView->centerSelRow(false);
+    if (dispMode == _ErtViewDispMode::FULL) {
+        _pdView->isVisible(false);
+        _sdteView->isVisible(false);
+        _priView->isVisible(false);
+        _ertView->isVisible(true);
+        _ertView->moveAndResize(rect);
+        _ertView->centerSelRow();
         return;
-
-    default:
-        break;
     }
 
-    const auto pdViewHeight = this->rect().h - ertViewHeight - 1;
-    const auto pdViewWidth = _sdteViewIsVisible ? this->rect().w / 2 : this->rect().w;
+    const auto ertViewHeight = std::invoke([dispMode, &rect]() -> Size {
+        switch (dispMode) {
+        case _ErtViewDispMode::SHORT:
+            return 8;
 
-    if (_ertViewDispModeWheel.curVal() == _ErtViewDispMode::HIDDEN) {
-        _ertView->moveAndResize({{0, 0}, this->rect().w, 8});
+        case _ErtViewDispMode::LONG:
+            return rect.h / 2;
 
-        if (this->isVisible()) {
-            _ertView->isVisible(false);
+        default:
+            return 0;
         }
-    } else {
-        _ertView->moveAndResize({{0, pdViewHeight + 1}, this->rect().w, ertViewHeight});
+    });
 
-        if (this->isVisible()) {
-            _ertView->isVisible(true);
-        }
-    }
+    const auto pdViewHeight = rect.h - ertViewHeight - 1;
+    const auto pdViewWidth = _sdteViewIsVisible ? rect.w / 2 : rect.w;
 
-    if (this->isVisible()) {
-        _pdView->isVisible(true);
-        _priView->isVisible(true);
-    }
-
+    _pdView->isVisible(true);
+    _priView->isVisible(true);
+    _sdteView->isVisible(_sdteViewIsVisible);
+    _ertView->isVisible(dispMode != _ErtViewDispMode::HIDDEN);
     _pdView->moveAndResize({{0, 0}, pdViewWidth, pdViewHeight});
-    _priView->moveAndResize({{0, pdViewHeight}, this->rect().w, 1});
+    _priView->moveAndResize({{0, pdViewHeight}, rect.w, 1});
+
+    if (dispMode == _ErtViewDispMode::HIDDEN) {
+        // keep a valid size while hidden
+        _ertView->moveAndResize({{0, 0}, rect.w, 8});
+    } else {
+        _ertView->moveAndResize({{0, pdViewHeight + 1}, rect.w, ertViewHeight});
+    }
 
     if (_sdteViewIsVisible) {
-        _sdteView->moveAndResize({{pdViewWidth, 0}, this->rect().w - pdViewWidth, pdViewHeight});
-    } else {
-        _sdteView->moveAndResize({{0, 0}, this->rect().w, pdViewHeight});
+        _sdteView->moveAndResize({{pdViewWidth, 0}, rect.w - pdViewWidth, pdViewHeight});
     }
 
-    if (this->isVisible()) {
-        _sdteView->isVisible(_sdteViewIsVisible);
-    }
-
-    _decErrorView->moveAndResize({
-        {this->rect().pos.x + 4, this->rect().h - 14},
-        this->rect().w - 8, 12
-    });
-    _ertView->centerSelRow(false);
-
-    // override visibility if screen is not visible
-    if (!this->isVisible()) {
-        _pdView->isVisible(false);
-        _ertView->isVisible(false);
-        _priView->isVisible(false);
-        _sdteView->isVisible(false);
-        _decErrorView->isVisible(false);
-    }
-}
-
-void InspectScreen::_redraw()
-{
-    _pdView->redraw();
-    _ertView->redraw();
-    _priView->redraw();
-    _sdteView->redraw();
-    _decErrorView->redraw();
+    _ertView->centerSelRow();
 }
 
 void InspectScreen::_resized()
@@ -201,34 +176,22 @@ void InspectScreen::_resized()
 
 void InspectScreen::_visibilityChanged()
 {
-    _pdView->isVisible(this->isVisible());
-    _priView->isVisible(this->isVisible());
-    this->_updateViews();
-
-    if (this->isVisible()) {
-        if (_stateSnapshots.empty()) {
-            // initial snapshot
-            this->_snapshotState();
-        }
-
-        this->_redraw();
-        this->_tryShowDecodingError();
-        _decErrorView->refresh();
+    if (!this->isVisible()) {
+        return;
     }
+
+    if (_stateSnapshots.empty()) {
+        // initial snapshot
+        this->_snapshotState();
+    }
+
+    this->_tryShowDecodingError();
 }
 
 void InspectScreen::_tryShowDecodingError()
 {
-    if (this->_appState().hasActivePktState() &&
-            this->_appState().activePktState().pkt().error()) {
-        _decErrorView->moveAndResize({
-            {this->rect().pos.x + 4, this->rect().h - 14},
-            this->rect().w - 8, 12
-        });
-        _decErrorView->isVisible(true);
-    } else if (_decErrorView->isVisible()) {
-        _decErrorView->isVisible(false);
-    }
+    _decErrorView->isVisible(this->_appState().hasActivePktState() &&
+                             this->_appState().activePktState().pkt().error());
 }
 
 InspectScreen::_StateSnapshot InspectScreen::_takeStateSnapshot()
@@ -314,14 +277,6 @@ void InspectScreen::_restoreStateSnapshot(const _StateSnapshot& snapshot)
     }
 }
 
-void InspectScreen::_refreshViews()
-{
-    _pdView->refresh();
-    _ertView->refresh();
-    _priView->refresh();
-    _sdteView->refresh();
-}
-
 void InspectScreen::_setLastOffsetInRowBits()
 {
     if (!_lastOffsetInRowBits) {
@@ -331,19 +286,13 @@ void InspectScreen::_setLastOffsetInRowBits()
 
 void InspectScreen::_search(const SearchQuery& query, const bool animate)
 {
-    if (dynamic_cast<const ErtNameSearchQuery *>(&query) ||
-            dynamic_cast<const ErtIdSearchQuery *>(&query)) {
-        std::atomic_bool stop {false};
-        std::thread t {[this, &stop, &query] {
+    const auto isSlow = dynamic_cast<const ErtNameSearchQuery *>(&query) ||
+                        dynamic_cast<const ErtIdSearchQuery *>(&query);
+
+    if (isSlow && animate) {
+        _searchCtrl.animateWhile([this, &query] {
             this->_appState().search(query);
-            stop = true;
-        }};
-
-        if (animate) {
-            _searchCtrl.animate(stop);
-        }
-
-        t.join();
+        });
     } else {
         this->_appState().search(query);
     }
@@ -355,11 +304,7 @@ KeyHandlingReaction InspectScreen::_handleKey(const Key key)
     const auto decErrorViewWasVisible = _decErrorView->isVisible();
 
     _goingToBookmark = false;
-
-    if (_decErrorView->isVisible()) {
-        _decErrorView->isVisible(false);
-        this->_redraw();
-    }
+    _decErrorView->isVisible(false);
 
     if (key.special() != SpecialKey::DOWN && key.special() != SpecialKey::UP) {
         _lastOffsetInRowBits = std::nullopt;
@@ -379,7 +324,6 @@ KeyHandlingReaction InspectScreen::_handleKey(const Key key)
 
             _sdteViewIsVisible = !_sdteViewIsVisible;
             this->_updateViews();
-            this->_redraw();
             break;
 
         case SpecialKey::HOME:
@@ -550,12 +494,10 @@ KeyHandlingReaction InspectScreen::_handleKey(const Key key)
         case 'e':
             _ertViewDispModeWheel.next();
             this->_updateViews();
-            this->_redraw();
             break;
 
         case 'E':
             _pdView->isErFirstPktRegionEmphasized(!_pdView->isErFirstPktRegionEmphasized());
-            _pdView->redraw();
             break;
 
         case 'a':
@@ -671,9 +613,6 @@ KeyHandlingReaction InspectScreen::_handleKey(const Key key)
                         // this makes the appropriate views update and redraw
                         this->_appState().search(query);
                     }
-
-                    // refresh background views
-                    this->_refreshViews();
                 };
 
                 query = _searchCtrl.startLive(init, liveUpdateFunc);
@@ -687,7 +626,6 @@ KeyHandlingReaction InspectScreen::_handleKey(const Key key)
 
             if (!query) {
                 // canceled or invalid
-                this->_redraw();
                 break;
             }
 
@@ -700,7 +638,6 @@ KeyHandlingReaction InspectScreen::_handleKey(const Key key)
             this->_snapshotState();
 
             _lastQuery = std::move(query);
-            this->_redraw();
             this->_tryShowDecodingError();
             break;
         }
@@ -732,13 +669,6 @@ KeyHandlingReaction InspectScreen::_handleKey(const Key key)
         }
     }
 
-    this->_refreshViews();
-
-    /*
-     * Refresh last because this is overlapping other views, and they
-     * were just refreshed (put on top).
-     */
-    _decErrorView->refresh();
     return KeyHandlingReaction::CONTINUE;
 }
 

@@ -41,9 +41,47 @@ constexpr auto ELLIPSIS = "…";
 /*
  * Base class of all views.
  *
- * A view manages a notcurses plane. The `View` class provides many
- * useful protected methods to its derived classes, like
- * _clearContent(), _moveCursor(), and _safeMoveAndPrint().
+ * A view manages a notcurses plane.
+ *
+ * The `View` class provides many useful protected methods to its
+ * derived classes, like _clearContent(), _moveCursor(),
+ * and _safeMoveAndPrint().
+ *
+ * A view never draws immediately: when its state changes, it calls
+ * _invalidate() and its next render() calls _redrawContent() to draw
+ * the whole view. Drawing methods must therefore ONLY be called from
+ * _redrawContent().
+ *
+ * The owner of a view renders it (calls render()), and the rendering
+ * order is actually the stacking order (the last rendered view is on
+ * top). For example, a screen renders its views in the order it added
+ * them (see Screen::render()).
+ *
+ * The plane of a view is either:
+ *
+ * Attached:
+ *     Bound to the standard plane, therefore part of what
+ *     term::update() shows.
+ *
+ * Detached:
+ *     Root of its own pile, which is never rendered, therefore not on
+ *     the terminal.
+ *
+ * A view starts detached. render() attaches it if it's visible (see
+ * isVisible()), and detaches it otherwise.
+ *
+ * Once attached, the plane remains on the terminal with its last drawn
+ * content until something detaches it: notcurses keeps compositing it
+ * whether or not its owner keeps rendering it. Therefore an owner which
+ * stops rendering a view without making it invisible must call
+ * detach(); otherwise the stale view remains on the terminal. For
+ * example, hiding a screen detaches all its views (see
+ * Screen::isVisible()) because the screen doesn't render them anymore,
+ * while their own visibility remains unchanged for when the screen
+ * becomes visible again.
+ *
+ * Destroying a view destroys its plane, removing it from the terminal
+ * on the next term::update().
  *
  * A view is built with a decoration style (see `DecorationStyle`):
  * either it has a border or none. When it has a border, it can have a
@@ -52,21 +90,15 @@ constexpr auto ELLIPSIS = "…";
  * methods control whether or not the top and bottom right "more
  * content" indicators exist.
  *
- * You can publicly refresh and redraw a view. See the document of the
- * refresh() and redraw() methods to learn more.
- *
- * The visibility (isVisible()) of a view controls whether or not this
- * view effectively shows its underlying plane when you call refresh().
- * An invisible view never shows its plane.
- *
  * A derived view can subscribe to the state of the application with a
- * ViewInspectCmdStateObserverGuard instance. This RAII helper has an
- * underlying StateObserverGuard and uses _appStateChanged() as the
- * observer.
+ * `ViewInspectCmdStateObserverGuard` instance. This RAII helper has an
+ * underlying `StateObserverGuard` and uses _appStateChanged() as
+ * the observer.
  *
- * The View class is friend with the Stylist class: the Stylist class
- * has a bunch of stylizing methods which apply to a view and it needs
- * to access its underlying plane to change its current attributes.
+ * The `View` class is friend with the `Stylist` class: the `Stylist`
+ * class has a bunch of stylizing methods which apply to a view and it
+ * needs to access its underlying plane to change its
+ * current attributes.
  */
 class View
 {
@@ -87,7 +119,7 @@ public:
 
 protected:
     /*
-     * Builds a base view.
+     * Builds a base view, initially visible and invalidated.
      *
      * `rect` is the rectangle of the view within the terminal screen.
      */
@@ -101,14 +133,28 @@ public:
     View& operator=(const View&) = delete;
 
     /*
-     * Refreshes this view, that is, shows its plane on top of the
-     * other planes on the next terminal update (term::update()).
+     * If this view is visible: redraws it if it's invalidated (see
+     * _invalidate()), and then shows its plane on top of all the other
+     * shown planes.
      *
-     * This method only applies if this view is visible.
+     * Otherwise, calls detach().
      *
-     * This method doesn't trigger a redraw.
+     * This doesn't update the terminal (see term::update()).
      */
-    void refresh() const;
+    void render();
+
+    /*
+     * Detaches the plane of this view (see the class comment), removing
+     * it from the terminal on the next term::update(), until the next
+     * render() of this view while it's visible.
+     *
+     * This doesn't change the visibility of this view (see isVisible()):
+     * call this when you stop rendering a view which must not remain on
+     * the terminal.
+     *
+     * Does nothing if the plane of this view is already detached.
+     */
+    void detach();
 
     /*
      * Focuses this view (changes the decoration accordingly).
@@ -129,13 +175,6 @@ public:
     void blur();
 
     /*
-     * Redraws this view. This method makes this view redraw every
-     * character according to its current state, and then calls
-     * refresh().
-     */
-    void redraw();
-
-    /*
      * Moves and resizes this view with the new rectangle `rect`.
      */
     void moveAndResize(const Rect& rect);
@@ -143,12 +182,15 @@ public:
     /*
      * Sets the visibility of this view to `isVisible`.
      *
-     * When this view isn't visible, its plane is hidden and refresh()
-     * has no effect.
+     * The next render() shows or hides the plane of this view
+     * accordingly.
      */
-    void isVisible(bool isVisible);
+    void isVisible(const bool isVisible) noexcept
+    {
+        _isVisible = isVisible;
+    }
 
-    bool isVisible() const
+    bool isVisible() const noexcept
     {
         return _isVisible;
     }
@@ -177,6 +219,16 @@ public:
     }
 
 protected:
+    /*
+     * Makes the next render() redraw this view.
+     *
+     * Call this whenever the state of this view changes.
+     */
+    void _invalidate() noexcept
+    {
+        _isInvalidated = true;
+    }
+
     /*
      * Called by the application state (through a
      * `ViewInspectCmdStateObserverGuard`) when the state changes.
@@ -208,20 +260,15 @@ protected:
     void _clearRect() const;
 
     /*
-     * Draws the decoration of this view according to the current state
-     * (decoration style, title, "more content" indicators).
-     */
-    void _decorate() const;
-
-    /*
      * Sets the title of this view to `title`.
      *
      * This only applies when the decoration style of this view isn't
      * `DecorationStyle::BORDERLESS`.
      */
-    void _title(const std::string_view title) noexcept
+    void _title(const std::string_view title)
     {
         _theTitle = utils::escapeStr(title);
+        this->_invalidate();
     }
 
     /*
@@ -337,26 +384,37 @@ protected:
      * Enables the top "more content" indicator of this view if
      * `hasMore` is true.
      *
-     * This only applies when the decoration style of this view isn't
-     * `DecorationStyle::BORDERLESS`.
+     * Call this from _redrawContent(): the decoration is drawn
+     * after it.
+     *
+     * This only applies when the decoration style of this view
+     * isn't `DecorationStyle::BORDERLESS`.
      */
-    void _hasMoreTop(bool hasMore);
+    void _hasMoreTop(const bool hasMore) noexcept
+    {
+        _moreTop = hasMore;
+    }
 
     /*
-     * Enables the "more content" indicator of this view if `hasMore` is
-     * true.
+     * Enables the bottom "more content" indicator of this view if
+     * `hasMore` is true.
      *
-     * This only applies when the decoration style of this view isn't
-     * `DecorationStyle::BORDERLESS`.
+     * Call this from _redrawContent(): the decoration is drawn
+     * after it.
+     *
+     * This only applies when the decoration style of this view
+     * isn't `DecorationStyle::BORDERLESS`.
      */
-    void _hasMoreBottom(bool hasMore);
+    void _hasMoreBottom(const bool hasMore) noexcept
+    {
+        _moreBottom = hasMore;
+    }
 
 private:
     void _setContentRect();
     int _vSafePrint(const char * const fmt, va_list& args) const;
     int _vPrint(const char * const fmt, va_list& args) const;
-    void _show() const;
-    void _hide() const;
+    void _decorate() const;
 
 private:
     Rect _rect;
@@ -371,9 +429,10 @@ private:
      * True if `_curPlane` is bound to the standard plane (shown);
      * otherwise, it's the root of its own pile (hidden).
      */
-    mutable bool _isShown = false;
+    bool _isAttached = false;
 
-    bool _isVisible = false;
+    bool _isVisible = true;
+    bool _isInvalidated = true;
     bool _moreTop = false;
     bool _moreBottom = false;
 };

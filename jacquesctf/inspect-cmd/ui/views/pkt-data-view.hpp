@@ -60,6 +60,15 @@ public:
     void isRowSizePowerOfTwo(bool isPowerOfTwo);
     void isOffsetInPkt(bool isOffsetInPkt);
 
+    /*
+     * Call this when the bookmarks which this view was built with
+     * change.
+     */
+    void bookmarksChanged() noexcept
+    {
+        this->_invalidate();
+    }
+
     bool isAsciiVisible() const noexcept
     {
         return _isAsciiVisible;
@@ -144,7 +153,6 @@ private:
     void _drawUnselChar(const _Char& ch) const;
     void _drawAllNumericChars() const;
     void _drawAllAsciiChars() const;
-    bool _isCharSel(const _Char& ch) const;
     void _setDataXAndRowSize();
     void _updateSel();
     void _setHexChars();
@@ -158,6 +166,7 @@ private:
     {
         const auto effectiveTotalLenBits = _appState->activePktState().pkt().indexEntry().effectiveTotalLen().bits();
 
+        _charsAreStale = true;
         _endOffsetInPktBits = std::min(_baseOffsetInPktBits + this->_pageLen().bits(),
                                        effectiveTotalLenBits);
     }
@@ -210,6 +219,12 @@ private:
 
     // current packet regions (owned here)
     std::vector<PktRegion::SPC> _pktRegions;
+
+    /*
+     * True if `_chars`, `_asciiChars`, and `_pktRegions` don't match
+     * the current page and format anymore (see _redrawContent()).
+     */
+    bool _charsAreStale = true;
 
     std::optional<Index> _prevOffsetInPktBits;
     Index _curOffsetInPktBits = 0;

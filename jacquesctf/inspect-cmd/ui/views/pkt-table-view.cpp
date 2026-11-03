@@ -292,7 +292,7 @@ void PktTableView::tsFmtMode(const TsFmtMode tsFmtMode)
     }
 
     _tsFmtMode = tsFmtMode;
-    this->_redrawRows();
+    this->_invalidate();
 }
 
 void PktTableView::dataLenFmtMode(const utils::LenFmtMode dataLenFmtMode)
@@ -301,7 +301,7 @@ void PktTableView::dataLenFmtMode(const utils::LenFmtMode dataLenFmtMode)
     static_cast<DataLenTableViewCell&>(*_row[2]).fmtMode(dataLenFmtMode);
     static_cast<DataLenTableViewCell&>(*_row[3]).fmtMode(dataLenFmtMode);
     _dataLenFmtMode = dataLenFmtMode;
-    this->_redrawRows();
+    this->_invalidate();
 }
 
 Index PktTableView::selPktIndex() const noexcept
@@ -312,7 +312,7 @@ Index PktTableView::selPktIndex() const noexcept
 
 void PktTableView::selPktIndex(const Index index)
 {
-    this->_selRowAndDraw(index);
+    this->_selectRow(index);
 }
 
 void PktTableView::_appStateChanged(const Message msg)
@@ -324,9 +324,9 @@ void PktTableView::_appStateChanged(const Message msg)
          * Go back to 0 without drawing first in case there's less
          * packets than our current selection index.
          */
-        this->_selRowAndDraw(0, false);
+        this->_selectRow(0);
         this->_updateCounts();
-        this->_redrawRows();
+        this->_invalidate();
         updateSel = true;
     } else if (msg == Message::ACTIVE_PKT_CHANGED) {
         updateSel = true;
@@ -334,7 +334,7 @@ void PktTableView::_appStateChanged(const Message msg)
 
     if (updateSel) {
         // reset selection from state
-        this->_selRowAndDraw(_appState->activeDsFileState().activePktStateIndex());
+        this->_selectRow(_appState->activeDsFileState().activePktStateIndex());
     }
 }
 

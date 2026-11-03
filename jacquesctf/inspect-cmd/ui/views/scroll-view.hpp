@@ -31,6 +31,7 @@ protected:
     void _rowCount(const Size count) noexcept
     {
         _theRowCount = count;
+        this->_invalidate();
     }
 
     Size _rowCount() const noexcept
@@ -41,6 +42,7 @@ protected:
     void _index(const Index index) noexcept
     {
         _myIndex = index;
+        this->_invalidate();
     }
 
     Index _index() const noexcept
@@ -52,9 +54,6 @@ protected:
     {
         return index - _myIndex;
     }
-
-private:
-    void _drawRowsSetHasMore();
 
 private:
     Index _myIndex = 0;
