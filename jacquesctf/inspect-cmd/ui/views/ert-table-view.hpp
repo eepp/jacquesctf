@@ -37,21 +37,16 @@ public:
     }
 
 protected:
-    void _drawRow(Index index) override;
     Size _rowCount() override;
-    void _resized() override;
 
 private:
-    void _setColumnDescrs();
     void _buildRows(const InspectCmdState& appState);
-    void _resetRow();
     //void _buildLogLevelNames();
 
 private:
     using Erts = std::vector<const yactfr::EventRecordType *>;
 
 private:
-    std::vector<std::unique_ptr<TableViewCell>> _row;
     std::unordered_map<const yactfr::DataStreamType *, Erts> _rows;
     const Erts *_erts = nullptr;
     //std::array<std::string, 15> _logLevelNames;

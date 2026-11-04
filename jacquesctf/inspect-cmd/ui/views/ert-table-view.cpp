@@ -17,39 +17,16 @@ ErtTableView::ErtTableView(const Rect& rect, const Stylist& stylist, const Inspe
     TableView {rect, "Event record types", DecorationStyle::BORDERS, stylist}
 {
     this->_buildRows(appState);
-    this->_setColumnDescrs();
-}
+    this->_cols({
+        _Col {"ID", 10, _COL_REQUIRED, [this](const Index row) {
+            return this->_createUIntCell((*_erts)[row]->id());
+        }},
+        _Col {"Name", 4, _COL_REQUIRED | _COL_LEFT | _COL_EMPH, [this](const Index row) {
+            const auto& name = (*_erts)[row]->name();
 
-void ErtTableView::_resized()
-{
-    TableView::_resized();
-    this->_setColumnDescrs();
-}
-
-void ErtTableView::_resetRow()
-{
-    _row.clear();
-    _row.push_back(std::make_unique<UIntTableViewCell>(TableViewCell::TextAlign::RIGHT));
-    _row.push_back(std::make_unique<TextTableViewCell>(TableViewCell::TextAlign::LEFT));
-    _row[1]->emphasized(true);
-}
-
-void ErtTableView::_setColumnDescrs()
-{
-    assert(this->contentRect().w >= 30);
-
-    std::vector<TableViewColumnDescr> descrs {
-        TableViewColumnDescr {"ID", 10},
-        TableViewColumnDescr {"Name", 4},
-    };
-
-    descrs[1] = TableViewColumnDescr {
-        descrs[1].title(),
-        this->_contentSize(descrs.size()) - descrs[0].contentWidth()
-    };
-
-    this->_resetRow();
-    this->_colDescrs(std::move(descrs));
+            return name ? this->_createTextCell(*name) : this->_createNaCell();
+        }},
+    });
 }
 
 void ErtTableView::_buildRows(const InspectCmdState& appState)
@@ -79,26 +56,6 @@ void ErtTableView::_buildRows(const InspectCmdState& appState)
             });
         }
     }
-}
-
-void ErtTableView::_drawRow(const Index row)
-{
-    if (!_erts) {
-        return;
-    }
-
-    const auto ert = (*_erts)[row];
-
-    static_cast<UIntTableViewCell&>(*_row[0]).val(ert->id());
-
-    if (ert->name()) {
-        _row[1]->na(false);
-        static_cast<TextTableViewCell&>(*_row[1]).text(*ert->name());
-    } else {
-        _row[1]->na(true);
-    }
-
-    this->_drawCells(row, _row);
 }
 
 Size ErtTableView::_rowCount()

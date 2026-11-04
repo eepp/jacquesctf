@@ -14,34 +14,16 @@ DstTableView::DstTableView(const Rect& rect, const Stylist& stylist,
                            const InspectCmdState& appState) :
     TableView {rect, "Data stream types", DecorationStyle::BORDERS, stylist}
 {
-    _row.push_back(std::make_unique<UIntTableViewCell>(TableViewCell::TextAlign::RIGHT));
-    _row.push_back(std::make_unique<UIntTableViewCell>(TableViewCell::TextAlign::RIGHT));
-    _row[0]->emphasized(true);
-    this->_setColumnDescrs();
+    this->_cols({
+        _Col {"ID", 10, _COL_REQUIRED | _COL_EMPH, [this](const Index row) {
+            return this->_createUIntCell((*_dsts)[row]->id());
+        }},
+        _Col {"Event record types", 20, _COL_REQUIRED, [this](const Index row) {
+            return this->_createUIntCell((*_dsts)[row]->eventRecordTypes().size());
+        }},
+    });
+
     this->_buildRows(appState);
-}
-
-void DstTableView::_resized()
-{
-    TableView::_resized();
-    this->_setColumnDescrs();
-}
-
-void DstTableView::_setColumnDescrs()
-{
-    assert(this->contentRect().w >= 30);
-
-    std::vector<TableViewColumnDescr> descrs {
-        TableViewColumnDescr {"ID", 10},
-        TableViewColumnDescr {"Event record types", 20},
-    };
-
-    descrs[1] = TableViewColumnDescr {
-        descrs[1].title(),
-        this->_contentSize(2) - descrs[0].contentWidth()
-    };
-
-    this->_colDescrs(std::move(descrs));
 }
 
 void DstTableView::_buildRows(const InspectCmdState& appState)
@@ -62,19 +44,6 @@ void DstTableView::_buildRows(const InspectCmdState& appState)
             dstVec.push_back(dst.get());
         }
     }
-}
-
-void DstTableView::_drawRow(const Index row)
-{
-    if (!_dsts) {
-        return;
-    }
-
-    const auto dst = (*_dsts)[row];
-
-    static_cast<UIntTableViewCell&>(*_row[0]).val(dst->id());
-    static_cast<UIntTableViewCell&>(*_row[1]).val(dst->eventRecordTypes().size());
-    this->_drawCells(row, _row);
 }
 
 Size DstTableView::_rowCount()

@@ -16,8 +16,6 @@ class PktTableView final :
 {
 public:
     explicit PktTableView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState);
-    void tsFmtMode(TsFmtMode tsFmtMode);
-    void dataLenFmtMode(utils::LenFmtMode dataLenFmtMode);
     Index selPktIndex() const noexcept;
     void selPktIndex(Index index);
 
@@ -32,21 +30,26 @@ public:
     }
 
 protected:
-    void _drawRow(Index row) override;
     Size _rowCount() override;
-    void _resized() override;
     void _appStateChanged(Message msg) override;
 
 private:
-    void _setColumnDescrs();
-    void _resetRow(const std::vector<TableViewColumnDescr>& descrs);
+    /*
+     * Column of which the cell function receives the packet index
+     * entry of the row.
+     *
+     * Any normal cell of an invalid packet gets the error style.
+     */
+    _Col _createCol(std::string title, Size width, unsigned int flags,
+              std::function<_Cell (const PktIndexEntry&)> func);
+
+    const DsFile& _dsFile() const;
+    const PktIndexEntry *_prevEntry(const PktIndexEntry& entry) const;
+    const PktIndexEntry *_nextEntry(const PktIndexEntry& entry) const;
 
 private:
-    std::vector<std::unique_ptr<TableViewCell>> _row;
     InspectCmdState *_appState;
     ViewInspectCmdStateObserverGuard _appStateObserverGuard;
-    TsFmtMode _tsFmtMode = TsFmtMode::LONG;
-    utils::LenFmtMode _dataLenFmtMode = utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS;
 };
 
 } // namespace jacques

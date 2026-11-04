@@ -19,23 +19,19 @@ public:
     explicit DsFileTableView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState);
     Index selDsFileIndex() const;
     void selDsFileIndex(Index index);
-    void tsFmtMode(TsFmtMode tsFmtMode);
-    void dataLenFmtMode(utils::LenFmtMode dataLenFmtMode);
 
 private:
-    void _drawRow(Index index) override;
     Size _rowCount() override;
-    void _resized() override;
     void _appStateChanged(Message msg) override;
-    void _setColumnDescrs();
-    void _resetRow(const std::vector<TableViewColumnDescr>& descrs);
+    const DsFile& _dsFile(Index row) const;
+
+    // first/last packet index entry of the data stream file of `row`, if any
+    const PktIndexEntry *_firstEntry(Index row) const;
+    const PktIndexEntry *_lastEntry(Index row) const;
 
 private:
-    std::vector<std::unique_ptr<TableViewCell>> _row;
     InspectCmdState *_appState;
     ViewInspectCmdStateObserverGuard _appStateObserverGuard;
-    TsFmtMode _tsFmtMode = TsFmtMode::LONG;
-    utils::LenFmtMode _dataLenFmtMode = utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS;
 };
 
 } // namespace jacques

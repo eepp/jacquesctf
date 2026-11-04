@@ -9,388 +9,30 @@
 #include <string>
 #include <string_view>
 #include <vector>
-#include <memory>
-#include <cassert>
-#include <cstdint>
+#include <functional>
 #include <boost/filesystem.hpp>
 
 #include "inspect-common/common-inspect-table-view.hpp"
 #include "view.hpp"
+#include "../stylist.hpp"
 #include "../rect.hpp"
 #include "data/ts.hpp"
-#include "data/duration.hpp"
-#include "data/time-ops.hpp"
+#include "data/data-len.hpp"
+#include "utils.hpp"
 
 namespace jacques {
 
-class TableViewColumnDescr final
-{
-public:
-    explicit TableViewColumnDescr(std::string title, Size contentWidth);
-    TableViewColumnDescr(const TableViewColumnDescr&) = default;
-    TableViewColumnDescr& operator=(const TableViewColumnDescr&) = default;
-
-    const std::string& title() const noexcept
-    {
-        return _title;
-    }
-
-    Size contentWidth() const noexcept
-    {
-        return _contentWidth;
-    }
-
-private:
-    std::string _title;
-    Size _contentWidth;
-};
-
-class TableViewCell
-{
-public:
-    enum class TextAlign
-    {
-        LEFT,
-        RIGHT,
-    };
-
-public:
-    enum class Style
-    {
-        NORMAL,
-        WARNING,
-        ERROR,
-    };
-
-protected:
-    explicit TableViewCell(TextAlign textAlign) noexcept;
-
-public:
-    virtual ~TableViewCell() = default;
-
-    TextAlign textAlign() const noexcept
-    {
-        return _textAlign;
-    }
-
-    bool emphasized() const noexcept
-    {
-        return _emphasized;
-    }
-
-    void emphasized(const bool emphasized) noexcept
-    {
-        _emphasized = emphasized;
-    }
-
-    Style style() const noexcept
-    {
-        return _style;
-    }
-
-    void style(const Style style) noexcept
-    {
-        _style = style;
-    }
-
-    bool na() const noexcept
-    {
-        return _na;
-    }
-
-    void na(const bool na) noexcept
-    {
-        _na = na;
-    }
-
-private:
-    const TextAlign _textAlign;
-    bool _emphasized = false;
-    Style _style = Style::NORMAL;
-    bool _na = false;
-};
-
-class TextTableViewCell final :
-    public TableViewCell
-{
-public:
-    explicit TextTableViewCell(TextAlign textAlign);
-
-    const std::string& text() const noexcept
-    {
-        return _text;
-    }
-
-    void text(const std::string_view text)
-    {
-        _text = utils::escapeStr(text);
-    }
-
-private:
-    std::string _text;
-};
-
-class PathTableViewCell final :
-    public TableViewCell
-{
-public:
-    explicit PathTableViewCell();
-
-    const boost::filesystem::path& path() const noexcept
-    {
-        return _path;
-    }
-
-    void path(const boost::filesystem::path& path)
-    {
-        _path = utils::escapeStr(path.string());
-    }
-
-private:
-    boost::filesystem::path _path;
-};
-
-class BoolTableViewCell final :
-    public TableViewCell
-{
-public:
-    explicit BoolTableViewCell(TextAlign textAlign);
-
-    bool val() const noexcept
-    {
-        return _val;
-    }
-
-    void val(const bool val) noexcept
-    {
-        _val = val;
-    }
-
-private:
-    bool _val = false;
-};
-
-class IntTableViewCell :
-    public TableViewCell
-{
-public:
-    enum class Radix
-    {
-        OCT,
-        DEC,
-        HEX,
-    };
-
-protected:
-    explicit IntTableViewCell(TextAlign textAlign) noexcept;
-
-public:
-    Radix radix() const noexcept
-    {
-        return _radix;
-    }
-
-    void radix(const Radix radix) noexcept
-    {
-        _radix = radix;
-    }
-
-    bool radixPrefix() const noexcept
-    {
-        return _radixPrefix;
-    }
-
-    void radixPrefix(const bool radixPrefix) noexcept
-    {
-        _radixPrefix = radixPrefix;
-    }
-
-    void sep(const bool sep) noexcept
-    {
-        _sep = sep;
-    }
-
-    bool sep() const noexcept
-    {
-        return _sep;
-    }
-
-private:
-    Radix _radix = Radix::DEC;
-    bool _radixPrefix = true;
-    bool _sep = false;
-};
-
-class SIntTableViewCell final :
-    public IntTableViewCell
-{
-public:
-    explicit SIntTableViewCell(TextAlign textAlign) noexcept;
-
-    long long val() const noexcept
-    {
-        return _val;
-    }
-
-    void val(const long long val) noexcept
-    {
-        _val = val;
-    }
-
-private:
-    long long _val = 0;
-};
-
-class UIntTableViewCell final :
-    public IntTableViewCell
-{
-public:
-    explicit UIntTableViewCell(TextAlign textAlign) noexcept;
-
-    unsigned long long val() const noexcept
-    {
-        return _val;
-    }
-
-    void val(const unsigned long long val) noexcept
-    {
-        _val = val;
-    }
-
-private:
-    unsigned long long _val = 0;
-};
-
-class DataLenTableViewCell final :
-    public TableViewCell
-{
-public:
-    explicit DataLenTableViewCell(utils::LenFmtMode fmtMode) noexcept;
-
-    void len(const DataLen& len) noexcept
-    {
-        _len = len;
-    }
-
-    const DataLen& len() const noexcept
-    {
-        return _len;
-    }
-
-    utils::LenFmtMode fmtMode() const noexcept
-    {
-        return _fmtMode;
-    }
-
-    void fmtMode(const utils::LenFmtMode fmtMode) noexcept
-    {
-        _fmtMode = fmtMode;
-    }
-
-private:
-    DataLen _len;
-    utils::LenFmtMode _fmtMode;
-};
-
-class TsTableViewCell final :
-    public TableViewCell
-{
-public:
-    explicit TsTableViewCell(TsFmtMode tsFmtMode) noexcept;
-
-    const Ts& ts() const noexcept
-    {
-        return _ts;
-    }
-
-    void ts(const Ts& ts)
-    {
-        _ts = ts;
-    }
-
-    TsFmtMode fmtMode() const noexcept
-    {
-        return _fmtMode;
-    }
-
-    void fmtMode(const TsFmtMode fmtMode) noexcept
-    {
-        _fmtMode = fmtMode;
-    }
-
-private:
-    Ts _ts;
-    TsFmtMode _fmtMode;
-};
-
-class DurationTableViewCell final :
-    public TableViewCell
-{
-public:
-    explicit DurationTableViewCell(TsFmtMode tsFmtMode) noexcept;
-
-    const Ts& beginTs() const noexcept
-    {
-        return _beginTs;
-    }
-
-    void beginTs(const Ts& beginTs) noexcept
-    {
-        _beginTs = beginTs;
-    }
-
-    const Ts& endTs() const noexcept
-    {
-        return _endTs;
-    }
-
-    void endTs(const Ts& endTs) noexcept
-    {
-        _endTs = endTs;
-    }
-
-    Duration absDuration() const noexcept
-    {
-        return std::max(_beginTs, _endTs) - std::min(_beginTs, _endTs);
-    }
-
-    bool isNegative() const noexcept
-    {
-        return _beginTs > _endTs;
-    }
-
-    bool cycleDiffAvailable() const noexcept
-    {
-        return _beginTs.frequency() == _endTs.frequency();
-    }
-
-    long long absCycleDiff() const noexcept
-    {
-        assert(this->cycleDiffAvailable());
-
-        // FIXME: this is not accurate enough
-        const auto nsDiff = static_cast<double>(this->absDuration().ns());
-        const auto sDiff = nsDiff / 1'000'000'000.;
-
-        return static_cast<long long>(sDiff * _beginTs.frequency());
-    }
-
-    TsFmtMode fmtMode() const noexcept
-    {
-        return _fmtMode;
-    }
-
-    void fmtMode(const TsFmtMode fmtMode) noexcept
-    {
-        _fmtMode = fmtMode;
-    }
-
-private:
-    Ts _beginTs;
-    Ts _endTs;
-    TsFmtMode _fmtMode;
-};
-
+/*
+ * Base class of a table view.
+ *
+ * A concrete table view declares its columns once with _cols(): each
+ * column has a cell function which returns the cell to draw for a
+ * given row.
+ *
+ * The table view only shows the columns which fit, dropping
+ * non-required columns from the right, and gives the leftover width to
+ * the expanding column (the last shown column if none).
+ */
 class TableView :
     public View,
     public CommonInspectTableView
@@ -406,32 +48,139 @@ public:
     void selectFirst();
     void selectLast();
     void highlightSel(bool highlight);
+    void tsFmtMode(TsFmtMode tsFmtMode);
+    void dataLenFmtMode(utils::LenFmtMode dataLenFmtMode);
+
+protected:
+    using _CellStyle = Stylist::TableViewCellStyle;
+
+    /*
+     * Cell to draw: a sequence of segments, each one having its own
+     * role, and a style for the whole cell.
+     *
+     * The segments only get their own style when the cell style is
+     * `_CellStyle::NORMAL` and the row isn't selected.
+     */
+    struct _Cell final
+    {
+        enum class SegRole
+        {
+            // regular text, emphasized if the column is
+            TEXT,
+
+            // regular text, never emphasized
+            PLAIN,
+
+            // value not available
+            NA,
+
+            // accent (nanosecond part of a timestamp, for example)
+            ACCENT,
+        };
+
+        struct Seg final
+        {
+            std::string text;
+            SegRole role;
+        };
+
+        _Cell() = default;
+
+        explicit _Cell(std::string text, const SegRole role = SegRole::TEXT) :
+            segs {{std::move(text), role}}
+        {
+        }
+
+        std::vector<Seg> segs;
+        _CellStyle style = _CellStyle::NORMAL;
+    };
+
+    // column flags
+    static constexpr unsigned int _COL_LEFT = 1U << 0;     // left-align (default: right)
+    static constexpr unsigned int _COL_EMPH = 1U << 1;     // emphasized
+    static constexpr unsigned int _COL_EXPAND = 1U << 2;   // takes the leftover width
+    static constexpr unsigned int _COL_REQUIRED = 1U << 3; // never dropped
+
+    class _Col final
+    {
+    public:
+        using CellFunc = std::function<_Cell (Index)>;
+
+    public:
+        /*
+         * `width` is the minimum content width and `flags` is a
+         * bitwise OR of `_COL_*` flags.
+         */
+        explicit _Col(std::string title, Size width, unsigned int flags, CellFunc cellFunc);
+
+        const std::string& title() const noexcept
+        {
+            return _title;
+        }
+
+        Size width() const noexcept
+        {
+            return _width;
+        }
+
+        unsigned int flags() const noexcept
+        {
+            return _flags;
+        }
+
+        // cell to draw for the row `row`
+        _Cell cell(const Index row) const
+        {
+            return _cellFunc(row);
+        }
+
+    private:
+        std::string _title;
+        Size _width;
+        unsigned int _flags;
+        CellFunc _cellFunc;
+    };
 
 protected:
     explicit TableView(const Rect& rect, std::string_view title, DecorationStyle decoStyle,
                        const Stylist& stylist);
 
-    virtual void _drawRow(Index row) = 0;
     virtual Size _rowCount() = 0;
     using CommonInspectTableView::_updateCounts;
     void _updateCounts();
-    void _drawCells(Index row, const std::vector<std::unique_ptr<TableViewCell>>& cells);
-    void _drawWarningRow(Index row, const std::string& msg);
-    void _colDescrs(std::vector<TableViewColumnDescr>&& columnDescriptions);
+    void _cols(std::vector<_Col>&& cols);
     void _redrawContent() override;
     void _selectRow(Index row);
     void _removeSel();
     void _resized() override;
 
-    const std::vector<TableViewColumnDescr>& _colDescrs() const noexcept
+    // current content width of the shown column `col`
+    Size _colWidth(const Index col) const noexcept
     {
-        return _theColDescrs;
+        return _colWidths[col];
     }
 
-    Size _contentSize(const Size columnCount) const noexcept
-    {
-        return this->contentRect().w - columnCount + 1;
-    }
+    static _Cell _createNaCell();
+    static _Cell _createTextCell(std::string_view text);
+    static _Cell _createUIntCell(unsigned long long val, bool sep = false);
+    static _Cell _createPathCell(const boost::filesystem::path& path, Size width);
+    _Cell _createDataLenCell(const DataLen& len) const;
+    _Cell _createTsCell(const Ts& ts) const;
+    _Cell _createDurationCell(const Ts& beginTs, const Ts& endTs) const;
+
+private:
+    // "seconds,nanoseconds ns" cell, the nanosecond part being accented
+    static _Cell _createNsCell(const char *sign, long long ns);
+
+    void _fitCols();
+    void _drawHeader();
+    void _drawRows();
+    void _drawRow(Index row);
+    void _drawCell(const Point& contentPos, Size width, const _Col& col, const _Cell& cell,
+                   bool sel);
+    void _applySegStyle(_Cell::SegRole role, bool emph);
+    void _clearRow(Index y);
+    void _clearCell(const Point& pos, Size cellWidth);
 
     Index _contentYFromVisibleRow(const Index row) const noexcept
     {
@@ -439,21 +188,15 @@ protected:
     }
 
 private:
-    void _drawRows();
-    void _clearRow(Index y);
-    void _clearCell(const Point& pos, Size cellWidth);
+    // all the declared columns
+    std::vector<_Col> _theCols;
 
-    void _drawCellAlignedText(const Point& pos, Size cellWidth, std::string_view text,
-                              bool customStyle, TableViewCell::TextAlign align);
+    // content widths of the shown columns (first ones of `_theCols`)
+    std::vector<Size> _colWidths;
 
-    void _drawCell(const Point& pos, const TableViewColumnDescr& descr, const TableViewCell& cell,
-                   bool customStyle);
-
-    void _drawHeader();
-
-private:
-    std::vector<TableViewColumnDescr> _theColDescrs;
     bool _highlightSel = true;
+    TsFmtMode _tsFmtMode = TsFmtMode::LONG;
+    utils::LenFmtMode _dataLenFmtMode = utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS;
 };
 
 } // namespace jacques

@@ -4,7 +4,6 @@
  */
 
 #include <cassert>
-#include <numeric>
 
 #include "pkt-table-view.hpp"
 #include "../../state/msg.hpp"
@@ -16,292 +15,152 @@ PktTableView::PktTableView(const Rect& rect, const Stylist& stylist, InspectCmdS
     _appState {&appState},
     _appStateObserverGuard {appState, *this}
 {
-    this->_setColumnDescrs();
+    this->_cols({
+        this->_createCol("Index", 12, _COL_REQUIRED | _COL_EMPH,
+                         [this](const PktIndexEntry& entry) {
+            return this->_createUIntCell(entry.natIndexInDsFile(), true);
+        }),
+        this->_createCol("Offset", 16, _COL_REQUIRED, [this](const PktIndexEntry& entry) {
+            return this->_createDataLenCell(entry.offsetInDsFileBits());
+        }),
+        this->_createCol("Total length", 16, _COL_REQUIRED, [this](const PktIndexEntry& entry) {
+            return this->_createDataLenCell(entry.effectiveTotalLen());
+        }),
+        this->_createCol("Content length", 16, _COL_REQUIRED, [this](const PktIndexEntry& entry) {
+            return this->_createDataLenCell(entry.effectiveContentLen());
+        }),
+        this->_createCol("Timestamp: beginning", 29, 0, [this](const PktIndexEntry& entry) {
+            const auto& beginTs = entry.beginTs();
+
+            if (!beginTs) {
+                return this->_createNaCell();
+            }
+
+            auto cell = this->_createTsCell(*beginTs);
+            const auto prevEntry = this->_prevEntry(entry);
+
+            if ((prevEntry && prevEntry->endTs() && *beginTs < *prevEntry->endTs()) ||
+                    (entry.endTs() && *beginTs > *entry.endTs())) {
+                cell.style = _CellStyle::ERROR;
+            }
+
+            return cell;
+        }),
+        this->_createCol("Timestamp: end", 29, 0, [this](const PktIndexEntry& entry) {
+            const auto& endTs = entry.endTs();
+
+            if (!endTs) {
+                return this->_createNaCell();
+            }
+
+            auto cell = this->_createTsCell(*endTs);
+            const auto nextEntry = this->_nextEntry(entry);
+
+            if ((entry.beginTs() && *entry.beginTs() > *endTs) ||
+                    (nextEntry && nextEntry->beginTs() && *endTs > *nextEntry->beginTs())) {
+                cell.style = _CellStyle::ERROR;
+            }
+
+            return cell;
+        }),
+        this->_createCol("Duration", 23, 0, [this](const PktIndexEntry& entry) {
+            if (!entry.beginTs() || !entry.endTs()) {
+                return this->_createNaCell();
+            }
+
+            return this->_createDurationCell(*entry.beginTs(), *entry.endTs());
+        }),
+        this->_createCol("Event records", 13, 0, [this](const PktIndexEntry& entry) {
+            if (!entry.erCount()) {
+                return this->_createNaCell();
+            }
+
+            return this->_createUIntCell(*entry.erCount(), true);
+        }),
+        this->_createCol("DST ID", 6, 0, [this](const PktIndexEntry& entry) {
+            return entry.dst() ? this->_createUIntCell(entry.dst()->id()) : this->_createNaCell();
+        }),
+        this->_createCol("DS ID", 5, 0, [this](const PktIndexEntry& entry) {
+            return entry.dsId() ? this->_createUIntCell(*entry.dsId()) : this->_createNaCell();
+        }),
+        this->_createCol("Seq num", 8, 0, [this](const PktIndexEntry& entry) {
+            const auto& seqNum = entry.seqNum();
+
+            if (!seqNum) {
+                return this->_createNaCell();
+            }
+
+            auto cell = this->_createUIntCell(*seqNum);
+            const auto prevEntry = this->_prevEntry(entry);
+
+            if (prevEntry && prevEntry->seqNum() && *prevEntry->seqNum() != *seqNum - 1) {
+                cell.style = _CellStyle::WARNING;
+            }
+
+            return cell;
+        }),
+        this->_createCol("Disc ER", 10, 0, [this](const PktIndexEntry& entry) {
+            const auto& snap = entry.discErCounterSnap();
+
+            if (!snap) {
+                return this->_createNaCell();
+            }
+
+            auto cell = this->_createUIntCell(*snap);
+            const auto prevEntry = this->_prevEntry(entry);
+
+            if (prevEntry && prevEntry->discErCounterSnap() &&
+                    *prevEntry->discErCounterSnap() != *snap) {
+                cell.style = _CellStyle::WARNING;
+            }
+
+            return cell;
+        }),
+    });
 }
 
-void PktTableView::_resized()
+PktTableView::_Col PktTableView::_createCol(std::string title, const Size width,
+                                      const unsigned int flags,
+                                      std::function<_Cell (const PktIndexEntry&)> func)
 {
-    TableView::_resized();
-    this->_setColumnDescrs();
+    return _Col {std::move(title), width, flags, [this, func = std::move(func)](const Index row) {
+        const auto& entry = this->_dsFile().pktIndexEntry(row);
+        auto cell = func(entry);
+
+        if (entry.isInvalid() && cell.style == _CellStyle::NORMAL) {
+            cell.style = _CellStyle::ERROR;
+        }
+
+        return cell;
+    }};
 }
 
-void PktTableView::_setColumnDescrs()
+const DsFile& PktTableView::_dsFile() const
 {
-    std::vector<TableViewColumnDescr> descrs {
-        TableViewColumnDescr {"Index", 12},
-        TableViewColumnDescr {"Offset", 16},
-        TableViewColumnDescr {"Total length", 16},
-        TableViewColumnDescr {"Content length", 16},
-        TableViewColumnDescr {"Timestamp: beginning", 29},
-        TableViewColumnDescr {"Timestamp: end", 29},
-        TableViewColumnDescr {"Duration", 23},
-        TableViewColumnDescr {"Event records", 13},
-        TableViewColumnDescr {"DST ID", 6},
-        TableViewColumnDescr {"DS ID", 5},
-        TableViewColumnDescr {"Seq num", 8},
-        TableViewColumnDescr {"Disc ER", 10},
-    };
-
-    const auto accOp = [](const auto sz, const auto& descr) {
-        return sz + descr.contentWidth();
-    };
-    auto curSize = std::accumulate(descrs.begin(), descrs.end(), 0ULL, accOp);
-
-    // remove columns until they all fit
-    while (this->_contentSize(descrs.size()) < curSize) {
-        descrs.pop_back();
-        curSize = std::accumulate(descrs.begin(), descrs.end(), 0ULL, accOp);
-    }
-
-    // expand last column
-    descrs.back() = TableViewColumnDescr {
-        descrs.back().title(),
-        this->_contentSize(descrs.size()) - std::accumulate(descrs.begin(), descrs.end() - 1, 0ULL,
-                                                            accOp)
-    };
-
-    this->_resetRow(descrs);
-    this->_colDescrs(std::move(descrs));
+    return _appState->activeDsFileState().dsFile();
 }
 
-void PktTableView::_resetRow(const std::vector<TableViewColumnDescr>& descrs)
+const PktIndexEntry *PktTableView::_prevEntry(const PktIndexEntry& entry) const
 {
-    _row.clear();
-    _row.push_back(std::make_unique<UIntTableViewCell>(TableViewCell::TextAlign::RIGHT));
-    _row.back()->emphasized(true);
-    static_cast<UIntTableViewCell&>(*_row.back()).sep(true);
-    _row.push_back(std::make_unique<DataLenTableViewCell>(_dataLenFmtMode));
-    static_cast<UIntTableViewCell&>(*_row.back()).sep(true);
-    _row.push_back(std::make_unique<DataLenTableViewCell>(_dataLenFmtMode));
-
-    if (descrs.size() >= 4) {
-        _row.push_back(std::make_unique<DataLenTableViewCell>(_dataLenFmtMode));
+    if (entry.indexInDsFile() == 0) {
+        return nullptr;
     }
 
-    if (descrs.size() >= 5) {
-        _row.push_back(std::make_unique<TsTableViewCell>(_tsFmtMode));
-    }
-
-    if (descrs.size() >= 6) {
-        _row.push_back(std::make_unique<TsTableViewCell>(_tsFmtMode));
-    }
-
-    if (descrs.size() >= 7) {
-        _row.push_back(std::make_unique<DurationTableViewCell>(_tsFmtMode));
-    }
-
-    if (descrs.size() >= 8) {
-        _row.push_back(std::make_unique<UIntTableViewCell>(TableViewCell::TextAlign::RIGHT));
-        static_cast<UIntTableViewCell&>(*_row.back()).sep(true);
-    }
-
-    if (descrs.size() >= 9) {
-        _row.push_back(std::make_unique<UIntTableViewCell>(TableViewCell::TextAlign::RIGHT));
-    }
-
-    if (descrs.size() >= 10) {
-        _row.push_back(std::make_unique<UIntTableViewCell>(TableViewCell::TextAlign::RIGHT));
-    }
-
-    if (descrs.size() >= 11) {
-        _row.push_back(std::make_unique<UIntTableViewCell>(TableViewCell::TextAlign::RIGHT));
-    }
-
-    if (descrs.size() >= 12) {
-        _row.push_back(std::make_unique<UIntTableViewCell>(TableViewCell::TextAlign::RIGHT));
-    }
+    return &this->_dsFile().pktIndexEntry(entry.indexInDsFile() - 1);
 }
 
-void PktTableView::_drawRow(const Index row)
+const PktIndexEntry *PktTableView::_nextEntry(const PktIndexEntry& entry) const
 {
-    const auto& dsf = _appState->activeDsFileState().dsFile();
-
-    assert(row < dsf.pktCount());
-
-    auto& entry = dsf.pktIndexEntry(row);
-    const auto prevEntry = (row == 0) ? nullptr : &dsf.pktIndexEntry(row - 1);
-    const auto nextEntry = (row >= dsf.pktCount() - 1) ? nullptr : &dsf.pktIndexEntry(row + 1);
-
-    // set all cell styles to normal initially
-    for (auto& cell : _row) {
-        cell->style(TableViewCell::Style::NORMAL);
+    if (entry.indexInDsFile() + 1 >= this->_dsFile().pktCount()) {
+        return nullptr;
     }
 
-    static_cast<UIntTableViewCell&>(*_row[0]).val(entry.natIndexInDsFile());
-    static_cast<DataLenTableViewCell&>(*_row[1]).len(entry.offsetInDsFileBits());
-    static_cast<DataLenTableViewCell&>(*_row[2]).len(entry.effectiveTotalLen());
-    static_cast<DataLenTableViewCell&>(*_row[3]).len(entry.effectiveContentLen());
-
-    Index at = 4;
-
-    if (_row.size() >= at + 1) {
-        if (entry.beginTs()) {
-            if (prevEntry && prevEntry->endTs()) {
-                if (*entry.beginTs() < *prevEntry->endTs()) {
-                    _row[at]->style(TableViewCell::Style::ERROR);
-                }
-            }
-
-            if (entry.endTs() && *entry.beginTs() > *entry.endTs()) {
-                _row[at]->style(TableViewCell::Style::ERROR);
-            }
-
-            _row[at]->na(false);
-            static_cast<TsTableViewCell&>(*_row[at]).ts(*entry.beginTs());
-        } else {
-            _row[at]->na(true);
-        }
-
-        ++at;
-    }
-
-    if (_row.size() >= at + 1) {
-        if (entry.endTs()) {
-            if (entry.beginTs() && *entry.beginTs() > *entry.endTs()) {
-                _row[at]->style(TableViewCell::Style::ERROR);
-            }
-
-            if (nextEntry && nextEntry->beginTs()) {
-                if (*entry.endTs() > *nextEntry->beginTs()) {
-                    _row[at]->style(TableViewCell::Style::ERROR);
-                }
-            }
-
-            _row[at]->na(false);
-            static_cast<TsTableViewCell&>(*_row[at]).ts(*entry.endTs());
-        } else {
-            _row[at]->na(true);
-        }
-
-        ++at;
-    }
-
-    if (_row.size() >= at + 1) {
-        if (entry.beginTs() && entry.endTs()) {
-            _row[at]->na(false);
-
-            auto& cell = static_cast<DurationTableViewCell&>(*_row[at]);
-
-            cell.beginTs(*entry.beginTs());
-            cell.endTs(*entry.endTs());
-        } else {
-            _row[at]->na(true);
-        }
-
-        ++at;
-    }
-
-    if (_row.size() >= at + 1) {
-        if (entry.erCount()) {
-            _row[at]->na(false);
-            static_cast<UIntTableViewCell&>(*_row[at]).val(*entry.erCount());
-        } else {
-            _row[at]->na(true);
-        }
-
-        ++at;
-    }
-
-    if (_row.size() >= at + 1) {
-        if (entry.dst()) {
-            _row[at]->na(false);
-            static_cast<UIntTableViewCell&>(*_row[at]).val(entry.dst()->id());
-        } else {
-            _row[at]->na(true);
-        }
-
-        ++at;
-    }
-
-    if (_row.size() >= at + 1) {
-        if (entry.dsId()) {
-            _row[at]->na(false);
-            static_cast<UIntTableViewCell&>(*_row[at]).val(*entry.dsId());
-        } else {
-            _row[at]->na(true);
-        }
-
-        ++at;
-    }
-
-    if (_row.size() >= at + 1) {
-        _row[at]->style(TableViewCell::Style::NORMAL);
-
-        if (entry.seqNum()) {
-            _row[at]->na(false);
-            static_cast<UIntTableViewCell&>(*_row[at]).val(*entry.seqNum());
-
-            if (prevEntry && prevEntry->seqNum()) {
-                if (*prevEntry->seqNum() != *entry.seqNum() - 1) {
-                    _row[at]->style(TableViewCell::Style::WARNING);
-                }
-            }
-        } else {
-            _row[at]->na(true);
-        }
-
-        ++at;
-    }
-
-    if (_row.size() >= at + 1) {
-        _row[at]->style(TableViewCell::Style::NORMAL);
-
-        if (entry.discErCounterSnap()) {
-            _row[at]->na(false);
-            static_cast<UIntTableViewCell&>(*_row[at]).val(*entry.discErCounterSnap());
-
-            if (prevEntry && prevEntry->discErCounterSnap()) {
-                const auto diff = *entry.discErCounterSnap() -
-                                  *prevEntry->discErCounterSnap();
-
-                if (diff != 0) {
-                    _row[at]->style(TableViewCell::Style::WARNING);
-                }
-            }
-        } else {
-            _row[at]->na(true);
-        }
-
-        ++at;
-    }
-
-    for (auto& cell : _row) {
-        if (entry.isInvalid() && cell->style() == TableViewCell::Style::NORMAL) {
-            cell->style(TableViewCell::Style::ERROR);
-        }
-    }
-
-    this->_drawCells(row, _row);
+    return &this->_dsFile().pktIndexEntry(entry.indexInDsFile() + 1);
 }
 
 Size PktTableView::_rowCount()
 {
-    return _appState->activeDsFileState().dsFile().pktCount();
-}
-
-void PktTableView::tsFmtMode(const TsFmtMode tsFmtMode)
-{
-    static_cast<TsTableViewCell&>(*_row[4]).fmtMode(tsFmtMode);
-
-    if (_row.size() >= 6) {
-        static_cast<TsTableViewCell&>(*_row[5]).fmtMode(tsFmtMode);
-    }
-
-    if (_row.size() >= 7) {
-        static_cast<DurationTableViewCell&>(*_row[6]).fmtMode(tsFmtMode);
-    }
-
-    _tsFmtMode = tsFmtMode;
-    this->_invalidate();
-}
-
-void PktTableView::dataLenFmtMode(const utils::LenFmtMode dataLenFmtMode)
-{
-    static_cast<DataLenTableViewCell&>(*_row[1]).fmtMode(dataLenFmtMode);
-    static_cast<DataLenTableViewCell&>(*_row[2]).fmtMode(dataLenFmtMode);
-    static_cast<DataLenTableViewCell&>(*_row[3]).fmtMode(dataLenFmtMode);
-    _dataLenFmtMode = dataLenFmtMode;
-    this->_invalidate();
+    return this->_dsFile().pktCount();
 }
 
 Index PktTableView::selPktIndex() const noexcept

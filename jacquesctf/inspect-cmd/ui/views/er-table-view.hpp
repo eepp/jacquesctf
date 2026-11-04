@@ -16,25 +16,21 @@ class ErTableView final :
 {
 public:
     explicit ErTableView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState);
-    void tsFmtMode(TsFmtMode tsFmtMode);
-    void dataLenFmtMode(utils::LenFmtMode dataLenFmtMode);
 
 protected:
-    void _drawRow(Index index) override;
     Size _rowCount() override;
-    void _resized() override;
     void _appStateChanged(Message msg) override;
 
 private:
-    void _setColumnDescrs();
-    void _resetRow(const std::vector<TableViewColumnDescr>& descrs);
+    /*
+     * Returned event record is only valid until the next call to this
+     * method (see Pkt::erAtIndexInPkt()).
+     */
+    const Er& _er(Index row);
 
 private:
     InspectCmdState *_appState;
     ViewInspectCmdStateObserverGuard _appStateObserverGuard;
-    std::vector<std::unique_ptr<TableViewCell>> _row;
-    TsFmtMode _tsFmtMode = TsFmtMode::LONG;
-    utils::LenFmtMode _dataLenFmtMode = utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS;
 };
 
 } // namespace jacques

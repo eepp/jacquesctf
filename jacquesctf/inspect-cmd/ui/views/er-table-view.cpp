@@ -4,7 +4,6 @@
  */
 
 #include <cassert>
-#include <numeric>
 
 #include "er-table-view.hpp"
 #include "../../state/msg.hpp"
@@ -16,152 +15,58 @@ ErTableView::ErTableView(const Rect& rect, const Stylist& stylist, InspectCmdSta
     _appState {&appState},
     _appStateObserverGuard {appState, *this}
 {
-    this->_setColumnDescrs();
+    this->_cols({
+        _Col {"Index", 12, _COL_REQUIRED, [this](const Index row) {
+            return this->_createUIntCell(this->_er(row).natIndexInPkt(), true);
+        }},
+        _Col {"Packet offset", 16, _COL_REQUIRED, [this](const Index row) {
+            return this->_createDataLenCell(this->_er(row).segment().offsetInPktBits());
+        }},
+        _Col {"Size", 14, _COL_REQUIRED, [this](const Index row) {
+            const auto& len = this->_er(row).segment().len();
+
+            return len ? this->_createDataLenCell(*len) : this->_createNaCell();
+        }},
+        _Col {"ERT name", 8, _COL_REQUIRED | _COL_LEFT | _COL_EMPH | _COL_EXPAND,
+              [this](const Index row) {
+            const auto type = this->_er(row).type();
+
+            if (!type || !type->name()) {
+                return this->_createNaCell();
+            }
+
+            return this->_createTextCell(*type->name());
+        }},
+        _Col {"ERT ID", 8, 0, [this](const Index row) {
+            const auto type = this->_er(row).type();
+
+            return type ? this->_createUIntCell(type->id()) : this->_createNaCell();
+        }},
+        _Col {"Timestamp", 29, 0, [this](const Index row) {
+            const auto& ts = this->_er(row).ts();
+
+            return ts ? this->_createTsCell(*ts) : this->_createNaCell();
+        }},
+        _Col {"Duration since last ER", 23, 0, [this](const Index row) {
+            const auto& ts = this->_er(row).ts();
+
+            if (row == 0 || !ts) {
+                return this->_createNaCell();
+            }
+
+            // copy: getting the previous event record invalidates `ts`
+            const auto curTs = *ts;
+            const auto& prevTs = this->_er(row - 1).ts();
+
+            return prevTs ? this->_createDurationCell(*prevTs, curTs) : this->_createNaCell();
+        }},
+    });
 }
 
-void ErTableView::_resized()
-{
-    TableView::_resized();
-    this->_setColumnDescrs();
-}
-
-void ErTableView::_resetRow(const std::vector<TableViewColumnDescr>& descrs)
-{
-    _row.clear();
-    _row.push_back(std::make_unique<UIntTableViewCell>(TableViewCell::TextAlign::RIGHT));
-    static_cast<UIntTableViewCell&>(*_row.back()).sep(true);
-    _row.push_back(std::make_unique<DataLenTableViewCell>(_dataLenFmtMode));
-    static_cast<UIntTableViewCell&>(*_row.back()).sep(true);
-    _row.push_back(std::make_unique<DataLenTableViewCell>(_dataLenFmtMode));
-
-    if (descrs.size() >= 4) {
-        _row.push_back(std::make_unique<TextTableViewCell>(TableViewCell::TextAlign::LEFT));
-        _row.back()->emphasized(true);
-    }
-
-    if (descrs.size() >= 5) {
-        _row.push_back(std::make_unique<UIntTableViewCell>(TableViewCell::TextAlign::RIGHT));
-    }
-
-    if (descrs.size() >= 6) {
-        _row.push_back(std::make_unique<TsTableViewCell>(_tsFmtMode));
-    }
-
-    if (descrs.size() >= 7) {
-        _row.push_back(std::make_unique<DurationTableViewCell>(_tsFmtMode));
-    }
-}
-
-void ErTableView::_setColumnDescrs()
-{
-    std::vector<TableViewColumnDescr> descrs {
-        TableViewColumnDescr {"Index", 12},
-        TableViewColumnDescr {"Packet offset", 16},
-        TableViewColumnDescr {"Size", 14},
-        TableViewColumnDescr {"ERT name", 8},
-        TableViewColumnDescr {"ERT ID", 8},
-        TableViewColumnDescr {"Timestamp", 29},
-        TableViewColumnDescr {"Duration since last ER", 23},
-    };
-
-    const auto accOp = [](const auto sz, const auto& descr) {
-        return sz + descr.contentWidth();
-    };
-    auto curSize = std::accumulate(descrs.begin(), descrs.end(), 0ULL, accOp);
-
-    // remove columns until they all fit
-    while (this->_contentSize(descrs.size()) < curSize) {
-        descrs.pop_back();
-        curSize = std::accumulate(descrs.begin(), descrs.end(), 0ULL, accOp);
-    }
-
-    // expand name column
-    auto totWidth = descrs[0].contentWidth() + descrs[1].contentWidth() + descrs[2].contentWidth();
-
-    if (descrs.size() >= 5) {
-        totWidth += descrs[4].contentWidth();
-    }
-
-    if (descrs.size() >= 6) {
-        totWidth += descrs[5].contentWidth();
-    }
-
-    if (descrs.size() >= 7) {
-        totWidth += descrs[6].contentWidth();
-    }
-
-    descrs[3] = TableViewColumnDescr {
-        descrs[3].title(),
-        this->_contentSize(descrs.size()) - totWidth
-    };
-
-    this->_resetRow(descrs);
-    this->_colDescrs(std::move(descrs));
-}
-
-void ErTableView::_drawRow(const Index row)
+const Er& ErTableView::_er(const Index row)
 {
     assert(_appState->hasActivePktState());
-
-    auto& er = _appState->activePktState().pkt().erAtIndexInPkt(row);
-
-    static_cast<UIntTableViewCell&>(*_row[0]).val(er.natIndexInPkt());
-    static_cast<DataLenTableViewCell&>(*_row[1]).len(er.segment().offsetInPktBits());
-
-    if (er.segment().len()) {
-        _row[2]->na(false);
-        static_cast<DataLenTableViewCell&>(*_row[2]).len(*er.segment().len());
-    } else {
-        _row[2]->na(true);
-    }
-
-    if (_row.size() >= 4) {
-        if (er.type() && er.type()->name()) {
-            _row[3]->na(false);
-            static_cast<TextTableViewCell&>(*_row[3]).text(*er.type()->name());
-        } else {
-            _row[3]->na(true);
-        }
-    }
-
-    if (_row.size() >= 5) {
-        if (er.type()) {
-            _row[4]->na(false);
-            static_cast<UIntTableViewCell&>(*_row[4]).val(er.type()->id());
-        } else {
-            _row[4]->na(true);
-        }
-    }
-
-    if (_row.size() >= 6) {
-        if (er.ts()) {
-            _row[5]->na(false);
-            static_cast<TsTableViewCell&>(*_row[5]).ts(*er.ts());
-        } else {
-            _row[5]->na(true);
-        }
-    }
-
-    if (_row.size() >= 7) {
-        auto& cell = static_cast<DurationTableViewCell&>(*_row[6]);
-
-        if (row == 0 || !er.ts()) {
-            cell.na(true);
-        } else {
-            const auto curTs = *er.ts();
-            auto& prevEventRecord = _appState->activePktState().pkt().erAtIndexInPkt(row - 1);
-
-            if (!prevEventRecord.ts()) {
-                cell.na(true);
-            } else {
-                cell.na(false);
-                cell.beginTs(*prevEventRecord.ts());
-                cell.endTs(curTs);
-            }
-        }
-    }
-
-    this->_drawCells(row, _row);
+    return _appState->activePktState().pkt().erAtIndexInPkt(row);
 }
 
 Size ErTableView::_rowCount()
@@ -171,28 +76,6 @@ Size ErTableView::_rowCount()
     }
 
     return _appState->activePktState().pkt().erCount();
-}
-
-void ErTableView::tsFmtMode(const TsFmtMode tsFmtMode)
-{
-    if (_row.size() >= 6) {
-        static_cast<TsTableViewCell&>(*_row[5]).fmtMode(tsFmtMode);
-    }
-
-    if (_row.size() >= 7) {
-        static_cast<DurationTableViewCell&>(*_row[6]).fmtMode(tsFmtMode);
-    }
-
-    _tsFmtMode = tsFmtMode;
-    this->_invalidate();
-}
-
-void ErTableView::dataLenFmtMode(const utils::LenFmtMode dataLenFmtMode)
-{
-    static_cast<DataLenTableViewCell&>(*_row[1]).fmtMode(dataLenFmtMode);
-    static_cast<DataLenTableViewCell&>(*_row[2]).fmtMode(dataLenFmtMode);
-    _dataLenFmtMode = dataLenFmtMode;
-    this->_invalidate();
 }
 
 void ErTableView::_appStateChanged(const Message msg)

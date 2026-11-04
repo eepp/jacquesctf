@@ -25,19 +25,15 @@ public:
     void selectDst(yactfr::TypeId id);
 
 protected:
-    void _drawRow(Index index) override;
     Size _rowCount() override;
-    void _resized() override;
 
 private:
-    void _setColumnDescrs();
     void _buildRows(const InspectCmdState& appState);
 
 private:
     using Dsts = std::vector<const yactfr::DataStreamType *>;
 
 private:
-    std::vector<std::unique_ptr<TableViewCell>> _row;
     std::unordered_map<const yactfr::TraceType *, Dsts> _rows;
     const Dsts *_dsts = nullptr;
 };

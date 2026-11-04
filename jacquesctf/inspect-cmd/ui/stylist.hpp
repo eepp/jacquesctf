@@ -45,7 +45,6 @@ public:
     void tableViewTsCellNsPart(const View& view, bool emphasized) const;
     void tableViewTextCell(const View& view, bool emphasized) const;
     void tableViewNaCell(const View& view, bool emphasized) const;
-    void tableViewBoolCell(const View& view, bool value, bool emphasized) const;
     void tableViewHeader(const View& view) const;
     void tableViewSel(const View& view, TableViewCellStyle style = TableViewCellStyle::NORMAL) const;
     void tableViewSelSep(const View& view, TableViewCellStyle style = TableViewCellStyle::NORMAL) const;
@@ -135,8 +134,6 @@ private:
         STD_DIM,
         STD_SEL,
         TABLE_VIEW_HEADER,
-        BOOL_YES,
-        BOOL_NO,
         TABLE_VIEW_SEL_WARNING,
         TABLE_VIEW_SEL_ERROR,
         TEXT_MORE,

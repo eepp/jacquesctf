@@ -97,8 +97,6 @@ Stylist::Stylist()
     this->_registerStyle(_StyleId::STD_DIM, dimFg, bg);
     this->_registerStyle(_StyleId::STD_SEL, fg, selBg);
     this->_registerStyle(_StyleId::TABLE_VIEW_HEADER, fg, darkGreenBg);
-    this->_registerStyle(_StyleId::BOOL_YES, green, bg);
-    this->_registerStyle(_StyleId::BOOL_NO, brightMagenta, bg);
     this->_registerStyle(_StyleId::TABLE_VIEW_SEL_ERROR, fg, errorBg);
     this->_registerStyle(_StyleId::TABLE_VIEW_SEL_WARNING, brightYellow, selBg);
     this->_registerStyle(_StyleId::TABLE_VIEW_TEXT_CELL_EMPHASIZED, yellow, bg);
@@ -236,12 +234,6 @@ void Stylist::tableViewTsCellNsPart(const View& view, const bool emphasized) con
 void Stylist::tableViewNaCell(const View& view, const bool emphasized) const
 {
     this->_applyStyle(view, _StyleId::STD_DIM, emphasized ? _ATTR_BOLD : 0);
-}
-
-void Stylist::tableViewBoolCell(const View& view, const bool val, const bool emphasized) const
-{
-    this->_applyStyle(view, val ? _StyleId::BOOL_YES : _StyleId::BOOL_NO,
-                      emphasized ? _ATTR_BOLD : 0);
 }
 
 void Stylist::tableViewHeader(const View& view) const
