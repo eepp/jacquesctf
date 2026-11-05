@@ -4,10 +4,6 @@
  */
 
 #include <cassert>
-#include <atomic>
-#include <chrono>
-#include <mutex>
-#include <thread>
 #include <utility>
 
 #include "key.hpp"
@@ -123,41 +119,24 @@ void SearchCtrl::parentScreenResized(const Screen& parentScreen)
     _searchView->moveAndResize(SearchCtrl::_viewRect(parentScreen));
 }
 
-void SearchCtrl::animateWhile(const std::function<void ()>& func) const
+void SearchCtrl::animateWhile(const AnimatedFunc& func) const
 {
-    using namespace std::chrono_literals;
-
-    /*
-     * Show the search view now, while no other thread modifies the
-     * application state.
-     *
-     * While `func` runs in another thread, only draw the border
-     * animation of the search view and update the terminal: rendering
-     * the other views could read the application state while `func`
-     * modifies it.
-     */
     _searchView->isVisible(true);
     _renderFrameFunc();
 
-    std::atomic_bool done {false};
+    /*
+     * While `func()` runs, only draw the border animation of the search
+     * view and update the terminal: the other views may not be up to
+     * date with the application state which `func()` modifies.
+     */
+    Index animIndex = 0;
 
-    std::thread thread {[&func, &done] {
-        func();
-        done = true;
-    }};
+    func([this, &animIndex] {
+        _searchView->animateBorder(animIndex);
+        ++animIndex;
+        term::update();
+    });
 
-    for (Index animIndex = 0; !done; ++animIndex) {
-        {
-            const std::lock_guard<std::recursive_mutex> lock {term::mutex()};
-
-            _searchView->animateBorder(animIndex);
-            term::update();
-        }
-
-        std::this_thread::sleep_for(50ms);
-    }
-
-    thread.join();
     _searchView->isVisible(false);
 }
 

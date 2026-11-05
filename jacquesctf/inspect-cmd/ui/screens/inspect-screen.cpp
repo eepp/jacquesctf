@@ -280,8 +280,8 @@ void InspectScreen::_search(const SearchQuery& query, const bool animate)
                         dynamic_cast<const ErtIdSearchQuery *>(&query);
 
     if (isSlow && animate) {
-        _searchCtrl.animateWhile([this, &query] {
-            this->_appState().search(query);
+        _searchCtrl.animateWhile([this, &query](const auto& animateFunc) {
+            this->_appState().search(query, animateFunc);
         });
     } else {
         this->_appState().search(query);

@@ -6,6 +6,7 @@
 #ifndef _JACQUES_INSPECT_COMMON_DS_FILE_STATE_HPP
 #define _JACQUES_INSPECT_COMMON_DS_FILE_STATE_HPP
 
+#include <functional>
 #include <vector>
 #include <optional>
 #include <boost/filesystem.hpp>
@@ -29,6 +30,13 @@ class DsFileState final
     friend class AppState;
 
 public:
+    /*
+     * Function which search() calls periodically, about every 50 ms,
+     * while it searches.
+     */
+    using SearchProgressFunc = std::function<void ()>;
+
+public:
     explicit DsFileState(AppState& appState, DsFile& dsFile,
                          PktCheckpointsBuildListener& pktCheckpointsBuildListener);
 
@@ -45,7 +53,15 @@ public:
     void gotoNextPktRegion();
     void gotoPktCtx();
     void gotoLastPktRegion();
-    bool search(const SearchQuery& query);
+
+    /*
+     * Searches with the query `query`, returning true if found.
+     *
+     * If `progressFunc` is set, then this method calls it about every
+     * 50 ms during a long search (event record type ID or name).
+     */
+    bool search(const SearchQuery& query, const SearchProgressFunc& progressFunc = {});
+
     void analyzeAllPkts(PktCheckpointsBuildListener *buildListener = nullptr);
 
     DsFile& dsFile() noexcept
@@ -169,6 +185,7 @@ private:
     PktState& _pktState(Index index);
     void _gotoPkt(Index index, bool notify);
     bool _gotoNextErWithProp(const std::function<bool (const Er&)>& cmpFunc,
+                             const SearchProgressFunc& progressFunc,
                              const std::optional<Index>& initPktIndex = std::nullopt,
                              const std::optional<Index>& initErIndex = std::nullopt);
 

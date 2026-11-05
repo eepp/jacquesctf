@@ -9,7 +9,6 @@
 #include <functional>
 #include <iterator>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -323,15 +322,11 @@ std::string_view strFittingSuffix(const std::string_view str, const Size maxWidt
 
 void update()
 {
-    const std::lock_guard<std::recursive_mutex> lock {mutex()};
-
     notcurses_render(&nc());
 }
 
 void repaint()
 {
-    const std::lock_guard<std::recursive_mutex> lock {mutex()};
-
     // this also resizes the standard plane to the new terminal size
     notcurses_refresh(&nc(), nullptr, nullptr);
 }
@@ -416,13 +411,6 @@ std::optional<Color> paletteColor(const unsigned int index) noexcept
     }
 
     return Color {ncchannel_rgb(pal->chans[index])};
-}
-
-std::recursive_mutex& mutex() noexcept
-{
-    static std::recursive_mutex theMutex;
-
-    return theMutex;
 }
 
 } // namespace term

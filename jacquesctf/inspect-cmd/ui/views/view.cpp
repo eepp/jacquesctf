@@ -8,7 +8,6 @@
 #include <cstdio>
 #include <functional>
 #include <string>
-#include <mutex>
 #include <notcurses/notcurses.h>
 
 #include "view.hpp"
@@ -390,13 +389,6 @@ int View::_vSafePrint(const char * const fmt, va_list& args) const
 ViewInspectCmdStateObserverGuard::ViewInspectCmdStateObserverGuard(InspectCmdState& appState,
                                                                    View& view) :
     _observerGuard {appState, [&view](const Message msg) {
-        /*
-         * The state can change in a thread other than the main one (see
-         * SearchCtrl::animateWhile()): lock the terminal while the view
-         * updates its own state, which View::render() reads.
-         */
-        const std::lock_guard<std::recursive_mutex> lock {term::mutex()};
-
         view._appStateChanged(msg);
     }}
 {

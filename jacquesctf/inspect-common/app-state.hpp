@@ -66,7 +66,8 @@ public:
     void gotoDsFile(Index index);
     void gotoPrevDsFile();
     void gotoNextDsFile();
-    bool search(const SearchQuery& query);
+    bool search(const SearchQuery& query,
+                const DsFileState::SearchProgressFunc& progressFunc = {});
 
     DsFileState& activeDsFileState() const noexcept
     {

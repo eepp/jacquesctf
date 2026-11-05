@@ -41,9 +41,6 @@ FetchContent_Declare (
 )
 FetchContent_MakeAvailable (yactfr)
 
-# threading
-find_package (Threads REQUIRED)
-
 # Jacques CTF program
 if (JACQUES_HAS_INSPECT_CMD)
     set (
@@ -143,7 +140,6 @@ target_link_libraries (
     jacquesctf
     Boost::program_options
     Boost::filesystem
-    Threads::Threads
     yactfr::yactfr
 )
 if (JACQUES_HAS_INSPECT_CMD)

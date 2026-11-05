@@ -105,9 +105,10 @@ void AppState::gotoNextDsFile()
     this->gotoDsFile(_activeDsFileStateIndex + 1);
 }
 
-bool AppState::search(const SearchQuery& query)
+bool AppState::search(const SearchQuery& query,
+                      const DsFileState::SearchProgressFunc& progressFunc)
 {
-    return this->activeDsFileState().search(query);
+    return this->activeDsFileState().search(query, progressFunc);
 }
 
 void AppState::_activeDsFileAndPktChanged()

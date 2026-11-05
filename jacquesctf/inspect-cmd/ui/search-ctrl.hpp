@@ -28,13 +28,23 @@ public:
      */
     using RenderFrameFunc = std::function<void ()>;
 
+    /*
+     * Draws the next frame of the border animation of the search view
+     * and updates the terminal.
+     */
+    using AnimateFunc = std::function<void ()>;
+
+    /*
+     * Function which animateWhile() calls.
+     */
+    using AnimatedFunc = std::function<void (const AnimateFunc&)>;
+
 public:
     /*
      * Builds a search controller for the screen `parentScreen`.
      *
      * The search controller has its own event loop: it calls
-     * `renderFrameFunc()` to render the terminal, which must lock
-     * term::mutex() itself.
+     * `renderFrameFunc()` to render the terminal.
      *
      * `parentScreen` must add view() last (see Screen::_addView()) so
      * that the search view ends up on top of its other views.
@@ -83,10 +93,11 @@ public:
     }
 
     /*
-     * Calls `func()` in another thread, animating the border of the
-     * search view until it returns.
+     * Shows the search view and calls `func()` with a function which
+     * animates its border, which `func()` calls periodically while it
+     * works, then hides the search view.
      */
-    void animateWhile(const std::function<void ()>& func) const;
+    void animateWhile(const AnimatedFunc& func) const;
 
     [[ nodiscard ]] std::unique_ptr<const SearchQuery> start(const std::string& init)
     {

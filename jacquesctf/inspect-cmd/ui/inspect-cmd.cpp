@@ -7,7 +7,6 @@
 #include <stdexcept>
 #include <optional>
 #include <memory>
-#include <mutex>
 #include <signal.h>
 #include <unistd.h>
 #include <notcurses/notcurses.h>
@@ -124,16 +123,11 @@ public:
 
 private:
     /*
-     * This listener can be called from a thread other than the main one
-     * (see SearchCtrl::animateWhile()): lock the terminal.
-     *
      * Only render the progress view, on top of the current planes: the
      * other views are rendered by the event loop which is running.
      */
     void _startBuild(const DsFile&, const PktIndexEntry& pktIndexEntry) override
     {
-        const std::lock_guard<std::recursive_mutex> lock {term::mutex()};
-
         if (pktIndexEntry.effectiveTotalLen() < 2_MiB) {
             // too fast anyway
             return;
@@ -150,8 +144,6 @@ private:
 
     void _update(const Er& er) override
     {
-        const std::lock_guard<std::recursive_mutex> lock {term::mutex()};
-
         if (!_view) {
             return;
         }
@@ -166,8 +158,6 @@ private:
 
     void _endBuild() override
     {
-        const std::lock_guard<std::recursive_mutex> lock {term::mutex()};
-
         // the next frame rendering reveals what's below
         _view = nullptr;
     }
@@ -227,8 +217,6 @@ void startInteractive(const InspectCfg& cfg)
      * the current screen, and the quit message, if any.
      */
     const auto renderFrame = [&statusView, &curScreen, &quitMsgView] {
-        const std::lock_guard<std::recursive_mutex> lock {term::mutex()};
-
         statusView->render();
         curScreen->render();
 

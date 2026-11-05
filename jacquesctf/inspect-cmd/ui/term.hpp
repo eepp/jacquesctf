@@ -6,7 +6,6 @@
 #ifndef _JACQUES_INSPECT_COMMAND_UI_TERM_HPP
 #define _JACQUES_INSPECT_COMMAND_UI_TERM_HPP
 
-#include <mutex>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -26,9 +25,8 @@ namespace term {
 /*
  * Takes TOTAL CONTROL of the terminal.
  *
- * Call this before any other function of this namespace, except
- * mutex(), and call fini() when you're done to give the terminal back
- * to the user.
+ * Call this before any other function of this namespace, and call
+ * fini() when you're done to give the terminal back to the user.
  *
  * The terminal must not be initialized (call fini() first to initialize
  * it again).
@@ -57,9 +55,6 @@ notcurses& nc() noexcept;
 
 /*
  * Standard plane (always at the bottom, covering the whole terminal).
- *
- * Lock mutex() while modifying it if another thread could render at
- * the same time.
  */
 ncplane& stdPlane() noexcept;
 
@@ -106,8 +101,6 @@ std::string_view strFittingSuffix(std::string_view str, Size maxWidth);
 
 /*
  * Renders all the visible planes to the terminal.
- *
- * Locks mutex() itself.
  */
 void update();
 
@@ -117,32 +110,25 @@ void update();
  *
  * This also updates the terminal dimensions: call it after a
  * `SpecialKey::RESIZE` key.
- *
- * Locks mutex() itself.
  */
 void repaint();
 
 /*
  * Blocks until the user presses a key and returns it.
- *
- * Doesn't lock mutex() so that other threads may keep rendering while
- * this function waits.
  */
 Key readKey();
 
 /*
  * Shows the terminal cursor at the absolute position `pos`.
  *
- * This writes to the terminal immediately: lock mutex() if another
- * thread could render at the same time.
+ * This writes to the terminal immediately.
  */
 void showCursor(const Point& pos);
 
 /*
  * Hides the terminal cursor.
  *
- * This writes to the terminal immediately: lock mutex() if another
- * thread could render at the same time.
+ * This writes to the terminal immediately.
  */
 void hideCursor();
 
@@ -172,14 +158,6 @@ std::optional<Color> defaultBgColor() noexcept;
  * queries it in init()), in which case all its entries are black.
  */
 std::optional<Color> paletteColor(unsigned int index) noexcept;
-
-/*
- * Mutex to lock while modifying planes or writing to the terminal when
- * more than one thread could do so (see SearchCtrl::animateWhile()).
- *
- * update() and repaint() lock it themselves.
- */
-std::recursive_mutex& mutex() noexcept;
 
 } // namespace term
 } // namespace jacques

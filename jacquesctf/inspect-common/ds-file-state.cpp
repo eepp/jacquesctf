@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <chrono>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -172,6 +173,7 @@ void DsFileState::gotoLastPktRegion()
 }
 
 bool DsFileState::_gotoNextErWithProp(const std::function<bool (const Er&)>& cmpFunc,
+                                      const SearchProgressFunc& progressFunc,
                                       const std::optional<Index>& initPktIndex,
                                       const std::optional<Index>& initErIndex)
 {
@@ -211,6 +213,28 @@ bool DsFileState::_gotoNextErWithProp(const std::function<bool (const Er&)>& cmp
         }
     }
 
+    using Clock = std::chrono::steady_clock;
+
+    auto lastProgressTime = Clock::now();
+
+    // calls `progressFunc()` if it's set and at least 50 ms elapsed since the last call
+    const auto tryReportProgress = [&progressFunc, &lastProgressTime] {
+        using namespace std::chrono_literals;
+
+        if (!progressFunc) {
+            return;
+        }
+
+        const auto now = Clock::now();
+
+        if (now - lastProgressTime < 50ms) {
+            return;
+        }
+
+        progressFunc();
+        lastProgressTime = now;
+    };
+
     for (auto pktIndex = startPktIndex; pktIndex < _dsFile->pktCount(); ++pktIndex) {
         auto& pkt = this->_pktState(pktIndex).pkt();
 
@@ -220,6 +244,8 @@ bool DsFileState::_gotoNextErWithProp(const std::function<bool (const Er&)>& cmp
         assert(itStartErIndex < pkt.erCount());
 
         for (Index erIndex = itStartErIndex; erIndex < pkt.erCount(); ++erIndex) {
+            tryReportProgress();
+
             const auto& er = pkt.erAtIndexInPkt(erIndex);
 
             if (cmpFunc(er)) {
@@ -235,7 +261,7 @@ bool DsFileState::_gotoNextErWithProp(const std::function<bool (const Er&)>& cmp
     return false;
 }
 
-bool DsFileState::search(const SearchQuery& query)
+bool DsFileState::search(const SearchQuery& query, const SearchProgressFunc& progressFunc)
 {
     if (const auto sQuery = dynamic_cast<const PktIndexSearchQuery *>(&query)) {
         long long reqIndex;
@@ -386,7 +412,7 @@ bool DsFileState::search(const SearchQuery& query)
             return er.type()->id() == static_cast<Index>(sQuery->val());
         };
 
-        return this->_gotoNextErWithProp(cmpFunc);
+        return this->_gotoNextErWithProp(cmpFunc, progressFunc);
     } else if (const auto sQuery = dynamic_cast<const ErtNameSearchQuery *>(&query)) {
         const auto cmpFunc = [sQuery](const Er& er) {
             if (!er.type()) {
@@ -400,7 +426,7 @@ bool DsFileState::search(const SearchQuery& query)
             return sQuery->matches(*er.type()->name());
         };
 
-        return this->_gotoNextErWithProp(cmpFunc);
+        return this->_gotoNextErWithProp(cmpFunc, progressFunc);
     } else if (const auto sQuery = dynamic_cast<const TimestampSearchQuery *>(&query)) {
         if (!_activePktState) {
             return false;
