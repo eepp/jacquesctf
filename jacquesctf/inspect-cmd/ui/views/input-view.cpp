@@ -23,14 +23,14 @@ void InputView::_redrawContent()
 {
     this->_clearContent();
     this->_drawBorder();
-    this->_stylist().std(*this);
+    this->_style(Stylist::Role::STD);
     this->_moveCursor({1, 1});
     this->_drawCurText(_text);
 }
 
 void InputView::_drawBorder() const
 {
-    this->_stylist().simpleInputViewBorder(*this);
+    this->_style(Stylist::Role::INPUT_BORDER);
 
     // border made of spaces (borderless view: content rectangle is the rectangle)
     const auto& rect = this->contentRect();

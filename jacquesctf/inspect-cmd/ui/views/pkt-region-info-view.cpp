@@ -147,7 +147,7 @@ void PktRegionInfoView::_safePrintScope(const yactfr::Scope scope)
 void PktRegionInfoView::_redrawContent()
 {
     // clear
-    this->_stylist().pktRegionInfoViewStd(*this);
+    this->_style(Stylist::Role::INFO);
     this->_clearRect();
 
     const auto pktRegion = _appState->curPktRegion();
@@ -164,13 +164,13 @@ void PktRegionInfoView::_redrawContent()
     if ((cPktRegion = dynamic_cast<const ContentPktRegion *>(pktRegion))) {
         // path
         if (cPktRegion->dtPath().items().empty()) {
-            this->_stylist().pktRegionInfoViewStd(*this, true);
+            this->_style(Stylist::Role::INFO_STRONG);
         }
 
         this->_safePrintScope(cPktRegion->dtPath().scope());
 
         if (cPktRegion->dtPath().items().empty()) {
-            this->_stylist().pktRegionInfoViewStd(*this);
+            this->_style(Stylist::Role::INFO);
         }
 
         auto arrayIndexesIt = cPktRegion->arrayIndexes().begin();
@@ -183,28 +183,28 @@ void PktRegionInfoView::_redrawContent()
             }
 
             if (it == cPktRegion->dtPath().items().end() - 1) {
-                this->_stylist().pktRegionInfoViewStd(*this, true);
+                this->_style(Stylist::Role::INFO_STRONG);
             }
 
             this->_safePrint("%s", str.c_str());
         }
     } else if (dynamic_cast<const PaddingPktRegion *>(pktRegion)) {
         if (pktRegion->scope()) {
-            this->_stylist().pktRegionInfoViewStd(*this);
+            this->_style(Stylist::Role::INFO);
             this->_safePrintScope(pktRegion->scope()->scope());
             this->_print(" ");
         }
 
-        this->_stylist().pktRegionInfoViewStd(*this, true);
+        this->_style(Stylist::Role::INFO_STRONG);
         this->_print("PADDING");
     } else if (dynamic_cast<const ErrorPktRegion *>(pktRegion)) {
-        this->_stylist().pktRegionInfoViewStd(*this, true);
+        this->_style(Stylist::Role::INFO_STRONG);
         this->_print("ERROR");
         isError = true;
     }
 
     // size
-    this->_stylist().pktRegionInfoViewStd(*this, false);
+    this->_style(Stylist::Role::INFO);
 
     const auto pathWidth = _maxDtPathSizes[&_appState->trace()];
     const auto str = utils::sepNumber(pktRegion->segment().len()->bits(), ',');
@@ -231,7 +231,7 @@ void PktRegionInfoView::_redrawContent()
         const auto& varVal = *cPktRegion->val();
 
         this->_safePrint("    ");
-        this->_stylist().pktRegionInfoViewVal(*this);
+        this->_style(Stylist::Role::INFO_VAL);
 
         if (const auto val = std::get_if<bool>(&varVal)) {
             this->_safePrint("%s", *val ? "true" : "false");
@@ -278,15 +278,15 @@ void PktRegionInfoView::_redrawContent()
             const auto names = cPktRegion->flagOrMappingNames();
 
             if (!names.empty()) {
-                this->_stylist().pktRegionInfoViewStd(*this);
+                this->_style(Stylist::Role::INFO);
                 this->_safePrint("   ");
 
                 for (auto& name : names) {
-                    this->_stylist().pktRegionInfoViewStd(*this);
+                    this->_style(Stylist::Role::INFO);
                     this->_safePrint(" [");
-                    this->_stylist().pktRegionInfoViewStd(*this, true);
+                    this->_style(Stylist::Role::INFO_STRONG);
                     this->_safePrint("%s", name.c_str());
-                    this->_stylist().pktRegionInfoViewStd(*this);
+                    this->_style(Stylist::Role::INFO);
                     this->_safePrint("]");
                 }
             }
@@ -296,7 +296,7 @@ void PktRegionInfoView::_redrawContent()
 
         assert(error);
         this->_safePrint("    ");
-        this->_stylist().pktRegionInfoViewError(*this);
+        this->_style(Stylist::Role::INFO_ERROR);
         this->_safePrint("%s", utils::escapeStr(error->decodingError().what()).c_str());
     }
 }

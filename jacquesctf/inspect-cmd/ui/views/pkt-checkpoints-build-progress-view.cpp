@@ -17,7 +17,7 @@ PktCheckpointsBuildProgressView::PktCheckpointsBuildProgressView(const Rect& rec
 
 void PktCheckpointsBuildProgressView::_clearRow(const Index contentY)
 {
-    this->_stylist().std(*this);
+    this->_style(Stylist::Role::STD);
 
     auto pos = Point {0, contentY};
 
@@ -50,7 +50,7 @@ void PktCheckpointsBuildProgressView::_drawPktIndexEntry()
     }
 
     this->_clearRow(1);
-    this->_stylist().pktIndexBuildProgressViewPath(*this, false);
+    this->_style(Stylist::Role::PATH);
     this->_moveAndPrint({1, 1}, "Packet #%llu", _pktIndexEntry->natIndexInDsFile());
 }
 
@@ -79,13 +79,13 @@ void PktCheckpointsBuildProgressView::_drawProgress()
     const auto barProgW = static_cast<Index>(fBarProgW);
     Index x = 1;
 
-    this->_stylist().pktIndexBuildProgressViewBar(*this, true);
+    this->_style(Stylist::Role::INVERSE);
 
     for (; x < 1 + barProgW; ++x) {
         this->_putChar({x, barY}, ' ');
     }
 
-    this->_stylist().pktIndexBuildProgressViewBar(*this, false);
+    this->_style(Stylist::Role::DIM);
 
     for (; x < 1 + barW; ++x) {
         this->_putChar({x, barY}, glyphs::CKBOARD);
@@ -93,17 +93,17 @@ void PktCheckpointsBuildProgressView::_drawProgress()
 
     // index
     this->_clearRow(indexY);
-    this->_stylist().std(*this);
+    this->_style(Stylist::Role::STD);
     this->_moveAndPrint({titleX, indexY}, "Index:");
-    this->_stylist().std(*this, true);
+    this->_style(Stylist::Role::STD, true);
     this->_moveAndPrint({infoX, indexY}, "%s",
                         utils::sepNumber(static_cast<long long>(_er->indexInPkt()), ',').c_str());
 
     // offset
     this->_clearRow(offsetInPktBitsY);
-    this->_stylist().std(*this);
+    this->_style(Stylist::Role::STD);
     this->_moveAndPrint({titleX, offsetInPktBitsY}, "Offset:");
-    this->_stylist().std(*this, true);
+    this->_style(Stylist::Role::STD, true);
 
     auto lenUnit = utils::formatLen(_er->segment().offsetInPktBits(),
                                     utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS, ',');
@@ -113,9 +113,9 @@ void PktCheckpointsBuildProgressView::_drawProgress()
 
     // size
     this->_clearRow(sizeY);
-    this->_stylist().std(*this);
+    this->_style(Stylist::Role::STD);
     this->_moveAndPrint({titleX, sizeY}, "Length:");
-    this->_stylist().std(*this, true);
+    this->_style(Stylist::Role::STD, true);
     lenUnit = _pktIndexEntry->effectiveContentLen().format(utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
                                                            ',');
     this->_moveAndPrint({infoX, sizeY}, "%s %s", lenUnit.first.c_str(), lenUnit.second.c_str());
@@ -131,16 +131,16 @@ void PktCheckpointsBuildProgressView::_drawProgress()
     }
 
     if (ert->name()) {
-        this->_stylist().std(*this);
+        this->_style(Stylist::Role::STD);
         this->_moveAndPrint({titleX, ertNameY}, "ERT name:");
-        this->_stylist().std(*this, true);
+        this->_style(Stylist::Role::STD, true);
         this->_moveAndPrint({infoX, ertNameY}, "%s", utils::escapeStr(*ert->name()).c_str());
     }
 
     // ERT ID
-    this->_stylist().std(*this);
+    this->_style(Stylist::Role::STD);
     this->_moveAndPrint({titleX, ertIdY}, "ERT ID:");
-    this->_stylist().std(*this, true);
+    this->_style(Stylist::Role::STD, true);
     this->_moveAndPrint({infoX, ertIdY}, "%llu", ert->id());
 }
 

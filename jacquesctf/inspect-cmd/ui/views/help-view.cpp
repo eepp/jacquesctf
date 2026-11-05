@@ -254,7 +254,7 @@ void HelpView::_buildRows()
 
 void HelpView::_drawRows()
 {
-    this->_stylist().std(*this);
+    this->_style(Stylist::Role::STD);
     this->_clearContent();
 
     const Index startX = (this->contentRect().w - _longestRowWidth) / 2;
@@ -270,61 +270,61 @@ void HelpView::_drawRows()
         const auto& row = _rows[rowIdx];
 
         if (const auto sectRow = std::get_if<_SectionRow>(&row)) {
-            this->_stylist().sectionTitle(*this);
+            this->_style(Stylist::Role::TITLE);
             this->_moveAndPrint({startX, y}, "%s", sectRow->title.c_str());
         } else if (const auto sectRow = std::get_if<_SubSectionRow>(&row)) {
-            this->_stylist().subsectionTitle(*this);
+            this->_style(Stylist::Role::SUBTITLE);
             this->_moveAndPrint({startX + 2, y}, "%s", sectRow->title.c_str());
         } else if (const auto keyRow = std::get_if<_KeyRow>(&row)) {
             this->_moveCursor({startX + 2, y});
 
             for (const auto ch : keyRow->key) {
                 if (ch == ',') {
-                    this->_stylist().std(*this);
+                    this->_style(Stylist::Role::STD);
                 } else {
-                    this->_stylist().helpViewKey(*this);
+                    this->_style(Stylist::Role::SYMBOL);
                 }
 
                 this->_appendChar(ch);
             }
 
-            this->_stylist().std(*this);
+            this->_style(Stylist::Role::STD);
             this->_moveAndPrint({startX + keyWidth, y}, "%s", keyRow->descr.c_str());
         } else if (const auto textRow = std::get_if<_TextRow>(&row)) {
-            this->_stylist().std(*this);
+            this->_style(Stylist::Role::STD);
             this->_moveCursor({startX + 2, y});
-            this->_stylist().std(*this, textRow->bold);
+            this->_style(Stylist::Role::STD, textRow->bold);
 
             for (const auto ch : textRow->line) {
                 if (ch == '\a') {
-                    this->_stylist().stdDim(*this);
+                    this->_style(Stylist::Role::DIM);
                     continue;
                 }
 
                 this->_appendChar(ch);
             }
         } else if (const auto ssRow = std::get_if<_SearchSyntaxRow>(&row)) {
-            this->_stylist().std(*this);
+            this->_style(Stylist::Role::STD);
             this->_moveCursor({startX + 2, y});
 
             for (const auto ch : ssRow->descr) {
                 if (ch == 'X' || ch == 'Z') {
-                    this->_stylist().helpViewKey(*this);
+                    this->_style(Stylist::Role::SYMBOL);
                 } else {
-                    this->_stylist().std(*this);
+                    this->_style(Stylist::Role::STD);
                 }
 
                 this->_appendChar(ch);
             }
 
             this->_moveCursor({startX + _ssRowFmtPos, y});
-            this->_stylist().helpViewKey(*this);
+            this->_style(Stylist::Role::SYMBOL);
 
             for (const auto ch : ssRow->fmt) {
                 if (ch == 'X' || ch == 'Z') {
-                    this->_stylist().helpViewKey(*this);
+                    this->_style(Stylist::Role::SYMBOL);
                 } else {
-                    this->_stylist().std(*this);
+                    this->_style(Stylist::Role::STD);
                 }
 
                 this->_appendChar(ch);

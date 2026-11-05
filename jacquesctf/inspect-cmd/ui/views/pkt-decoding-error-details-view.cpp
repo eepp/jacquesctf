@@ -26,17 +26,17 @@ void PktDecodingErrorDetailsView::_redrawContent()
 
     const auto& error = *_appState->activePktState().pkt().error();
 
-    this->_stylist().pktDecodingErrorDetailsView(*this);
+    this->_style(Stylist::Role::ALERT);
     this->_clearRect();
 
     // title
-    this->_stylist().pktDecodingErrorDetailsView(*this, true);
+    this->_style(Stylist::Role::ALERT, true);
     this->_moveAndPrint({1, 1}, "PACKET DECODING ERROR");
 
     // packet
-    this->_stylist().pktDecodingErrorDetailsView(*this, true);
+    this->_style(Stylist::Role::ALERT, true);
     this->_moveAndPrint({1, 3}, "Packet index:               ");
-    this->_stylist().pktDecodingErrorDetailsView(*this, false);
+    this->_style(Stylist::Role::ALERT);
 
     auto& pktIndexEntry = error.pktIndexEntry();
     auto str = utils::sepNumber(static_cast<long long>(pktIndexEntry.natIndexInDsFile()), ',');
@@ -44,9 +44,9 @@ void PktDecodingErrorDetailsView::_redrawContent()
     this->_print("%s", str.c_str());
 
     // offset in data stream file
-    this->_stylist().pktDecodingErrorDetailsView(*this, true);
+    this->_style(Stylist::Role::ALERT, true);
     this->_moveAndPrint({1, 4}, "Offset in data stream file: ");
-    this->_stylist().pktDecodingErrorDetailsView(*this, false);
+    this->_style(Stylist::Role::ALERT);
 
     {
         const auto [len, unit] = utils::formatLen(error.decodingError().offset(),
@@ -64,9 +64,9 @@ void PktDecodingErrorDetailsView::_redrawContent()
     }
 
     // offset in packet
-    this->_stylist().pktDecodingErrorDetailsView(*this, true);
+    this->_style(Stylist::Role::ALERT, true);
     this->_moveAndPrint({1, 5}, "Offset in packet:           ");
-    this->_stylist().pktDecodingErrorDetailsView(*this, false);
+    this->_style(Stylist::Role::ALERT);
 
     const auto offsetInPktBits = error.decodingError().offset() -
                                  pktIndexEntry.offsetInDsFileBits();
@@ -92,7 +92,7 @@ void PktDecodingErrorDetailsView::_redrawContent()
     Index curY = 7;
     Index curX = 1;
 
-    this->_stylist().pktDecodingErrorDetailsView(*this, false);
+    this->_style(Stylist::Role::ALERT);
 
     while (it != msg.end()) {
         if (*it == '\n') {

@@ -4,6 +4,8 @@
  */
 
 #include <iostream>
+#include <cassert>
+#include <iterator>
 #include <cinttypes>
 #include <cstdio>
 #include <algorithm>
@@ -186,7 +188,7 @@ void PktDataView::_drawSeparators() const
     const auto endOffsetInPktBits = _endOffsetInPktBits + _rowSize.bits() - 1;
     const auto yEnd = (endOffsetInPktBits - _baseOffsetInPktBits) / _rowSize.bits();
 
-    this->_stylist().stdDim(*this);
+    this->_style(Stylist::Role::DIM);
 
     for (Index y = 0; y < yEnd; ++y) {
         this->_putChar({_dataX - 1, y}, glyphs::VLINE);
@@ -254,7 +256,7 @@ void PktDataView::_drawOffsets() const
             const auto sel = offsetInPktBits >= curRegionBaseOffsetBits &&
                              offsetInPktBits <= curRegionBaseEndOffsetBits;
 
-            this->_stylist().pktDataViewOffset(*this, sel);
+            this->_style(sel ? Stylist::Role::CUR_OFFSET : Stylist::Role::OFFSET);
 
             for (Index x = 0; x < maxOffsetWidth - offsetWidth; ++x) {
                 this->_appendChar(' ');
@@ -300,9 +302,9 @@ void PktDataView::_setCustomStyle(const _Char& ch) const
 {
     if (ch.pktRegions.size() != 1) {
         if (ch.isPrintable) {
-            this->_stylist().std(*this);
+            this->_style(Stylist::Role::STD);
         } else {
-            this->_stylist().stdDim(*this);
+            this->_style(Stylist::Role::DIM);
         }
 
         return;
@@ -327,7 +329,15 @@ void PktDataView::_setCustomStyle(const _Char& ch) const
         for (Index id = 0; id < bookmarks->size(); ++id) {
             if (bookmarks->at(id) &&
                     *(bookmarks->at(id)) == singlePktRegion.segment().offsetInPktBits()) {
-                this->_stylist().pktDataViewBookmark(*this, id);
+                static constexpr Stylist::Role bookmarkRoles[] = {
+                    Stylist::Role::BOOKMARK_1,
+                    Stylist::Role::BOOKMARK_2,
+                    Stylist::Role::BOOKMARK_3,
+                    Stylist::Role::BOOKMARK_4,
+                };
+
+                assert(id < std::size(bookmarkRoles));
+                this->_style(bookmarkRoles[id]);
                 bookmarkExists = true;
                 break;
             }
@@ -336,17 +346,17 @@ void PktDataView::_setCustomStyle(const _Char& ch) const
 
     if (!bookmarkExists) {
         if (ch.isErFirst && _isErFirstPktRegionEmphasized) {
-            this->_stylist().pktDataViewErFirstPktRegion(*this);
+            this->_style(Stylist::Role::HIGHLIGHT);
         } else if (const auto region = dynamic_cast<const ContentPktRegion *>(&singlePktRegion)) {
             if (ch.isPrintable) {
-                this->_stylist().std(*this);
+                this->_style(Stylist::Role::STD);
             } else {
-                this->_stylist().stdDim(*this);
+                this->_style(Stylist::Role::DIM);
             }
         } else if (const auto region = dynamic_cast<const PaddingPktRegion *>(&singlePktRegion)) {
-            this->_stylist().pktDataViewPadding(*this);
+            this->_style(Stylist::Role::PADDING);
         } else if (const auto region = dynamic_cast<const ErrorPktRegion *>(&singlePktRegion)) {
-            this->_stylist().error(*this);
+            this->_style(Stylist::Role::ERROR);
         } else {
             std::abort();
         }
@@ -373,9 +383,9 @@ void PktDataView::_drawChar(const _Char& ch) const
     if (const auto selPktRegionIt = ch.pktRegionIt(_curOffsetInPktBits);
             selPktRegionIt != ch.pktRegions.end()) {
         if (ch.pktRegions.size() == 1) {
-            this->_stylist().pktDataViewSel(*this, Stylist::PktDataViewSelType::CUR);
+            this->_style(Stylist::Role::SEL);
         } else {
-            this->_stylist().pktDataViewAuxSel(*this);
+            this->_style(Stylist::Role::INVERSE);
         }
 
         this->_putCharVal(ch);
@@ -392,16 +402,14 @@ void PktDataView::_drawChar(const _Char& ch) const
     if (_isPrevNextVisible) {
         if (_prevOffsetInPktBits &&
                 *_prevOffsetInPktBits == singlePktRegion.segment().offsetInPktBits()) {
-            this->_stylist().pktDataViewSel(*this,
-                                                     Stylist::PktDataViewSelType::PREV);
+            this->_style(Stylist::Role::SEL_PREV);
             this->_putCharVal(ch);
             return;
         }
 
         if (_nextOffsetInPktBits &&
                 *_nextOffsetInPktBits == singlePktRegion.segment().offsetInPktBits()) {
-            this->_stylist().pktDataViewSel(*this,
-                                                     Stylist::PktDataViewSelType::NEXT);
+            this->_style(Stylist::Role::SEL_NEXT);
             this->_putCharVal(ch);
             return;
         }

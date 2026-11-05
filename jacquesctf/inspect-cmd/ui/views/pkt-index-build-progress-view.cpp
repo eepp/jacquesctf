@@ -20,7 +20,7 @@ PktIndexBuildProgressView::PktIndexBuildProgressView(const Rect& rect, const Sty
 
 void PktIndexBuildProgressView::_clearRow(const Index y)
 {
-    this->_stylist().std(*this);
+    this->_style(Stylist::Role::STD);
 
     auto pos = Point {0, y};
 
@@ -65,12 +65,12 @@ void PktIndexBuildProgressView::_drawFile()
     Index filenameX = 1;
 
     if (!dirName.empty()) {
-        this->_stylist().pktIndexBuildProgressViewPath(*this, false);
+        this->_style(Stylist::Role::PATH);
         this->_moveAndPrint({filenameX, y}, "%s/", dirName.c_str());
         filenameX += term::strWidth(dirName) + 1;
     }
 
-    this->_stylist().pktIndexBuildProgressViewPath(*this, true);
+    this->_style(Stylist::Role::PATH, true);
     this->_moveAndPrint({filenameX, y}, "%s", filename.c_str());
 }
 
@@ -103,13 +103,13 @@ void PktIndexBuildProgressView::_drawProgress()
     const auto barProgW = static_cast<Index>(fBarProgW);
     Index x = 1;
 
-    this->_stylist().pktIndexBuildProgressViewBar(*this, true);
+    this->_style(Stylist::Role::INVERSE);
 
     for (; x < 1 + barProgW; ++x) {
         this->_putChar({x, barY}, ' ');
     }
 
-    this->_stylist().pktIndexBuildProgressViewBar(*this, false);
+    this->_style(Stylist::Role::DIM);
 
     for (; x < 1 + barW; ++x) {
         this->_putChar({x, barY}, glyphs::CKBOARD);
@@ -117,17 +117,17 @@ void PktIndexBuildProgressView::_drawProgress()
 
     // index
     this->_clearRow(indexY);
-    this->_stylist().std(*this);
+    this->_style(Stylist::Role::STD);
     this->_moveAndPrint({titleX, indexY}, "Index:");
-    this->_stylist().std(*this, true);
+    this->_style(Stylist::Role::STD, true);
     this->_moveAndPrint({infoX, indexY}, "%s",
                         utils::sepNumber(static_cast<long long>(_index), ',').c_str());
 
     // offset
     this->_clearRow(offsetY);
-    this->_stylist().std(*this);
+    this->_style(Stylist::Role::STD);
     this->_moveAndPrint({titleX, offsetY}, "Offset:");
-    this->_stylist().std(*this, true);
+    this->_style(Stylist::Role::STD, true);
 
     {
         const auto [len, unit] = utils::formatLen(_offsetBytes * 8,
@@ -138,9 +138,9 @@ void PktIndexBuildProgressView::_drawProgress()
     }
 
     this->_clearRow(sizeY);
-    this->_stylist().std(*this);
+    this->_style(Stylist::Role::STD);
     this->_moveAndPrint({titleX, sizeY}, "Length:");
-    this->_stylist().std(*this, true);
+    this->_style(Stylist::Role::STD, true);
 
     {
         const auto [len, unit] = _dsf->fileLen().format(utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
@@ -153,9 +153,9 @@ void PktIndexBuildProgressView::_drawProgress()
     this->_clearRow(seqNumY);
 
     if (_seqNum) {
-        this->_stylist().std(*this);
+        this->_style(Stylist::Role::STD);
         this->_moveAndPrint({titleX, seqNumY}, "Seq num:");
-        this->_stylist().std(*this, true);
+        this->_style(Stylist::Role::STD, true);
         this->_moveAndPrint({infoX, seqNumY}, "%15s",
                             utils::sepNumber(static_cast<long long>(*_seqNum), ',').c_str());
     }

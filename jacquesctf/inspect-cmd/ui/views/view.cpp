@@ -79,7 +79,7 @@ void View::render()
     }
 
     if (_isInvalidated) {
-        _theStylist->std(*this);
+        this->_style(Stylist::Role::STD);
         ncplane_erase(_curPlane);
         this->_redrawContent();
 
@@ -142,8 +142,14 @@ void View::_decorate() const
         return;
     }
 
-    _theStylist->viewBorder(*this, _hasFocusMemb,
-                            _decoStyle == DecorationStyle::BORDERS_EMPHASIZED);
+    // style of the border and title
+    if (!_hasFocusMemb) {
+        this->_style(Stylist::Role::FAINT);
+    } else if (_decoStyle == DecorationStyle::BORDERS_EMPHASIZED) {
+        this->_style(Stylist::Role::HIGHLIGHT, true);
+    } else {
+        this->_style(Stylist::Role::STD);
+    }
 
     {
         // draw the border cell by cell with the current plane style
@@ -176,7 +182,6 @@ void View::_decorate() const
         }
     });
 
-    _theStylist->viewTitle(*this, _hasFocusMemb, _decoStyle == DecorationStyle::BORDERS_EMPHASIZED);
     ncplane_putstr_yx(_curPlane, 0, 2, title.c_str());
 
     static auto moreStr = " +++ ";
@@ -184,20 +189,20 @@ void View::_decorate() const
 
     if (_moreTop) {
         assert(_decoStyle != DecorationStyle::BORDERLESS);
-        _theStylist->viewHasMore(*this);
+        this->_style(Stylist::Role::HIGHLIGHT);
         ncplane_putstr_yx(_curPlane, 0, moreX, moreStr);
     }
 
     if (_moreBottom) {
         assert(_decoStyle != DecorationStyle::BORDERLESS);
-        _theStylist->viewHasMore(*this);
+        this->_style(Stylist::Role::HIGHLIGHT);
         ncplane_putstr_yx(_curPlane, static_cast<int>(_rect.h - 1), moreX, moreStr);
     }
 }
 
 void View::_clearContent() const
 {
-    _theStylist->std(*this);
+    this->_style(Stylist::Role::STD);
 
     for (Index y = 0; y < this->contentRect().h; ++y) {
         this->_putChar({0, y}, ' ');

@@ -45,9 +45,12 @@ protected:
         return _indentWidth;
     }
 
-    const Stylist& _stylist() const noexcept
+    /*
+     * Makes the next writes to `plane` use the style of `role`.
+     */
+    void _style(ncplane * const plane, const Stylist::Role role) const
     {
-        return *_theStylist;
+        _theStylist->apply(*plane, role);
     }
 
     virtual void _renderLine(ncplane *plane, Size maxWidth, bool stylize) const = 0;

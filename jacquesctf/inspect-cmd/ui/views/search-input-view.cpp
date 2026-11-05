@@ -38,13 +38,13 @@ void SearchInputView::_drawFormatText(const std::string& utf8Text)
     auto it = text.begin();
 
     if (*it == '/') {
-        this->_stylist().searchInputViewPrefix(*this);
+        this->_style(Stylist::Role::ACCENT, true);
         this->_appendCh(*it);
         ++it;
 
         while (it != text.end()) {
             if (*it == '\\') {
-                this->_stylist().searchInputViewEscape(*this);
+                this->_style(Stylist::Role::STD, true);
                 this->_appendCh(*it);
                 ++it;
 
@@ -55,9 +55,9 @@ void SearchInputView::_drawFormatText(const std::string& utf8Text)
 
                 continue;
             } else if (*it == '*') {
-                this->_stylist().searchInputViewWildcard(*this);
+                this->_style(Stylist::Role::SYMBOL, true);
             } else {
-                this->_stylist().std(*this);
+                this->_style(Stylist::Role::STD);
             }
 
             this->_appendCh(*it);
@@ -74,7 +74,7 @@ void SearchInputView::_drawFormatText(const std::string& utf8Text)
     auto hasAddSub = false;
 
     if (*it == '+' || *it == '-') {
-        this->_stylist().searchInputViewAddSub(*this);
+        this->_style(Stylist::Role::ACCENT, true);
         this->_appendCh(*it);
         ++it;
         hasAddSub = true;
@@ -84,7 +84,7 @@ void SearchInputView::_drawFormatText(const std::string& utf8Text)
         return;
     }
 
-    this->_stylist().searchInputViewPrefix(*this);
+    this->_style(Stylist::Role::ACCENT, true);
 
     if (*it == '#') {
         this->_appendCh(*it);
@@ -161,7 +161,7 @@ void SearchInputView::_drawNumber(std::u32string::const_iterator it,
         return;
     }
 
-    this->_stylist().searchInputViewNumber(*this);
+    this->_style(Stylist::Role::NUMBER);
 
     if (*it == '0') {
         this->_appendCh(*it);
@@ -177,9 +177,9 @@ void SearchInputView::_drawNumber(std::u32string::const_iterator it,
 
     while (it != endIt) {
         if (checkDigitFunc(*it)) {
-            this->_stylist().searchInputViewNumber(*this);
+            this->_style(Stylist::Role::NUMBER);
         } else {
-            this->_stylist().searchInputViewError(*this);
+            this->_style(Stylist::Role::ALERT, true);
         }
 
         this->_appendCh(*it);
@@ -193,7 +193,7 @@ void SearchInputView::animateBorder(const Index index)
     const auto altChCount = index % (borderChCount + 1);
 
     this->_drawBorder();
-    this->_stylist().simpleInputViewBorder(*this);
+    this->_style(Stylist::Role::INPUT_BORDER);
 
     Point pt {0, 0};
 

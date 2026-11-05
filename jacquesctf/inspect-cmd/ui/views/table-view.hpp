@@ -44,7 +44,13 @@ public:
     void highlightSel(bool highlight);
 
 protected:
-    using _CellStyle = Stylist::TableViewCellStyle;
+    // style of a whole cell
+    enum class _CellStyle
+    {
+        NORMAL,
+        WARNING,
+        ERROR,
+    };
 
     /*
      * Cell to draw: a sequence of segments, each one having its own
@@ -189,6 +195,7 @@ private:
     void _drawCell(const Point& contentPos, Size width, const _Col& col, const _Cell& cell,
                    bool sel);
     void _applySegStyle(_Cell::SegRole role, bool emph);
+    static Stylist::Role _cellRole(_CellStyle style, bool sel) noexcept;
     void _clearRow(Index y);
     void _clearCell(const Point& pos, Size cellWidth);
 

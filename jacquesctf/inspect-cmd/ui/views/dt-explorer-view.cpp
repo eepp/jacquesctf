@@ -251,17 +251,17 @@ void DtExplorerView::centerHighlight()
 
 void DtExplorerView::_drawScopeSubtitleRow(const Index index, const std::string& text)
 {
-    this->_stylist().std(*this, true);
+    this->_style(Stylist::Role::STD, true);
     this->_moveAndPrint({0, this->_contentRectYFromIndex(index)}, "%s", text.c_str());
 }
 
 void DtExplorerView::_drawRows()
 {
-    this->_stylist().std(*this);
+    this->_style(Stylist::Role::STD);
     this->_clearContent();
 
     if (this->_rowCount() == 0) {
-        this->_stylist().std(*this, true);
+        this->_style(Stylist::Role::STD, true);
 
         const std::string msg {"Nothing to show here!"};
 
@@ -283,7 +283,7 @@ void DtExplorerView::_drawRows()
 
         if (const auto subRow = std::get_if<_ScopeSubtitleRow>(&row)) {
             this->_moveCursor({0, y});
-            this->_stylist().sectionTitle(*this);
+            this->_style(Stylist::Role::TITLE);
 
             switch (subRow->scope) {
             case yactfr::Scope::PacketHeader:
@@ -319,7 +319,7 @@ void DtExplorerView::_drawRows()
             if (const auto dtDetails = dynamic_cast<const DtDetails *>(details)) {
                 if (&dtDetails->dt() == _highlight) {
                     highlighted = true;
-                    this->_stylist().stdSel(*this);
+                    this->_style(Stylist::Role::SEL);
 
                     for (Index x = 0; x < this->contentRect().w; ++x) {
                         this->_putChar({x, y}, ' ');
@@ -328,7 +328,7 @@ void DtExplorerView::_drawRows()
             }
 
             if (!highlighted) {
-                this->_stylist().std(*this);
+                this->_style(Stylist::Role::STD);
             }
 
             this->_moveCursor({2, y});

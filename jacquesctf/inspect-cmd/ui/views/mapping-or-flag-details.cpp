@@ -26,7 +26,7 @@ void MappingOrFlagDetails::_renderLine(ncplane * const plane, const Size maxWidt
     auto remWidth = maxWidth;
 
     if (stylize) {
-        this->_stylist().detailsViewMappingOrFlagName(plane);
+        this->_style(plane, Stylist::Role::HIGHLIGHT);
     }
 
     this->_renderStr(plane, remWidth, _name + ' ');
@@ -36,7 +36,7 @@ void MappingOrFlagDetails::_renderLine(ncplane * const plane, const Size maxWidt
     }
 
     if (stylize) {
-        this->_stylist().detailsViewMappingOrFlagRange(plane);
+        this->_style(plane, Stylist::Role::ACCENT);
     }
 
     this->_renderStr(plane, remWidth, _rangesStrs);

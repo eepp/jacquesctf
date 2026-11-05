@@ -19,7 +19,7 @@ TextInputView::TextInputView(const Rect& rect, const Stylist& stylist) :
 
 void TextInputView::_drawCurText(const std::string& text)
 {
-    this->_stylist().std(*this);
+    this->_style(Stylist::Role::STD);
     this->_print("%s", text.c_str());
 }
 

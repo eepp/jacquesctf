@@ -69,7 +69,7 @@ void StatusView::_drawOffset()
     }
 
     // clear previous
-    this->_stylist().statusViewStd(*this);
+    this->_style(Stylist::Role::STATUS);
 
     for (auto x = this->contentRect().w - _curEndPositions->dsfPath;
             x < this->contentRect().w - _curEndPositions->pktPercent; ++x) {
@@ -77,25 +77,25 @@ void StatusView::_drawOffset()
     }
 
     // draw percentage
-    this->_stylist().statusViewStd(*this, true);
+    this->_style(Stylist::Role::STATUS, true);
 
     const auto percent = _appState->activePktState().curOffsetInPktBits() * 100 /
                          _appState->activePktState().pkt().indexEntry().effectiveTotalLen().bits();
 
     this->_moveAndPrint({this->contentRect().w - _curEndPositions->pktPercent - 5, 0}, "%3u",
                         static_cast<unsigned int>(percent));
-    this->_stylist().statusViewStd(*this);
+    this->_style(Stylist::Role::STATUS);
     this->_print(" %%");
 
     // draw new offset in packet
-    this->_stylist().statusViewStd(*this, true);
+    this->_style(Stylist::Role::STATUS, true);
 
     auto str = utils::sepNumber(_appState->activePktState().curOffsetInPktBits(), ',');
 
     this->_moveAndPrint({
         this->contentRect().w - _curEndPositions->curOffsetInPktBits - 2 - str.size(), 0
     }, "%s", str.c_str());
-    this->_stylist().statusViewStd(*this);
+    this->_style(Stylist::Role::STATUS);
     this->_print(" b");
 
     // draw new offset in data stream file
@@ -103,16 +103,16 @@ void StatusView::_drawOffset()
     this->_moveAndPrint({
         this->contentRect().w - _curEndPositions->curOffsetInDsFileBits - str.size() - 3, 0
     }, "(", str.c_str());
-    this->_stylist().statusViewStd(*this);
+    this->_style(Stylist::Role::STATUS);
     this->_print(str.c_str());
-    this->_stylist().statusViewStd(*this);
+    this->_style(Stylist::Role::STATUS);
     this->_print(" b)");
 }
 
 void StatusView::_redrawContent()
 {
     // clear
-    this->_stylist().statusViewStd(*this);
+    this->_style(Stylist::Role::STATUS);
     this->_clearRect();
 
     if (!_curEndPositions) {
@@ -130,9 +130,9 @@ void StatusView::_redrawContent()
             this->contentRect().w - _curEndPositions->pktIndex -
             indexStr.size() - 1, 0
         }, '#');
-        this->_stylist().statusViewStd(*this, true);
+        this->_style(Stylist::Role::STATUS, true);
         this->_print("%s", indexStr.c_str());
-        this->_stylist().statusViewStd(*this);
+        this->_style(Stylist::Role::STATUS);
         this->_print("/%s", countStr.c_str());
 
         // packet sequence number
@@ -144,7 +144,7 @@ void StatusView::_redrawContent()
             this->_moveAndPrint({
                 this->contentRect().w - _curEndPositions->seqNum - seqNumStr.size() - 2, 0
             }, "##");
-            this->_stylist().statusViewStd(*this, true);
+            this->_style(Stylist::Role::STATUS, true);
             this->_safePrint("%s", seqNumStr.c_str());
         }
     }
@@ -161,7 +161,7 @@ void StatusView::_redrawContent()
         this->_print("%s/", dirNameStr.c_str());
     }
 
-    this->_stylist().statusViewFilename(*this);
+    this->_style(Stylist::Role::STATUS, true);
     this->_print("%s", filenameStr.c_str());
 }
 

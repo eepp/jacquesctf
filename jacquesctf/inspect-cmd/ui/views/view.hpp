@@ -16,6 +16,7 @@
 
 #include "../key.hpp"
 #include "../rect.hpp"
+#include "../stylist.hpp"
 #include "../../state/msg.hpp"
 #include "../../state/inspect-cmd-state.hpp"
 
@@ -23,7 +24,6 @@ struct ncplane;
 
 namespace jacques {
 
-class Stylist;
 class ViewInspectCmdStateObserverGuard;
 
 /*
@@ -50,8 +50,8 @@ constexpr auto ELLIPSIS = "…";
  *
  * A view never draws immediately: when its state changes, it calls
  * _invalidate() and its next render() calls _redrawContent() to draw
- * the whole view. Drawing methods must therefore ONLY be called from
- * _redrawContent().
+ * the whole view. Drawing methods must therefore ONLY be called
+ * from _redrawContent().
  *
  * The owner of a view renders it (calls render()), and the rendering
  * order is actually the stacking order (the last rendered view is on
@@ -96,14 +96,11 @@ constexpr auto ELLIPSIS = "…";
  * underlying `StateObserverGuard` and uses _appStateChanged() as
  * the observer.
  *
- * The `View` class is friend with the `Stylist` class: the `Stylist`
- * class has a bunch of stylizing methods which apply to a view and it
- * needs to access its underlying plane to change its
- * current attributes.
+ * A derived view calls _style() to choose the style of what it
+ * draws next.
  */
 class View
 {
-    friend class Stylist;
     friend class ViewInspectCmdStateObserverGuard;
 
 public:
@@ -271,7 +268,7 @@ protected:
 
     /*
      * Clears everything in the content rectangle (contentRect()) with
-     * the Stylist::std() style.
+     * the `Stylist::Role::STD` style.
      */
     void _clearContent() const;
 
@@ -307,6 +304,15 @@ protected:
     const Stylist& _stylist() const noexcept
     {
         return *_theStylist;
+    }
+
+    /*
+     * Makes the next drawing operations use the style of `role`, bold
+     * if `isEm` is true.
+     */
+    void _style(const Stylist::Role role, const bool isEm = false) const
+    {
+        _theStylist->apply(*_curPlane, role, isEm);
     }
 
     /*

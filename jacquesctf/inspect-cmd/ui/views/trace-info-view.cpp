@@ -421,7 +421,7 @@ void TraceInfoView::_buildRows()
 
 void TraceInfoView::_drawRows()
 {
-    this->_stylist().std(*this);
+    this->_style(Stylist::Role::STD);
     this->_clearContent();
     assert(this->_index() < this->_rowCount());
 
@@ -435,14 +435,14 @@ void TraceInfoView::_drawRows()
 
         if (const auto sRow = dynamic_cast<const _SectionRow *>(row.get())) {
             this->_moveCursor({0, y});
-            this->_stylist().sectionTitle(*this);
+            this->_style(Stylist::Role::TITLE);
             this->_safePrint("%s:", sRow->title.c_str());
         } else if (const auto sRow = dynamic_cast<const _PropRow *>(row.get())) {
             this->_moveCursor({2, y});
-            this->_stylist().traceInfoViewPropKey(*this);
+            this->_style(Stylist::Role::PROP_KEY);
             this->_safePrint("%s:", sRow->key.c_str());
             this->_moveCursor({sRow->valOffset + 2, y});
-            this->_stylist().traceInfoViewPropVal(*this);
+            this->_style(Stylist::Role::PROP_VAL);
 
             if (const auto vRow = dynamic_cast<const _SIntPropRow *>(row.get())) {
                 if (vRow->sepNumber) {
@@ -451,7 +451,7 @@ void TraceInfoView::_drawRows()
                     this->_safePrint("%s", utils::sepNumber(vRow->val, ',').c_str());
                 }
             } else if (const auto vRow = dynamic_cast<const _ErrorPropRow *>(row.get())) {
-                this->_stylist().error(*this);
+                this->_style(Stylist::Role::ERROR);
                 this->_safePrint("%s", vRow->val.c_str());
             } else if (const auto vRow = dynamic_cast<const _StrPropRow *>(row.get())) {
                 this->_safePrint("%s", vRow->val.c_str());
@@ -464,12 +464,11 @@ void TraceInfoView::_drawRows()
             } else if (const auto vRow = dynamic_cast<const _DurationPropRow *>(row.get())) {
                 this->_safePrint("%s", vRow->duration.format().c_str());
             } else if (const auto vRow = dynamic_cast<const _NonePropRow *>(row.get())) {
-                this->_stylist().tableViewNaCell(*this, false);
+                this->_style(Stylist::Role::DIM);
                 this->_safePrint("N/A");
             }
         } else if (const auto sRow = dynamic_cast<const _SepRow *>(row.get())) {
-            this->_moveCursor({2, y});
-            this->_stylist().traceInfoViewPropKey(*this);
+            this->_style(Stylist::Role::DIM);
             this->_moveAndPrint({2, y}, "---");
         }
     }

@@ -333,7 +333,7 @@ void startInteractive(const InspectCfg& cfg)
                     curScreen->isVisible(false);
                     statusView->isVisible(false);
                     ncplane_erase(&stdPlane);
-                    stylist->error(&stdPlane);
+                    stylist->apply(stdPlane, Stylist::Role::ERROR);
 
                     const auto termSize = term::size();
 

@@ -353,11 +353,11 @@ void DtDetails::_renderName(ncplane * const plane, Size& remWidth, const bool st
 {
     this->_renderAligned(plane, remWidth, [this, stylize](const auto plane) {
         if (stylize) {
-            this->_stylist().detailsViewDtName(plane);
+            this->_style(plane, Stylist::Role::DT_NAME);
         }
     }, [this, stylize](const auto plane) {
         if (stylize) {
-            this->_stylist().std(plane);
+            this->_style(plane, Stylist::Role::STD);
         }
     }, _name, _nameWidth);
 }
@@ -366,11 +366,11 @@ void DtDetails::_renderExtra(ncplane * const plane, Size& remWidth, const bool s
 {
     this->_renderAligned(plane, remWidth, [this, stylize](const auto plane) {
         if (stylize) {
-            this->_stylist().detailsViewDtExtra(plane);
+            this->_style(plane, Stylist::Role::DT_EXTRA);
         }
     }, [this, stylize](const auto plane) {
         if (stylize) {
-            this->_stylist().std(plane);
+            this->_style(plane, Stylist::Role::STD);
         }
     }, _extra, _extraWidth);
 }
@@ -379,7 +379,7 @@ void DtDetails::_renderDtInfo(ncplane * const plane, Size& remWidth, const bool 
                               const char * const info) const
 {
     if (stylize) {
-        this->_stylist().detailsViewTypeInfo(plane);
+        this->_style(plane, Stylist::Role::SYMBOL);
     }
 
     this->_renderStr(plane, remWidth, info);
@@ -389,7 +389,7 @@ void DtDetails::_renderRoleFlag(ncplane * const plane, Size& remWidth, const boo
                                 const char * const name) const
 {
     if (stylize) {
-        this->_stylist().detailsViewPropKey(plane);
+        this->_style(plane, Stylist::Role::PROP_KEY);
     }
 
     this->_renderChar(plane, remWidth, ' ');
@@ -445,7 +445,7 @@ void DtDetails::_renderProp(ncplane * const plane, Size& remWidth, const bool st
                             const char * const key, const char * const val) const
 {
     if (stylize) {
-        this->_stylist().detailsViewPropKey(plane);
+        this->_style(plane, Stylist::Role::PROP_KEY);
     }
 
     this->_renderChar(plane, remWidth, ' ');
@@ -461,7 +461,7 @@ void DtDetails::_renderProp(ncplane * const plane, Size& remWidth, const bool st
     }
 
     if (stylize) {
-        this->_stylist().std(plane);
+        this->_style(plane, Stylist::Role::STD);
     }
 
     this->_renderChar(plane, remWidth, '=');
@@ -471,7 +471,7 @@ void DtDetails::_renderProp(ncplane * const plane, Size& remWidth, const bool st
     }
 
     if (stylize) {
-        this->_stylist().detailsViewPropVal(plane);
+        this->_style(plane, Stylist::Role::PROP_VAL);
     }
 
     this->_renderStr(plane, remWidth, val);

@@ -4,6 +4,7 @@
  */
 
 #include <cassert>
+#include <cstdlib>
 #include <algorithm>
 #include <numeric>
 
@@ -100,7 +101,7 @@ void TableView::_redrawContent()
 
 void TableView::_drawHeader()
 {
-    this->_stylist().tableViewHeader(*this);
+    this->_style(Stylist::Role::INVERSE);
     this->_clearRow(0);
 
     Index x = 0;
@@ -134,23 +135,44 @@ void TableView::_clearCell(const Point& pos, const Size cellWidth)
     }
 }
 
+Stylist::Role TableView::_cellRole(const _CellStyle style, const bool sel) noexcept
+{
+    switch (style) {
+    case _CellStyle::NORMAL:
+        return sel ? Stylist::Role::SEL : Stylist::Role::STD;
+
+    case _CellStyle::WARNING:
+        return sel ? Stylist::Role::SEL_WARNING : Stylist::Role::WARNING;
+
+    case _CellStyle::ERROR:
+        return sel ? Stylist::Role::SEL_ERROR : Stylist::Role::ERROR;
+    }
+
+    std::abort();
+}
+
 void TableView::_applySegStyle(const _Cell::SegRole role, const bool emph)
 {
     switch (role) {
     case _Cell::SegRole::TEXT:
-        this->_stylist().tableViewTextCell(*this, emph);
+        if (emph) {
+            this->_style(Stylist::Role::HIGHLIGHT, true);
+        } else {
+            this->_style(Stylist::Role::STD);
+        }
+
         break;
 
     case _Cell::SegRole::PLAIN:
-        this->_stylist().tableViewTextCell(*this, false);
+        this->_style(Stylist::Role::STD);
         break;
 
     case _Cell::SegRole::NA:
-        this->_stylist().tableViewNaCell(*this, emph);
+        this->_style(Stylist::Role::DIM, emph);
         break;
 
     case _Cell::SegRole::ACCENT:
-        this->_stylist().tableViewTsCellNsPart(*this, emph);
+        this->_style(Stylist::Role::ACCENT, emph);
         break;
     }
 }
@@ -159,11 +181,7 @@ void TableView::_drawCell(const Point& contentPos, const Size width, const _Col&
                           const _Cell& cell, const bool sel)
 {
     // clear with the cell style first because it might have a background color
-    if (sel) {
-        this->_stylist().tableViewSel(*this, cell.style);
-    } else {
-        this->_stylist().tableViewCell(*this, cell.style);
-    }
+    this->_style(_cellRole(cell.style, sel));
 
     this->_clearCell(contentPos, width);
 
@@ -216,7 +234,7 @@ void TableView::_drawCell(const Point& contentPos, const Size width, const _Col&
 
     if (!fits) {
         if (segStyles) {
-            this->_stylist().textMore(*this);
+            this->_style(Stylist::Role::SYMBOL, true);
         }
 
         this->_putChar({contentPos.x + width - 1, contentPos.y}, glyphs::RARROW);
@@ -230,11 +248,7 @@ void TableView::_drawRow(const Index row)
     Index x = 0;
 
     // set style to clear row initially
-    if (sel) {
-        this->_stylist().tableViewSel(*this);
-    } else {
-        this->_stylist().tableViewCell(*this);
-    }
+    this->_style(sel ? Stylist::Role::SEL : Stylist::Role::STD);
 
     this->_clearRow(y);
 
@@ -249,11 +263,7 @@ void TableView::_drawRow(const Index row)
             break;
         }
 
-        if (sel) {
-            this->_stylist().tableViewSelSep(*this);
-        } else {
-            this->_stylist().tableViewSep(*this);
-        }
+        this->_style(sel ? Stylist::Role::SEL : Stylist::Role::FAINT);
 
         this->_putChar({x, y}, glyphs::VLINE);
         x += 1;
@@ -376,7 +386,7 @@ void TableView::_updateCounts()
 void TableView::_drawRows()
 {
     if (this->_rowCount() == 0) {
-        this->_stylist().tableViewCell(*this);
+        this->_style(Stylist::Role::STD);
 
         for (Index yIndex = 0; yIndex < this->contentRect().h; ++yIndex) {
             this->_clearRow(yIndex);
@@ -390,7 +400,7 @@ void TableView::_drawRows()
         this->_drawRow(row);
     }
 
-    this->_stylist().tableViewSep(*this);
+    this->_style(Stylist::Role::FAINT);
 
     for (auto yIndex = this->_contentYFromVisibleRow(this->_lastVisibleRow()) + 1;
             yIndex < this->contentRect().h; ++yIndex) {
