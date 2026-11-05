@@ -13,7 +13,7 @@ namespace jacques {
 
 DsFileTableView::DsFileTableView(const Rect& rect, const Stylist& stylist,
                                  InspectCmdState& appState) :
-    TableView {rect, "Data stream files", DecorationStyle::BORDERS, stylist},
+    TableView {rect, "Data stream files", DecorationStyle::BORDERS, stylist, appState},
     _appState {&appState},
     _appStateObserverGuard {appState, *this}
 {
@@ -124,6 +124,8 @@ void DsFileTableView::_appStateChanged(const Message msg)
 {
     if (msg == Message::ACTIVE_DS_FILE_AND_PKT_CHANGED) {
         this->_selectRow(_appState->activeDsFileStateIndex());
+    } else if (msg == Message::FMT_MODES_CHANGED) {
+        this->_invalidate();
     }
 }
 

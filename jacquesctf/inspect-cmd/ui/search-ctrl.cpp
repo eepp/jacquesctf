@@ -84,6 +84,40 @@ std::unique_ptr<const SearchQuery> SearchCtrl::startLive(const std::string& init
     return parseSearchQuery(buf);
 }
 
+std::optional<std::string> SearchCtrl::initFromKey(const Key key)
+{
+    const auto ch = key.ch();
+
+    if (!ch) {
+        return std::nullopt;
+    }
+
+    switch (*ch) {
+    case U'/':
+    case U'g':
+        return "";
+
+    case U'N':
+    case U'*':
+        return "*";
+
+    case U'k':
+        return "**";
+
+    case U':':
+        return ":";
+
+    case U'P':
+        return "#";
+
+    case U'$':
+        return "$";
+
+    default:
+        return std::nullopt;
+    }
+}
+
 void SearchCtrl::parentScreenResized(const Screen& parentScreen)
 {
     _searchView->moveAndResize(SearchCtrl::_viewRect(parentScreen));

@@ -12,7 +12,7 @@ namespace jacques {
 
 DstTableView::DstTableView(const Rect& rect, const Stylist& stylist,
                            const InspectCmdState& appState) :
-    TableView {rect, "Data stream types", DecorationStyle::BORDERS, stylist}
+    TableView {rect, "Data stream types", DecorationStyle::BORDERS, stylist, appState}
 {
     this->_cols({
         _Col {"ID", 10, _COL_REQUIRED | _COL_EMPH, [this](const Index row) {

@@ -10,8 +10,6 @@
 #include "../stylist.hpp"
 #include "../views/ds-file-table-view.hpp"
 #include "screen.hpp"
-#include "../cycle-wheel.hpp"
-#include "data/data-len.hpp"
 
 namespace jacques {
 
@@ -23,13 +21,10 @@ public:
                            InspectCmdState& appState);
 
 private:
-    void _resized() override;
     KeyHandlingReaction _handleKey(Key key) override;
 
 private:
     std::unique_ptr<DsFileTableView> _view;
-    CycleWheel<TsFmtMode> _tsFmtModeWheel;
-    CycleWheel<utils::LenFmtMode> _dataLenFmtModeWheel;
 };
 
 } // namespace jacques

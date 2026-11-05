@@ -33,6 +33,15 @@ namespace jacques {
  * necessarily full screen: there can be other, "permanent" views on the
  * top, bottom, or sides.
  *
+ * At most one view of a screen has the focus (see _focus()):
+ * handleKey() passes the key to this view first (see
+ * View::handleKey()), and then to _handleKey() if the view didn't
+ * handle it. This is how the navigation keys (Up, Down, Page Up, and
+ * so on) reach the focused view.
+ *
+ * A screen which mostly shows a single view adds it with
+ * _addMainView(): the default _resized() makes it fill the screen.
+ *
  * As a convenience, the base screen holds the stylist and state, which
  * are almost always needed by derived screens anyway.
  */
@@ -91,11 +100,12 @@ public:
 
     /*
      * Handles a user key `key`.
+     *
+     * Passes `key` to the focused view first, if any (see _focus()):
+     * if it handles it, calls _focusedViewHandledKey(); otherwise,
+     * calls _handleKey().
      */
-    KeyHandlingReaction handleKey(const Key key)
-    {
-        return this->_handleKey(key);
-    }
+    KeyHandlingReaction handleKey(Key key);
 
     const Rect& rect() const noexcept
     {
@@ -115,12 +125,68 @@ protected:
     }
 
     /*
+     * Like _addView(), but also makes `view` the main view of this
+     * screen: the default _resized() makes it fill rect().
+     *
+     * Also focuses `view` (see _focus()).
+     */
+    void _addMainView(View& view);
+
+    /*
+     * Focuses `view`, blurring the previously focused view, if any.
+     *
+     * handleKey() passes the user keys to `view` first.
+     *
+     * `view` must be one of the views of this screen (see _addView()).
+     */
+    void _focus(View& view);
+
+    /*
+     * Focused view, or `nullptr` if none (see _focus()).
+     */
+    View *_focusedView() const noexcept
+    {
+        return _theFocusedView;
+    }
+
+    /*
+     * If `key` is `t` or `s`, then selects the next timestamp or data
+     * length format mode of the application state (which notifies the
+     * views), and returns true.
+     *
+     * Otherwise, returns false.
+     */
+    bool _handleFmtModeKey(Key key);
+
+    /*
+     * If `key` is F3 or F4, then goes to the previous or next data
+     * stream file, and returns true.
+     *
+     * Otherwise, returns false.
+     */
+    bool _handleDsFileKey(Key key);
+
+    /*
      * Implementation can perform anything visual within the rectangle
      * of the screen and can modify the state of the application.
      *
+     * handleKey() only calls this if the focused view, if any, didn't
+     * handle `key`.
+     *
      * The return value indicates what to do next.
+     *
+     * The default implementation doesn't handle any key.
      */
-    virtual KeyHandlingReaction _handleKey(Key key) = 0;
+    virtual KeyHandlingReaction _handleKey(Key key);
+
+    /*
+     * Called when the focused view handled the user key `key` (see
+     * handleKey()).
+     *
+     * For example, the selection of the focused view could have
+     * changed.
+     */
+    virtual void _focusedViewHandledKey(Key key);
 
     /*
      * Called when the screen needs to be resized.
@@ -129,8 +195,11 @@ protected:
      *
      * Implementation must move/resize its views and make sure nothing
      * is drawn outside rect().
+     *
+     * The default implementation makes the main view (see
+     * _addMainView()), if any, fill rect().
      */
-    virtual void _resized() = 0;
+    virtual void _resized();
 
     /*
      * Called when the visibility of the screen changes (new visibility
@@ -165,6 +234,8 @@ private:
     InspectCmdState *_curAppState;
     bool _isVisible = false;
     std::vector<View *> _views;
+    View *_mainView = nullptr;
+    View *_theFocusedView = nullptr;
 };
 
 } // namespace jacques

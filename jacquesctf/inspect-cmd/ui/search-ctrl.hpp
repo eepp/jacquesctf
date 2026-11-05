@@ -8,7 +8,10 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
+#include <string>
 
+#include "key.hpp"
 #include "views/search-input-view.hpp"
 #include "screens/screen.hpp"
 #include "stylist.hpp"
@@ -43,6 +46,33 @@ public:
                                                                  const LiveUpdateFunc& liveUpdateFunc);
 
     void parentScreenResized(const Screen& parentScreen);
+
+    /*
+     * Initial text of the search input when the user starts a search
+     * with the key `key`, or `std::nullopt` if `key` doesn't start a
+     * search.
+     *
+     * The keys which start a search are:
+     *
+     * `/`, `g`:
+     *     Empty text.
+     *
+     * `N`, `*`:
+     *     `*` (event record type name).
+     *
+     * `k`:
+     *     `**` (event record type ID).
+     *
+     * `:`:
+     *     `:` (event record index).
+     *
+     * `P`:
+     *     `#` (packet index).
+     *
+     * `$`:
+     *     `$` (timestamp).
+     */
+    static std::optional<std::string> initFromKey(Key key);
 
     /*
      * Search view, which the parent screen renders.

@@ -11,7 +11,7 @@
 namespace jacques {
 
 ErTableView::ErTableView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState) :
-    TableView {rect, "Event records", DecorationStyle::BORDERS, stylist},
+    TableView {rect, "Event records", DecorationStyle::BORDERS, stylist, appState},
     _appState {&appState},
     _appStateObserverGuard {appState, *this}
 {
@@ -80,6 +80,11 @@ Size ErTableView::_rowCount()
 
 void ErTableView::_appStateChanged(const Message msg)
 {
+    if (msg == Message::FMT_MODES_CHANGED) {
+        this->_invalidate();
+        return;
+    }
+
     if (msg == Message::ACTIVE_DS_FILE_AND_PKT_CHANGED || msg == Message::ACTIVE_PKT_CHANGED) {
         /*
          * Remove selection in case there's less event records than our

@@ -38,18 +38,10 @@ class TableView :
     public CommonInspectTableView
 {
 public:
-    void next();
-    void prev();
-    void pageDown();
-    void pageUp();
-    void showFirstPage();
-    void showLastPage();
     void centerSelRow();
     void selectFirst();
     void selectLast();
     void highlightSel(bool highlight);
-    void tsFmtMode(TsFmtMode tsFmtMode);
-    void dataLenFmtMode(utils::LenFmtMode dataLenFmtMode);
 
 protected:
     using _CellStyle = Stylist::TableViewCellStyle;
@@ -142,8 +134,16 @@ protected:
     };
 
 protected:
+    /*
+     * The data length and timestamp cells follow the format modes of
+     * `appState` (see InspectCmdState::tsFmtMode() and
+     * InspectCmdState::dataLenFmtMode()).
+     *
+     * A derived table view which shows such cells must invalidate
+     * itself on `Message::FMT_MODES_CHANGED`.
+     */
     explicit TableView(const Rect& rect, std::string_view title, DecorationStyle decoStyle,
-                       const Stylist& stylist);
+                       const Stylist& stylist, const InspectCmdState& appState);
 
     virtual Size _rowCount() = 0;
     using CommonInspectTableView::_updateCounts;
@@ -153,6 +153,12 @@ protected:
     void _selectRow(Index row);
     void _removeSel();
     void _resized() override;
+
+    /*
+     * Handles Up, Down, Page Up, Page Down, Home, End (selection), and
+     * `c` (center the selected row).
+     */
+    bool _handleKey(Key key) override;
 
     // current content width of the shown column `col`
     Size _colWidth(const Index col) const noexcept
@@ -172,6 +178,10 @@ private:
     // "seconds,nanoseconds ns" cell, the nanosecond part being accented
     static _Cell _createNsCell(const char *sign, long long ns);
 
+    void _selNext();
+    void _selPrev();
+    void _selNextPage();
+    void _selPrevPage();
     void _fitCols();
     void _drawHeader();
     void _drawRows();
@@ -195,8 +205,9 @@ private:
     std::vector<Size> _colWidths;
 
     bool _highlightSel = true;
-    TsFmtMode _tsFmtMode = TsFmtMode::LONG;
-    utils::LenFmtMode _dataLenFmtMode = utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS;
+
+    // for the format modes
+    const InspectCmdState *_theAppState;
 };
 
 } // namespace jacques

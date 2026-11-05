@@ -17,8 +17,10 @@
 namespace jacques {
 
 TableView::TableView(const Rect& rect, const std::string_view title,
-                     const DecorationStyle decoStyle, const Stylist& stylist) :
-    View {rect, title, decoStyle, stylist}
+                     const DecorationStyle decoStyle, const Stylist& stylist,
+                     const InspectCmdState& appState) :
+    View {rect, title, decoStyle, stylist},
+    _theAppState {&appState}
 {
     assert(this->contentRect().h >= 2);
 }
@@ -290,10 +292,11 @@ TableView::_Cell TableView::_createPathCell(const boost::filesystem::path& path,
 
 TableView::_Cell TableView::_createDataLenCell(const DataLen& len) const
 {
-    const auto [qty, unit] = len.format(_dataLenFmtMode, ',');
+    const auto fmtMode = _theAppState->dataLenFmtMode();
+    const auto [qty, unit] = len.format(fmtMode, ',');
 
-    if (_dataLenFmtMode == utils::LenFmtMode::FULL_FLOOR ||
-            _dataLenFmtMode == utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS) {
+    if (fmtMode == utils::LenFmtMode::FULL_FLOOR ||
+            fmtMode == utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS) {
         // right-align the unit within four columns
         return _Cell {qty + std::string(unit.size() < 4 ? 4 - unit.size() : 0, ' ') + unit};
     }
@@ -317,10 +320,12 @@ TableView::_Cell TableView::_createNsCell(const char * const sign, const long lo
 
 TableView::_Cell TableView::_createTsCell(const Ts& ts) const
 {
-    switch (ts.effectiveFmtMode(_tsFmtMode)) {
+    const auto fmtMode = _theAppState->tsFmtMode();
+
+    switch (ts.effectiveFmtMode(fmtMode)) {
     case TsFmtMode::LONG:
     case TsFmtMode::SHORT:
-        return _Cell {ts.format(_tsFmtMode)};
+        return _Cell {ts.format(fmtMode)};
 
     case TsFmtMode::NS_FROM_ORIGIN:
         return this->_createNsCell("", ts.nsFromOrigin());
@@ -337,7 +342,7 @@ TableView::_Cell TableView::_createDurationCell(const Ts& beginTs, const Ts& end
     const auto sign = beginTs > endTs ? "-" : "";
     const auto absDuration = std::max(beginTs, endTs) - std::min(beginTs, endTs);
 
-    switch (_tsFmtMode) {
+    switch (_theAppState->tsFmtMode()) {
     case TsFmtMode::LONG:
     case TsFmtMode::SHORT:
         return _Cell {sign + absDuration.format()};
@@ -414,19 +419,50 @@ void TableView::_resized()
     this->_fitCols();
 }
 
-void TableView::tsFmtMode(const TsFmtMode tsFmtMode)
+bool TableView::_handleKey(const Key key)
 {
-    _tsFmtMode = tsFmtMode;
-    this->_invalidate();
+    if (key.ch() == U'c') {
+        this->centerSelRow();
+        return true;
+    }
+
+    const auto specialKey = key.special();
+
+    if (!specialKey) {
+        return false;
+    }
+
+    switch (*specialKey) {
+    case SpecialKey::UP:
+        this->_selPrev();
+        return true;
+
+    case SpecialKey::DOWN:
+        this->_selNext();
+        return true;
+
+    case SpecialKey::PAGE_UP:
+        this->_selPrevPage();
+        return true;
+
+    case SpecialKey::PAGE_DOWN:
+        this->_selNextPage();
+        return true;
+
+    case SpecialKey::HOME:
+        this->selectFirst();
+        return true;
+
+    case SpecialKey::END:
+        this->selectLast();
+        return true;
+
+    default:
+        return false;
+    }
 }
 
-void TableView::dataLenFmtMode(const utils::LenFmtMode dataLenFmtMode)
-{
-    _dataLenFmtMode = dataLenFmtMode;
-    this->_invalidate();
-}
-
-void TableView::next()
+void TableView::_selNext()
 {
     if (this->_rowCount() == 0) {
         return;
@@ -436,7 +472,7 @@ void TableView::next()
     this->_invalidate();
 }
 
-void TableView::prev()
+void TableView::_selPrev()
 {
     if (this->_rowCount() == 0) {
         return;
@@ -446,7 +482,7 @@ void TableView::prev()
     this->_invalidate();
 }
 
-void TableView::pageDown()
+void TableView::_selNextPage()
 {
     if (this->_rowCount() == 0) {
         return;
@@ -462,7 +498,7 @@ void TableView::pageDown()
     this->_invalidate();
 }
 
-void TableView::pageUp()
+void TableView::_selPrevPage()
 {
     if (this->_rowCount() == 0) {
         return;
@@ -478,18 +514,6 @@ void TableView::pageUp()
         }
     }
 
-    this->_invalidate();
-}
-
-void TableView::showFirstPage()
-{
-    this->_showFirstPage();
-    this->_invalidate();
-}
-
-void TableView::showLastPage()
-{
-    this->_showLastPage();
     this->_invalidate();
 }
 

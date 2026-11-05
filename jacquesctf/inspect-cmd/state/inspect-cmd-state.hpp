@@ -12,6 +12,9 @@
 
 #include "msg.hpp"
 #include "inspect-common/app-state.hpp"
+#include "data/ts.hpp"
+#include "utils.hpp"
+#include "../ui/cycle-wheel.hpp"
 
 namespace jacques {
 
@@ -27,6 +30,34 @@ public:
     Index addObserver(const Observer& observer);
     void removeObserver(Index id);
 
+    /*
+     * Current timestamp format mode.
+     */
+    TsFmtMode tsFmtMode() const noexcept
+    {
+        return _tsFmtModeWheel.curVal();
+    }
+
+    /*
+     * Current data length format mode.
+     */
+    utils::LenFmtMode dataLenFmtMode() const noexcept
+    {
+        return _dataLenFmtModeWheel.curVal();
+    }
+
+    /*
+     * Selects the next timestamp format mode (possibly wrapping), and
+     * notifies `Message::FMT_MODES_CHANGED`.
+     */
+    void nextTsFmtMode();
+
+    /*
+     * Selects the next data length format mode (possibly wrapping), and
+     * notifies `Message::FMT_MODES_CHANGED`.
+     */
+    void nextDataLenFmtMode();
+
 private:
     void _notify(Message msg);
     void _activeDsFileAndPktChanged() override;
@@ -35,6 +66,18 @@ private:
 
 private:
     std::vector<Observer> _observers;
+
+    CycleWheel<TsFmtMode> _tsFmtModeWheel {
+        TsFmtMode::LONG,
+        TsFmtMode::NS_FROM_ORIGIN,
+        TsFmtMode::CYCLES,
+    };
+
+    CycleWheel<utils::LenFmtMode> _dataLenFmtModeWheel {
+        utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
+        utils::LenFmtMode::BYTES_FLOOR_WITH_EXTRA_BITS,
+        utils::LenFmtMode::BITS,
+    };
 };
 
 class InspectCmdStateObserverGuard final

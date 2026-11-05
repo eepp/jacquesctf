@@ -34,6 +34,7 @@ public:
 private:
     void _resized() override;
     KeyHandlingReaction _handleKey(Key key) override;
+    void _focusedViewHandledKey(Key key) override;
     void _visibilityChanged() override;
     std::tuple<Rect, Rect, Rect> _viewRects() const;
     void _updateViews();
@@ -43,7 +44,6 @@ private:
     std::unique_ptr<DstTableView> _dstTableView;
     std::unique_ptr<DtExplorerView> _dtExplorerView;
     SearchCtrl _searchController;
-    View *_focusedView;
     bool _tablesVisible = true;
     std::unique_ptr<const ErtNameSearchQuery> _lastQuery;
 };

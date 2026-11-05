@@ -12,6 +12,9 @@ enum class Message {
     ACTIVE_DS_FILE_AND_PKT_CHANGED,
     ACTIVE_PKT_CHANGED,
     CUR_OFFSET_IN_PKT_CHANGED,
+
+    // timestamp or data length format mode changed
+    FMT_MODES_CHANGED,
 };
 
 } // namespace jacques

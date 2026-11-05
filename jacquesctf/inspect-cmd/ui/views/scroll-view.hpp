@@ -6,57 +6,64 @@
 #ifndef _JACQUES_INSPECT_CMD_UI_VIEWS_SCROLL_VIEW_HPP
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_SCROLL_VIEW_HPP
 
+#include "inspect-common/common-inspect-table-view.hpp"
 #include "view.hpp"
 
 namespace jacques {
 
+/*
+ * Base class of a view which shows rows and scrolls them with Up,
+ * Down, Page Up, Page Down, Home, and End (see _handleKey()).
+ *
+ * The scrolling logic is the one of a table view without a selection
+ * (see `CommonInspectTableView`).
+ */
 class ScrollView :
-    public View
+    public View,
+    private CommonInspectTableView
 {
 protected:
     explicit ScrollView(const Rect& rect, std::string_view title, DecorationStyle decoStyle,
                         const Stylist& stylist);
 
-public:
-    void prev();
-    void next();
-    void pageUp();
-    void pageDown();
-
-protected:
     virtual void _drawRows() = 0;
     void _resized() override;
     void _redrawContent() override;
+    bool _handleKey(Key key) override;
 
-    void _rowCount(const Size count) noexcept
-    {
-        _theRowCount = count;
-        this->_invalidate();
-    }
+    /*
+     * Sets the row count to `count`.
+     *
+     * If the row count changes, then this view shows the first row
+     * at the top.
+     */
+    void _rowCount(Size count);
 
     Size _rowCount() const noexcept
     {
         return _theRowCount;
     }
 
-    void _index(const Index index) noexcept
-    {
-        _myIndex = index;
-        this->_invalidate();
-    }
+    /*
+     * Shows the row `index` at the top (or the last page if there
+     * aren't enough rows after it).
+     */
+    void _index(Index index);
 
+    /*
+     * Index of the row at the top.
+     */
     Index _index() const noexcept
     {
-        return _myIndex;
+        return this->_firstVisibleRow();
     }
 
     Index _contentRectYFromIndex(const Index index) const noexcept
     {
-        return index - _myIndex;
+        return index - this->_firstVisibleRow();
     }
 
 private:
-    Index _myIndex = 0;
     Size _theRowCount = 0;
 };
 

@@ -14,7 +14,7 @@
 namespace jacques {
 
 ErtTableView::ErtTableView(const Rect& rect, const Stylist& stylist, const InspectCmdState& appState) :
-    TableView {rect, "Event record types", DecorationStyle::BORDERS, stylist}
+    TableView {rect, "Event record types", DecorationStyle::BORDERS, stylist, appState}
 {
     this->_buildRows(appState);
     this->_cols({

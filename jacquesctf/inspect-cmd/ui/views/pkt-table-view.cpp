@@ -11,7 +11,7 @@
 namespace jacques {
 
 PktTableView::PktTableView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState) :
-    TableView {rect, "Packets", DecorationStyle::BORDERS, stylist},
+    TableView {rect, "Packets", DecorationStyle::BORDERS, stylist, appState},
     _appState {&appState},
     _appStateObserverGuard {appState, *this}
 {
@@ -189,6 +189,8 @@ void PktTableView::_appStateChanged(const Message msg)
         updateSel = true;
     } else if (msg == Message::ACTIVE_PKT_CHANGED) {
         updateSel = true;
+    } else if (msg == Message::FMT_MODES_CHANGED) {
+        this->_invalidate();
     }
 
     if (updateSel) {

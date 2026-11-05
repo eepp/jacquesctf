@@ -89,6 +89,15 @@ private:
     void _setLastOffsetInRowBits();
     void _search(const SearchQuery& query, bool animate = true);
 
+    /*
+     * Starts a search with the initial input text `init` and, if the
+     * user accepts it, searches.
+     *
+     * If `live` is true, then the state follows the search input as
+     * the user types it.
+     */
+    void _startSearch(const std::string& init, bool live);
+
 private:
     std::unique_ptr<ErTableView> _ertView;
     std::unique_ptr<PktDataView> _pdView;
@@ -97,8 +106,6 @@ private:
     std::unique_ptr<PktDecodingErrorDetailsView> _decErrorView;
     SearchCtrl _searchCtrl;
     std::unique_ptr<const SearchQuery> _lastQuery;
-    CycleWheel<TsFmtMode> _tsFmtModeWheel;
-    CycleWheel<utils::LenFmtMode> _dataLenFmtModeWheel;
     const Size _maxStateSnapshots = 500;
     std::list<_StateSnapshot> _stateSnapshots;
     decltype(_stateSnapshots)::iterator _curStateSnapshot;

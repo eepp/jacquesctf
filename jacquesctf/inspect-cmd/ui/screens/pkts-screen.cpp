@@ -3,11 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
-#include <iostream>
-#include <functional>
 #include <utility>
-#include <signal.h>
-#include <unistd.h>
 
 #include "../key.hpp"
 #include "../term.hpp"
@@ -26,26 +22,15 @@ PktsScreen::PktsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& s
                        InspectCmdState& appState, SearchCtrl::RenderFrameFunc renderFrameFunc) :
     Screen {rect, cfg, stylist, appState},
     _ptView {std::make_unique<PktTableView>(rect, stylist, appState)},
-    _searchCtrl {*this, stylist, std::move(renderFrameFunc)},
-    _tsFmtModeWheel {
-        TsFmtMode::LONG,
-        TsFmtMode::NS_FROM_ORIGIN,
-        TsFmtMode::CYCLES,
-    },
-    _dataLenFmtModeWheel {
-        utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
-        utils::LenFmtMode::BYTES_FLOOR_WITH_EXTRA_BITS,
-        utils::LenFmtMode::BITS,
-    }
+    _searchCtrl {*this, stylist, std::move(renderFrameFunc)}
 {
-    this->_addView(*_ptView);
+    this->_addMainView(*_ptView);
     this->_addView(_searchCtrl.view());
-    _ptView->focus();
 }
 
 void PktsScreen::_resized()
 {
-    _ptView->moveAndResize(this->rect());
+    Screen::_resized();
     _searchCtrl.parentScreenResized(*this);
 }
 
@@ -115,32 +100,23 @@ private:
 
 KeyHandlingReaction PktsScreen::_handleKey(const Key key)
 {
+    if (this->_handleDsFileKey(key) || this->_handleFmtModeKey(key)) {
+        return KeyHandlingReaction::CONTINUE;
+    }
+
+    if (const auto init = SearchCtrl::initFromKey(key)) {
+        auto query = _searchCtrl.start(*init);
+
+        if (query) {
+            this->_appState().search(*query);
+            _lastQuery = std::move(query);
+        }
+
+        return KeyHandlingReaction::CONTINUE;
+    }
+
     if (const auto specialKey = key.special()) {
         switch (*specialKey) {
-        case SpecialKey::UP:
-            _ptView->prev();
-            break;
-
-        case SpecialKey::DOWN:
-            _ptView->next();
-            break;
-
-        case SpecialKey::PAGE_UP:
-            _ptView->pageUp();
-            break;
-
-        case SpecialKey::PAGE_DOWN:
-            _ptView->pageDown();
-            break;
-
-        case SpecialKey::END:
-            _ptView->selectLast();
-            break;
-
-        case SpecialKey::HOME:
-            _ptView->selectFirst();
-            break;
-
         case SpecialKey::ENTER:
             if (this->_appState().activeDsFileState().dsFile().pktCount() == 0) {
                 break;
@@ -148,14 +124,6 @@ KeyHandlingReaction PktsScreen::_handleKey(const Key key)
 
             this->_appState().gotoPkt(_ptView->selPktIndex());
             return KeyHandlingReaction::RETURN_TO_INSPECT;
-
-        case SpecialKey::F3:
-            this->_appState().gotoPrevDsFile();
-            break;
-
-        case SpecialKey::F4:
-            this->_appState().gotoNextDsFile();
-            break;
 
         case SpecialKey::F5:
             this->_appState().gotoPrevPkt();
@@ -169,70 +137,7 @@ KeyHandlingReaction PktsScreen::_handleKey(const Key key)
             break;
         }
     } else {
-        const auto ch = *key.ch();
-
-        switch (ch) {
-        case 'c':
-            _ptView->centerSelRow();
-            break;
-
-        case 't':
-            _tsFmtModeWheel.next();
-            _ptView->tsFmtMode(_tsFmtModeWheel.curVal());
-            break;
-
-        case 's':
-            _dataLenFmtModeWheel.next();
-            _ptView->dataLenFmtMode(_dataLenFmtModeWheel.curVal());
-            break;
-
-        case '/':
-        case 'g':
-        case 'N':
-        case 'k':
-        case ':':
-        case '$':
-        case '*':
-        case 'P':
-        {
-            auto query = _searchCtrl.start(std::invoke([ch]() -> std::string {
-                switch (ch) {
-                case 'N':
-                case '*':
-                    return "*";
-                    break;
-
-                case 'k':
-                    return "**";
-                    break;
-
-                case ':':
-                    return ":";
-                    break;
-
-                case 'P':
-                    return "#";
-                    break;
-
-                case '$':
-                    return "$";
-                    break;
-
-                default:
-                    return {};
-                }
-            }));
-
-            if (!query) {
-                // canceled or invalid
-                break;
-            }
-
-            this->_appState().search(*query);
-            _lastQuery = std::move(query);
-            break;
-        }
-
+        switch (*key.ch()) {
         case 'n':
             if (!_lastQuery) {
                 break;

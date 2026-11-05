@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
-#include <cassert>
+#include <algorithm>
+#include <functional>
+#include <optional>
 
 #include "scroll-view.hpp"
 
@@ -15,56 +17,81 @@ ScrollView::ScrollView(const Rect& rect, const std::string_view title,
 {
 }
 
-void ScrollView::prev()
+void ScrollView::_rowCount(const Size count)
 {
-    if (_myIndex == 0) {
+    _theRowCount = count;
+    this->_updateCounts(count, this->contentRect().h);
+    this->_invalidate();
+}
+
+void ScrollView::_index(const Index index)
+{
+    if (_theRowCount == 0) {
         return;
     }
 
-    --_myIndex;
+    this->_firstVisibleRow(std::min(index, this->_maxFirstVisibleRow()));
     this->_invalidate();
 }
 
-void ScrollView::next()
+bool ScrollView::_handleKey(const Key key)
 {
-    if (_theRowCount - _myIndex <= this->contentRect().h) {
-        return;
+    const auto specialKey = key.special();
+
+    if (!specialKey) {
+        return false;
     }
 
-    ++_myIndex;
-    this->_invalidate();
-}
+    const auto changed = std::invoke([this, specialKey]() -> std::optional<bool> {
+        const auto haveRows = _theRowCount > 0;
 
-void ScrollView::pageDown()
-{
-    const auto maxIndex = _theRowCount - std::min(_theRowCount, this->contentRect().h);
+        switch (*specialKey) {
+        case SpecialKey::UP:
+            return haveRows && this->_goUp();
 
-    _myIndex = std::min(maxIndex, _myIndex + this->contentRect().h);
-    this->_invalidate();
-}
+        case SpecialKey::DOWN:
+            return haveRows && this->_goDown();
 
-void ScrollView::pageUp()
-{
-    _myIndex -= std::min(_myIndex, this->contentRect().h);
-    this->_invalidate();
+        case SpecialKey::PAGE_UP:
+            return haveRows && this->_pageUp();
+
+        case SpecialKey::PAGE_DOWN:
+            return haveRows && this->_pageDown();
+
+        case SpecialKey::HOME:
+            return this->_showFirstPage();
+
+        case SpecialKey::END:
+            return this->_showLastPage();
+
+        default:
+            // not a scrolling key
+            return std::nullopt;
+        }
+    });
+
+    if (!changed) {
+        return false;
+    }
+
+    if (*changed) {
+        this->_invalidate();
+    }
+
+    return true;
 }
 
 void ScrollView::_redrawContent()
 {
     this->_drawRows();
-    this->_hasMoreTop(_myIndex > 0);
-    this->_hasMoreBottom(_myIndex + this->contentRect().h < _theRowCount);
+    this->_hasMoreTop(this->_index() > 0);
+    this->_hasMoreBottom(this->_index() + this->contentRect().h < _theRowCount);
 }
 
 void ScrollView::_resized()
 {
-    if (_theRowCount - _myIndex <= this->contentRect().h) {
-        if (_theRowCount < this->contentRect().h) {
-            _myIndex = 0;
-        } else {
-            _myIndex = _theRowCount - this->contentRect().h;
-        }
-    }
+    // keeps the current top row, if possible
+    this->_updateCounts(_theRowCount, this->contentRect().h);
 }
 
 } // namespace jacques

@@ -20,8 +20,13 @@ SubDtExplorerView::SubDtExplorerView(const Rect& rect, const Stylist& stylist,
 {
 }
 
-void SubDtExplorerView::_appStateChanged(Message)
+void SubDtExplorerView::_appStateChanged(const Message msg)
 {
+    if (msg == Message::FMT_MODES_CHANGED) {
+        // nothing to format
+        return;
+    }
+
     const auto& pktRegion = _appState->curPktRegion();
 
     if (!pktRegion || !pktRegion->scope() || !pktRegion->scope()->dt()) {

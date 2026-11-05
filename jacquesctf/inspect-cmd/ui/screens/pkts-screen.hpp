@@ -11,8 +11,6 @@
 #include "../views/pkt-table-view.hpp"
 #include "../search-ctrl.hpp"
 #include "screen.hpp"
-#include "../cycle-wheel.hpp"
-#include "data/data-len.hpp"
 
 namespace jacques {
 
@@ -34,8 +32,6 @@ private:
     std::unique_ptr<PktTableView> _ptView;
     SearchCtrl _searchCtrl;
     std::unique_ptr<const SearchQuery> _lastQuery;
-    CycleWheel<TsFmtMode> _tsFmtModeWheel;
-    CycleWheel<utils::LenFmtMode> _dataLenFmtModeWheel;
 };
 
 } // namespace jacques

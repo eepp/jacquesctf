@@ -34,6 +34,18 @@ void InspectCmdState::removeObserver(const Index id)
     _observers[id] = nullptr;
 }
 
+void InspectCmdState::nextTsFmtMode()
+{
+    _tsFmtModeWheel.next();
+    this->_notify(Message::FMT_MODES_CHANGED);
+}
+
+void InspectCmdState::nextDataLenFmtMode()
+{
+    _dataLenFmtModeWheel.next();
+    this->_notify(Message::FMT_MODES_CHANGED);
+}
+
 void InspectCmdState::_notify(const Message msg)
 {
     for (const auto& observer : _observers) {

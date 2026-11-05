@@ -112,6 +112,11 @@ void View::_appStateChanged(Message)
 {
 }
 
+bool View::_handleKey(Key)
+{
+    return false;
+}
+
 void View::_redrawContent()
 {
 }

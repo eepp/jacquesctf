@@ -14,6 +14,7 @@
 #include <cstdarg>
 #include <boost/filesystem/path.hpp>
 
+#include "../key.hpp"
 #include "../rect.hpp"
 #include "../../state/msg.hpp"
 #include "../../state/inspect-cmd-state.hpp"
@@ -180,6 +181,19 @@ public:
     void moveAndResize(const Rect& rect);
 
     /*
+     * Handles the user key `key`, returning true if this view handled
+     * it.
+     *
+     * A screen passes the keys to its focused view first (see
+     * Screen::handleKey()), then handles the keys which the view
+     * didn't handle.
+     */
+    bool handleKey(const Key key)
+    {
+        return this->_handleKey(key);
+    }
+
+    /*
      * Sets the visibility of this view to `isVisible`.
      *
      * The next render() shows or hides the plane of this view
@@ -234,6 +248,14 @@ protected:
      * `ViewInspectCmdStateObserverGuard`) when the state changes.
      */
     virtual void _appStateChanged(Message msg);
+
+    /*
+     * Implementation handles the user key `key` (usually a navigation
+     * key), returning true if it did.
+     *
+     * The default implementation doesn't handle any key.
+     */
+    virtual bool _handleKey(Key key);
 
     /*
      * Implementation must redraw the whole content (everything in

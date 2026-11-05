@@ -26,9 +26,8 @@ DtsScreen::DtsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& sty
     this->_addView(*_ertTableView);
     this->_addView(*_dtExplorerView);
     this->_addView(_searchController.view());
-    _focusedView = _dstTableView.get();
+    this->_focus(*_dstTableView);
     this->_updateViews();
-    _focusedView->focus();
 }
 
 void DtsScreen::_visibilityChanged()
@@ -59,10 +58,10 @@ void DtsScreen::_updateViews()
     _dstTableView->highlightSel(false);
     _ertTableView->highlightSel(false);
 
-    if (_focusedView == _dstTableView.get()) {
+    if (this->_focusedView() == _dstTableView.get()) {
         _dtExplorerView->dst(*_dstTableView->dst());
         _dstTableView->highlightSel(true);
-    } else if (_focusedView == _ertTableView.get()) {
+    } else if (this->_focusedView() == _ertTableView.get()) {
         _dtExplorerView->ert(*_ertTableView->ert());
         _ertTableView->highlightSel(true);
     }
@@ -98,9 +97,7 @@ void DtsScreen::highlightCurDt()
         _dstTableView->centerSelRow();
         _ertTableView->centerSelRow();
         _dtExplorerView->ert(*curEr->type());
-        _focusedView->blur();
-        _focusedView = _ertTableView.get();
-        _focusedView->focus();
+        this->_focus(*_ertTableView);
     } else if (curDst) {
         _dstTableView->selectDst(curDst->id());
         _ertTableView->dst(*curDst);
@@ -108,9 +105,7 @@ void DtsScreen::highlightCurDt()
         _dstTableView->centerSelRow();
         _ertTableView->centerSelRow();
         _dtExplorerView->dst(*curDst);
-        _focusedView->blur();
-        _focusedView = _dstTableView.get();
-        _focusedView->focus();
+        this->_focus(*_dstTableView);
     }
 
     _dtExplorerView->clearHighlight();
@@ -122,9 +117,7 @@ void DtsScreen::highlightCurDt()
 
         if (cPktRegion) {
             _dtExplorerView->highlightDt(cPktRegion->dt());
-            _focusedView->blur();
-            _focusedView = _dtExplorerView.get();
-            _focusedView->focus();
+            this->_focus(*_dtExplorerView);
         }
     }
 }
@@ -134,131 +127,58 @@ void DtsScreen::clearHighlight()
     _dtExplorerView->clearHighlight();
 }
 
+void DtsScreen::_focusedViewHandledKey(Key)
+{
+    // the selection of a table view could have changed
+    this->_updateViews();
+}
+
 KeyHandlingReaction DtsScreen::_handleKey(const Key key)
 {
+    const auto focusedView = this->_focusedView();
+
     if (const auto specialKey = key.special()) {
         switch (*specialKey) {
-        case SpecialKey::UP:
-            if (_focusedView == _ertTableView.get()) {
-                _ertTableView->prev();
-            } else if (_focusedView == _dstTableView.get()) {
-                _dstTableView->prev();
-            } else if (_focusedView == _dtExplorerView.get()) {
-                _dtExplorerView->prev();
-            }
-
-            this->_updateViews();
-            break;
-
-        case SpecialKey::DOWN:
-            if (_focusedView == _ertTableView.get()) {
-                _ertTableView->next();
-            } else if (_focusedView == _dstTableView.get()) {
-                _dstTableView->next();
-            } else if (_focusedView == _dtExplorerView.get()) {
-                _dtExplorerView->next();
-            }
-
-            this->_updateViews();
-            break;
-
-        case SpecialKey::PAGE_UP:
-            if (_focusedView == _ertTableView.get()) {
-                _ertTableView->pageUp();
-            } else if (_focusedView == _dstTableView.get()) {
-                _dstTableView->pageUp();
-            } else if (_focusedView == _dtExplorerView.get()) {
-                _dtExplorerView->pageUp();
-            }
-
-            this->_updateViews();
-            break;
-
-        case SpecialKey::PAGE_DOWN:
-            if (_focusedView == _ertTableView.get()) {
-                _ertTableView->pageDown();
-            } else if (_focusedView == _dstTableView.get()) {
-                _dstTableView->pageDown();
-            } else if (_focusedView == _dtExplorerView.get()) {
-                _dtExplorerView->pageDown();
-            }
-
-            this->_updateViews();
-            break;
-
-        case SpecialKey::END:
-            if (_focusedView == _ertTableView.get()) {
-                _ertTableView->selectLast();
-            } else if (_focusedView == _dstTableView.get()) {
-                _dstTableView->selectLast();
-            }
-
-            this->_updateViews();
-            break;
-
-        case SpecialKey::HOME:
-            if (_focusedView == _ertTableView.get()) {
-                _ertTableView->selectFirst();
-            } else if (_focusedView == _dstTableView.get()) {
-                _dstTableView->selectFirst();
-            }
-
-            this->_updateViews();
-            break;
-
         case SpecialKey::ENTER:
         case SpecialKey::TAB:
-        {
             if (!_tablesVisible) {
                 break;
             }
 
-            // change focus
-            const auto oldFocusedView = _focusedView;
-
-            if (_focusedView == _ertTableView.get()) {
-                _focusedView = _dtExplorerView.get();
-            } else if (_focusedView == _dtExplorerView.get()) {
-                _focusedView = _dstTableView.get();
-            } else if (_focusedView == _dstTableView.get()) {
-                if (_ertTableView->isEmpty()) {
-                    _focusedView = _dtExplorerView.get();
-                } else {
-                    _focusedView = _ertTableView.get();
-                }
+            // change focus: data stream types, event record types, data types
+            if (focusedView == _ertTableView.get()) {
+                this->_focus(*_dtExplorerView);
+            } else if (focusedView == _dtExplorerView.get()) {
+                this->_focus(*_dstTableView);
+            } else if (_ertTableView->isEmpty()) {
+                this->_focus(*_dtExplorerView);
+            } else {
+                this->_focus(*_ertTableView);
             }
 
             this->_updateViews();
-            oldFocusedView->blur();
-            _focusedView->focus();
             break;
-        }
 
         case SpecialKey::LEFT:
             if (!_tablesVisible) {
                 break;
             }
 
-            _focusedView->blur();
-
             if (_ertTableView->isEmpty()) {
-                _focusedView = _dstTableView.get();
+                this->_focus(*_dstTableView);
             } else {
-                _focusedView = _ertTableView.get();
+                this->_focus(*_ertTableView);
             }
 
-            _focusedView->focus();
             this->_updateViews();
             break;
 
         case SpecialKey::RIGHT:
-            if (!_tablesVisible || _focusedView == _dtExplorerView.get()) {
+            if (!_tablesVisible || focusedView == _dtExplorerView.get()) {
                 break;
             }
 
-            _focusedView->blur();
-            _focusedView = _dtExplorerView.get();
-            _focusedView->focus();
+            this->_focus(*_dtExplorerView);
             this->_updateViews();
             break;
 
@@ -269,15 +189,6 @@ KeyHandlingReaction DtsScreen::_handleKey(const Key key)
         const auto ch = *key.ch();
 
         switch (ch) {
-        case 'c':
-            if (_focusedView == _ertTableView.get()) {
-                _ertTableView->centerSelRow();
-            } else if (_focusedView == _dstTableView.get()) {
-                _dstTableView->centerSelRow();
-            }
-
-            break;
-
         case '+':
         {
             _tablesVisible = !_tablesVisible;
@@ -289,9 +200,7 @@ KeyHandlingReaction DtsScreen::_handleKey(const Key key)
             _ertTableView->isVisible(_tablesVisible);
 
             if (!_tablesVisible) {
-                _focusedView->blur();
-                _focusedView = _dtExplorerView.get();
-                _focusedView->focus();
+                this->_focus(*_dtExplorerView);
             }
 
             break;
@@ -300,7 +209,7 @@ KeyHandlingReaction DtsScreen::_handleKey(const Key key)
         case '/':
         case 'g':
         {
-            if (!_tablesVisible || _focusedView != _ertTableView.get()) {
+            if (!_tablesVisible || focusedView != _ertTableView.get()) {
                 break;
             }
 
@@ -327,7 +236,7 @@ KeyHandlingReaction DtsScreen::_handleKey(const Key key)
         }
 
         case 'n':
-            if (!_tablesVisible || _focusedView != _ertTableView.get() || !_lastQuery) {
+            if (!_tablesVisible || focusedView != _ertTableView.get() || !_lastQuery) {
                 break;
             }
 

@@ -29,16 +29,6 @@ InspectScreen::InspectScreen(const Rect& rect, const InspectCfg& cfg, const Styl
         std::make_unique<PktDecodingErrorDetailsView>(rect, stylist, appState)
     },
     _searchCtrl {*this, stylist, std::move(renderFrameFunc)},
-    _tsFmtModeWheel {
-        TsFmtMode::LONG,
-        TsFmtMode::NS_FROM_ORIGIN,
-        TsFmtMode::CYCLES,
-    },
-    _dataLenFmtModeWheel {
-        utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
-        utils::LenFmtMode::BYTES_FLOOR_WITH_EXTRA_BITS,
-        utils::LenFmtMode::BITS,
-    },
     _curStateSnapshot {_stateSnapshots.end()},
     _ertViewDispModeWheel {
         _ErtViewDispMode::SHORT,
@@ -62,7 +52,7 @@ InspectScreen::InspectScreen(const Rect& rect, const InspectCfg& cfg, const Styl
     }
 
     _decErrorView->isVisible(false);
-    _pdView->focus();
+    this->_focus(*_pdView);
     this->_updateViews();
 }
 
@@ -298,6 +288,46 @@ void InspectScreen::_search(const SearchQuery& query, const bool animate)
     }
 }
 
+void InspectScreen::_startSearch(const std::string& init, const bool live)
+{
+    std::unique_ptr<const SearchQuery> query;
+
+    if (live) {
+        const auto snapshot = this->_takeStateSnapshot();
+        const auto liveUpdateFunc = [this, snapshot](const auto& query) {
+            // start from initial state
+            this->_restoreStateSnapshot(snapshot);
+
+            if (!dynamic_cast<const ErtNameSearchQuery *>(&query) &&
+                    !dynamic_cast<const ErtIdSearchQuery *>(&query)) {
+                // this makes the appropriate views update and redraw
+                this->_appState().search(query);
+            }
+        };
+
+        query = _searchCtrl.startLive(init, liveUpdateFunc);
+        this->_restoreStateSnapshot(snapshot);
+    } else {
+        query = _searchCtrl.start(init);
+    }
+
+    if (!query) {
+        // canceled or invalid
+        return;
+    }
+
+    this->_search(*query);
+
+    /*
+     * If we didn't move, then the state snapshot is identical and
+     * _snapshotState() doesn't push it to the state snapshot list.
+     */
+    this->_snapshotState();
+
+    _lastQuery = std::move(query);
+    this->_tryShowDecodingError();
+}
+
 KeyHandlingReaction InspectScreen::_handleKey(const Key key)
 {
     const auto goingToBookmark = _goingToBookmark;
@@ -308,6 +338,24 @@ KeyHandlingReaction InspectScreen::_handleKey(const Key key)
 
     if (key.special() != SpecialKey::DOWN && key.special() != SpecialKey::UP) {
         _lastOffsetInRowBits = std::nullopt;
+    }
+
+    if (this->_handleDsFileKey(key)) {
+        this->_snapshotState();
+        this->_tryShowDecodingError();
+        return KeyHandlingReaction::CONTINUE;
+    }
+
+    if (this->_handleFmtModeKey(key)) {
+        return KeyHandlingReaction::CONTINUE;
+    }
+
+    if (key.ch() == U'G') {
+        this->_startSearch({}, true);
+        return KeyHandlingReaction::CONTINUE;
+    } else if (const auto init = SearchCtrl::initFromKey(key)) {
+        this->_startSearch(*init, false);
+        return KeyHandlingReaction::CONTINUE;
     }
 
     if (const auto specialKey = key.special()) {
@@ -427,18 +475,6 @@ KeyHandlingReaction InspectScreen::_handleKey(const Key key)
             _pdView->pageDown();
             break;
 
-        case SpecialKey::F3:
-            this->_appState().gotoPrevDsFile();
-            this->_snapshotState();
-            this->_tryShowDecodingError();
-            break;
-
-        case SpecialKey::F4:
-            this->_appState().gotoNextDsFile();
-            this->_snapshotState();
-            this->_tryShowDecodingError();
-            break;
-
         case SpecialKey::F5:
             this->_appState().gotoPrevPkt();
             this->_snapshotState();
@@ -479,16 +515,6 @@ KeyHandlingReaction InspectScreen::_handleKey(const Key key)
         case '#':
         case '`':
             this->_tryShowDecodingError();
-            break;
-
-        case 't':
-            _tsFmtModeWheel.next();
-            _ertView->tsFmtMode(_tsFmtModeWheel.curVal());
-            break;
-
-        case 's':
-            _dataLenFmtModeWheel.next();
-            _ertView->dataLenFmtMode(_dataLenFmtModeWheel.curVal());
             break;
 
         case 'e':
@@ -561,86 +587,6 @@ KeyHandlingReaction InspectScreen::_handleKey(const Key key)
         case 'b':
             _goingToBookmark = true;
             break;
-
-        case '/':
-        case 'g':
-        case 'G':
-        case 'N':
-        case 'k':
-        case ':':
-        case '$':
-        case '*':
-        case 'P':
-        {
-            const auto init = std::invoke([ch]() {
-                switch (ch) {
-                case 'N':
-                case '*':
-                    return "*";
-                    break;
-
-                case 'k':
-                    return "**";
-                    break;
-
-                case ':':
-                    return ":";
-                    break;
-
-                case 'P':
-                    return "#";
-                    break;
-
-                case '$':
-                    return "$";
-                    break;
-
-                default:
-                    return "";
-                }
-            });
-
-            std::unique_ptr<const SearchQuery> query;
-
-            if (ch == 'G') {
-                const auto snapshot = this->_takeStateSnapshot();
-                const auto liveUpdateFunc = [this, snapshot](const auto& query) {
-                    // start from initial state
-                    this->_restoreStateSnapshot(snapshot);
-
-                    if (!dynamic_cast<const ErtNameSearchQuery *>(&query) &&
-                            !dynamic_cast<const ErtIdSearchQuery *>(&query)) {
-                        // this makes the appropriate views update and redraw
-                        this->_appState().search(query);
-                    }
-                };
-
-                query = _searchCtrl.startLive(init, liveUpdateFunc);
-
-                if (ch == 'G') {
-                    this->_restoreStateSnapshot(snapshot);
-                }
-            } else {
-                query = _searchCtrl.start(init);
-            }
-
-            if (!query) {
-                // canceled or invalid
-                break;
-            }
-
-            this->_search(*query);
-
-            /*
-             * If we didn't move, the state snapshot will be identical and
-             * will be not be pushed to the state snapshot list.
-             */
-            this->_snapshotState();
-
-            _lastQuery = std::move(query);
-            this->_tryShowDecodingError();
-            break;
-        }
 
         case 'n':
             if (!_lastQuery) {
