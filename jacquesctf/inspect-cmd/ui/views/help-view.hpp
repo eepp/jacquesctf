@@ -25,33 +25,33 @@ private:
     void _buildRows();
 
 private:
-    struct _SectionRow
+    struct _SectionRow final
     {
         std::string title;
     };
 
-    struct _SubSectionRow
+    struct _SubSectionRow final
     {
         std::string title;
     };
 
-    struct _EmptyRow
+    struct _EmptyRow final
     {
     };
 
-    struct _TextRow
+    struct _TextRow final
     {
         std::string line;
         bool bold = false;
     };
 
-    struct _KeyRow
+    struct _KeyRow final
     {
         std::string key;
         std::string descr;
     };
 
-    struct _SearchSyntaxRow
+    struct _SearchSyntaxRow final
     {
         std::string descr;
         std::string fmt;

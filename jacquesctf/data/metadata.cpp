@@ -221,7 +221,7 @@ private:
     }
 
 private:
-    struct _StackEntry
+    struct _StackEntry final
     {
         const yactfr::DataType *parentDt;
         const DtPath::Item pathItem;

@@ -40,7 +40,7 @@ public:
     ~InspectScreen();
 
 private:
-    struct _StateSnapshot
+    struct _StateSnapshot final
     {
         Index dsfStateIndex;
         std::optional<Index> pktIndexInDsFile;
@@ -55,7 +55,7 @@ private:
     };
 
 private:
-    struct _ViewRects
+    struct _ViewRects final
     {
         Rect ert;
         Rect pri;

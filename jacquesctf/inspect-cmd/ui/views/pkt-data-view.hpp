@@ -116,7 +116,7 @@ public:
     }
 
 private:
-    struct _Char
+    struct _Char final
     {
         explicit _Char() = default;
         _Char(const _Char&) = default;

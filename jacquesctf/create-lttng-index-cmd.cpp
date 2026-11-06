@@ -24,14 +24,14 @@ namespace bendian = boost::endian;
 
 namespace {
 
-struct LTTngIndexHeader {
+struct LTTngIndexHeader final {
     bendian::big_uint32_buf_t magic;
     bendian::big_uint32_buf_t indexMajor;
     bendian::big_uint32_buf_t indexMinor;
     bendian::big_uint32_buf_t indexEntrySizeBytes;
 };
 
-struct LTTngIndexEntryBase {
+struct LTTngIndexEntryBase final {
     bendian::big_uint64_buf_t offsetBytes;
     bendian::big_uint64_buf_t totalLenBits;
     bendian::big_uint64_buf_t contentLenBits;
@@ -41,7 +41,7 @@ struct LTTngIndexEntryBase {
     bendian::big_uint64_buf_t dstId;
 };
 
-struct LTTngIndexEntry11Addon {
+struct LTTngIndexEntry11Addon final {
     bendian::big_uint64_buf_t dsId;
     bendian::big_uint64_buf_t seqNum;
 };

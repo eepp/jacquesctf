@@ -16,7 +16,7 @@
 
 namespace jacques {
 
-class PktIndexEntry :
+class PktIndexEntry final :
     public boost::totally_ordered<PktIndexEntry>
 {
 public:

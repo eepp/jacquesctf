@@ -11,7 +11,7 @@
 
 namespace jacques {
 
-struct Rect
+struct Rect final
 {
     Point pos;
     Size w, h;

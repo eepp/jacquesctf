@@ -113,7 +113,7 @@ public:
     }
 
 private:
-    struct _IndexBuildingState
+    struct _IndexBuildingState final
     {
         void reset();
 

@@ -18,7 +18,7 @@
 
 namespace jacques {
 
-class DtDetails :
+class DtDetails final :
     public AbstractDtDetails
 {
 public:

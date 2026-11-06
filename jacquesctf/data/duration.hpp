@@ -20,7 +20,7 @@ class Duration final :
     public boost::totally_ordered<Duration>
 {
 public:
-    struct Parts
+    struct Parts final
     {
         unsigned long long hours;
         unsigned long long mins;

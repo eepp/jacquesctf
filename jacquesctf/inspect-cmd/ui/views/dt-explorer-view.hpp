@@ -29,12 +29,12 @@ public:
     void centerHighlight();
 
 private:
-    struct _ScopeSubtitleRow
+    struct _ScopeSubtitleRow final
     {
         yactfr::Scope scope;
     };
 
-    struct _EmptyRow
+    struct _EmptyRow final
     {
     };
 

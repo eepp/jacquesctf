@@ -10,7 +10,7 @@
 
 namespace jacques {
 
-struct Point
+struct Point final
 {
     Index x, y;
 };

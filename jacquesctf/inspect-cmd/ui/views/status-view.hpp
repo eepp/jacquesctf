@@ -22,7 +22,7 @@ public:
     explicit StatusView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState);
 
 private:
-    struct _EndPositions
+    struct _EndPositions final
     {
         Index pktCount;
         Index pktIndex;

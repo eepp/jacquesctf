@@ -19,23 +19,23 @@ namespace jacques {
 class DtPath final
 {
 public:
-    struct StructMemberItem
+    struct StructMemberItem final
     {
         Index index;
         std::string name;
     };
 
-    struct VarOptItem
+    struct VarOptItem final
     {
         Index index;
         std::optional<std::string> name;
     };
 
-    struct CurArrayElemItem
+    struct CurArrayElemItem final
     {
     };
 
-    struct CurOptDataItem
+    struct CurOptDataItem final
     {
     };
 
