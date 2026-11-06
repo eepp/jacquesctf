@@ -25,8 +25,7 @@ DtsScreen::DtsScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& 
     this->_addView(*_dstTableView);
     this->_addView(*_ertTableView);
     this->_addView(*_dtExplorerView);
-    this->_focus(*_dstTableView);
-    this->_updateViews();
+    this->_focusAndUpdateViews(*_dstTableView);
 }
 
 void DtsScreen::_visibilityChanged()
@@ -64,6 +63,12 @@ void DtsScreen::_updateViews()
         _dtExplorerView->ert(*_ertTableView->ert());
         _ertTableView->highlightSel(true);
     }
+}
+
+void DtsScreen::_focusAndUpdateViews(View& view)
+{
+    this->_focus(view);
+    this->_updateViews();
 }
 
 void DtsScreen::_resized()
@@ -185,31 +190,28 @@ void DtsScreen::_handleKey(const Key key)
         case SpecialKey::TAB:
             // change focus: data stream types, event record types, data types
             if (focusedView == _ertTableView.get()) {
-                this->_focus(*_dtExplorerView);
+                this->_focusAndUpdateViews(*_dtExplorerView);
             } else if (focusedView == _dtExplorerView.get()) {
-                this->_focus(*_dstTableView);
+                this->_focusAndUpdateViews(*_dstTableView);
             } else if (_ertTableView->isEmpty()) {
-                this->_focus(*_dtExplorerView);
+                this->_focusAndUpdateViews(*_dtExplorerView);
             } else {
-                this->_focus(*_ertTableView);
+                this->_focusAndUpdateViews(*_ertTableView);
             }
 
-            this->_updateViews();
             break;
 
         case SpecialKey::LEFT:
             if (_ertTableView->isEmpty()) {
-                this->_focus(*_dstTableView);
+                this->_focusAndUpdateViews(*_dstTableView);
             } else {
-                this->_focus(*_ertTableView);
+                this->_focusAndUpdateViews(*_ertTableView);
             }
 
-            this->_updateViews();
             break;
 
         case SpecialKey::RIGHT:
-            this->_focus(*_dtExplorerView);
-            this->_updateViews();
+            this->_focusAndUpdateViews(*_dtExplorerView);
             break;
 
         default:

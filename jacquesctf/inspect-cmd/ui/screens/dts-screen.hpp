@@ -41,6 +41,12 @@ private:
     void _updateViews();
 
     /*
+     * Focuses `view` and then updates the views, as the data type
+     * explorer shows the selection of the focused table view.
+     */
+    void _focusAndUpdateViews(View& view);
+
+    /*
      * Selects the event record type which the accepted query `query`,
      * if any, matches.
      */
