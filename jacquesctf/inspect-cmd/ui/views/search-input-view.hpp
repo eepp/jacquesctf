@@ -10,15 +10,24 @@
 #include <vector>
 #include <optional>
 
-#include "input-view.hpp"
+#include "view.hpp"
 
 namespace jacques {
 
 class SearchInputView final :
-    public InputView
+    public View
 {
 public:
     explicit SearchInputView(const Rect& rect, const Stylist& stylist);
+
+    /*
+     * Sets the current text to `text`.
+     */
+    void text(std::string text)
+    {
+        _text = std::move(text);
+        this->_invalidate();
+    }
 
     /*
      * Draws the frame `index` of the border animation.
@@ -30,11 +39,15 @@ public:
     void animateBorder(Index index);
 
 private:
+    void _redrawContent() override;
+    void _drawBorder() const;
     void _drawFormatText(Point contentPos, const std::string& text);
-    void _drawCurText(const Point& contentPos, const std::string& text) override;
     void _drawNumber(Point& contentPos, std::u32string::const_iterator it,
                      std::u32string::const_iterator endIt);
     void _writeCh(Point& contentPos, char32_t ch) const;
+
+private:
+    std::string _text;
 };
 
 } // namespace jacques

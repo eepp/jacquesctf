@@ -10,7 +10,6 @@
 #include <unistd.h>
 
 #include "../key.hpp"
-#include "cfg.hpp"
 #include "../views/er-table-view.hpp"
 #include "inspect-screen.hpp"
 #include "../stylist.hpp"
@@ -18,9 +17,9 @@
 
 namespace jacques {
 
-InspectScreen::InspectScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                             InspectCmdState& appState, ScreenHost& host) :
-    Screen {rect, cfg, stylist, appState, host},
+InspectScreen::InspectScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
+                             ScreenHost& host) :
+    Screen {rect, stylist, appState, host},
     _decErrorView {
         std::make_unique<PktDecodingErrorDetailsView>(this->_decErrorViewRect(), stylist,
                                                       appState)

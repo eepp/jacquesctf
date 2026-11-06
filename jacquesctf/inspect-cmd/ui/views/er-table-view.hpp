@@ -12,7 +12,8 @@
 namespace jacques {
 
 class ErTableView final :
-    public TableView
+    public TableView,
+    private ViewInspectCmdStateObserver
 {
 public:
     explicit ErTableView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState);
@@ -27,10 +28,6 @@ private:
      * method (see Pkt::erAtIndexInPkt()).
      */
     const Er& _er(Index row);
-
-private:
-    InspectCmdState *_appState;
-    ViewInspectCmdStateObserverGuard _appStateObserverGuard;
 };
 
 } // namespace jacques

@@ -306,8 +306,9 @@ void View::_moveCursor(const Point& contentPos) const
                                              static_cast<int>(x)));
 }
 
-ViewInspectCmdStateObserverGuard::ViewInspectCmdStateObserverGuard(InspectCmdState& appState,
-                                                                   View& view) :
+ViewInspectCmdStateObserver::ViewInspectCmdStateObserver(InspectCmdState& appState,
+                                                         View& view) :
+    _curAppState {&appState},
     _observerGuard {appState, [&view](const Message msg) {
         view._appStateChanged(msg);
     }}

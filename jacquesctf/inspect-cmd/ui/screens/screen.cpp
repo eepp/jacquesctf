@@ -9,10 +9,9 @@
 
 namespace jacques {
 
-Screen::Screen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-               InspectCmdState& appState, ScreenHost& host) noexcept :
+Screen::Screen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
+               ScreenHost& host) noexcept :
     _curRect {rect},
-    _curCfg {&cfg},
     _curStylist {&stylist},
     _curAppState {&appState},
     _curHost {&host}

@@ -30,8 +30,7 @@ namespace jacques {
 PktRegionInfoView::PktRegionInfoView(const Rect& rect, const Stylist& stylist,
                                      InspectCmdState& appState) :
     View {rect, "Packet region info", DecorationStyle::BORDERLESS, stylist},
-    _appState {&appState},
-    _appStateObserverGuard {appState, *this}
+    ViewInspectCmdStateObserver {appState, *this}
 {
     this->_setMaxDtPathSizes();
 }
@@ -143,7 +142,7 @@ void PktRegionInfoView::_redrawContent()
 {
     this->_clearContent(Stylist::Role::INFO);
 
-    const auto pktRegion = _appState->curPktRegion();
+    const auto pktRegion = this->_appState().curPktRegion();
 
     if (!pktRegion) {
         return;
@@ -196,7 +195,7 @@ void PktRegionInfoView::_redrawContent()
     // size
     this->_style(Stylist::Role::INFO);
 
-    const auto pathWidth = _maxDtPathSizes[&_appState->trace()];
+    const auto pathWidth = _maxDtPathSizes[&this->_appState().trace()];
     const auto str = utils::sepNumber(pktRegion->segment().len()->bits(), ',');
 
     x = this->_write({pathWidth + 4 + this->_curMaxOffsetSize() - 2 - str.size(), 0}, str + " b");
@@ -273,7 +272,7 @@ void PktRegionInfoView::_redrawContent()
             }
         }
     } else if (isError) {
-        const auto& error = _appState->activePktState().pkt().error();
+        const auto& error = this->_appState().activePktState().pkt().error();
 
         assert(error);
         x = this->_write({x, 0}, "    ");
@@ -314,7 +313,7 @@ void PktRegionInfoView::_setMaxDtPathSize(const Trace& trace)
 
 void PktRegionInfoView::_setMaxDtPathSizes()
 {
-    for (const auto& dsfState : _appState->dsFileStates()) {
+    for (const auto& dsfState : this->_appState().dsFileStates()) {
         auto& trace = dsfState->trace();
 
         if (_maxDtPathSizes.find(&trace) == _maxDtPathSizes.end()) {
@@ -325,9 +324,9 @@ void PktRegionInfoView::_setMaxDtPathSizes()
 
 Size PktRegionInfoView::_curMaxOffsetSize()
 {
-    assert(_appState->hasActivePktState());
+    assert(this->_appState().hasActivePktState());
 
-    const auto& pkt = _appState->activePktState().pkt();
+    const auto& pkt = this->_appState().activePktState().pkt();
     const auto it = _maxOffsetSizes.find(&pkt);
 
     if (it == _maxOffsetSizes.end()) {

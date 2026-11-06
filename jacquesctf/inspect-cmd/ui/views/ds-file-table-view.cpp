@@ -14,8 +14,7 @@ namespace jacques {
 DsFileTableView::DsFileTableView(const Rect& rect, const Stylist& stylist,
                                  InspectCmdState& appState) :
     TableView {rect, "Data stream files", DecorationStyle::BORDERS, stylist, appState},
-    _appState {&appState},
-    _appStateObserverGuard {appState, *this}
+    ViewInspectCmdStateObserver {appState, *this}
 {
     this->_cols({
         _Col {"Path", 29, _COL_REQUIRED | _COL_LEFT | _COL_EMPH | _COL_EXPAND,
@@ -102,8 +101,8 @@ DsFileTableView::DsFileTableView(const Rect& rect, const Stylist& stylist,
 
 const DsFile& DsFileTableView::_dsFile(const Index row) const
 {
-    assert(row < _appState->dsFileStateCount());
-    return _appState->dsFileState(row).dsFile();
+    assert(row < this->_appState().dsFileStateCount());
+    return this->_appState().dsFileState(row).dsFile();
 }
 
 const PktIndexEntry *DsFileTableView::_firstEntry(const Index row) const
@@ -123,7 +122,7 @@ const PktIndexEntry *DsFileTableView::_lastEntry(const Index row) const
 void DsFileTableView::_appStateChanged(const Message msg)
 {
     if (msg == Message::ACTIVE_DS_FILE_AND_PKT_CHANGED) {
-        this->_selectRow(_appState->activeDsFileStateIndex());
+        this->_selectRow(this->_appState().activeDsFileStateIndex());
     } else if (msg == Message::FMT_MODES_CHANGED) {
         this->_invalidate();
     }
@@ -131,7 +130,7 @@ void DsFileTableView::_appStateChanged(const Message msg)
 
 Size DsFileTableView::_rowCount()
 {
-    return _appState->dsFileStateCount();
+    return this->_appState().dsFileStateCount();
 }
 
 Index DsFileTableView::selDsFileIndex() const

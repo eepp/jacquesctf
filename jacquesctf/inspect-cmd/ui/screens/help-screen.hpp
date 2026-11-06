@@ -17,8 +17,8 @@ class HelpScreen final :
     public Screen
 {
 public:
-    explicit HelpScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                        InspectCmdState& appState, ScreenHost& host);
+    explicit HelpScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
+                        ScreenHost& host);
 
 private:
     std::unique_ptr<HelpView> _view;

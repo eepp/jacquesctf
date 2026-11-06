@@ -4,16 +4,15 @@
  */
 
 #include "../key.hpp"
-#include "cfg.hpp"
 #include "trace-info-screen.hpp"
 #include "../views/trace-info-view.hpp"
 #include "../stylist.hpp"
 
 namespace jacques {
 
-TraceInfoScreen::TraceInfoScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
+TraceInfoScreen::TraceInfoScreen(const Rect& rect, const Stylist& stylist,
                                  InspectCmdState& appState, ScreenHost& host) :
-    Screen {rect, cfg, stylist, appState, host},
+    Screen {rect, stylist, appState, host},
     _view {std::make_unique<TraceInfoView>(rect, stylist, appState)}
 {
     this->_addMainView(*_view);

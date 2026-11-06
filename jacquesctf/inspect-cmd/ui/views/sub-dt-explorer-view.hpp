@@ -11,17 +11,14 @@
 namespace jacques {
 
 class SubDtExplorerView final :
-    public DtExplorerView
+    public DtExplorerView,
+    private ViewInspectCmdStateObserver
 {
 public:
     explicit SubDtExplorerView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState);
 
 private:
     void _appStateChanged(Message msg) override;
-
-private:
-    InspectCmdState *_appState;
-    ViewInspectCmdStateObserverGuard _appStateObserverGuard;
 };
 
 } // namespace jacques

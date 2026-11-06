@@ -22,8 +22,7 @@ namespace jacques {
 
 TraceInfoView::TraceInfoView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState) :
     ScrollView {rect, "Trace info", DecorationStyle::BORDERS, stylist},
-    _appState {&appState},
-    _appStateObserverGuard {appState, *this}
+    ViewInspectCmdStateObserver {appState, *this}
 {
     this->_buildRows();
     _rows = &_traceInfo[&appState.trace()];
@@ -381,7 +380,7 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
 
 void TraceInfoView::_buildRows()
 {
-    for (const auto& dsfState : _appState->dsFileStates()) {
+    for (const auto& dsfState : this->_appState().dsFileStates()) {
         this->_buildTraceInfoRows(dsfState->dsFile().trace());
     }
 
@@ -476,7 +475,7 @@ void TraceInfoView::_drawRows()
 void TraceInfoView::_appStateChanged(const Message msg)
 {
     if (msg == Message::ACTIVE_DS_FILE_AND_PKT_CHANGED) {
-        _rows = &_traceInfo[&_appState->trace()];
+        _rows = &_traceInfo[&this->_appState().trace()];
         this->_index(0);
         this->_rowCount(_rows->size());
     }

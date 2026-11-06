@@ -12,7 +12,8 @@
 namespace jacques {
 
 class PktTableView final :
-    public TableView
+    public TableView,
+    private ViewInspectCmdStateObserver
 {
 public:
     explicit PktTableView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState);
@@ -46,10 +47,6 @@ private:
     const DsFile& _dsFile() const;
     const PktIndexEntry *_prevEntry(const PktIndexEntry& entry) const;
     const PktIndexEntry *_nextEntry(const PktIndexEntry& entry) const;
-
-private:
-    InspectCmdState *_appState;
-    ViewInspectCmdStateObserverGuard _appStateObserverGuard;
 };
 
 } // namespace jacques

@@ -13,7 +13,8 @@
 namespace jacques {
 
 class PktRegionInfoView final :
-    public View
+    public View,
+    private ViewInspectCmdStateObserver
 {
 public:
     explicit PktRegionInfoView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState);
@@ -26,8 +27,6 @@ private:
     void _setMaxDtPathSizes();
 
 private:
-    InspectCmdState *_appState;
-    ViewInspectCmdStateObserverGuard _appStateObserverGuard;
     std::unordered_map<const Pkt *, Size> _maxOffsetSizes;
     std::unordered_map<const Trace *, Size> _maxDtPathSizes;
 };

@@ -313,19 +313,18 @@ class InspectUi final :
     public ScreenHost
 {
 public:
-    explicit InspectUi(const InspectCfg& cfg, const Stylist& stylist,
-                       InspectCmdState& appState) :
+    explicit InspectUi(const Stylist& stylist, InspectCmdState& appState) :
         _appState {&appState},
         _statusView {
             std::make_unique<StatusView>(InspectUi::_statusViewRect(), stylist, appState)
         },
         _screens {
-            InspectScreen {InspectUi::_screenRect(), cfg, stylist, appState, *this},
-            PktsScreen {InspectUi::_screenRect(), cfg, stylist, appState, *this},
-            DsFilesScreen {InspectUi::_screenRect(), cfg, stylist, appState, *this},
-            HelpScreen {InspectUi::_screenRect(), cfg, stylist, appState, *this},
-            DtsScreen {InspectUi::_screenRect(), cfg, stylist, appState, *this},
-            TraceInfoScreen {InspectUi::_screenRect(), cfg, stylist, appState, *this},
+            InspectScreen {InspectUi::_screenRect(), stylist, appState, *this},
+            PktsScreen {InspectUi::_screenRect(), stylist, appState, *this},
+            DsFilesScreen {InspectUi::_screenRect(), stylist, appState, *this},
+            HelpScreen {InspectUi::_screenRect(), stylist, appState, *this},
+            DtsScreen {InspectUi::_screenRect(), stylist, appState, *this},
+            TraceInfoScreen {InspectUi::_screenRect(), stylist, appState, *this},
         },
         _quitOverlay {stylist, [this] { _done = true; }},
         _termTooSmallOverlay {stylist, [this] { _done = true; }}
@@ -664,7 +663,7 @@ void startInteractive(const InspectCfg& cfg)
      */
     msgView = showFullScreenMessage("Building caches…", *stylist);
 
-    InspectUi ui {cfg, *stylist, *appState};
+    InspectUi ui {*stylist, *appState};
 
     // goto first packet if available: this creates it and shows the progress
     msgView = showFullScreenMessage("Selecting initial packet…", *stylist);

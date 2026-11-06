@@ -19,7 +19,8 @@
 namespace jacques {
 
 class TraceInfoView final :
-    public ScrollView
+    public ScrollView,
+    private ViewInspectCmdStateObserver
 {
 public:
     explicit TraceInfoView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState);
@@ -149,8 +150,6 @@ private:
     using _Rows = std::vector<std::unique_ptr<_Row>>;
 
 private:
-    InspectCmdState *_appState;
-    ViewInspectCmdStateObserverGuard _appStateObserverGuard;
     std::unordered_map<const Trace *, _Rows> _traceInfo;
     const _Rows *_rows = nullptr;
 };

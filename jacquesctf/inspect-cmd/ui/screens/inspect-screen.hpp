@@ -35,8 +35,8 @@ public:
     using Bookmarks = std::unordered_map<Index, DsFileBookmarks>;
 
 public:
-    explicit InspectScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                           InspectCmdState& appState, ScreenHost& host);
+    explicit InspectScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
+                           ScreenHost& host);
     ~InspectScreen();
 
 private:

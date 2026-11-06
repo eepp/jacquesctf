@@ -15,8 +15,7 @@ namespace jacques {
 SubDtExplorerView::SubDtExplorerView(const Rect& rect, const Stylist& stylist,
                                      InspectCmdState& appState) :
     DtExplorerView {rect, stylist},
-    _appState {&appState},
-    _appStateObserverGuard {appState, *this}
+    ViewInspectCmdStateObserver {appState, *this}
 {
 }
 
@@ -27,7 +26,7 @@ void SubDtExplorerView::_appStateChanged(const Message msg)
         return;
     }
 
-    const auto& pktRegion = _appState->curPktRegion();
+    const auto& pktRegion = this->_appState().curPktRegion();
 
     if (!pktRegion || !pktRegion->scope() || !pktRegion->scope()->dt()) {
         this->reset();
@@ -38,7 +37,7 @@ void SubDtExplorerView::_appStateChanged(const Message msg)
         this->ert(*pktRegion->scope()->er()->type());
     } else if (pktRegion->scope()->scope() == yactfr::Scope::PacketHeader ||
             pktRegion->scope()->scope() == yactfr::Scope::PacketContext) {
-        const auto dst = _appState->activePktState().pkt().indexEntry().dst();
+        const auto dst = this->_appState().activePktState().pkt().indexEntry().dst();
 
         if (dst) {
             this->dst(*dst, false);

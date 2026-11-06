@@ -4,16 +4,15 @@
  */
 
 #include "../key.hpp"
-#include "cfg.hpp"
 #include "../views/ds-file-table-view.hpp"
 #include "ds-files-screen.hpp"
 #include "../stylist.hpp"
 
 namespace jacques {
 
-DsFilesScreen::DsFilesScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                             InspectCmdState& appState, ScreenHost& host) :
-    Screen {rect, cfg, stylist, appState, host},
+DsFilesScreen::DsFilesScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
+                             ScreenHost& host) :
+    Screen {rect, stylist, appState, host},
     _view {std::make_unique<DsFileTableView>(rect, stylist, appState)}
 {
     _view->selectFirst();

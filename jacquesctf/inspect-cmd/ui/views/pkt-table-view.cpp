@@ -12,8 +12,7 @@ namespace jacques {
 
 PktTableView::PktTableView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState) :
     TableView {rect, "Packets", DecorationStyle::BORDERS, stylist, appState},
-    _appState {&appState},
-    _appStateObserverGuard {appState, *this}
+    ViewInspectCmdStateObserver {appState, *this}
 {
     this->_cols({
         this->_createCol("Index", 12, _COL_REQUIRED | _COL_EMPH,
@@ -137,7 +136,7 @@ PktTableView::_Col PktTableView::_createCol(std::string title, const Size width,
 
 const DsFile& PktTableView::_dsFile() const
 {
-    return _appState->activeDsFileState().dsFile();
+    return this->_appState().activeDsFileState().dsFile();
 }
 
 const PktIndexEntry *PktTableView::_prevEntry(const PktIndexEntry& entry) const
@@ -195,7 +194,7 @@ void PktTableView::_appStateChanged(const Message msg)
 
     if (updateSel) {
         // reset selection from state
-        this->_selectRow(_appState->activeDsFileState().activePktStateIndex());
+        this->_selectRow(this->_appState().activeDsFileState().activePktStateIndex());
     }
 }
 

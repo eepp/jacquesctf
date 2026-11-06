@@ -4,16 +4,15 @@
  */
 
 #include "../key.hpp"
-#include "cfg.hpp"
 #include "help-screen.hpp"
 #include "../views/help-view.hpp"
 #include "../stylist.hpp"
 
 namespace jacques {
 
-HelpScreen::HelpScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                       InspectCmdState& appState, ScreenHost& host) :
-    Screen {rect, cfg, stylist, appState, host},
+HelpScreen::HelpScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
+                       ScreenHost& host) :
+    Screen {rect, stylist, appState, host},
     _view {std::make_unique<HelpView>(rect, stylist)}
 {
     this->_addMainView(*_view);

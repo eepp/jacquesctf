@@ -17,8 +17,8 @@ class DsFilesScreen final :
     public Screen
 {
 public:
-    explicit DsFilesScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                           InspectCmdState& appState, ScreenHost& host);
+    explicit DsFilesScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
+                           ScreenHost& host);
 
 private:
     void _handleKey(Key key) override;

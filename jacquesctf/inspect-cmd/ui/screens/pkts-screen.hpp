@@ -18,8 +18,8 @@ class PktsScreen final :
     public Screen
 {
 public:
-    explicit PktsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                        InspectCmdState& appState, ScreenHost& host);
+    explicit PktsScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
+                        ScreenHost& host);
 
 protected:
     void _resized() override;

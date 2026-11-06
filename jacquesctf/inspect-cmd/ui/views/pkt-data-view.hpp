@@ -43,7 +43,8 @@ namespace jacques {
  * centered dot).
  */
 class PktDataView final :
-    public View
+    public View,
+    private ViewInspectCmdStateObserver
 {
 public:
     explicit PktDataView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
@@ -164,7 +165,7 @@ private:
 
     void _setEndOffsetInPktBitsFromBaseOffset() noexcept
     {
-        const auto effectiveTotalLenBits = _appState->activePktState().pkt().indexEntry().effectiveTotalLen().bits();
+        const auto effectiveTotalLenBits = this->_appState().activePktState().pkt().indexEntry().effectiveTotalLen().bits();
 
         _charsAreStale = true;
         _endOffsetInPktBits = std::min(_baseOffsetInPktBits + this->_pageLen().bits(),
@@ -192,8 +193,6 @@ private:
     }
 
 private:
-    InspectCmdState *_appState;
-    ViewInspectCmdStateObserverGuard _appStateObserverGuard;
     const InspectScreen::Bookmarks *_bookmarks;
 
     // X position of the first numeric character of a row

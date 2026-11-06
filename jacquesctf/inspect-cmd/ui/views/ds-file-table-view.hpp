@@ -13,7 +13,8 @@
 namespace jacques {
 
 class DsFileTableView final :
-    public TableView
+    public TableView,
+    private ViewInspectCmdStateObserver
 {
 public:
     explicit DsFileTableView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState);
@@ -28,10 +29,6 @@ private:
     // first/last packet index entry of the data stream file of `row`, if any
     const PktIndexEntry *_firstEntry(Index row) const;
     const PktIndexEntry *_lastEntry(Index row) const;
-
-private:
-    InspectCmdState *_appState;
-    ViewInspectCmdStateObserverGuard _appStateObserverGuard;
 };
 
 } // namespace jacques

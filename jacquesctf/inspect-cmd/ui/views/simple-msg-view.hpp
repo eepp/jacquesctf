@@ -18,7 +18,6 @@ public:
     void msg(std::string_view msg);
 
 protected:
-    void _resized() override;
     void _redrawContent() override;
 
 private:

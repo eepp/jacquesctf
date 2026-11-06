@@ -24,9 +24,4 @@ void SimpleMsgView::_redrawContent()
     this->_write({1, 1}, _msg);
 }
 
-void SimpleMsgView::_resized()
-{
-    // TODO
-}
-
 } // namespace jacques

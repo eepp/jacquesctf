@@ -15,7 +15,8 @@ namespace jacques {
 class DsFileState;
 
 class StatusView final :
-    public View
+    public View,
+    private ViewInspectCmdStateObserver
 {
 public:
     explicit StatusView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState);
@@ -39,8 +40,6 @@ private:
     void _redrawContent() override;
 
 private:
-    InspectCmdState *_appState;
-    ViewInspectCmdStateObserverGuard _appStateObserverGuard;
     std::unordered_map<const DsFileState *, _EndPositions> _endPositions;
     const _EndPositions *_curEndPositions = nullptr;
 };

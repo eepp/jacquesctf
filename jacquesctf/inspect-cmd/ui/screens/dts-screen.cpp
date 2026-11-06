@@ -12,9 +12,9 @@
 
 namespace jacques {
 
-DtsScreen::DtsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                     InspectCmdState& appState, ScreenHost& host) :
-    Screen {rect, cfg, stylist, appState, host},
+DtsScreen::DtsScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
+                     ScreenHost& host) :
+    Screen {rect, stylist, appState, host},
     _searchController {*this, stylist, host}
 {
     const auto viewRects = this->_viewRects();

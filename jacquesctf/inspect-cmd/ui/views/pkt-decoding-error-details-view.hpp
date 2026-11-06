@@ -14,7 +14,8 @@
 namespace jacques {
 
 class PktDecodingErrorDetailsView final :
-    public View
+    public View,
+    private ViewInspectCmdStateObserver
 {
 public:
     explicit PktDecodingErrorDetailsView(const Rect& rect, const Stylist& stylist,
@@ -23,10 +24,6 @@ public:
 private:
     void _redrawContent() override;
     void _appStateChanged(Message msg) override;
-
-private:
-    InspectCmdState *_appState;
-    ViewInspectCmdStateObserverGuard _appStateObserverGuard;
 };
 
 } // namespace jacques

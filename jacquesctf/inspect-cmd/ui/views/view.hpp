@@ -24,7 +24,7 @@ struct ncplane;
 
 namespace jacques {
 
-class ViewInspectCmdStateObserverGuard;
+class ViewInspectCmdStateObserver;
 
 /*
  * Some non-ASCII glyphs which views use.
@@ -99,17 +99,15 @@ struct LabelValRow final
  * methods control whether or not the top and bottom right "more
  * content" indicators exist.
  *
- * A derived view can subscribe to the state of the application with a
- * `ViewInspectCmdStateObserverGuard` instance. This RAII helper has an
- * underlying `StateObserverGuard` and uses _appStateChanged() as
- * the observer.
+ * A derived view can subscribe to the state of the application by also
+ * deriving from `ViewInspectCmdStateObserver`.
  *
  * A derived view calls _style() to choose the style of what it
  * draws next.
  */
 class View
 {
-    friend class ViewInspectCmdStateObserverGuard;
+    friend class ViewInspectCmdStateObserver;
 
 public:
     enum class DecorationStyle {
@@ -250,7 +248,7 @@ protected:
 
     /*
      * Called by the application state (through a
-     * `ViewInspectCmdStateObserverGuard`) when the state changes.
+     * `ViewInspectCmdStateObserver`) when the state changes.
      */
     virtual void _appStateChanged(Message msg);
 
@@ -443,20 +441,27 @@ private:
 };
 
 /*
- * This is an application state observer guard for views.
+ * Mixin base class of a view which observes the application state.
  *
- * Just have an instance and build it with the state to observe and the
- * observer view. When the state changes, the virtual
- * View::_appStateChanged() method is called. When the view is
- * destroyed, the observer guard removes the view from the state
- * observers.
+ * A view derives from this class _after_ its view base class, building
+ * it with the state to observe and `*this`. When the state changes, the
+ * virtual View::_appStateChanged() method of the view is called. When
+ * the view is destroyed, this removes it from the state observers.
+ *
+ * _appState() returns the observed state.
  */
-class ViewInspectCmdStateObserverGuard final
+class ViewInspectCmdStateObserver
 {
-public:
-    explicit ViewInspectCmdStateObserverGuard(InspectCmdState& state, View& view);
+protected:
+    explicit ViewInspectCmdStateObserver(InspectCmdState& appState, View& view);
+
+    InspectCmdState& _appState() const noexcept
+    {
+        return *_curAppState;
+    }
 
 private:
+    InspectCmdState *_curAppState;
     const InspectCmdStateObserverGuard _observerGuard;
 };
 

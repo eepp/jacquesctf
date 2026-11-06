@@ -7,7 +7,6 @@
 
 #include "../key.hpp"
 #include "../term.hpp"
-#include "cfg.hpp"
 #include "../views/pkt-table-view.hpp"
 #include "../views/search-input-view.hpp"
 #include "pkts-screen.hpp"
@@ -18,9 +17,9 @@
 
 namespace jacques {
 
-PktsScreen::PktsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                       InspectCmdState& appState, ScreenHost& host) :
-    Screen {rect, cfg, stylist, appState, host},
+PktsScreen::PktsScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
+                       ScreenHost& host) :
+    Screen {rect, stylist, appState, host},
     _ptView {std::make_unique<PktTableView>(rect, stylist, appState)},
     _searchCtrl {*this, stylist, host}
 {

@@ -12,7 +12,6 @@
 #include "../key.hpp"
 #include "../screen-host.hpp"
 #include "../rect.hpp"
-#include "cfg.hpp"
 #include "../stylist.hpp"
 #include "../views/view.hpp"
 #include "../../state/inspect-cmd-state.hpp"
@@ -58,8 +57,8 @@ protected:
      *
      * `host` must exist as long as this screen exists.
      */
-    explicit Screen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                    InspectCmdState& appState, ScreenHost& host) noexcept;
+    explicit Screen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
+                    ScreenHost& host) noexcept;
 
 public:
     virtual ~Screen() = default;
@@ -210,11 +209,6 @@ protected:
      */
     virtual void _visibilityChanged();
 
-    const InspectCfg& _config() const noexcept
-    {
-        return *_curCfg;
-    }
-
     const Stylist& _stylist() const noexcept
     {
         return *_curStylist;
@@ -237,7 +231,6 @@ protected:
 
 private:
     Rect _curRect;
-    const InspectCfg *_curCfg;
     const Stylist *_curStylist;
     InspectCmdState *_curAppState;
     ScreenHost *_curHost;

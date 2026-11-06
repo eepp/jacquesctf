@@ -17,8 +17,32 @@
 namespace jacques {
 
 SearchInputView::SearchInputView(const Rect& rect, const Stylist& stylist) :
-    InputView {rect, stylist}
+    View {rect, "Input", DecorationStyle::BORDERLESS, stylist}
 {
+    assert(rect.h == 3);
+}
+
+void SearchInputView::_redrawContent()
+{
+    this->_clearContent();
+    this->_drawBorder();
+
+    if (!_text.empty()) {
+        this->_drawFormatText({1, 1}, _text);
+    }
+}
+
+void SearchInputView::_drawBorder() const
+{
+    this->_style(Stylist::Role::INPUT_BORDER);
+
+    // border made of spaces (borderless view: content rectangle is the rectangle)
+    const auto& rect = this->contentRect();
+
+    this->_clearRow(0);
+    this->_clearRow(rect.h - 1);
+    this->_fill({{0, 1}, 1, rect.h - 2});
+    this->_fill({{rect.w - 1, 1}, 1, rect.h - 2});
 }
 
 void SearchInputView::_writeCh(Point& contentPos, const char32_t ch) const
@@ -130,15 +154,6 @@ void SearchInputView::_drawFormatText(Point contentPos, const std::string& utf8T
     }
 
     this->_drawNumber(contentPos, it, text.end());
-}
-
-void SearchInputView::_drawCurText(const Point& contentPos, const std::string& text)
-{
-    if (text.empty()) {
-        return;
-    }
-
-    this->_drawFormatText(contentPos, text);
 }
 
 namespace {

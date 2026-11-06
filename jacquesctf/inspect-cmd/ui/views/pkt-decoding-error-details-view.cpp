@@ -13,18 +13,17 @@ namespace jacques {
 PktDecodingErrorDetailsView::PktDecodingErrorDetailsView(const Rect& rect, const Stylist& stylist,
                                                          InspectCmdState& appState) :
     View {rect, "", DecorationStyle::BORDERLESS, stylist},
-    _appState {&appState},
-    _appStateObserverGuard {appState, *this}
+    ViewInspectCmdStateObserver {appState, *this}
 {
 }
 
 void PktDecodingErrorDetailsView::_redrawContent()
 {
-    if (!_appState->hasActivePktState() || !_appState->activePktState().pkt().error()) {
+    if (!this->_appState().hasActivePktState() || !this->_appState().activePktState().pkt().error()) {
         return;
     }
 
-    const auto& error = *_appState->activePktState().pkt().error();
+    const auto& error = *this->_appState().activePktState().pkt().error();
     const auto& pktIndexEntry = error.pktIndexEntry();
 
     this->_clearContent(Stylist::Role::ALERT);

@@ -12,8 +12,7 @@ namespace jacques {
 
 ErTableView::ErTableView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState) :
     TableView {rect, "Event records", DecorationStyle::BORDERS, stylist, appState},
-    _appState {&appState},
-    _appStateObserverGuard {appState, *this}
+    ViewInspectCmdStateObserver {appState, *this}
 {
     this->_cols({
         _Col {"Index", 12, _COL_REQUIRED, [this](const Index row) {
@@ -65,17 +64,17 @@ ErTableView::ErTableView(const Rect& rect, const Stylist& stylist, InspectCmdSta
 
 const Er& ErTableView::_er(const Index row)
 {
-    assert(_appState->hasActivePktState());
-    return _appState->activePktState().pkt().erAtIndexInPkt(row);
+    assert(this->_appState().hasActivePktState());
+    return this->_appState().activePktState().pkt().erAtIndexInPkt(row);
 }
 
 Size ErTableView::_rowCount()
 {
-    if (!_appState->hasActivePktState()) {
+    if (!this->_appState().hasActivePktState()) {
         return 0;
     }
 
-    return _appState->activePktState().pkt().erCount();
+    return this->_appState().activePktState().pkt().erCount();
 }
 
 void ErTableView::_appStateChanged(const Message msg)
@@ -94,21 +93,21 @@ void ErTableView::_appStateChanged(const Message msg)
         this->_updateCounts();
     }
 
-    if (_appState->hasActivePktState() && _appState->activePktState().pkt().erCount() > 0) {
-        assert(_appState->activePktState().pkt().firstEr());
-        assert(_appState->activePktState().pkt().lastEr());
+    if (this->_appState().hasActivePktState() && this->_appState().activePktState().pkt().erCount() > 0) {
+        assert(this->_appState().activePktState().pkt().firstEr());
+        assert(this->_appState().activePktState().pkt().lastEr());
 
-        if (const auto curEr = _appState->curEr()) {
+        if (const auto curEr = this->_appState().curEr()) {
             this->_selectRow(curEr->indexInPkt());
         } else {
-            const auto& indexEntry = _appState->activePktState().pktIndexEntry();
-            const auto offsetInPktBits = _appState->curOffsetInPktBits();
+            const auto& indexEntry = this->_appState().activePktState().pktIndexEntry();
+            const auto offsetInPktBits = this->_appState().curOffsetInPktBits();
 
             // convenience for regions outside the event record block
             if (indexEntry.preambleLen() && offsetInPktBits < indexEntry.preambleLen()->bits()) {
                 this->_showFirstPage();
             } else if (offsetInPktBits >=
-                    _appState->activePktState().pkt().lastEr()->segment().endOffsetInPktBits()) {
+                    this->_appState().activePktState().pkt().lastEr()->segment().endOffsetInPktBits()) {
                 this->_showLastPage();
             }
 

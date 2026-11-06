@@ -23,8 +23,8 @@ class DtsScreen final :
     public Screen
 {
 public:
-    explicit DtsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                       InspectCmdState& appState, ScreenHost& host);
+    explicit DtsScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
+                       ScreenHost& host);
     void highlightCurDt();
     void clearHighlight();
 
