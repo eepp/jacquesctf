@@ -37,7 +37,7 @@ protected:
 
 public:
     virtual ~AbstractDtDetails() = default;
-    void renderLine(ncplane *plane, Size maxWidth, bool stylize = false) const;
+    void renderLine(ncplane& plane, Size maxWidth, bool stylize = false) const;
 
 protected:
     Size _indent() const noexcept
@@ -48,16 +48,16 @@ protected:
     /*
      * Makes the next writes to `plane` use the style of `role`.
      */
-    void _style(ncplane * const plane, const Stylist::Role role) const
+    void _style(ncplane& plane, const Stylist::Role role) const
     {
-        _theStylist->apply(*plane, role);
+        _theStylist->apply(plane, role);
     }
 
-    virtual void _renderLine(ncplane *plane, Size maxWidth, bool stylize) const = 0;
-    void _renderChar(ncplane *plane, Size& remWidth, char ch) const;
-    void _renderStr(ncplane *plane, Size& remWidth, const char *str) const;
+    virtual void _renderLine(ncplane& plane, Size maxWidth, bool stylize) const = 0;
+    void _renderChar(ncplane& plane, Size& remWidth, char ch) const;
+    void _renderStr(ncplane& plane, Size& remWidth, const char *str) const;
 
-    void _renderStr(ncplane *plane, Size& remWidth, const std::string& str) const
+    void _renderStr(ncplane& plane, Size& remWidth, const std::string& str) const
     {
         this->_renderStr(plane, remWidth, str.c_str());
     }

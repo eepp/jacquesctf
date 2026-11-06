@@ -28,7 +28,7 @@ public:
                                   const Stylist& stylist);
 
 private:
-    void _renderLine(ncplane *plane, Size maxWidth, bool stylize) const override;
+    void _renderLine(ncplane& plane, Size maxWidth, bool stylize) const override;
 
 private:
     const std::string _name;

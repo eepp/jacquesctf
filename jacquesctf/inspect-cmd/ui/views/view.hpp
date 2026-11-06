@@ -293,9 +293,9 @@ protected:
     /*
      * Underlying plane of this view.
      */
-    ncplane *_plane() const noexcept
+    ncplane& _plane() const noexcept
     {
-        return _curPlane;
+        return *_curPlane;
     }
 
     /*

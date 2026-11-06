@@ -20,7 +20,7 @@ MappingOrFlagDetails::MappingOrFlagDetails(std::string name, std::string rangesS
 {
 }
 
-void MappingOrFlagDetails::_renderLine(ncplane * const plane, const Size maxWidth,
+void MappingOrFlagDetails::_renderLine(ncplane& plane, const Size maxWidth,
                                        const bool stylize) const
 {
     auto remWidth = maxWidth;

@@ -23,7 +23,7 @@ AbstractDtDetails::AbstractDtDetails(const Size indent,
 {
 }
 
-void AbstractDtDetails::renderLine(ncplane * const plane, const Size maxWidth, const bool stylize) const
+void AbstractDtDetails::renderLine(ncplane& plane, const Size maxWidth, const bool stylize) const
 {
     if (_indentWidth >= maxWidth) {
         return;
@@ -31,21 +31,21 @@ void AbstractDtDetails::renderLine(ncplane * const plane, const Size maxWidth, c
 
     // indent
     for (Index i = 0; i < _indentWidth; ++i) {
-        ncplane_putchar(plane, ' ');
+        ncplane_putchar(&plane, ' ');
     }
 
     this->_renderLine(plane, maxWidth - _indentWidth, stylize);
 }
 
-void AbstractDtDetails::_renderChar(ncplane * const plane, Size& remWidth, const char ch) const
+void AbstractDtDetails::_renderChar(ncplane& plane, Size& remWidth, const char ch) const
 {
     if (remWidth > 0) {
-        ncplane_putchar(plane, ch);
+        ncplane_putchar(&plane, ch);
         --remWidth;
     }
 }
 
-void AbstractDtDetails::_renderStr(ncplane * const plane, Size& remWidth, const char * const str) const
+void AbstractDtDetails::_renderStr(ncplane& plane, Size& remWidth, const char * const str) const
 {
     assert(remWidth != 0);
 
@@ -53,7 +53,7 @@ void AbstractDtDetails::_renderStr(ncplane * const plane, Size& remWidth, const 
     const std::string fittingStr {term::strFittingPrefix(escapedStr, remWidth)};
 
     remWidth -= term::strWidth(fittingStr);
-    ncplane_putstr(plane, fittingStr.c_str());
+    ncplane_putstr(&plane, fittingStr.c_str());
 }
 
 Size dtDetailsStrWidth(const std::string_view str)

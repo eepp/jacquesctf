@@ -45,46 +45,46 @@ public:
     }
 
 private:
-    void _renderLine(ncplane *plane, Size maxWidth, bool stylize) const override;
+    void _renderLine(ncplane& plane, Size maxWidth, bool stylize) const override;
 
-    void _tryRenderPrefDispBaseProp(const yactfr::DataType& dt, ncplane *plane, Size& remWidth,
+    void _tryRenderPrefDispBaseProp(const yactfr::DataType& dt, ncplane& plane, Size& remWidth,
                                     bool stylize) const;
 
-    void _renderDt(const yactfr::FixedLengthBitArrayType& dt, ncplane *plane, Size remWidth,
+    void _renderDt(const yactfr::FixedLengthBitArrayType& dt, ncplane& plane, Size remWidth,
                    bool stylize) const;
 
-    void _renderDt(const yactfr::NullTerminatedStringType& dt, ncplane *plane, Size remWidth,
+    void _renderDt(const yactfr::NullTerminatedStringType& dt, ncplane& plane, Size remWidth,
                    bool stylize) const;
 
-    void _renderDt(const yactfr::StaticLengthStringType& dt, ncplane *plane, Size remWidth,
+    void _renderDt(const yactfr::StaticLengthStringType& dt, ncplane& plane, Size remWidth,
                    bool stylize) const;
 
-    void _renderDt(const yactfr::DynamicLengthStringType& dt, ncplane *plane, Size remWidth,
+    void _renderDt(const yactfr::DynamicLengthStringType& dt, ncplane& plane, Size remWidth,
                    bool stylize) const;
 
-    void _tryRenderMediaTypeProp(const yactfr::BlobType& dt, ncplane *plane, Size remWidth,
+    void _tryRenderMediaTypeProp(const yactfr::BlobType& dt, ncplane& plane, Size remWidth,
                                  bool stylize) const;
 
-    void _renderDt(const yactfr::StaticLengthBlobType& dt, ncplane *plane, Size remWidth,
+    void _renderDt(const yactfr::StaticLengthBlobType& dt, ncplane& plane, Size remWidth,
                    bool stylize) const;
 
-    void _renderDt(const yactfr::DynamicLengthBlobType& dt, ncplane *plane, Size remWidth,
+    void _renderDt(const yactfr::DynamicLengthBlobType& dt, ncplane& plane, Size remWidth,
                    bool stylize) const;
 
-    void _renderDt(const yactfr::StaticLengthArrayType& dt, ncplane *plane, Size remWidth,
+    void _renderDt(const yactfr::StaticLengthArrayType& dt, ncplane& plane, Size remWidth,
                    bool stylize) const;
 
-    void _renderDt(const yactfr::DynamicLengthArrayType& dt, ncplane *plane, Size remWidth,
+    void _renderDt(const yactfr::DynamicLengthArrayType& dt, ncplane& plane, Size remWidth,
                    bool stylize) const;
 
-    void _renderDt(const yactfr::StructureType& dt, ncplane *plane, Size remWidth,
+    void _renderDt(const yactfr::StructureType& dt, ncplane& plane, Size remWidth,
                    bool stylize) const;
 
-    void _renderDt(const yactfr::OptionalType& dt, ncplane *plane, Size remWidth,
+    void _renderDt(const yactfr::OptionalType& dt, ncplane& plane, Size remWidth,
                    bool stylize) const;
 
     template <typename IntTypeT>
-    void _renderMappingCountProp(const IntTypeT& dt, ncplane * const plane, Size& remWidth,
+    void _renderMappingCountProp(const IntTypeT& dt, ncplane& plane, Size& remWidth,
                                  const bool stylize) const
     {
         if (!dt.mappings().empty()) {
@@ -93,7 +93,7 @@ private:
     }
 
     template <typename IntTypeT>
-    void _renderIntTypeCommon(const IntTypeT& dt, ncplane * const plane, Size remWidth,
+    void _renderIntTypeCommon(const IntTypeT& dt, ncplane& plane, Size remWidth,
                               const bool stylize) const
     {
         if (remWidth == 0) {
@@ -122,7 +122,7 @@ private:
     }
 
     template <typename VlIntTypeT>
-    void _renderVlIntType(const VlIntTypeT& dt, ncplane * const plane, Size remWidth,
+    void _renderVlIntType(const VlIntTypeT& dt, ncplane& plane, Size remWidth,
                           const bool stylize) const
     {
         std::ostringstream ss;
@@ -142,7 +142,7 @@ private:
     }
 
     template <typename DtT>
-    void _tryRenderHasTraceTypeUuidRoleFlag(const DtT& dt, ncplane * const plane, Size& remWidth,
+    void _tryRenderHasTraceTypeUuidRoleFlag(const DtT& dt, ncplane& plane, Size& remWidth,
                                             const bool stylize) const
     {
         if (dt.hasMetadataStreamUuidRole()) {
@@ -151,7 +151,7 @@ private:
     }
 
     template <typename DtT>
-    void _tryRenderMinAlignProp(const DtT& dt, ncplane * const plane, Size& remWidth, const bool stylize) const
+    void _tryRenderMinAlignProp(const DtT& dt, ncplane& plane, Size& remWidth, const bool stylize) const
     {
         if (dt.minimumAlignment() == 1) {
             return;
@@ -161,7 +161,7 @@ private:
     }
 
     template <typename DtT>
-    void _renderRoleFlags(const DtT& dt, ncplane * const plane, Size& remWidth, const bool stylize) const
+    void _renderRoleFlags(const DtT& dt, ncplane& plane, Size& remWidth, const bool stylize) const
     {
         for (const auto role : dt.roles()) {
             const auto roleStr = std::invoke([role] {
@@ -210,7 +210,7 @@ private:
     }
 
     template <typename DtT>
-    void _renderSelLocProp(const DtT& dt, ncplane * const plane, Size& remWidth, const bool stylize) const
+    void _renderSelLocProp(const DtT& dt, ncplane& plane, Size& remWidth, const bool stylize) const
     {
         this->_renderDataLoc(plane, remWidth, stylize, "sel-loc", dt.selectorLocation());
     }
@@ -226,7 +226,7 @@ private:
     }
 
     template <typename VarTypeT>
-    void _renderVarType(const VarTypeT& dt, ncplane * const plane, Size remWidth,
+    void _renderVarType(const VarTypeT& dt, ncplane& plane, Size remWidth,
                         const bool stylize) const
     {
         std::ostringstream ss;
@@ -247,24 +247,24 @@ private:
         this->_renderProp(plane, remWidth, stylize, "opt-cnt", dt.options().size());
     }
 
-    void _renderName(ncplane *plane, Size& remWidth, bool stylize) const;
-    void _renderExtra(ncplane *plane, Size& remWidth, bool stylize) const;
-    void _renderDtInfo(ncplane *plane, Size& remWidth, bool stylize, const char *info) const;
-    void _renderRoleFlag(ncplane *plane, Size& remWidth, bool stylize, const char *name) const;
-    void _renderStrEncodingProp(ncplane *plane, Size& remWidth, bool stylize,
+    void _renderName(ncplane& plane, Size& remWidth, bool stylize) const;
+    void _renderExtra(ncplane& plane, Size& remWidth, bool stylize) const;
+    void _renderDtInfo(ncplane& plane, Size& remWidth, bool stylize, const char *info) const;
+    void _renderRoleFlag(ncplane& plane, Size& remWidth, bool stylize, const char *name) const;
+    void _renderStrEncodingProp(ncplane& plane, Size& remWidth, bool stylize,
                                 const yactfr::StringType& strType) const;
 
-    void _renderProp(ncplane *plane, Size& remWidth, bool stylize, const char *key,
+    void _renderProp(ncplane& plane, Size& remWidth, bool stylize, const char *key,
                      const char *val) const;
 
-    void _renderProp(ncplane *plane, Size& remWidth, bool stylize, const char *key,
+    void _renderProp(ncplane& plane, Size& remWidth, bool stylize, const char *key,
                      unsigned long long val) const;
 
-    void _renderDataLoc(ncplane *plane, Size& remWidth, bool stylize, const char *key,
+    void _renderDataLoc(ncplane& plane, Size& remWidth, bool stylize, const char *key,
                         const yactfr::DataLocation& loc) const;
 
     template <typename StyliseFuncT, typename UnstyliseFuncT>
-    void _renderAligned(ncplane * const plane, Size& remWidth, StyliseFuncT&& styliseFunc,
+    void _renderAligned(ncplane& plane, Size& remWidth, StyliseFuncT&& styliseFunc,
                         UnstyliseFuncT&& unstyliseFunc, const std::optional<std::string>& str,
                         const Size strWidth) const
     {
@@ -289,7 +289,7 @@ private:
         unstyliseFunc(plane);
 
         for (Index i = 0; i < spCount; ++i) {
-            ncplane_putchar(plane, ' ');
+            ncplane_putchar(&plane, ' ');
         }
 
         remWidth -= spCount;

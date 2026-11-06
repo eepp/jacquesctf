@@ -33,7 +33,7 @@ DtDetails::DtDetails(const yactfr::DataType& dt, std::optional<std::string> name
 {
 }
 
-void DtDetails::_renderLine(ncplane * const plane, const Size maxWidth, const bool stylize) const
+void DtDetails::_renderLine(ncplane& plane, const Size maxWidth, const bool stylize) const
 {
     auto remWidth = maxWidth;
 
@@ -86,7 +86,7 @@ void DtDetails::_renderLine(ncplane * const plane, const Size maxWidth, const bo
     }
 }
 
-void DtDetails::_tryRenderPrefDispBaseProp(const yactfr::DataType& dt, ncplane * const plane,
+void DtDetails::_tryRenderPrefDispBaseProp(const yactfr::DataType& dt, ncplane& plane,
                                            Size& remWidth, const bool stylize) const
 {
     if (!dt.isIntegerType()) {
@@ -137,7 +137,7 @@ std::string alignStr(const yactfr::DataType& dt)
 
 } // namespace
 
-void DtDetails::_renderDt(const yactfr::FixedLengthBitArrayType& dt, ncplane * const plane,
+void DtDetails::_renderDt(const yactfr::FixedLengthBitArrayType& dt, ncplane& plane,
                           Size remWidth, const bool stylize) const
 {
     std::ostringstream ss;
@@ -183,14 +183,14 @@ void DtDetails::_renderDt(const yactfr::FixedLengthBitArrayType& dt, ncplane * c
     }
 }
 
-void DtDetails::_renderDt(const yactfr::NullTerminatedStringType& dt, ncplane * const plane,
+void DtDetails::_renderDt(const yactfr::NullTerminatedStringType& dt, ncplane& plane,
                           Size remWidth, const bool stylize) const
 {
     this->_renderDtInfo(plane, remWidth, stylize, "{nt-str}");
     this->_renderStrEncodingProp(plane, remWidth, stylize, dt);
 }
 
-void DtDetails::_renderDt(const yactfr::StructureType& dt, ncplane * const plane,
+void DtDetails::_renderDt(const yactfr::StructureType& dt, ncplane& plane,
                           Size remWidth, const bool stylize) const
 {
     std::ostringstream ss;
@@ -211,7 +211,7 @@ void DtDetails::_renderDt(const yactfr::StructureType& dt, ncplane * const plane
     this->_renderProp(plane, remWidth, stylize, "member-type-cnt", dt.size());
 }
 
-void DtDetails::_renderDt(const yactfr::StaticLengthArrayType& dt, ncplane * const plane,
+void DtDetails::_renderDt(const yactfr::StaticLengthArrayType& dt, ncplane& plane,
                           Size remWidth, const bool stylize) const
 {
     std::ostringstream ss;
@@ -232,7 +232,7 @@ void DtDetails::_renderDt(const yactfr::StaticLengthArrayType& dt, ncplane * con
     this->_tryRenderHasTraceTypeUuidRoleFlag(dt, plane, remWidth, stylize);
 }
 
-void DtDetails::_renderDt(const yactfr::StaticLengthStringType& dt, ncplane * const plane,
+void DtDetails::_renderDt(const yactfr::StaticLengthStringType& dt, ncplane& plane,
                           Size remWidth, const bool stylize) const
 {
     this->_renderDtInfo(plane, remWidth, stylize, "{sl-str}");
@@ -245,7 +245,7 @@ void DtDetails::_renderDt(const yactfr::StaticLengthStringType& dt, ncplane * co
     this->_renderStrEncodingProp(plane, remWidth, stylize, dt);
 }
 
-void DtDetails::_tryRenderMediaTypeProp(const yactfr::BlobType& dt, ncplane * const plane,
+void DtDetails::_tryRenderMediaTypeProp(const yactfr::BlobType& dt, ncplane& plane,
                                         Size remWidth, const bool stylize) const
 {
     if (dt.mediaType() == yactfr::BlobType::defaultMediaType()) {
@@ -255,7 +255,7 @@ void DtDetails::_tryRenderMediaTypeProp(const yactfr::BlobType& dt, ncplane * co
     this->_renderProp(plane, remWidth, stylize, "media-type", dt.mediaType().c_str());
 }
 
-void DtDetails::_renderDt(const yactfr::StaticLengthBlobType& dt, ncplane * const plane,
+void DtDetails::_renderDt(const yactfr::StaticLengthBlobType& dt, ncplane& plane,
                           Size remWidth, const bool stylize) const
 {
     this->_renderDtInfo(plane, remWidth, stylize, "{sl-blob}");
@@ -279,7 +279,7 @@ void DtDetails::_renderDt(const yactfr::StaticLengthBlobType& dt, ncplane * cons
     this->_tryRenderHasTraceTypeUuidRoleFlag(dt, plane, remWidth, stylize);
 }
 
-void DtDetails::_renderDt(const yactfr::DynamicLengthArrayType& dt, ncplane * const plane,
+void DtDetails::_renderDt(const yactfr::DynamicLengthArrayType& dt, ncplane& plane,
                           Size remWidth, const bool stylize) const
 {
     std::ostringstream ss;
@@ -294,7 +294,7 @@ void DtDetails::_renderDt(const yactfr::DynamicLengthArrayType& dt, ncplane * co
     this->_renderDataLoc(plane, remWidth, stylize, "len-loc", dt.lengthLocation());
 }
 
-void DtDetails::_renderDt(const yactfr::DynamicLengthStringType& dt, ncplane * const plane,
+void DtDetails::_renderDt(const yactfr::DynamicLengthStringType& dt, ncplane& plane,
                           Size remWidth, const bool stylize) const
 {
     this->_renderDtInfo(plane, remWidth, stylize, "{dl-str}");
@@ -307,7 +307,7 @@ void DtDetails::_renderDt(const yactfr::DynamicLengthStringType& dt, ncplane * c
     this->_renderStrEncodingProp(plane, remWidth, stylize, dt);
 }
 
-void DtDetails::_renderDt(const yactfr::DynamicLengthBlobType& dt, ncplane * const plane,
+void DtDetails::_renderDt(const yactfr::DynamicLengthBlobType& dt, ncplane& plane,
                           Size remWidth, const bool stylize) const
 {
     this->_renderDtInfo(plane, remWidth, stylize, "{dl-blob}");
@@ -325,7 +325,7 @@ void DtDetails::_renderDt(const yactfr::DynamicLengthBlobType& dt, ncplane * con
     this->_tryRenderMediaTypeProp(dt, plane, remWidth, stylize);
 }
 
-void DtDetails::_renderDt(const yactfr::OptionalType& dt, ncplane * const plane, Size remWidth,
+void DtDetails::_renderDt(const yactfr::OptionalType& dt, ncplane& plane, Size remWidth,
                           const bool stylize) const
 {
     std::ostringstream ss;
@@ -349,33 +349,33 @@ void DtDetails::_renderDt(const yactfr::OptionalType& dt, ncplane * const plane,
     this->_renderSelLocProp(dt, plane, remWidth, stylize);
 }
 
-void DtDetails::_renderName(ncplane * const plane, Size& remWidth, const bool stylize) const
+void DtDetails::_renderName(ncplane& plane, Size& remWidth, const bool stylize) const
 {
-    this->_renderAligned(plane, remWidth, [this, stylize](const auto plane) {
+    this->_renderAligned(plane, remWidth, [this, stylize](auto& plane) {
         if (stylize) {
             this->_style(plane, Stylist::Role::DT_NAME);
         }
-    }, [this, stylize](const auto plane) {
+    }, [this, stylize](auto& plane) {
         if (stylize) {
             this->_style(plane, Stylist::Role::STD);
         }
     }, _name, _nameWidth);
 }
 
-void DtDetails::_renderExtra(ncplane * const plane, Size& remWidth, const bool stylize) const
+void DtDetails::_renderExtra(ncplane& plane, Size& remWidth, const bool stylize) const
 {
-    this->_renderAligned(plane, remWidth, [this, stylize](const auto plane) {
+    this->_renderAligned(plane, remWidth, [this, stylize](auto& plane) {
         if (stylize) {
             this->_style(plane, Stylist::Role::DT_EXTRA);
         }
-    }, [this, stylize](const auto plane) {
+    }, [this, stylize](auto& plane) {
         if (stylize) {
             this->_style(plane, Stylist::Role::STD);
         }
     }, _extra, _extraWidth);
 }
 
-void DtDetails::_renderDtInfo(ncplane * const plane, Size& remWidth, const bool stylize,
+void DtDetails::_renderDtInfo(ncplane& plane, Size& remWidth, const bool stylize,
                               const char * const info) const
 {
     if (stylize) {
@@ -385,7 +385,7 @@ void DtDetails::_renderDtInfo(ncplane * const plane, Size& remWidth, const bool 
     this->_renderStr(plane, remWidth, info);
 }
 
-void DtDetails::_renderRoleFlag(ncplane * const plane, Size& remWidth, const bool stylize,
+void DtDetails::_renderRoleFlag(ncplane& plane, Size& remWidth, const bool stylize,
                                 const char * const name) const
 {
     if (stylize) {
@@ -404,7 +404,7 @@ void DtDetails::_renderRoleFlag(ncplane * const plane, Size& remWidth, const boo
     this->_renderStr(plane, remWidth, ss.str());
 }
 
-void DtDetails::_renderStrEncodingProp(ncplane * const plane, Size& remWidth, const bool stylize,
+void DtDetails::_renderStrEncodingProp(ncplane& plane, Size& remWidth, const bool stylize,
                                        const yactfr::StringType& strType) const
 {
     if (strType.encoding() == yactfr::StringEncoding::Utf8) {
@@ -441,7 +441,7 @@ void DtDetails::_renderStrEncodingProp(ncplane * const plane, Size& remWidth, co
     this->_renderProp(plane, remWidth, stylize, "enc", enc.c_str());
 }
 
-void DtDetails::_renderProp(ncplane * const plane, Size& remWidth, const bool stylize,
+void DtDetails::_renderProp(ncplane& plane, Size& remWidth, const bool stylize,
                             const char * const key, const char * const val) const
 {
     if (stylize) {
@@ -477,7 +477,7 @@ void DtDetails::_renderProp(ncplane * const plane, Size& remWidth, const bool st
     this->_renderStr(plane, remWidth, val);
 }
 
-void DtDetails::_renderProp(ncplane * const plane, Size& remWidth, const bool stylize,
+void DtDetails::_renderProp(ncplane& plane, Size& remWidth, const bool stylize,
                             const char * const key, const unsigned long long val) const
 {
     std::ostringstream ss;
@@ -486,7 +486,7 @@ void DtDetails::_renderProp(ncplane * const plane, Size& remWidth, const bool st
     this->_renderProp(plane, remWidth, stylize, key, ss.str().c_str());
 }
 
-void DtDetails::_renderDataLoc(ncplane * const plane, Size& remWidth, const bool stylize,
+void DtDetails::_renderDataLoc(ncplane& plane, Size& remWidth, const bool stylize,
                                const char * const key, const yactfr::DataLocation& loc) const
 {
     std::ostringstream ss;
