@@ -68,7 +68,7 @@ void PktDecodingErrorDetailsView::_redrawContent()
 
 void PktDecodingErrorDetailsView::_appStateChanged(const Message msg)
 {
-    if (msg == Message::ACTIVE_PKT_CHANGED) {
+    if (msg == Message::ACTIVE_DS_FILE_AND_PKT_CHANGED || msg == Message::ACTIVE_PKT_CHANGED) {
         this->_invalidate();
     }
 }

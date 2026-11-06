@@ -12,6 +12,7 @@
 #include "aliases.hpp"
 #include "../stylist.hpp"
 #include "../../state/inspect-cmd-state.hpp"
+#include "../../state/msg.hpp"
 #include "../views/pkt-region-info-view.hpp"
 #include "../views/er-table-view.hpp"
 #include "../views/sub-dt-explorer-view.hpp"
@@ -43,7 +44,7 @@ private:
     {
         Index dsfStateIndex;
         std::optional<Index> pktIndexInDsFile;
-        Index offsetInPktBits;
+        Index offsetInPktBits = 0;
 
         bool operator==(const _StateSnapshot& other)
         {
@@ -72,7 +73,20 @@ private:
     void _resized() override;
     void _handleKey(Key key) override;
     void _visibilityChanged() override;
+
+    /*
+     * Shows the decoding error box if the active packet has a decoding
+     * error, or hides it otherwise.
+     */
     void _tryShowDecodingError();
+
+    /*
+     * Called when the application state changes to show the decoding
+     * error box if the new active packet has a decoding error.
+     */
+    void _appStateChanged(Message msg);
+
+    Rect _decErrorViewRect() const noexcept;
     void _snapshotState();
     _StateSnapshot _takeStateSnapshot();
     void _goBack();
@@ -116,6 +130,9 @@ private:
     Bookmarks _bookmarks;
     bool _goingToBookmark = false;
     std::optional<Index> _lastOffsetInRowBits;
+
+    // last so that it's destroyed first
+    InspectCmdStateObserverGuard _appStateObserverGuard;
 };
 
 } // namespace jacques

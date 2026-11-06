@@ -4,11 +4,9 @@
  */
 
 #include <cassert>
-#include <iostream>
 #include <functional>
 #include <initializer_list>
 #include <utility>
-#include <signal.h>
 #include <unistd.h>
 
 #include "../key.hpp"
@@ -17,7 +15,6 @@
 #include "inspect-screen.hpp"
 #include "../stylist.hpp"
 #include "../views/pkt-data-view.hpp"
-#include "utils.hpp"
 
 namespace jacques {
 
@@ -25,7 +22,8 @@ InspectScreen::InspectScreen(const Rect& rect, const InspectCfg& cfg, const Styl
                              InspectCmdState& appState, ScreenHost& host) :
     Screen {rect, cfg, stylist, appState, host},
     _decErrorView {
-        std::make_unique<PktDecodingErrorDetailsView>(rect, stylist, appState)
+        std::make_unique<PktDecodingErrorDetailsView>(this->_decErrorViewRect(), stylist,
+                                                      appState)
     },
     _searchCtrl {*this, stylist, host},
     _curStateSnapshot {_stateSnapshots.end()},
@@ -34,7 +32,10 @@ InspectScreen::InspectScreen(const Rect& rect, const InspectCfg& cfg, const Styl
         _ErtViewDispMode::LONG,
         _ErtViewDispMode::FULL,
         _ErtViewDispMode::HIDDEN,
-    }
+    },
+    _appStateObserverGuard {appState, [this](const Message msg) {
+        this->_appStateChanged(msg);
+    }}
 {
     _pdView = std::make_unique<PktDataView>(this->rect(), stylist, appState, _bookmarks);
     _ertView = std::make_unique<ErTableView>(this->rect(), stylist, appState);
@@ -107,7 +108,7 @@ void InspectScreen::_updateViews()
     const auto& rect = this->rect();
     const auto dispMode = _ertViewDispModeWheel.curVal();
 
-    _decErrorView->moveAndResize({{rect.pos.x + 4, rect.h - 14}, rect.w - 8, 12});
+    _decErrorView->moveAndResize(this->_decErrorViewRect());
 
     if (dispMode == _ErtViewDispMode::FULL) {
         _pdView->isVisible(false);
@@ -180,6 +181,20 @@ void InspectScreen::_tryShowDecodingError()
 {
     _decErrorView->isVisible(this->_appState().hasActivePktState() &&
                              this->_appState().activePktState().pkt().error());
+}
+
+void InspectScreen::_appStateChanged(const Message msg)
+{
+    if (msg == Message::ACTIVE_DS_FILE_AND_PKT_CHANGED || msg == Message::ACTIVE_PKT_CHANGED) {
+        this->_tryShowDecodingError();
+    }
+}
+
+Rect InspectScreen::_decErrorViewRect() const noexcept
+{
+    const auto& rect = this->rect();
+
+    return {{rect.pos.x + 4, rect.h - 14}, rect.w - 8, 12};
 }
 
 InspectScreen::_StateSnapshot InspectScreen::_takeStateSnapshot()
@@ -331,7 +346,6 @@ void InspectScreen::_searchAccepted(std::unique_ptr<const SearchQuery> query)
     this->_snapshotState();
 
     _lastQuery = std::move(query);
-    this->_tryShowDecodingError();
 }
 
 void InspectScreen::_handleKey(const Key key)
@@ -339,6 +353,11 @@ void InspectScreen::_handleKey(const Key key)
     const auto goingToBookmark = _goingToBookmark;
     const auto decErrorViewWasVisible = _decErrorView->isVisible();
 
+    /*
+     * Any key hides the decoding error box, but _appStateChanged()
+     * shows it again if the key changes the active packet to one having
+     * a decoding error.
+     */
     _goingToBookmark = false;
     _decErrorView->isVisible(false);
 
@@ -346,16 +365,11 @@ void InspectScreen::_handleKey(const Key key)
         _lastOffsetInRowBits = std::nullopt;
     }
 
-    if (this->_handleDsFileKey(key)) {
-        this->_snapshotState();
-        this->_tryShowDecodingError();
-        return;
-    }
-
     if (this->_handleFmtModeKey(key)) {
         return;
     }
 
+    // _searchAccepted() takes the state snapshot
     if (key.ch() == U'G') {
         this->_startSearch({}, true);
         return;
@@ -364,10 +378,21 @@ void InspectScreen::_handleKey(const Key key)
         return;
     }
 
-    if (const auto specialKey = key.special()) {
+    /*
+     * Take a snapshot of the state after handling the key, unless the
+     * key restores a previous state.
+     *
+     * _snapshotState() ignores an unchanged state.
+     */
+    auto snapshotState = true;
+
+    if (this->_handleDsFileKey(key)) {
+        // nothing else to do
+    } else if (const auto specialKey = key.special()) {
         switch (*specialKey) {
         case SpecialKey::BACKSPACE:
             this->_goBack();
+            snapshotState = false;
             break;
 
         case SpecialKey::ENTER:
@@ -382,23 +407,21 @@ void InspectScreen::_handleKey(const Key key)
 
         case SpecialKey::HOME:
             this->_appState().gotoPktRegionAtOffsetInPktBits(0);
-            this->_snapshotState();
             break;
 
         case SpecialKey::END:
             this->_appState().gotoLastPktRegion();
-            this->_snapshotState();
+
+            // the last region of a packet may be its decoding error
             this->_tryShowDecodingError();
             break;
 
         case SpecialKey::LEFT:
             this->_appState().gotoPrevPktRegion();
-            this->_snapshotState();
             break;
 
         case SpecialKey::RIGHT:
             this->_appState().gotoNextPktRegion();
-            this->_snapshotState();
             break;
 
         case SpecialKey::UP:
@@ -434,7 +457,6 @@ void InspectScreen::_handleKey(const Key key)
             this->_appState().gotoPktRegionAtOffsetInPktBits(
                 reqPktRegion.segment().offsetInPktBits()
             );
-            this->_snapshotState();
             break;
         }
 
@@ -469,7 +491,6 @@ void InspectScreen::_handleKey(const Key key)
             this->_appState().gotoPktRegionAtOffsetInPktBits(
                 reqPktRegion.segment().offsetInPktBits()
             );
-            this->_snapshotState();
             break;
         }
 
@@ -483,24 +504,18 @@ void InspectScreen::_handleKey(const Key key)
 
         case SpecialKey::F5:
             this->_appState().gotoPrevPkt();
-            this->_snapshotState();
-            this->_tryShowDecodingError();
             break;
 
         case SpecialKey::F6:
             this->_appState().gotoNextPkt();
-            this->_snapshotState();
-            this->_tryShowDecodingError();
             break;
 
         case SpecialKey::F7:
             this->_appState().gotoPrevEr(10);
-            this->_snapshotState();
             break;
 
         case SpecialKey::F8:
             this->_appState().gotoNextEr(10);
-            this->_snapshotState();
             break;
 
         default:
@@ -512,10 +527,12 @@ void InspectScreen::_handleKey(const Key key)
         switch (ch) {
         case '9':
             this->_goBack();
+            snapshotState = false;
             break;
 
         case '0':
             this->_goForward();
+            snapshotState = false;
             break;
 
         case '#':
@@ -566,7 +583,6 @@ void InspectScreen::_handleKey(const Key key)
 
         case 'C':
             this->_appState().gotoPktCtx();
-            this->_snapshotState();
             break;
 
         case 'z':
@@ -575,7 +591,6 @@ void InspectScreen::_handleKey(const Key key)
             }
 
             this->_appState().activePktState().gotoPktRegionNextParent();
-            this->_snapshotState();
             break;
 
         case '1':
@@ -584,6 +599,7 @@ void InspectScreen::_handleKey(const Key key)
         case '4':
             if (goingToBookmark) {
                 this->_gotoBookmark(ch - '1');
+                snapshotState = false;
             } else {
                 this->_toggleBookmark(ch - '1');
             }
@@ -600,25 +616,25 @@ void InspectScreen::_handleKey(const Key key)
             }
 
             this->_search(*_lastQuery, false);
-            this->_snapshotState();
-            this->_tryShowDecodingError();
             break;
 
         case '-':
             this->_appState().gotoPrevEr();
-            this->_snapshotState();
             break;
 
         case '+':
         case '=':
         case ' ':
             this->_appState().gotoNextEr();
-            this->_snapshotState();
             break;
 
         default:
             break;
         }
+    }
+
+    if (snapshotState) {
+        this->_snapshotState();
     }
 }
 
