@@ -41,7 +41,7 @@ protected:
 
     Size _rowCount() const noexcept
     {
-        return _theRowCount;
+        return this->_totalRowCount();
     }
 
     /*
@@ -62,9 +62,6 @@ protected:
     {
         return index - this->_firstVisibleRow();
     }
-
-private:
-    Size _theRowCount = 0;
 };
 
 } // namespace jacques

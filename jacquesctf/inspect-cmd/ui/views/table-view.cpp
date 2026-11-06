@@ -458,30 +458,18 @@ bool TableView::_handleKey(const Key key)
 
 void TableView::_selNext()
 {
-    if (this->_rowCount() == 0) {
-        return;
-    }
-
     this->_selNextRow(1, true);
     this->_invalidate();
 }
 
 void TableView::_selPrev()
 {
-    if (this->_rowCount() == 0) {
-        return;
-    }
-
     this->_selPrevRow(1, true);
     this->_invalidate();
 }
 
 void TableView::_selNextPage()
 {
-    if (this->_rowCount() == 0) {
-        return;
-    }
-
     this->_pageDown();
 
     if (this->_selRow()) {
@@ -494,10 +482,6 @@ void TableView::_selNextPage()
 
 void TableView::_selPrevPage()
 {
-    if (this->_rowCount() == 0) {
-        return;
-    }
-
     this->_pageUp();
 
     if (this->_selRow()) {
@@ -513,30 +497,18 @@ void TableView::_selPrevPage()
 
 void TableView::centerSelRow()
 {
-    if (this->_rowCount() == 0) {
-        return;
-    }
-
     this->_centerOnSelRow();
     this->_invalidate();
 }
 
 void TableView::selectFirst()
 {
-    if (this->_rowCount() == 0) {
-        return;
-    }
-
     this->_selFirstRow(true);
     this->_invalidate();
 }
 
 void TableView::selectLast()
 {
-    if (this->_rowCount() == 0) {
-        return;
-    }
-
     this->_selLastRow(true);
     this->_invalidate();
 }

@@ -19,17 +19,12 @@ ScrollView::ScrollView(const Rect& rect, const std::string_view title,
 
 void ScrollView::_rowCount(const Size count)
 {
-    _theRowCount = count;
     this->_updateCounts(count, this->contentRect().h);
     this->_invalidate();
 }
 
 void ScrollView::_index(const Index index)
 {
-    if (_theRowCount == 0) {
-        return;
-    }
-
     this->_firstVisibleRow(std::min(index, this->_maxFirstVisibleRow()));
     this->_invalidate();
 }
@@ -43,20 +38,18 @@ bool ScrollView::_handleKey(const Key key)
     }
 
     const auto changed = std::invoke([this, specialKey]() -> std::optional<bool> {
-        const auto haveRows = _theRowCount > 0;
-
         switch (*specialKey) {
         case SpecialKey::UP:
-            return haveRows && this->_goUp();
+            return this->_goUp();
 
         case SpecialKey::DOWN:
-            return haveRows && this->_goDown();
+            return this->_goDown();
 
         case SpecialKey::PAGE_UP:
-            return haveRows && this->_pageUp();
+            return this->_pageUp();
 
         case SpecialKey::PAGE_DOWN:
-            return haveRows && this->_pageDown();
+            return this->_pageDown();
 
         case SpecialKey::HOME:
             return this->_showFirstPage();
@@ -85,13 +78,13 @@ void ScrollView::_redrawContent()
 {
     this->_drawRows();
     this->_hasMoreTop(this->_index() > 0);
-    this->_hasMoreBottom(this->_index() + this->contentRect().h < _theRowCount);
+    this->_hasMoreBottom(this->_index() + this->contentRect().h < this->_rowCount());
 }
 
 void ScrollView::_resized()
 {
     // keeps the current top row, if possible
-    this->_updateCounts(_theRowCount, this->contentRect().h);
+    this->_updateCounts(this->_rowCount(), this->contentRect().h);
 }
 
 } // namespace jacques

@@ -6,7 +6,6 @@
 #ifndef _JACQUES_INSPECT_COMMON_COMMON_INSPECT_TABLE_VIEW_HPP
 #define _JACQUES_INSPECT_COMMON_COMMON_INSPECT_TABLE_VIEW_HPP
 
-#include <cassert>
 #include <optional>
 
 #include "aliases.hpp"
@@ -64,34 +63,14 @@ protected:
         return _theSelRow;
     }
 
+    Size _totalRowCount() const noexcept
+    {
+        return _theRowCount;
+    }
+
     Index _firstVisibleRow() const noexcept
     {
         return _theFirstVisibleRow;
-    }
-
-private:
-    template <typename FuncT>
-    _Change _selRow(const Size steps, const bool ensureVisible, FuncT&& func)
-    {
-        assert(_theRowCount > 0);
-
-        auto change = _Change::NONE;
-
-        for (Index step = 0; step < steps; ++step) {
-            const auto stepChange = this->_selRow(func(), ensureVisible);
-
-            if (stepChange == _Change::NONE) {
-                // nothing more to do
-                return change;
-            }
-
-            if (static_cast<int>(stepChange) > static_cast<int>(change)) {
-                // more important change
-                change = stepChange;
-            }
-        }
-
-        return change;
     }
 
 private:
