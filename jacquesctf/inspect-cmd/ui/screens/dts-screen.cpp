@@ -25,6 +25,7 @@ DtsScreen::DtsScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& 
     this->_addView(*_dstTableView);
     this->_addView(*_ertTableView);
     this->_addView(*_dtExplorerView);
+    this->_updateTraceType();
     this->_focusAndUpdateViews(*_dstTableView);
 }
 
@@ -32,6 +33,7 @@ void DtsScreen::_visibilityChanged()
 {
     if (this->isVisible()) {
         // the active trace could have changed in the meantime
+        this->_updateTraceType();
         this->_updateViews();
     }
 }
@@ -49,9 +51,13 @@ DtsScreen::_ViewRects DtsScreen::_viewRects() const
     return {dstTableViewRect, ertTableViewRect, dtExplorerViewRect};
 }
 
-void DtsScreen::_updateViews()
+void DtsScreen::_updateTraceType()
 {
     _dstTableView->traceType(this->_appState().metadata().traceType());
+}
+
+void DtsScreen::_updateViews()
+{
     _ertTableView->dst(*_dstTableView->dst());
     _dstTableView->highlightSel(false);
     _ertTableView->highlightSel(false);
@@ -89,7 +95,7 @@ void DtsScreen::highlightCurDt()
     }
 
     // the active trace could have changed in the meantime
-    _dstTableView->traceType(this->_appState().metadata().traceType());
+    this->_updateTraceType();
 
     auto& activePktState = this->_appState().activePktState();
 

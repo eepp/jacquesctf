@@ -38,6 +38,13 @@ private:
     void _focusedViewHandledKey(Key key) override;
     void _visibilityChanged() override;
     _ViewRects _viewRects() const;
+
+    /*
+     * Makes the data stream type table view show the data stream types
+     * of the active trace.
+     */
+    void _updateTraceType();
+
     void _updateViews();
 
     /*
