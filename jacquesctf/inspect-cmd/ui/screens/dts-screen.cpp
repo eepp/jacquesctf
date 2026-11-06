@@ -83,6 +83,9 @@ void DtsScreen::highlightCurDt()
         return;
     }
 
+    // the active trace could have changed in the meantime
+    _dstTableView->traceType(this->_appState().metadata().traceType());
+
     auto& activePktState = this->_appState().activePktState();
 
     const auto curDst = activePktState.pktIndexEntry().dst();
