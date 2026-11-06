@@ -161,10 +161,7 @@ void DtsScreen::_handleKey(const Key key)
 {
     if (key.ch() == U'+') {
         _tablesVisible = !_tablesVisible;
-
-        const auto viewRects = this->_viewRects();
-
-        _dtExplorerView->moveAndResize(viewRects.dtExplorer);
+        this->_resized();
         _dstTableView->isVisible(_tablesVisible);
         _ertTableView->isVisible(_tablesVisible);
 
