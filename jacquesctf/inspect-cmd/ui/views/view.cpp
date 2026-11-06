@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
+#include <algorithm>
 #include <cassert>
-#include <cstdarg>
-#include <cstdio>
 #include <functional>
 #include <string>
 #include <notcurses/notcurses.h>
@@ -200,65 +199,71 @@ void View::_decorate() const
     }
 }
 
-void View::_clearContent() const
+void View::_clearContent(const Stylist::Role role) const
 {
-    this->_style(Stylist::Role::STD);
+    this->_style(role);
+    this->_fill({{0, 0}, _contentRect.w, _contentRect.h});
+}
 
-    for (Index y = 0; y < this->contentRect().h; ++y) {
-        this->_putChar({0, y}, ' ');
-
-        for (Index x = 1; x < this->contentRect().w; ++x) {
-            this->_appendChar(' ');
-        }
+Index View::_write(const Point& contentPos, const std::string_view str) const
+{
+    if (contentPos.x >= _contentRect.w || contentPos.y >= _contentRect.h) {
+        return contentPos.x;
     }
-}
 
-void View::_clearRect() const
-{
-    for (Index y = 0; y < _rect.h; ++y) {
-        ncplane_putchar_yx(_curPlane, static_cast<int>(y), 0, ' ');
+    const auto fittingStr = term::strFittingPrefix(str, _contentRect.w - contentPos.x);
 
-        for (Index x = 1; x < _rect.w; ++x) {
-            this->_appendChar(' ');
-        }
+    if (fittingStr.empty()) {
+        return contentPos.x;
     }
-}
 
-void View::_putChar(const Point& contentPos, const char ch) const
-{
-    ncplane_putchar_yx(_curPlane, static_cast<int>(_contentRect.pos.y + contentPos.y),
-                       static_cast<int>(_contentRect.pos.x + contentPos.x), ch);
-}
-
-void View::_putChar(const Point& contentPos, const char * const glyph) const
-{
-    ncplane_putegc_yx(_curPlane, static_cast<int>(_contentRect.pos.y + contentPos.y),
-                      static_cast<int>(_contentRect.pos.x + contentPos.x), glyph, nullptr);
-}
-
-void View::_appendChar(const char ch) const
-{
-    ncplane_putchar(_curPlane, ch);
-}
-
-void View::_appendCh(const char32_t ch) const
-{
-    ncplane_pututf32_yx(_curPlane, -1, -1, ch);
-}
-
-void View::_putStr(const Point& contentPos, const std::string_view str) const
-{
-    this->_moveCursor(contentPos);
-    this->_appendStr(str);
-}
-
-void View::_appendStr(const std::string_view str) const
-{
     /*
-     * Not using ncplane_putnstr(): it could read past `str` to complete
-     * the last grapheme cluster.
+     * Not using ncplane_putnstr_yx(): it could read past `fittingStr`
+     * to complete the last grapheme cluster.
      */
-    ncplane_putstr(_curPlane, std::string {str}.c_str());
+    ncplane_putstr_yx(_curPlane, static_cast<int>(_contentRect.pos.y + contentPos.y),
+                      static_cast<int>(_contentRect.pos.x + contentPos.x),
+                      std::string {fittingStr}.c_str());
+    return contentPos.x + term::strWidth(fittingStr);
+}
+
+void View::_fill(const Rect& contentRect) const
+{
+    if (contentRect.pos.x >= _contentRect.w || contentRect.pos.y >= _contentRect.h) {
+        return;
+    }
+
+    const std::string spaces(std::min(contentRect.w, _contentRect.w - contentRect.pos.x), ' ');
+    const auto endY = std::min(contentRect.pos.y + contentRect.h, _contentRect.h);
+
+    for (auto y = contentRect.pos.y; y < endY; ++y) {
+        this->_write({contentRect.pos.x, y}, spaces);
+    }
+}
+
+void View::_clearRow(const Index contentY) const
+{
+    this->_fill({{0, contentY}, _contentRect.w, 1});
+}
+
+void View::_writeLabelValRows(const Point& contentPos, const std::vector<LabelValRow>& rows,
+                              const Stylist::Role role, const bool emLabels) const
+{
+    Size labelWidth = 0;
+
+    for (auto& row : rows) {
+        labelWidth = std::max(labelWidth, term::strWidth(row.label));
+    }
+
+    auto y = contentPos.y;
+
+    for (auto& row : rows) {
+        this->_style(role, emLabels);
+        this->_write({contentPos.x, y}, row.label);
+        this->_style(role, !emLabels);
+        this->_write({contentPos.x + labelWidth + 1, y}, row.val);
+        ++y;
+    }
 }
 
 std::pair<std::string, std::string> View::_formatPath(const boost::filesystem::path& path,
@@ -292,30 +297,6 @@ std::pair<std::string, std::string> View::_formatPath(const boost::filesystem::p
     return std::pair {std::move(dirNameStr), std::move(filenameStr)};
 }
 
-int View::_print(const char * const fmt, ...) const
-{
-    va_list args;
-
-    va_start(args, fmt);
-
-    const auto ret = this->_vPrint(fmt, args);
-
-    va_end(args);
-    return ret;
-}
-
-int View::_safePrint(const char * const fmt, ...) const
-{
-    va_list args;
-
-    va_start(args, fmt);
-
-    const auto ret = this->_vSafePrint(fmt, args);
-
-    va_end(args);
-    return ret;
-}
-
 void View::_moveCursor(const Point& contentPos) const
 {
     const auto x = _contentRect.pos.x + contentPos.x;
@@ -323,72 +304,6 @@ void View::_moveCursor(const Point& contentPos) const
 
     static_cast<void>(ncplane_cursor_move_yx(_curPlane, static_cast<int>(y),
                                              static_cast<int>(x)));
-}
-
-int View::_safeMoveAndPrint(const Point& contentPos, const char * const fmt, ...) const
-{
-    this->_moveCursor(contentPos);
-
-    va_list args;
-
-    va_start(args, fmt);
-
-    const auto ret = this->_vSafePrint(fmt, args);
-
-    va_end(args);
-    return ret;
-}
-
-int View::_moveAndPrint(const Point& contentPos, const char * const fmt, ...) const
-{
-    this->_moveCursor(contentPos);
-
-    va_list args;
-
-    va_start(args, fmt);
-
-    const auto ret = this->_vPrint(fmt, args);
-
-    va_end(args);
-    return ret;
-}
-
-int View::_vPrint(const char * const fmt, va_list& args) const
-{
-    return ncplane_vprintf(_curPlane, fmt, args);
-}
-
-int View::_vSafePrint(const char * const fmt, va_list& args) const
-{
-    unsigned int x;
-
-    ncplane_cursor_yx(_curPlane, nullptr, &x);
-
-    const auto endX = _contentRect.pos.x + _contentRect.w;
-
-    if (static_cast<Index>(x) >= endX) {
-        return 0;
-    }
-
-    // format the whole string first
-    va_list argsCopy;
-
-    va_copy(argsCopy, args);
-
-    const auto len = std::vsnprintf(nullptr, 0, fmt, argsCopy);
-
-    va_end(argsCopy);
-
-    if (len <= 0) {
-        return 0;
-    }
-
-    std::string str(static_cast<std::size_t>(len), '\0');
-
-    static_cast<void>(std::vsnprintf(str.data(), str.size() + 1, fmt, args));
-
-    // then only print what fits in the rest of the content rectangle
-    return ncplane_putstr(_curPlane, std::string {term::strFittingPrefix(str, endX - x)}.c_str());
 }
 
 ViewInspectCmdStateObserverGuard::ViewInspectCmdStateObserverGuard(InspectCmdState& appState,

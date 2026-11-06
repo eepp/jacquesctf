@@ -24,8 +24,7 @@
 #include "screens/dts-screen.hpp"
 #include "screens/trace-info-screen.hpp"
 #include "views/status-view.hpp"
-#include "views/pkt-index-build-progress-view.hpp"
-#include "views/pkt-checkpoints-build-progress-view.hpp"
+#include "views/progress-view.hpp"
 #include "views/simple-msg-view.hpp"
 #include "utils.hpp"
 #include "data/pkt-checkpoints-build-listener.hpp"
@@ -76,9 +75,11 @@ void init()
 void buildIndexes(InspectCmdState& appState, const Stylist& stylist)
 {
     const auto screenRect = term::size();
-    const auto view = std::make_unique<PktIndexBuildProgressView>(screenRect, stylist);
-    auto func = [&view](const PktIndexEntry& entry) {
-        view->pktIndexEntry(entry);
+    const auto view = std::make_unique<ProgressView>(screenRect, "Building packet indexes…",
+                                                     stylist);
+    const DsFile *curDsf = nullptr;
+    auto func = [&view, &curDsf](const PktIndexEntry& entry) {
+        setPktIndexBuildProgress(*view, *curDsf, &entry);
         view->render();
         term::update();
     };
@@ -88,7 +89,8 @@ void buildIndexes(InspectCmdState& appState, const Stylist& stylist)
     for (auto& dsfStateUp : appState.dsFileStates()) {
         auto& dsf = dsfStateUp->dsFile();
 
-        view->dsFile(dsf);
+        curDsf = &dsf;
+        setPktIndexBuildProgress(*view, dsf, nullptr);
         dsf.buildIndex(func, 443);
     }
 }
@@ -135,9 +137,10 @@ private:
 
         const auto rect = Rect {{4, 4}, term::size().w - 8, 13};
 
-        _view = std::make_unique<PktCheckpointsBuildProgressView>(rect, *_stylist);
+        _view = std::make_unique<ProgressView>(rect, "Creating packet checkpoints…", *_stylist);
         _view->focus();
-        _view->pktIndexEntry(pktIndexEntry);
+        _pktIndexEntry = &pktIndexEntry;
+        setPktCheckpointsBuildProgress(*_view, pktIndexEntry, nullptr);
         this->_render();
         _count = 0;
     }
@@ -152,7 +155,7 @@ private:
             return;
         }
 
-        _view->er(er);
+        setPktCheckpointsBuildProgress(*_view, *_pktIndexEntry, &er);
         this->_render();
     }
 
@@ -170,7 +173,8 @@ private:
 
 private:
     Index _count = 0;
-    std::unique_ptr<PktCheckpointsBuildProgressView> _view;
+    std::unique_ptr<ProgressView> _view;
+    const PktIndexEntry *_pktIndexEntry = nullptr;
     const Stylist * const _stylist;
 };
 

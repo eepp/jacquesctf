@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cstring>
 #include <cstdio>
+#include <cstdarg>
 #include <cwctype>
 #include <array>
 #include <string>
@@ -79,6 +80,31 @@ std::string sepNumber(const ValT val, const char sep, const char * const fmt)
 }
 
 } // namespace
+
+std::string format(const char * const fmt, ...)
+{
+    va_list args;
+
+    va_start(args, fmt);
+
+    va_list argsCopy;
+
+    va_copy(argsCopy, args);
+
+    const auto len = std::vsnprintf(nullptr, 0, fmt, argsCopy);
+
+    va_end(argsCopy);
+
+    std::string str;
+
+    if (len > 0) {
+        str.resize(static_cast<std::size_t>(len));
+        static_cast<void>(std::vsnprintf(str.data(), str.size() + 1, fmt, args));
+    }
+
+    va_end(args);
+    return str;
+}
 
 std::string sepNumber(const long long val, const char sep)
 {

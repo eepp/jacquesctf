@@ -149,7 +149,7 @@ private:
     void _setTitle();
     void _setCustomStyle(const _Char& ch) const;
     void _drawChar(const _Char& ch) const;
-    void _putCharVal(const _Char& ch) const;
+    void _writeCharVal(const _Char& ch) const;
     void _drawUnselChar(const _Char& ch) const;
     void _drawAllNumericChars() const;
     void _drawAllAsciiChars() const;

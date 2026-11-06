@@ -69,12 +69,11 @@ if (JACQUES_HAS_INSPECT_CMD)
         inspect-cmd/ui/views/help-view.cpp
         inspect-cmd/ui/views/input-view.cpp
         inspect-cmd/ui/views/mapping-or-flag-details.cpp
-        inspect-cmd/ui/views/pkt-checkpoints-build-progress-view.cpp
         inspect-cmd/ui/views/pkt-data-view.cpp
         inspect-cmd/ui/views/pkt-decoding-error-details-view.cpp
-        inspect-cmd/ui/views/pkt-index-build-progress-view.cpp
         inspect-cmd/ui/views/pkt-region-info-view.cpp
         inspect-cmd/ui/views/pkt-table-view.cpp
+        inspect-cmd/ui/views/progress-view.cpp
         inspect-cmd/ui/views/scroll-view.cpp
         inspect-cmd/ui/views/search-input-view.cpp
         inspect-cmd/ui/views/simple-msg-view.cpp

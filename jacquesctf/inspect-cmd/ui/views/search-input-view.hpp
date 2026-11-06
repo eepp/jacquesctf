@@ -30,9 +30,11 @@ public:
     void animateBorder(Index index);
 
 private:
-    void _drawFormatText(const std::string& text);
-    void _drawCurText(const std::string& text) override;
-    void _drawNumber(std::u32string::const_iterator it, std::u32string::const_iterator endIt);
+    void _drawFormatText(Point contentPos, const std::string& text);
+    void _drawCurText(const Point& contentPos, const std::string& text) override;
+    void _drawNumber(Point& contentPos, std::u32string::const_iterator it,
+                     std::u32string::const_iterator endIt);
+    void _writeCh(Point& contentPos, char32_t ch) const;
 };
 
 } // namespace jacques

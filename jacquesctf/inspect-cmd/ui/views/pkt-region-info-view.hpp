@@ -21,7 +21,6 @@ public:
 private:
     void _appStateChanged(Message msg) override;
     void _redrawContent() override;
-    void _safePrintScope(yactfr::Scope scope);
     Size _curMaxOffsetSize();
     void _setMaxDtPathSize(const Trace& trace);
     void _setMaxDtPathSizes();

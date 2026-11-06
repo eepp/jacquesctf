@@ -13,7 +13,7 @@
 #include "pkts-screen.hpp"
 #include "../stylist.hpp"
 #include "data/pkt-checkpoints-build-listener.hpp"
-#include "../views/pkt-checkpoints-build-progress-view.hpp"
+#include "../views/progress-view.hpp"
 #include "utils.hpp"
 
 namespace jacques {
@@ -42,9 +42,9 @@ class AnalyzeAllPktsProgressUpdater final :
 public:
     explicit AnalyzeAllPktsProgressUpdater(const Stylist& stylist) :
         _view {
-            std::make_unique<PktCheckpointsBuildProgressView>(
+            std::make_unique<ProgressView>(
                 Rect {{4, 4}, term::size().w - 8, 12},
-                stylist
+                "Creating packet checkpoints…", stylist
             )
         }
     {
@@ -63,7 +63,8 @@ private:
             return;
         }
 
-        _view->pktIndexEntry(pktIndexEntry);
+        _pktIndexEntry = &pktIndexEntry;
+        setPktCheckpointsBuildProgress(*_view, pktIndexEntry, nullptr);
         this->_render();
         _count = 0;
     }
@@ -78,7 +79,7 @@ private:
             return;
         }
 
-        _view->er(er);
+        setPktCheckpointsBuildProgress(*_view, *_pktIndexEntry, &er);
         this->_render();
     }
 
@@ -93,7 +94,8 @@ private:
     bool _canUpdate = false;
     Index _pktCount = 0;
     Index _count = 0;
-    std::unique_ptr<PktCheckpointsBuildProgressView> _view;
+    std::unique_ptr<ProgressView> _view;
+    const PktIndexEntry *_pktIndexEntry = nullptr;
 };
 
 } // namespace

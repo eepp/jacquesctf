@@ -434,42 +434,41 @@ void TraceInfoView::_drawRows()
         const auto& row = (*_rows)[index];
 
         if (const auto sRow = dynamic_cast<const _SectionRow *>(row.get())) {
-            this->_moveCursor({0, y});
             this->_style(Stylist::Role::TITLE);
-            this->_safePrint("%s:", sRow->title.c_str());
+            this->_write({0, y}, sRow->title + ':');
         } else if (const auto sRow = dynamic_cast<const _PropRow *>(row.get())) {
-            this->_moveCursor({2, y});
             this->_style(Stylist::Role::PROP_KEY);
-            this->_safePrint("%s:", sRow->key.c_str());
-            this->_moveCursor({sRow->valOffset + 2, y});
+            this->_write({2, y}, sRow->key + ':');
             this->_style(Stylist::Role::PROP_VAL);
+
+            const Point valPos {sRow->valOffset + 2, y};
 
             if (const auto vRow = dynamic_cast<const _SIntPropRow *>(row.get())) {
                 if (vRow->sepNumber) {
-                    this->_safePrint("%s", utils::sepNumber(vRow->val, ',').c_str());
+                    this->_write(valPos, utils::sepNumber(vRow->val, ','));
                 } else {
-                    this->_safePrint("%s", utils::sepNumber(vRow->val, ',').c_str());
+                    this->_write(valPos, utils::sepNumber(vRow->val, ','));
                 }
             } else if (const auto vRow = dynamic_cast<const _ErrorPropRow *>(row.get())) {
                 this->_style(Stylist::Role::ERROR);
-                this->_safePrint("%s", vRow->val.c_str());
+                this->_write(valPos, vRow->val);
             } else if (const auto vRow = dynamic_cast<const _StrPropRow *>(row.get())) {
-                this->_safePrint("%s", vRow->val.c_str());
+                this->_write(valPos, vRow->val);
             } else if (const auto vRow = dynamic_cast<const _DataLenPropRow *>(row.get())) {
                 const auto [len, unit] = vRow->len.format();
 
-                this->_safePrint("%s %s", len.c_str(), unit.c_str());
+                this->_write(valPos, len + ' ' + unit);
             } else if (const auto vRow = dynamic_cast<const _TsPropRow *>(row.get())) {
-                this->_safePrint("%s", vRow->ts.format().c_str());
+                this->_write(valPos, vRow->ts.format());
             } else if (const auto vRow = dynamic_cast<const _DurationPropRow *>(row.get())) {
-                this->_safePrint("%s", vRow->duration.format().c_str());
+                this->_write(valPos, vRow->duration.format());
             } else if (const auto vRow = dynamic_cast<const _NonePropRow *>(row.get())) {
                 this->_style(Stylist::Role::DIM);
-                this->_safePrint("N/A");
+                this->_write(valPos, "N/A");
             }
         } else if (const auto sRow = dynamic_cast<const _SepRow *>(row.get())) {
             this->_style(Stylist::Role::DIM);
-            this->_moveAndPrint({2, y}, "---");
+            this->_write({2, y}, "---");
         }
     }
 }

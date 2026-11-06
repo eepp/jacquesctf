@@ -17,10 +17,10 @@ TextInputView::TextInputView(const Rect& rect, const Stylist& stylist) :
 {
 }
 
-void TextInputView::_drawCurText(const std::string& text)
+void TextInputView::_drawCurText(const Point& contentPos, const std::string& text)
 {
     this->_style(Stylist::Role::STD);
-    this->_print("%s", text.c_str());
+    this->_write(contentPos, text);
 }
 
 } // namespace jacques

@@ -33,7 +33,12 @@ public:
     }
 
 protected:
-    virtual void _drawCurText(const std::string& text) = 0;
+    /*
+     * Implementation draws the current text `text` at `contentPos`
+     * relative to the top-left position of contentRect().
+     */
+    virtual void _drawCurText(const Point& contentPos, const std::string& text) = 0;
+
     void _drawBorder() const;
 
 private:

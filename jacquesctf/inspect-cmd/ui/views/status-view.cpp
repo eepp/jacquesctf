@@ -70,50 +70,43 @@ void StatusView::_drawOffset()
 
     // clear previous
     this->_style(Stylist::Role::STATUS);
-
-    for (auto x = this->contentRect().w - _curEndPositions->dsfPath;
-            x < this->contentRect().w - _curEndPositions->pktPercent; ++x) {
-        this->_putChar({x, 0}, ' ');
-    }
+    this->_fill({
+        {this->contentRect().w - _curEndPositions->dsfPath, 0},
+        _curEndPositions->dsfPath - _curEndPositions->pktPercent, 1
+    });
 
     // draw percentage
     this->_style(Stylist::Role::STATUS, true);
 
     const auto percent = _appState->activePktState().curOffsetInPktBits() * 100 /
                          _appState->activePktState().pkt().indexEntry().effectiveTotalLen().bits();
+    auto x = this->_write({this->contentRect().w - _curEndPositions->pktPercent - 5, 0},
+                          utils::format("%3u", static_cast<unsigned int>(percent)));
 
-    this->_moveAndPrint({this->contentRect().w - _curEndPositions->pktPercent - 5, 0}, "%3u",
-                        static_cast<unsigned int>(percent));
     this->_style(Stylist::Role::STATUS);
-    this->_print(" %%");
+    this->_write({x, 0}, " %");
 
     // draw new offset in packet
     this->_style(Stylist::Role::STATUS, true);
 
     auto str = utils::sepNumber(_appState->activePktState().curOffsetInPktBits(), ',');
 
-    this->_moveAndPrint({
+    x = this->_write({
         this->contentRect().w - _curEndPositions->curOffsetInPktBits - 2 - str.size(), 0
-    }, "%s", str.c_str());
+    }, str);
     this->_style(Stylist::Role::STATUS);
-    this->_print(" b");
+    this->_write({x, 0}, " b");
 
     // draw new offset in data stream file
     str = utils::sepNumber(_appState->activeDsFileState().curOffsetInDsFileBits(), ',');
-    this->_moveAndPrint({
+    this->_write({
         this->contentRect().w - _curEndPositions->curOffsetInDsFileBits - str.size() - 3, 0
-    }, "(", str.c_str());
-    this->_style(Stylist::Role::STATUS);
-    this->_print(str.c_str());
-    this->_style(Stylist::Role::STATUS);
-    this->_print(" b)");
+    }, "(" + str + " b)");
 }
 
 void StatusView::_redrawContent()
 {
-    // clear
-    this->_style(Stylist::Role::STATUS);
-    this->_clearRect();
+    this->_clearContent(Stylist::Role::STATUS);
 
     if (!_curEndPositions) {
         return;
@@ -125,15 +118,14 @@ void StatusView::_redrawContent()
         const auto countStr = utils::sepNumber(count, ',');
         const auto index = _appState->activePktState().pktIndexEntry().natIndexInDsFile();
         const auto indexStr = utils::sepNumber(index, ',');
+        auto x = this->_write({
+            this->contentRect().w - _curEndPositions->pktIndex - indexStr.size() - 1, 0
+        }, "#");
 
-        this->_putChar({
-            this->contentRect().w - _curEndPositions->pktIndex -
-            indexStr.size() - 1, 0
-        }, '#');
         this->_style(Stylist::Role::STATUS, true);
-        this->_print("%s", indexStr.c_str());
+        x = this->_write({x, 0}, indexStr);
         this->_style(Stylist::Role::STATUS);
-        this->_print("/%s", countStr.c_str());
+        this->_write({x, 0}, "/" + countStr);
 
         // packet sequence number
         const auto& seqNum = _appState->activePktState().pktIndexEntry().seqNum();
@@ -141,11 +133,11 @@ void StatusView::_redrawContent()
         if (seqNum) {
             const auto seqNumStr = utils::sepNumber(*seqNum, ',');
 
-            this->_moveAndPrint({
+            x = this->_write({
                 this->contentRect().w - _curEndPositions->seqNum - seqNumStr.size() - 2, 0
             }, "##");
             this->_style(Stylist::Role::STATUS, true);
-            this->_safePrint("%s", seqNumStr.c_str());
+            this->_write({x, 0}, seqNumStr);
         }
     }
 
@@ -154,15 +146,16 @@ void StatusView::_redrawContent()
     const auto& path = utils::escapeStr(_appState->activeDsFileState().dsFile().path().string());
     const auto pathMaxLen = this->contentRect().w - _curEndPositions->dsfPath;
     const auto [dirNameStr, filenameStr] = _formatPath(path, pathMaxLen);
+    Index x = 0;
 
-    this->_moveCursor({0, 0});
+    this->_style(Stylist::Role::STATUS);
 
     if (!dirNameStr.empty()) {
-        this->_print("%s/", dirNameStr.c_str());
+        x = this->_write({x, 0}, dirNameStr + '/');
     }
 
     this->_style(Stylist::Role::STATUS, true);
-    this->_print("%s", filenameStr.c_str());
+    this->_write({x, 0}, filenameStr);
 }
 
 } // namespace jacques

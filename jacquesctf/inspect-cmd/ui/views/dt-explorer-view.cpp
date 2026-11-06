@@ -4,7 +4,10 @@
  */
 
 #include <cassert>
+#include <cstdlib>
+#include <functional>
 #include <sstream>
+#include <string>
 #include <yactfr/yactfr.hpp>
 
 #include "abstract-dt-details.hpp"
@@ -252,7 +255,7 @@ void DtExplorerView::centerHighlight()
 void DtExplorerView::_drawScopeSubtitleRow(const Index index, const std::string& text)
 {
     this->_style(Stylist::Role::STD, true);
-    this->_moveAndPrint({0, this->_contentRectYFromIndex(index)}, "%s", text.c_str());
+    this->_write({0, this->_contentRectYFromIndex(index)}, text);
 }
 
 void DtExplorerView::_drawRows()
@@ -265,9 +268,7 @@ void DtExplorerView::_drawRows()
 
         const std::string msg {"Nothing to show here!"};
 
-        this->_safeMoveAndPrint({
-            this->contentRect().w / 2 - msg.size() / 2, this->contentRect().h / 2
-        }, "%s", msg.c_str());
+        this->_write({this->contentRect().w / 2 - msg.size() / 2, this->contentRect().h / 2}, msg);
         return;
     }
 
@@ -282,36 +283,32 @@ void DtExplorerView::_drawRows()
         auto& row = _rows[index];
 
         if (const auto subRow = std::get_if<_ScopeSubtitleRow>(&row)) {
-            this->_moveCursor({0, y});
+            const auto scopeName = std::invoke([subRow] {
+                switch (subRow->scope) {
+                case yactfr::Scope::PacketHeader:
+                    return "Packet header";
+
+                case yactfr::Scope::PacketContext:
+                    return "Packet context";
+
+                case yactfr::Scope::EventRecordHeader:
+                    return "Event record header";
+
+                case yactfr::Scope::EventRecordCommonContext:
+                    return "Event record common context";
+
+                case yactfr::Scope::EventRecordSpecificContext:
+                    return "Event record specific context";
+
+                case yactfr::Scope::EventRecordPayload:
+                    return "Event record payload";
+                }
+
+                std::abort();
+            });
+
             this->_style(Stylist::Role::TITLE);
-
-            switch (subRow->scope) {
-            case yactfr::Scope::PacketHeader:
-                this->_print("Packet header");
-                break;
-
-            case yactfr::Scope::PacketContext:
-                this->_print("Packet context");
-                break;
-
-            case yactfr::Scope::EventRecordHeader:
-                this->_print("Event record header");
-                break;
-
-            case yactfr::Scope::EventRecordCommonContext:
-                this->_print("Event record common context");
-                break;
-
-            case yactfr::Scope::EventRecordSpecificContext:
-                this->_print("Event record specific context");
-                break;
-
-            case yactfr::Scope::EventRecordPayload:
-                this->_print("Event record payload");
-                break;
-            }
-
-            this->_print(" type:");
+            this->_write({0, y}, std::string {scopeName} + " type:");
         } else if (const auto detailsRow = std::get_if<const AbstractDtDetails *>(&row)) {
             const auto details = *detailsRow;
             bool highlighted = false;
@@ -320,10 +317,7 @@ void DtExplorerView::_drawRows()
                 if (&dtDetails->dt() == _highlight) {
                     highlighted = true;
                     this->_style(Stylist::Role::SEL);
-
-                    for (Index x = 0; x < this->contentRect().w; ++x) {
-                        this->_putChar({x, y}, ' ');
-                    }
+                    this->_clearRow(y);
                 }
             }
 

@@ -107,31 +107,15 @@ void TableView::_drawHeader()
     Index x = 0;
 
     for (Index col = 0; col < _colWidths.size(); ++col) {
-        this->_putStr({x, 0}, term::strFittingPrefix(_theCols[col].title(), _colWidths[col]));
+        this->_write({x, 0}, term::strFittingPrefix(_theCols[col].title(), _colWidths[col]));
         x += _colWidths[col];
 
         if (col == _colWidths.size() - 1) {
             break;
         }
 
-        this->_putChar({x, 0}, glyphs::VLINE);
+        this->_write({x, 0}, glyphs::VLINE);
         x += 1;
-    }
-}
-
-void TableView::_clearRow(const Index contentY)
-{
-    this->_putChar({0, contentY}, ' ');
-
-    for (Index x = 1; x < this->contentRect().w; ++x) {
-        this->_appendChar(' ');
-    }
-}
-
-void TableView::_clearCell(const Point& pos, const Size cellWidth)
-{
-    for (Index at = 0; at < cellWidth; ++at) {
-        this->_putChar({pos.x + at, pos.y}, ' ');
     }
 }
 
@@ -183,7 +167,7 @@ void TableView::_drawCell(const Point& contentPos, const Size width, const _Col&
     // clear with the cell style first because it might have a background color
     this->_style(_cellRole(cell.style, sel));
 
-    this->_clearCell(contentPos, width);
+    this->_fill({contentPos, width, 1});
 
     if (width == 0) {
         return;
@@ -222,7 +206,7 @@ void TableView::_drawCell(const Point& contentPos, const Size width, const _Col&
 
             const auto segWidth = term::strWidth(text);
 
-            this->_putStr({x, contentPos.y}, text);
+            this->_write({x, contentPos.y}, text);
             x += segWidth;
             availWidth -= segWidth;
         }
@@ -237,7 +221,7 @@ void TableView::_drawCell(const Point& contentPos, const Size width, const _Col&
             this->_style(Stylist::Role::SYMBOL, true);
         }
 
-        this->_putChar({contentPos.x + width - 1, contentPos.y}, glyphs::RARROW);
+        this->_write({contentPos.x + width - 1, contentPos.y}, glyphs::RARROW);
     }
 }
 
@@ -265,7 +249,7 @@ void TableView::_drawRow(const Index row)
 
         this->_style(sel ? Stylist::Role::SEL : Stylist::Role::FAINT);
 
-        this->_putChar({x, y}, glyphs::VLINE);
+        this->_write({x, y}, glyphs::VLINE);
         x += 1;
     }
 }

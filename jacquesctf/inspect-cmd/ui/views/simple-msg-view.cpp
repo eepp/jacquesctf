@@ -21,7 +21,7 @@ void SimpleMsgView::msg(const std::string_view msg)
 void SimpleMsgView::_redrawContent()
 {
     this->_clearContent();
-    this->_safeMoveAndPrint({1, 1}, "%s", _msg.c_str());
+    this->_write({1, 1}, _msg);
 }
 
 void SimpleMsgView::_resized()

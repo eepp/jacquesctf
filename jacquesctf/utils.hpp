@@ -57,6 +57,11 @@ std::vector<std::string> wrapTextLines(const std::string& text, Size lineLen);
 std::string escapeStr(std::string_view str);
 
 /*
+ * Formats a string like std::printf() does.
+ */
+[[ nodiscard ]] std::string format(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+
+/*
  * Creates a string which has "thousands separators" from a value,
  * like so:
  *

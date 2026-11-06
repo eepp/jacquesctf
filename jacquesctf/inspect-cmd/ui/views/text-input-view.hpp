@@ -21,7 +21,7 @@ public:
     explicit TextInputView(const Rect& rect, const Stylist& stylist);
 
 private:
-    void _drawCurText(const std::string& text) override;
+    void _drawCurText(const Point& contentPos, const std::string& text) override;
 };
 
 } // namespace jacques

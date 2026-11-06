@@ -24,8 +24,7 @@ void InputView::_redrawContent()
     this->_clearContent();
     this->_drawBorder();
     this->_style(Stylist::Role::STD);
-    this->_moveCursor({1, 1});
-    this->_drawCurText(_text);
+    this->_drawCurText({1, 1}, _text);
 }
 
 void InputView::_drawBorder() const
@@ -35,15 +34,10 @@ void InputView::_drawBorder() const
     // border made of spaces (borderless view: content rectangle is the rectangle)
     const auto& rect = this->contentRect();
 
-    for (Index x = 0; x < rect.w; ++x) {
-        this->_putChar({x, 0}, ' ');
-        this->_putChar({x, rect.h - 1}, ' ');
-    }
-
-    for (Index y = 1; y < rect.h - 1; ++y) {
-        this->_putChar({0, y}, ' ');
-        this->_putChar({rect.w - 1, y}, ' ');
-    }
+    this->_clearRow(0);
+    this->_clearRow(rect.h - 1);
+    this->_fill({{0, 1}, 1, rect.h - 2});
+    this->_fill({{rect.w - 1, 1}, 1, rect.h - 2});
 }
 
 } // namespace jacques

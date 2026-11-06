@@ -191,7 +191,7 @@ void PktDataView::_drawSeparators() const
     this->_style(Stylist::Role::DIM);
 
     for (Index y = 0; y < yEnd; ++y) {
-        this->_putChar({_dataX - 1, y}, glyphs::VLINE);
+        this->_write({_dataX - 1, y}, glyphs::VLINE);
     }
 
     if (!_isAsciiVisible) {
@@ -199,7 +199,7 @@ void PktDataView::_drawSeparators() const
     }
 
     for (Index y = 0; y < yEnd; ++y) {
-        this->_putChar({_asciiCharsX - 1, y}, glyphs::VLINE);
+        this->_write({_asciiCharsX - 1, y}, glyphs::VLINE);
     }
 }
 
@@ -220,11 +220,8 @@ void PktDataView::_drawOffsets() const
     for (Index y = 0; y < this->contentRect().h; ++y) {
         if (offsetInPktBits >= pktTotalLen) {
             // clear
-            for (Index x = 0; x < _dataX - 1; ++x) {
-                this->_putChar({x, y}, ' ');
-            }
+            this->_fill({{0, y}, _dataX - 1, 1});
         } else {
-            std::array<char, 32> buf;
             Index dispOffsetInPktBits = offsetInPktBits;
 
             if (!_isOffsetInPkt) {
@@ -233,15 +230,9 @@ void PktDataView::_drawOffsets() const
 
             dispOffsetInPktBits /= div;
 
-            if (_isOffsetInHex) {
-                std::sprintf(buf.data(), "%llx", dispOffsetInPktBits);
-            } else {
-                std::strcpy(buf.data(), utils::sepNumber(dispOffsetInPktBits, ',').c_str());
-            }
-
-            const auto offsetWidth = std::strlen(buf.data());
-
-            this->_moveCursor({0, y});
+            const auto offsetStr = _isOffsetInHex ?
+                                   utils::format("%llx", dispOffsetInPktBits) :
+                                   utils::sepNumber(dispOffsetInPktBits, ',');
 
             const auto curRegionBaseOffsetBits = curRegionSegment.offsetInPktBits() -
                                                  curRegionSegment.offsetInPktBits() % _rowSize.bits();
@@ -257,12 +248,7 @@ void PktDataView::_drawOffsets() const
                              offsetInPktBits <= curRegionBaseEndOffsetBits;
 
             this->_style(sel ? Stylist::Role::CUR_OFFSET : Stylist::Role::OFFSET);
-
-            for (Index x = 0; x < maxOffsetWidth - offsetWidth; ++x) {
-                this->_appendChar(' ');
-            }
-
-            this->_print("%s", buf.data());
+            this->_write({0, y}, std::string(maxOffsetWidth - offsetStr.size(), ' ') + offsetStr);
             offsetInPktBits += _rowSize.bits();
         }
     }
@@ -363,19 +349,19 @@ void PktDataView::_setCustomStyle(const _Char& ch) const
     }
 }
 
-void PktDataView::_putCharVal(const _Char& ch) const
+void PktDataView::_writeCharVal(const _Char& ch) const
 {
     if (ch.isPrintable) {
-        this->_putChar(ch.pt, ch.val);
+        this->_write(ch.pt, {&ch.val, 1});
     } else {
-        this->_putChar(ch.pt, glyphs::BULLET);
+        this->_write(ch.pt, glyphs::BULLET);
     }
 }
 
 void PktDataView::_drawUnselChar(const _Char& ch) const
 {
     this->_setCustomStyle(ch);
-    this->_putCharVal(ch);
+    this->_writeCharVal(ch);
 }
 
 void PktDataView::_drawChar(const _Char& ch) const
@@ -388,7 +374,7 @@ void PktDataView::_drawChar(const _Char& ch) const
             this->_style(Stylist::Role::INVERSE);
         }
 
-        this->_putCharVal(ch);
+        this->_writeCharVal(ch);
         return;
     }
 
@@ -403,14 +389,14 @@ void PktDataView::_drawChar(const _Char& ch) const
         if (_prevOffsetInPktBits &&
                 *_prevOffsetInPktBits == singlePktRegion.segment().offsetInPktBits()) {
             this->_style(Stylist::Role::SEL_PREV);
-            this->_putCharVal(ch);
+            this->_writeCharVal(ch);
             return;
         }
 
         if (_nextOffsetInPktBits &&
                 *_nextOffsetInPktBits == singlePktRegion.segment().offsetInPktBits()) {
             this->_style(Stylist::Role::SEL_NEXT);
-            this->_putCharVal(ch);
+            this->_writeCharVal(ch);
             return;
         }
     }

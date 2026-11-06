@@ -25,86 +25,44 @@ void PktDecodingErrorDetailsView::_redrawContent()
     }
 
     const auto& error = *_appState->activePktState().pkt().error();
+    const auto& pktIndexEntry = error.pktIndexEntry();
 
-    this->_style(Stylist::Role::ALERT);
-    this->_clearRect();
+    this->_clearContent(Stylist::Role::ALERT);
 
     // title
     this->_style(Stylist::Role::ALERT, true);
-    this->_moveAndPrint({1, 1}, "PACKET DECODING ERROR");
+    this->_write({1, 1}, "PACKET DECODING ERROR");
 
-    // packet
-    this->_style(Stylist::Role::ALERT, true);
-    this->_moveAndPrint({1, 3}, "Packet index:               ");
-    this->_style(Stylist::Role::ALERT);
-
-    auto& pktIndexEntry = error.pktIndexEntry();
-    auto str = utils::sepNumber(static_cast<long long>(pktIndexEntry.natIndexInDsFile()), ',');
-
-    this->_print("%s", str.c_str());
-
-    // offset in data stream file
-    this->_style(Stylist::Role::ALERT, true);
-    this->_moveAndPrint({1, 4}, "Offset in data stream file: ");
-    this->_style(Stylist::Role::ALERT);
-
-    {
-        const auto [len, unit] = utils::formatLen(error.decodingError().offset(),
+    // packet index and offsets
+    const auto offsetStr = [](const Size offsetBits) {
+        const auto [len, unit] = utils::formatLen(offsetBits,
                                                   utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
                                                   ',');
+        const auto [lenBits, unitBits] = utils::formatLen(offsetBits, utils::LenFmtMode::BITS,
+                                                          ',');
 
-        this->_print("%s %s", len.c_str(), unit.c_str());
-    }
+        return len + ' ' + unit + " (" + lenBits + ' ' + unitBits + ')';
+    };
 
-    {
-        const auto [len, unit] = utils::formatLen(error.decodingError().offset(),
-                                                  utils::LenFmtMode::BITS, ',');
-
-        this->_print(" (%s %s)", len.c_str(), unit.c_str());
-    }
-
-    // offset in packet
-    this->_style(Stylist::Role::ALERT, true);
-    this->_moveAndPrint({1, 5}, "Offset in packet:           ");
-    this->_style(Stylist::Role::ALERT);
-
-    const auto offsetInPktBits = error.decodingError().offset() -
-                                 pktIndexEntry.offsetInDsFileBits();
-
-    {
-        const auto [len, unit] = utils::formatLen(offsetInPktBits,
-                                                  utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
-                                                  ',');
-
-        this->_print("%s %s", len.c_str(), unit.c_str());
-    }
-
-    {
-        const auto [len, unit] = utils::formatLen(offsetInPktBits, utils::LenFmtMode::BITS, ',');
-
-        this->_print(" (%s %s)", len.c_str(), unit.c_str());
-    }
+    this->_writeLabelValRows({1, 3}, {
+        {"Packet index:", utils::sepNumber(pktIndexEntry.natIndexInDsFile(), ',')},
+        {"Offset in data stream file:", offsetStr(error.decodingError().offset())},
+        {
+            "Offset in packet:",
+            offsetStr(error.decodingError().offset() - pktIndexEntry.offsetInDsFileBits())
+        },
+    }, Stylist::Role::ALERT, true);
 
     // message
-    const auto msg = utils::wrapText(utils::escapeStr(error.decodingError().reason()),
-                                     this->contentRect().w - 2);
-    auto it = msg.begin();
-    Index curY = 7;
-    Index curX = 1;
+    const auto lines = utils::wrapTextLines(utils::escapeStr(error.decodingError().reason()),
+                                            this->contentRect().w - 2);
+    Index y = 7;
 
     this->_style(Stylist::Role::ALERT);
 
-    while (it != msg.end()) {
-        if (*it == '\n') {
-            ++curY;
-            ++it;
-            curX = 1;
-            continue;
-        }
-
-        this->_putChar({curX, curY}, *it);
-        ++curX;
-        ++it;
+    for (auto& line : lines) {
+        this->_write({1, y}, line);
+        ++y;
     }
 }
 

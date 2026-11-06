@@ -271,63 +271,61 @@ void HelpView::_drawRows()
 
         if (const auto sectRow = std::get_if<_SectionRow>(&row)) {
             this->_style(Stylist::Role::TITLE);
-            this->_moveAndPrint({startX, y}, "%s", sectRow->title.c_str());
+            this->_write({startX, y}, sectRow->title);
         } else if (const auto sectRow = std::get_if<_SubSectionRow>(&row)) {
             this->_style(Stylist::Role::SUBTITLE);
-            this->_moveAndPrint({startX + 2, y}, "%s", sectRow->title.c_str());
+            this->_write({startX + 2, y}, sectRow->title);
         } else if (const auto keyRow = std::get_if<_KeyRow>(&row)) {
-            this->_moveCursor({startX + 2, y});
+            auto x = startX + 2;
 
-            for (const auto ch : keyRow->key) {
+            for (const auto& ch : keyRow->key) {
                 if (ch == ',') {
                     this->_style(Stylist::Role::STD);
                 } else {
                     this->_style(Stylist::Role::SYMBOL);
                 }
 
-                this->_appendChar(ch);
+                x = this->_write({x, y}, {&ch, 1});
             }
 
             this->_style(Stylist::Role::STD);
-            this->_moveAndPrint({startX + keyWidth, y}, "%s", keyRow->descr.c_str());
+            this->_write({startX + keyWidth, y}, keyRow->descr);
         } else if (const auto textRow = std::get_if<_TextRow>(&row)) {
-            this->_style(Stylist::Role::STD);
-            this->_moveCursor({startX + 2, y});
+            auto x = startX + 2;
+
             this->_style(Stylist::Role::STD, textRow->bold);
 
-            for (const auto ch : textRow->line) {
+            for (const auto& ch : textRow->line) {
                 if (ch == '\a') {
                     this->_style(Stylist::Role::DIM);
                     continue;
                 }
 
-                this->_appendChar(ch);
+                x = this->_write({x, y}, {&ch, 1});
             }
         } else if (const auto ssRow = std::get_if<_SearchSyntaxRow>(&row)) {
-            this->_style(Stylist::Role::STD);
-            this->_moveCursor({startX + 2, y});
+            auto x = startX + 2;
 
-            for (const auto ch : ssRow->descr) {
+            for (const auto& ch : ssRow->descr) {
                 if (ch == 'X' || ch == 'Z') {
                     this->_style(Stylist::Role::SYMBOL);
                 } else {
                     this->_style(Stylist::Role::STD);
                 }
 
-                this->_appendChar(ch);
+                x = this->_write({x, y}, {&ch, 1});
             }
 
-            this->_moveCursor({startX + _ssRowFmtPos, y});
-            this->_style(Stylist::Role::SYMBOL);
+            x = startX + _ssRowFmtPos;
 
-            for (const auto ch : ssRow->fmt) {
+            for (const auto& ch : ssRow->fmt) {
                 if (ch == 'X' || ch == 'Z') {
                     this->_style(Stylist::Role::SYMBOL);
                 } else {
                     this->_style(Stylist::Role::STD);
                 }
 
-                this->_appendChar(ch);
+                x = this->_write({x, y}, {&ch, 1});
             }
         }
     }

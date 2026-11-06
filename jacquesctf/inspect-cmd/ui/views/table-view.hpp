@@ -196,8 +196,6 @@ private:
                    bool sel);
     void _applySegStyle(_Cell::SegRole role, bool emph);
     static Stylist::Role _cellRole(_CellStyle style, bool sel) noexcept;
-    void _clearRow(Index y);
-    void _clearCell(const Point& pos, Size cellWidth);
 
     Index _contentYFromVisibleRow(const Index row) const noexcept
     {

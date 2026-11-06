@@ -11,7 +11,7 @@
 #include <memory>
 #include <utility>
 #include <cassert>
-#include <cstdarg>
+#include <vector>
 #include <boost/filesystem/path.hpp>
 
 #include "../key.hpp"
@@ -40,13 +40,21 @@ constexpr auto ELLIPSIS = "…";
 } // namespace glyphs
 
 /*
+ * Label and value of a row (see View::_writeLabelValRows()).
+ */
+struct LabelValRow final
+{
+    std::string label;
+    std::string val;
+};
+
+/*
  * Base class of all views.
  *
  * A view manages a notcurses plane.
  *
  * The `View` class provides many useful protected methods to its
- * derived classes, like _clearContent(), _moveCursor(),
- * and _safeMoveAndPrint().
+ * derived classes, like _clearContent(), _fill(), and _write().
  *
  * A view never draws immediately: when its state changes, it calls
  * _invalidate() and its next render() calls _redrawContent() to draw
@@ -267,16 +275,10 @@ protected:
     virtual void _resized();
 
     /*
-     * Clears everything in the content rectangle (contentRect()) with
-     * the `Stylist::Role::STD` style.
+     * Fills the content rectangle (contentRect()) with spaces with the
+     * style of `role`.
      */
-    void _clearContent() const;
-
-    /*
-     * Clears the whole view's rectangle (rect()) without applying any
-     * specific style.
-     */
-    void _clearRect() const;
+    void _clearContent(Stylist::Role role = Stylist::Role::STD) const;
 
     /*
      * Sets the title of this view to `title`.
@@ -316,45 +318,45 @@ protected:
     }
 
     /*
-     * Puts a single ASCII character `ch` at `contentPos` relative to
-     * the top-left position of contentRect().
-     */
-    void _putChar(const Point& contentPos, char ch) const;
-
-    /*
-     * Puts a single glyph `glyph` (UTF-8; see `glyphs`) at
-     * `contentPos` relative to the top-left position of contentRect().
-     */
-    void _putChar(const Point& contentPos, const char *glyph) const;
-
-    /*
-     * Appends a single ASCII character `ch` at the current cursor
-     * position.
-     */
-    void _appendChar(char ch) const;
-
-    /*
-     * Appends a single character `ch` (Unicode code point) at the
-     * current cursor position.
-     */
-    void _appendCh(char32_t ch) const;
-
-    /*
-     * Puts the UTF-8 string `str` at `contentPos` relative to the
-     * top-left position of contentRect().
+     * Writes the UTF-8 string `str` at `contentPos` relative to the
+     * top-left position of contentRect() with the current style.
      *
-     * This method doesn't truncate `str` (see
-     * term::strFittingPrefix()).
+     * This method only writes the longest prefix of `str` which fits
+     * within contentRect() (see term::strFittingPrefix()), and nothing
+     * if `contentPos` is outside of it.
+     *
+     * Returns the X position, relative to the left of contentRect(),
+     * just after the last written column.
      */
-    void _putStr(const Point& contentPos, std::string_view str) const;
+    Index _write(const Point& contentPos, std::string_view str) const;
 
     /*
-     * Appends the UTF-8 string `str` at the current cursor position.
+     * Fills `contentRect`, a rectangle relative to the top-left
+     * position of contentRect(), with spaces with the current style.
      *
-     * This method doesn't truncate `str` (see
-     * term::strFittingPrefix()).
+     * This method only fills the part of `contentRect` which is
+     * within contentRect().
      */
-    void _appendStr(std::string_view str) const;
+    void _fill(const Rect& contentRect) const;
+
+    /*
+     * Fills the whole content row `contentY` with spaces with the
+     * current style.
+     */
+    void _clearRow(Index contentY) const;
+
+    /*
+     * Writes the label/value rows `rows`, one per content row, starting
+     * at `contentPos` relative to the top-left position
+     * of contentRect().
+     *
+     * The values are aligned one column after the widest label.
+     *
+     * This method uses the style of `role`, emphasizing the labels if
+     * `emLabels` is true, or the values otherwise.
+     */
+    void _writeLabelValRows(const Point& contentPos, const std::vector<LabelValRow>& rows,
+                            Stylist::Role role, bool emLabels) const;
 
     /*
      * Formats the path `path` (escaped UTF-8; see utils::escapeStr())
@@ -372,36 +374,13 @@ protected:
                                                            Size maxWidth);
 
     /*
-     * Prints a formatted string at the current cursor position.
+     * Moves the cursor of the plane at `contentPos` relative to the
+     * top-left position of contentRect().
      *
-     * This method doesn't print outside the view, but there's no
-     * explicit truncation. Use _safePrint() for a safe version which
-     * truncates the formatted string so that it doesn't exceed the
-     * content rectangle.
-     */
-    int _print(const char *fmt, ...) const;
-
-    /*
-     * Like _print(), but truncates the formatted string so that it's
-     * not printed outside the view.
-     */
-    int _safePrint(const char *fmt, ...) const;
-
-    /*
-     * Moves the cursor at `contentPos` relative to the top-left
-     * position of contentRect().
+     * Only useful before calling something which draws at the cursor
+     * of _plane() (see AbstractDtDetails::renderLine(), for example).
      */
     void _moveCursor(const Point& contentPos) const;
-
-    /*
-     * Calls _moveCursor(contentPos), and then _safePrint().
-     */
-    int _safeMoveAndPrint(const Point& contentPos, const char *fmt, ...) const;
-
-    /*
-     * Calls _moveCursor(contentPos), and then _print().
-     */
-    int _moveAndPrint(const Point& contentPos, const char *fmt, ...) const;
 
     bool _hasFocus() const
     {
@@ -440,8 +419,6 @@ protected:
 
 private:
     void _setContentRect();
-    int _vSafePrint(const char * const fmt, va_list& args) const;
-    int _vPrint(const char * const fmt, va_list& args) const;
     void _decorate() const;
 
 private:

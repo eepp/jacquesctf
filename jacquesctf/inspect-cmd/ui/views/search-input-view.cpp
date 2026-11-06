@@ -21,7 +21,15 @@ SearchInputView::SearchInputView(const Rect& rect, const Stylist& stylist) :
 {
 }
 
-void SearchInputView::_drawFormatText(const std::string& utf8Text)
+void SearchInputView::_writeCh(Point& contentPos, const char32_t ch) const
+{
+    std::string utf8Ch;
+
+    unicode::appendUtf8(utf8Ch, ch);
+    contentPos.x = this->_write(contentPos, utf8Ch);
+}
+
+void SearchInputView::_drawFormatText(Point contentPos, const std::string& utf8Text)
 {
     // work with code points
     const auto text = std::invoke([&utf8Text] {
@@ -39,17 +47,17 @@ void SearchInputView::_drawFormatText(const std::string& utf8Text)
 
     if (*it == '/') {
         this->_style(Stylist::Role::ACCENT, true);
-        this->_appendCh(*it);
+        this->_writeCh(contentPos, *it);
         ++it;
 
         while (it != text.end()) {
             if (*it == '\\') {
                 this->_style(Stylist::Role::STD, true);
-                this->_appendCh(*it);
+                this->_writeCh(contentPos, *it);
                 ++it;
 
                 if (it != text.end()) {
-                    this->_appendCh(*it);
+                    this->_writeCh(contentPos, *it);
                     ++it;
                 }
 
@@ -60,7 +68,7 @@ void SearchInputView::_drawFormatText(const std::string& utf8Text)
                 this->_style(Stylist::Role::STD);
             }
 
-            this->_appendCh(*it);
+            this->_writeCh(contentPos, *it);
             ++it;
         }
 
@@ -75,7 +83,7 @@ void SearchInputView::_drawFormatText(const std::string& utf8Text)
 
     if (*it == '+' || *it == '-') {
         this->_style(Stylist::Role::ACCENT, true);
-        this->_appendCh(*it);
+        this->_writeCh(contentPos, *it);
         ++it;
         hasAddSub = true;
     }
@@ -87,50 +95,50 @@ void SearchInputView::_drawFormatText(const std::string& utf8Text)
     this->_style(Stylist::Role::ACCENT, true);
 
     if (*it == '#') {
-        this->_appendCh(*it);
+        this->_writeCh(contentPos, *it);
         ++it;
 
         if (it != text.end() && *it == '#') {
-            this->_appendCh(*it);
+            this->_writeCh(contentPos, *it);
             ++it;
         }
     } else if (*it == ':') {
-        this->_appendCh(*it);
+        this->_writeCh(contentPos, *it);
         ++it;
 
         if (it != text.end() && *it == '$') {
-            this->_appendCh(*it);
+            this->_writeCh(contentPos, *it);
             ++it;
         }
     } else if (*it == '@') {
-        this->_appendCh(*it);
+        this->_writeCh(contentPos, *it);
         ++it;
     } else if (*it == '$') {
-        this->_appendCh(*it);
+        this->_writeCh(contentPos, *it);
         ++it;
     } else if (*it == '*') {
-        this->_appendCh(*it);
+        this->_writeCh(contentPos, *it);
         ++it;
 
         if (it != text.end() && *it == '*') {
-            this->_appendCh(*it);
+            this->_writeCh(contentPos, *it);
             ++it;
         }
     } else if (*it == '%' && !hasAddSub) {
-        this->_appendCh(*it);
+        this->_writeCh(contentPos, *it);
         ++it;
     }
 
-    this->_drawNumber(it, text.end());
+    this->_drawNumber(contentPos, it, text.end());
 }
 
-void SearchInputView::_drawCurText(const std::string& text)
+void SearchInputView::_drawCurText(const Point& contentPos, const std::string& text)
 {
     if (text.empty()) {
         return;
     }
 
-    this->_drawFormatText(text);
+    this->_drawFormatText(contentPos, text);
 }
 
 namespace {
@@ -152,7 +160,7 @@ bool isOctDigit(const char32_t ch)
 
 } // namespace
 
-void SearchInputView::_drawNumber(std::u32string::const_iterator it,
+void SearchInputView::_drawNumber(Point& contentPos, std::u32string::const_iterator it,
                                   const std::u32string::const_iterator endIt)
 {
     std::function<bool (char32_t)> checkDigitFunc = isDecDigit;
@@ -164,12 +172,12 @@ void SearchInputView::_drawNumber(std::u32string::const_iterator it,
     this->_style(Stylist::Role::NUMBER);
 
     if (*it == '0') {
-        this->_appendCh(*it);
+        this->_writeCh(contentPos, *it);
         ++it;
         checkDigitFunc = isOctDigit;
 
         if (it != endIt && (*it == 'x' || *it == 'X')) {
-            this->_appendCh(*it);
+            this->_writeCh(contentPos, *it);
             ++it;
             checkDigitFunc = isHexDigit;
         }
@@ -182,7 +190,7 @@ void SearchInputView::_drawNumber(std::u32string::const_iterator it,
             this->_style(Stylist::Role::ALERT, true);
         }
 
-        this->_appendCh(*it);
+        this->_writeCh(contentPos, *it);
         ++it;
     }
 }
@@ -205,7 +213,7 @@ void SearchInputView::animateBorder(const Index index)
     } direction = Direction::RIGHT;
 
     for (Index i = 0; i < altChCount; ++i) {
-        this->_putChar(pt, glyphs::BULLET);
+        this->_write(pt, glyphs::BULLET);
 
         switch (direction) {
         case Direction::RIGHT:

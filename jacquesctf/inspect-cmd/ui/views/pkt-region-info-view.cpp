@@ -139,16 +139,9 @@ DtPathItemStrVisitor::Result dtPathItemStr(const DtPath::Item& item,
 
 } // namespace
 
-void PktRegionInfoView::_safePrintScope(const yactfr::Scope scope)
-{
-    this->_safePrint(scopeStr(scope));
-}
-
 void PktRegionInfoView::_redrawContent()
 {
-    // clear
-    this->_style(Stylist::Role::INFO);
-    this->_clearRect();
+    this->_clearContent(Stylist::Role::INFO);
 
     const auto pktRegion = _appState->curPktRegion();
 
@@ -158,8 +151,7 @@ void PktRegionInfoView::_redrawContent()
 
     const ContentPktRegion *cPktRegion = nullptr;
     bool isError = false;
-
-    this->_moveCursor({0, 0});
+    Index x = 0;
 
     if ((cPktRegion = dynamic_cast<const ContentPktRegion *>(pktRegion))) {
         // path
@@ -167,7 +159,7 @@ void PktRegionInfoView::_redrawContent()
             this->_style(Stylist::Role::INFO_STRONG);
         }
 
-        this->_safePrintScope(cPktRegion->dtPath().scope());
+        x = this->_write({x, 0}, scopeStr(cPktRegion->dtPath().scope()));
 
         if (cPktRegion->dtPath().items().empty()) {
             this->_style(Stylist::Role::INFO);
@@ -178,28 +170,26 @@ void PktRegionInfoView::_redrawContent()
         for (auto it = cPktRegion->dtPath().items().begin(); it != cPktRegion->dtPath().items().end(); ++it) {
             const auto [prefix, str] = dtPathItemStr(*it, &arrayIndexesIt);
 
-            if (!prefix.empty()) {
-                this->_safePrint(prefix.c_str());
-            }
+            x = this->_write({x, 0}, prefix);
 
             if (it == cPktRegion->dtPath().items().end() - 1) {
                 this->_style(Stylist::Role::INFO_STRONG);
             }
 
-            this->_safePrint("%s", str.c_str());
+            x = this->_write({x, 0}, str);
         }
     } else if (dynamic_cast<const PaddingPktRegion *>(pktRegion)) {
         if (pktRegion->scope()) {
             this->_style(Stylist::Role::INFO);
-            this->_safePrintScope(pktRegion->scope()->scope());
-            this->_print(" ");
+            x = this->_write({x, 0}, scopeStr(pktRegion->scope()->scope()));
+            x = this->_write({x, 0}, " ");
         }
 
         this->_style(Stylist::Role::INFO_STRONG);
-        this->_print("PADDING");
+        this->_write({x, 0}, "PADDING");
     } else if (dynamic_cast<const ErrorPktRegion *>(pktRegion)) {
         this->_style(Stylist::Role::INFO_STRONG);
-        this->_print("ERROR");
+        this->_write({x, 0}, "ERROR");
         isError = true;
     }
 
@@ -209,34 +199,32 @@ void PktRegionInfoView::_redrawContent()
     const auto pathWidth = _maxDtPathSizes[&_appState->trace()];
     const auto str = utils::sepNumber(pktRegion->segment().len()->bits(), ',');
 
-    this->_safeMoveAndPrint({
-        pathWidth + 4 + this->_curMaxOffsetSize() - 2 - str.size(), 0
-    }, "%s b", str.c_str());
+    x = this->_write({pathWidth + 4 + this->_curMaxOffsetSize() - 2 - str.size(), 0}, str + " b");
 
     // byte order
     if (pktRegion->segment().bo()) {
-        this->_safePrint("    ");
+        x = this->_write({x, 0}, "    ");
 
         if (*pktRegion->segment().bo() == yactfr::ByteOrder::Big) {
-            this->_safePrint("BE");
+            x = this->_write({x, 0}, "BE");
         } else {
-            this->_safePrint("LE");
+            x = this->_write({x, 0}, "LE");
         }
     } else {
-        this->_safePrint("      ");
+        x = this->_write({x, 0}, "      ");
     }
 
     // value
     if (cPktRegion && cPktRegion->val()) {
         const auto& varVal = *cPktRegion->val();
 
-        this->_safePrint("    ");
+        x = this->_write({x, 0}, "    ");
         this->_style(Stylist::Role::INFO_VAL);
 
         if (const auto val = std::get_if<bool>(&varVal)) {
-            this->_safePrint("%s", *val ? "true" : "false");
+            x = this->_write({x, 0}, *val ? "true" : "false");
         } else if (const auto val = std::get_if<long long>(&varVal)) {
-            this->_safePrint("%s", utils::sepNumber(*val, ',').c_str());
+            x = this->_write({x, 0}, utils::sepNumber(*val, ','));
         } else if (const auto val = std::get_if<unsigned long long>(&varVal)) {
             const auto prefDispBase = std::invoke([cPktRegion] {
                 if (cPktRegion->dt().isIntegerType()) {
@@ -248,30 +236,23 @@ void PktRegionInfoView::_redrawContent()
                 }
             });
 
-            std::string intFmt;
-
             switch (prefDispBase) {
             case yactfr::DisplayBase::Octal:
-                intFmt = "0%" PRIo64;
+                x = this->_write({x, 0}, utils::format("0%llo", *val));
                 break;
 
             case yactfr::DisplayBase::Hexadecimal:
-                intFmt = "0x%" PRIx64;
+                x = this->_write({x, 0}, utils::format("0x%llx", *val));
                 break;
 
             default:
+                x = this->_write({x, 0}, utils::sepNumber(*val, ','));
                 break;
             }
-
-            if (intFmt.empty()) {
-                this->_safePrint("%s", utils::sepNumber(*val, ',').c_str());
-            } else {
-                this->_safePrint(intFmt.c_str(), *val);
-            }
         } else if (const auto val = std::get_if<double>(&varVal)) {
-            this->_safePrint("%f", *val);
+            x = this->_write({x, 0}, utils::format("%f", *val));
         } else if (const auto val = std::get_if<std::string>(&varVal)) {
-            this->_safePrint("%s", utils::escapeStr(*val).c_str());
+            x = this->_write({x, 0}, utils::escapeStr(*val));
         }
 
         if (cPktRegion->dt().isFixedLengthBitMapType() || cPktRegion->dt().isIntegerType()) {
@@ -279,15 +260,15 @@ void PktRegionInfoView::_redrawContent()
 
             if (!names.empty()) {
                 this->_style(Stylist::Role::INFO);
-                this->_safePrint("   ");
+                x = this->_write({x, 0}, "   ");
 
                 for (auto& name : names) {
                     this->_style(Stylist::Role::INFO);
-                    this->_safePrint(" [");
+                    x = this->_write({x, 0}, " [");
                     this->_style(Stylist::Role::INFO_STRONG);
-                    this->_safePrint("%s", name.c_str());
+                    x = this->_write({x, 0}, name);
                     this->_style(Stylist::Role::INFO);
-                    this->_safePrint("]");
+                    x = this->_write({x, 0}, "]");
                 }
             }
         }
@@ -295,9 +276,9 @@ void PktRegionInfoView::_redrawContent()
         const auto& error = _appState->activePktState().pkt().error();
 
         assert(error);
-        this->_safePrint("    ");
+        x = this->_write({x, 0}, "    ");
         this->_style(Stylist::Role::INFO_ERROR);
-        this->_safePrint("%s", utils::escapeStr(error->decodingError().what()).c_str());
+        this->_write({x, 0}, utils::escapeStr(error->decodingError().what()));
     }
 }
 
