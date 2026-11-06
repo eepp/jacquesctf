@@ -19,9 +19,9 @@ DtsScreen::DtsScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& 
 {
     const auto viewRects = this->_viewRects();
 
-    _dstTableView = std::make_unique<DstTableView>(std::get<0>(viewRects), stylist, appState);
-    _ertTableView = std::make_unique<ErtTableView>(std::get<1>(viewRects), stylist, appState);
-    _dtExplorerView = std::make_unique<DtExplorerView>(std::get<2>(viewRects), stylist);
+    _dstTableView = std::make_unique<DstTableView>(viewRects.dstTable, stylist, appState);
+    _ertTableView = std::make_unique<ErtTableView>(viewRects.ertTable, stylist, appState);
+    _dtExplorerView = std::make_unique<DtExplorerView>(viewRects.dtExplorer, stylist);
     this->_addView(*_dstTableView);
     this->_addView(*_ertTableView);
     this->_addView(*_dtExplorerView);
@@ -37,7 +37,7 @@ void DtsScreen::_visibilityChanged()
     }
 }
 
-std::tuple<Rect, Rect, Rect> DtsScreen::_viewRects() const
+DtsScreen::_ViewRects DtsScreen::_viewRects() const
 {
     const auto& rect = this->rect();
     const auto detailsWidth = _tablesVisible ? rect.w - (rect.w / 2) : rect.w;
@@ -47,7 +47,7 @@ std::tuple<Rect, Rect, Rect> DtsScreen::_viewRects() const
                                  rect.w / 2, rect.h - dstTableViewRect.h};
     const Rect dtExplorerViewRect {{rect.pos.x + detailsX, rect.pos.y}, detailsWidth, rect.h};
 
-    return std::tuple {dstTableViewRect, ertTableViewRect, dtExplorerViewRect};
+    return {dstTableViewRect, ertTableViewRect, dtExplorerViewRect};
 }
 
 void DtsScreen::_updateViews()
@@ -70,9 +70,9 @@ void DtsScreen::_resized()
 {
     const auto viewRects = this->_viewRects();
 
-    _dstTableView->moveAndResize(std::get<0>(viewRects));
-    _ertTableView->moveAndResize(std::get<1>(viewRects));
-    _dtExplorerView->moveAndResize(std::get<2>(viewRects));
+    _dstTableView->moveAndResize(viewRects.dstTable);
+    _ertTableView->moveAndResize(viewRects.ertTable);
+    _dtExplorerView->moveAndResize(viewRects.dtExplorer);
     _searchController.parentScreenResized(*this);
 }
 
@@ -219,7 +219,7 @@ void DtsScreen::_handleKey(const Key key)
 
             const auto viewRects = this->_viewRects();
 
-            _dtExplorerView->moveAndResize(std::get<2>(viewRects));
+            _dtExplorerView->moveAndResize(viewRects.dtExplorer);
             _dstTableView->isVisible(_tablesVisible);
             _ertTableView->isVisible(_tablesVisible);
 

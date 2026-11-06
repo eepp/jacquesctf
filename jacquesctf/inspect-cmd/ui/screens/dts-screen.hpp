@@ -6,8 +6,6 @@
 #ifndef _JACQUES_INSPECT_COMMAND_UI_SCREENS_DTS_SCREEN_HPP
 #define _JACQUES_INSPECT_COMMAND_UI_SCREENS_DTS_SCREEN_HPP
 
-#include <tuple>
-
 #include "../stylist.hpp"
 #include "../views/ert-table-view.hpp"
 #include "../views/dst-table-view.hpp"
@@ -27,11 +25,19 @@ public:
     void clearHighlight();
 
 private:
+    struct _ViewRects final
+    {
+        Rect dstTable;
+        Rect ertTable;
+        Rect dtExplorer;
+    };
+
+private:
     void _resized() override;
     void _handleKey(Key key) override;
     void _focusedViewHandledKey(Key key) override;
     void _visibilityChanged() override;
-    std::tuple<Rect, Rect, Rect> _viewRects() const;
+    _ViewRects _viewRects() const;
     void _updateViews();
 
     /*
