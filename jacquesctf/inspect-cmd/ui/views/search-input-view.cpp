@@ -5,7 +5,6 @@
 
 #include <cassert>
 #include <cctype>
-#include <cstring>
 #include <functional>
 #include <string>
 #include <string_view>

@@ -5,9 +5,7 @@
 
 #include <cassert>
 #include <cstdio>
-#include <cstdint>
 #include <cstdlib>
-#include <cinttypes>
 #include <limits>
 #include <array>
 #include <time.h>

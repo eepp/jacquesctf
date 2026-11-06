@@ -7,7 +7,6 @@
 #define _JACQUES_INSPECT_COMMON_APP_STATE_HPP
 
 #include <vector>
-#include <functional>
 #include <boost/filesystem.hpp>
 
 #include "ds-file-state.hpp"

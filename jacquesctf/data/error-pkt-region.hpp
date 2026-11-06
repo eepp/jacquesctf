@@ -6,8 +6,6 @@
 #ifndef _JACQUES_DATA_ERROR_PKT_REGION_HPP
 #define _JACQUES_DATA_ERROR_PKT_REGION_HPP
 
-#include <memory>
-
 #include "pkt-region.hpp"
 
 namespace jacques {

@@ -6,8 +6,6 @@
 #ifndef _JACQUES_DATA_MEM_MAPPED_FILE_HPP
 #define _JACQUES_DATA_MEM_MAPPED_FILE_HPP
 
-#include <string>
-#include <cstdlib>
 #include <optional>
 #include <boost/filesystem.hpp>
 #include <sys/mman.h>

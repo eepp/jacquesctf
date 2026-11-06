@@ -8,7 +8,6 @@
 
 #include "content-pkt-region.hpp"
 #include "aliases.hpp"
-#include "utils.hpp"
 
 namespace jacques {
 namespace {

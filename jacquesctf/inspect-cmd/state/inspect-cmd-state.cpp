@@ -4,8 +4,6 @@
  */
 
 #include <cassert>
-#include <algorithm>
-#include <map>
 
 #include "inspect-cmd-state.hpp"
 #include "msg.hpp"

@@ -4,13 +4,8 @@
  */
 
 #include <cstdlib>
-#include <cstring>
 #include <iostream>
-#include <fstream>
 #include <memory>
-#include <stdexcept>
-#include <yactfr/yactfr.hpp>
-#include <boost/filesystem.hpp>
 
 #include "cfg.hpp"
 #include "utils.hpp"

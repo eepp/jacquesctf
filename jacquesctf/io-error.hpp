@@ -8,6 +8,8 @@
 
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <boost/filesystem.hpp>
 
 namespace jacques {
 

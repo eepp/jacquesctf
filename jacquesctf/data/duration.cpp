@@ -4,7 +4,6 @@
  */
 
 #include "duration.hpp"
-#include "utils.hpp"
 
 namespace jacques {
 

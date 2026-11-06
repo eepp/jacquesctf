@@ -10,7 +10,6 @@
 #include <vector>
 #include <memory>
 #include <string_view>
-#include <yactfr/metadata/fwd.hpp>
 
 #include "scroll-view.hpp"
 #include "data/ts.hpp"

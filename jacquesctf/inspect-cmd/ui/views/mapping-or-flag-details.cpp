@@ -4,9 +4,6 @@
  */
 
 #include <cassert>
-#include <cstdlib>
-#include <cstring>
-#include <sstream>
 
 #include "mapping-or-flag-details.hpp"
 

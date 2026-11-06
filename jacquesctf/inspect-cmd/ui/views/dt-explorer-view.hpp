@@ -10,7 +10,6 @@
 #include <yactfr/metadata/fwd.hpp>
 
 #include "scroll-view.hpp"
-#include "data/metadata.hpp"
 #include "abstract-dt-details.hpp"
 
 namespace jacques {

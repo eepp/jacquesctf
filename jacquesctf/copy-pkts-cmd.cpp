@@ -15,10 +15,8 @@
 #include "cfg.hpp"
 #include "copy-pkts-cmd.hpp"
 #include "cmd-error.hpp"
-#include "io-error.hpp"
 #include "data/trace.hpp"
 #include "data/ds-file.hpp"
-#include "data/time-ops.hpp"
 
 namespace jacques {
 namespace {

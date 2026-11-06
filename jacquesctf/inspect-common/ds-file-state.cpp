@@ -4,16 +4,11 @@
  */
 
 #include <cassert>
-#include <algorithm>
 #include <chrono>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
 #include "ds-file-state.hpp"
 #include "search-query.hpp"
 #include "app-state.hpp"
-#include "io-error.hpp"
 
 namespace jacques {
 

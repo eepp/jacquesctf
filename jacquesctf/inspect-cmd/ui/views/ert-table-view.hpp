@@ -8,8 +8,6 @@
 
 #include <unordered_map>
 #include <vector>
-#include <string>
-#include <array>
 #include <yactfr/metadata/fwd.hpp>
 
 #include "table-view.hpp"

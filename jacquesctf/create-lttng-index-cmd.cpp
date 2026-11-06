@@ -7,14 +7,12 @@
 #include <fstream>
 #include <cassert>
 #include <map>
-#include <set>
 #include <boost/endian/buffers.hpp>
 
 #include "cfg.hpp"
 #include "create-lttng-index-cmd.hpp"
 #include "cmd-error.hpp"
 #include "data/trace.hpp"
-#include "data/metadata.hpp"
 #include "data/ds-file.hpp"
 
 namespace jacques {

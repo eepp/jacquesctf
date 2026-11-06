@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
-#include <yactfr/yactfr.hpp>
-
 #include "er.hpp"
 
 namespace jacques {

@@ -6,7 +6,6 @@
 #ifndef _JACQUES_INSPECT_COMMAND_UI_SCREENS_SCREEN_HPP
 #define _JACQUES_INSPECT_COMMAND_UI_SCREENS_SCREEN_HPP
 
-#include <memory>
 #include <vector>
 
 #include "../key.hpp"

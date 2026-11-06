@@ -6,7 +6,6 @@
 #ifndef _JACQUES_DATA_DURATION_HPP
 #define _JACQUES_DATA_DURATION_HPP
 
-#include <cstdint>
 #include <ostream>
 #include <string>
 #include <array>

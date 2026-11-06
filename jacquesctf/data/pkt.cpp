@@ -5,14 +5,12 @@
 
 #include <algorithm>
 #include <functional>
-#include <yactfr/yactfr.hpp>
 
 #include "pkt.hpp"
 #include "unicode.hpp"
 #include "content-pkt-region.hpp"
 #include "padding-pkt-region.hpp"
 #include "error-pkt-region.hpp"
-#include "utils.hpp"
 
 namespace jacques {
 

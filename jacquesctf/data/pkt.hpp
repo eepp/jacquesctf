@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
-#include <yactfr/yactfr.hpp>
 
 #include "pkt-index-entry.hpp"
 #include "pkt-checkpoints.hpp"

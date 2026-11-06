@@ -8,7 +8,6 @@
 
 #include <memory>
 #include <string>
-#include <optional>
 
 #include "utils.hpp"
 

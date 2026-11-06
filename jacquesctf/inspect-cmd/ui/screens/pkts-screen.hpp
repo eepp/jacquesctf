@@ -6,7 +6,6 @@
 #ifndef _JACQUES_INSPECT_COMMAND_UI_SCREENS_PKTS_SCREEN_HPP
 #define _JACQUES_INSPECT_COMMAND_UI_SCREENS_PKTS_SCREEN_HPP
 
-#include "aliases.hpp"
 #include "../stylist.hpp"
 #include "../views/pkt-table-view.hpp"
 #include "../search-ctrl.hpp"

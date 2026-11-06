@@ -7,8 +7,6 @@
 #define _JACQUES_INSPECT_COMMON_COMMON_INSPECT_TABLE_VIEW_HPP
 
 #include <cassert>
-#include <utility>
-#include <tuple>
 #include <optional>
 
 #include "aliases.hpp"

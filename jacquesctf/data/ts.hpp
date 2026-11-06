@@ -6,14 +6,12 @@
 #ifndef _JACQUES_DATA_TS_HPP
 #define _JACQUES_DATA_TS_HPP
 
-#include <cstdint>
 #include <ostream>
 #include <string>
 #include <boost/operators.hpp>
 #include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
-#include "duration.hpp"
 
 namespace jacques {
 

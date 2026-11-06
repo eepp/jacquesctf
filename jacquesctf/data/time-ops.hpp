@@ -7,10 +7,7 @@
 #define _JACQUES_DATA_TIME_OPS_HPP
 
 #include <cassert>
-#include <cstdint>
-#include <ostream>
 #include <boost/operators.hpp>
-#include <yactfr/yactfr.hpp>
 
 #include "ts.hpp"
 #include "duration.hpp"

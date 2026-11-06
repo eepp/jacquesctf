@@ -10,11 +10,9 @@
 #include <sstream>
 #include <optional>
 #include <functional>
-#include <yactfr/yactfr.hpp>
 #include <notcurses/notcurses.h>
 
 #include "abstract-dt-details.hpp"
-#include "utils.hpp"
 
 namespace jacques {
 

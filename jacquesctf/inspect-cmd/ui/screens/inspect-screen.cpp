@@ -7,7 +7,6 @@
 #include <functional>
 #include <initializer_list>
 #include <utility>
-#include <unistd.h>
 
 #include "../key.hpp"
 #include "../views/er-table-view.hpp"

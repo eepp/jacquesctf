@@ -4,7 +4,6 @@
  */
 
 #include <memory>
-#include <fstream>
 #include <numeric>
 #include <optional>
 #include <yactfr/yactfr.hpp>

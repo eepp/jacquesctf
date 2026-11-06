@@ -4,7 +4,6 @@
  */
 
 #include <cassert>
-#include <algorithm>
 #include <map>
 
 #include "data/trace.hpp"

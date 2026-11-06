@@ -7,7 +7,6 @@
 #define _JACQUES_INSPECT_COMMAND_UI_TERM_HPP
 
 #include <optional>
-#include <string>
 #include <string_view>
 
 #include "aliases.hpp"

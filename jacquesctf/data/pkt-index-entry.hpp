@@ -8,7 +8,6 @@
 
 #include <optional>
 #include <boost/operators.hpp>
-#include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
 #include "ts.hpp"

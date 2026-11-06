@@ -6,14 +6,12 @@
 #ifndef _JACQUES_DATA_PKT_SEGMENT_HPP
 #define _JACQUES_DATA_PKT_SEGMENT_HPP
 
-#include <cstdint>
 #include <optional>
 #include <boost/operators.hpp>
 
 #include "aliases.hpp"
 #include "data-len.hpp"
 #include "bo.hpp"
-#include "bit-loc.hpp"
 
 namespace jacques {
 

@@ -7,8 +7,6 @@
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_SEARCH_INPUT_VIEW_HPP
 
 #include <string>
-#include <vector>
-#include <optional>
 
 #include "view.hpp"
 

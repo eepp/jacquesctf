@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
-#include <yactfr/yactfr.hpp>
 
 #include "unicode.hpp"
 

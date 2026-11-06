@@ -6,15 +6,8 @@
 #ifndef _JACQUES_INSPECT_CMD_UI_VIEWS_MAPPING_OR_FLAG_DETAILS_HPP
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_MAPPING_OR_FLAG_DETAILS_HPP
 
-#include <cstring>
-#include <cstdio>
-#include <cinttypes>
 #include <string>
-#include <sstream>
-#include <algorithm>
-#include <type_traits>
 struct ncplane;
-#include <yactfr/yactfr.hpp>
 
 #include "abstract-dt-details.hpp"
 

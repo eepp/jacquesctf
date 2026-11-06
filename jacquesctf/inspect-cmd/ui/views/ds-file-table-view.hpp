@@ -6,8 +6,6 @@
 #ifndef _JACQUES_INSPECT_CMD_UI_VIEWS_DS_FILE_TABLE_VIEW_HPP
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_DS_FILE_TABLE_VIEW_HPP
 
-#include "data/data-len.hpp"
-#include "data/ts.hpp"
 #include "table-view.hpp"
 
 namespace jacques {

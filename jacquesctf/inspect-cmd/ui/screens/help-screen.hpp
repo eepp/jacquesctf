@@ -6,7 +6,6 @@
 #ifndef _JACQUES_INSPECT_COMMAND_UI_SCREENS_HELP_SCREEN_HPP
 #define _JACQUES_INSPECT_COMMAND_UI_SCREENS_HELP_SCREEN_HPP
 
-#include "aliases.hpp"
 #include "../stylist.hpp"
 #include "screen.hpp"
 #include "../views/help-view.hpp"

@@ -5,7 +5,6 @@
 
 #include <cassert>
 #include <algorithm>
-#include <sstream>
 #include <string>
 
 #include "ert-table-view.hpp"

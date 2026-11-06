@@ -6,7 +6,6 @@
 #ifndef _JACQUES_INSPECT_COMMAND_UI_SCREENS_DS_FILES_SCREEN_HPP
 #define _JACQUES_INSPECT_COMMAND_UI_SCREENS_DS_FILES_SCREEN_HPP
 
-#include "aliases.hpp"
 #include "../stylist.hpp"
 #include "../views/ds-file-table-view.hpp"
 #include "screen.hpp"

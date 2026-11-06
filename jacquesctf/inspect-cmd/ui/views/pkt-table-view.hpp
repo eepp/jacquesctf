@@ -7,7 +7,6 @@
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_PKT_TABLE_VIEW_HPP
 
 #include "table-view.hpp"
-#include "data/data-len.hpp"
 
 namespace jacques {
 

@@ -5,10 +5,8 @@
 
 #include <cassert>
 #include <cstdlib>
-#include <cstring>
 #include <sstream>
 #include <functional>
-#include <yactfr/yactfr.hpp>
 
 #include "dt-details.hpp"
 #include "utils.hpp"

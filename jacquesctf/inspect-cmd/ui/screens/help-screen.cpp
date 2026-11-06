@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
-#include "../key.hpp"
 #include "help-screen.hpp"
 #include "../views/help-view.hpp"
 #include "../stylist.hpp"

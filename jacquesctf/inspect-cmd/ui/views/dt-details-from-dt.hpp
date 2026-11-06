@@ -7,7 +7,6 @@
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_DT_DETAILS_FROM_DT_HPP
 
 #include <vector>
-#include <yactfr/yactfr.hpp>
 
 #include "abstract-dt-details.hpp"
 #include "../stylist.hpp"

@@ -9,7 +9,6 @@
 #include <memory>
 #include <optional>
 #include <boost/operators.hpp>
-#include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
 #include "pkt-segment.hpp"

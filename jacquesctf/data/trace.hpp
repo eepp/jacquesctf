@@ -8,11 +8,8 @@
 
 #include <memory>
 #include <vector>
-#include <optional>
 #include <boost/filesystem.hpp>
 
-#include "aliases.hpp"
-#include "utils.hpp"
 #include "metadata.hpp"
 
 namespace jacques {

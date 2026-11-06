@@ -10,7 +10,6 @@
 #include <vector>
 #include <functional>
 #include <boost/filesystem.hpp>
-#include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
 #include "pkt.hpp"

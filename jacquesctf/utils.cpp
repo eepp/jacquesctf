@@ -17,7 +17,6 @@
 
 #include "utils.hpp"
 #include "unicode.hpp"
-#include "cfg.hpp"
 
 namespace jacques::utils {
 

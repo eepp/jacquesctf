@@ -6,10 +6,8 @@
 #include <cassert>
 #include <algorithm>
 #include <numeric>
-#include <unordered_set>
 #include <variant>
 #include <boost/uuid/uuid_io.hpp>
-#include <yactfr/yactfr.hpp>
 
 #include "trace-info-view.hpp"
 #include "data/ts.hpp"

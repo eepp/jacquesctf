@@ -3,18 +3,13 @@
  * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
-#include <iostream>
 #include <algorithm>
 #include <numeric>
-#include <cinttypes>
-#include <cstdio>
 #include <set>
 #include <string>
 #include <cassert>
 #include <variant>
 #include <functional>
-#include <signal.h>
-#include <unistd.h>
 
 #include "../stylist.hpp"
 #include "../term.hpp"

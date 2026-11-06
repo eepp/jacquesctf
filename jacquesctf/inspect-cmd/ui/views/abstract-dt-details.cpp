@@ -5,11 +5,9 @@
 
 #include <string>
 #include <string_view>
-#include <yactfr/yactfr.hpp>
 #include <notcurses/notcurses.h>
 
 #include "abstract-dt-details.hpp"
-#include "dt-details.hpp"
 #include "mapping-or-flag-details.hpp"
 #include "../term.hpp"
 #include "utils.hpp"

@@ -4,7 +4,6 @@
  */
 
 #include <cassert>
-#include <algorithm>
 
 #include "pkt-checkpoints.hpp"
 

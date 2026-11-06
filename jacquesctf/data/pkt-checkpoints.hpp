@@ -8,16 +8,12 @@
 
 #include <cassert>
 #include <algorithm>
-#include <functional>
 #include <vector>
 #include <utility>
 #include <optional>
-#include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
-#include "data-len.hpp"
 #include "er.hpp"
-#include "ts.hpp"
 #include "pkt-checkpoints-build-listener.hpp"
 
 namespace jacques {

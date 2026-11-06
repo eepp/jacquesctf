@@ -7,7 +7,6 @@
 #define _JACQUES_DATA_SCOPE_HPP
 
 #include <memory>
-#include <yactfr/yactfr.hpp>
 
 #include "er.hpp"
 #include "pkt-segment.hpp"

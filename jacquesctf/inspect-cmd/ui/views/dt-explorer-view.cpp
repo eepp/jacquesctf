@@ -8,7 +8,6 @@
 #include <functional>
 #include <sstream>
 #include <string>
-#include <yactfr/yactfr.hpp>
 
 #include "abstract-dt-details.hpp"
 #include "dt-explorer-view.hpp"

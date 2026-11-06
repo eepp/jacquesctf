@@ -9,13 +9,11 @@
 #include <cstdlib>
 #include <functional>
 #include <iostream>
-#include <stdexcept>
 #include <optional>
 #include <memory>
 #include <utility>
 #include <vector>
 #include <signal.h>
-#include <unistd.h>
 #include <notcurses/notcurses.h>
 
 #include "inspect-cmd.hpp"
@@ -39,10 +37,6 @@
 #include "data/pkt-checkpoints-build-listener.hpp"
 #include "cmd-error.hpp"
 #include "data/data-len.hpp"
-#include "data/pkt-region.hpp"
-#include "data/padding-pkt-region.hpp"
-#include "data/content-pkt-region.hpp"
-#include "data/error-pkt-region.hpp"
 
 namespace jacques {
 namespace {

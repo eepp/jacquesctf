@@ -6,7 +6,6 @@
 #ifndef _JACQUES_INSPECT_COMMAND_UI_SCREENS_INSPECT_SCREEN_HPP
 #define _JACQUES_INSPECT_COMMAND_UI_SCREENS_INSPECT_SCREEN_HPP
 
-#include <tuple>
 #include <list>
 
 #include "aliases.hpp"

@@ -7,9 +7,7 @@
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_ABSTRACT_DT_DETAILS_HPP
 
 #include <memory>
-#include <cstring>
 #include <vector>
-#include <optional>
 #include <string_view>
 struct ncplane;
 #include <yactfr/metadata/fwd.hpp>

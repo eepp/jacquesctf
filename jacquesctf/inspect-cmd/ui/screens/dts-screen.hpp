@@ -6,10 +6,8 @@
 #ifndef _JACQUES_INSPECT_COMMAND_UI_SCREENS_DTS_SCREEN_HPP
 #define _JACQUES_INSPECT_COMMAND_UI_SCREENS_DTS_SCREEN_HPP
 
-#include <functional>
 #include <tuple>
 
-#include "aliases.hpp"
 #include "../stylist.hpp"
 #include "../views/ert-table-view.hpp"
 #include "../views/dst-table-view.hpp"

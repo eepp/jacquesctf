@@ -4,8 +4,6 @@
  */
 
 #include <cassert>
-#include <sstream>
-#include <yactfr/yactfr.hpp>
 
 #include "sub-dt-explorer-view.hpp"
 #include "data/content-pkt-region.hpp"

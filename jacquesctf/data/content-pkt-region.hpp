@@ -6,13 +6,10 @@
 #ifndef _JACQUES_DATA_CONTENT_PKT_REGION_HPP
 #define _JACQUES_DATA_CONTENT_PKT_REGION_HPP
 
-#include <memory>
-#include <cstdint>
 #include <set>
 #include <string>
 #include <optional>
 #include <variant>
-#include <yactfr/yactfr.hpp>
 
 #include "dt-path.hpp"
 #include "pkt-region.hpp"

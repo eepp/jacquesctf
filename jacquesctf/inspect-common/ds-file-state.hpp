@@ -9,14 +9,10 @@
 #include <functional>
 #include <vector>
 #include <optional>
-#include <boost/filesystem.hpp>
-#include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
-#include "data/ts.hpp"
 #include "data/ds-file.hpp"
 #include "search-query.hpp"
-#include "data/pkt.hpp"
 #include "data/er.hpp"
 #include "data/metadata.hpp"
 #include "pkt-state.hpp"

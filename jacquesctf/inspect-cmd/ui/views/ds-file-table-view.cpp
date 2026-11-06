@@ -7,7 +7,6 @@
 
 #include "ds-file-table-view.hpp"
 #include "../../state/msg.hpp"
-#include "utils.hpp"
 
 namespace jacques {
 

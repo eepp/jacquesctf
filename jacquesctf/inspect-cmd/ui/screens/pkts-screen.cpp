@@ -8,12 +8,10 @@
 #include "../key.hpp"
 #include "../term.hpp"
 #include "../views/pkt-table-view.hpp"
-#include "../views/search-input-view.hpp"
 #include "pkts-screen.hpp"
 #include "../stylist.hpp"
 #include "data/pkt-checkpoints-build-listener.hpp"
 #include "../views/progress-view.hpp"
-#include "utils.hpp"
 
 namespace jacques {
 

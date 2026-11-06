@@ -7,9 +7,7 @@
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_PKT_DATA_VIEW_HPP
 
 #include <vector>
-#include <list>
 #include <algorithm>
-#include <unordered_set>
 
 #include "view.hpp"
 #include "data/pkt-region.hpp"

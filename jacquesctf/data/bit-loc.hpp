@@ -6,10 +6,7 @@
 #ifndef _JACQUES_DATA_BIT_LOC_HPP
 #define _JACQUES_DATA_BIT_LOC_HPP
 
-#include <cstdint>
-
 #include "aliases.hpp"
-#include "data-len.hpp"
 
 namespace jacques {
 

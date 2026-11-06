@@ -5,14 +5,10 @@
 
 #include <cassert>
 #include <fstream>
-#include <yactfr/yactfr.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/range/iterator_range.hpp>
-#include <boost/algorithm/string.hpp>
 
 #include "trace.hpp"
 #include "ds-file.hpp"
-#include "utils.hpp"
 
 namespace jacques {
 

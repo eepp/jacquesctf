@@ -12,7 +12,6 @@
 #include "color.hpp"
 #include "stylist.hpp"
 #include "term.hpp"
-#include "utils.hpp"
 
 namespace jacques {
 

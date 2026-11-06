@@ -7,7 +7,6 @@
 #define _JACQUES_DATA_PKT_REGION_HPP
 
 #include <memory>
-#include <vector>
 #include <optional>
 #include <boost/operators.hpp>
 

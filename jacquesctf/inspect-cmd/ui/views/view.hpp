@@ -8,7 +8,6 @@
 
 #include <string>
 #include <string_view>
-#include <memory>
 #include <utility>
 #include <cassert>
 #include <vector>

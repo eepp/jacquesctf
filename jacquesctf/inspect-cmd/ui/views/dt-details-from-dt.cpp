@@ -4,9 +4,6 @@
  */
 
 #include <algorithm>
-#include <array>
-#include <cstring>
-#include <yactfr/yactfr.hpp>
 
 #include "dt-details-from-dt.hpp"
 #include "abstract-dt-details.hpp"

@@ -9,15 +9,11 @@
 #include <memory>
 #include <unordered_map>
 #include <optional>
-#include <yactfr/yactfr.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
 
-#include "aliases.hpp"
-#include "bo.hpp"
 #include "data-len.hpp"
 #include "dt-path.hpp"
-#include "metadata-error.hpp"
 
 namespace jacques {
 

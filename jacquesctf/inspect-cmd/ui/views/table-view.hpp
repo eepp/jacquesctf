@@ -18,7 +18,6 @@
 #include "../rect.hpp"
 #include "data/ts.hpp"
 #include "data/data-len.hpp"
-#include "utils.hpp"
 
 namespace jacques {
 
