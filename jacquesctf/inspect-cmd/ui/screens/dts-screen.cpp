@@ -221,7 +221,6 @@ void DtsScreen::_handleKey(const Key key)
         switch (ch) {
         case '/':
         case 'g':
-        {
             if (focusedView != _ertTableView.get()) {
                 break;
             }
@@ -231,7 +230,6 @@ void DtsScreen::_handleKey(const Key key)
             });
 
             break;
-        }
 
         case 'n':
             if (focusedView != _ertTableView.get() || !_lastQuery) {
