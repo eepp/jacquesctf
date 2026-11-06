@@ -152,12 +152,11 @@ void DtsScreen::_searchAccepted(std::unique_ptr<const SearchQuery> query)
         return;
     }
 
-    _lastQuery = nullptr;
+    _lastErtNamePattern.reset();
 
     if (const auto sQuery = dynamic_cast<const ErtNameSearchQuery *>(query.get())) {
         _ertTableView->selectErt(sQuery->pattern());
-        _lastQuery.reset(sQuery);
-        query.release();
+        _lastErtNamePattern = sQuery->pattern();
     } else if (const auto sQuery = dynamic_cast<const ErtIdSearchQuery *>(query.get())) {
         _ertTableView->selectErt(static_cast<yactfr::TypeId>(sQuery->val()));
     }
@@ -238,11 +237,11 @@ void DtsScreen::_handleKey(const Key key)
             break;
 
         case 'n':
-            if (focusedView != _ertTableView.get() || !_lastQuery) {
+            if (focusedView != _ertTableView.get() || !_lastErtNamePattern) {
                 break;
             }
 
-            _ertTableView->selectErt(_lastQuery->pattern(), true);
+            _ertTableView->selectErt(*_lastErtNamePattern, true);
             this->_updateViews();
             _ertTableView->centerSelRow();
             break;

@@ -6,6 +6,9 @@
 #ifndef _JACQUES_INSPECT_COMMAND_UI_SCREENS_DTS_SCREEN_HPP
 #define _JACQUES_INSPECT_COMMAND_UI_SCREENS_DTS_SCREEN_HPP
 
+#include <optional>
+#include <string>
+
 #include "../stylist.hpp"
 #include "../views/ert-table-view.hpp"
 #include "../views/dst-table-view.hpp"
@@ -65,7 +68,9 @@ private:
     std::unique_ptr<DtExplorerView> _dtExplorerView;
     SearchCtrl _searchController;
     bool _tablesVisible = true;
-    std::unique_ptr<const ErtNameSearchQuery> _lastQuery;
+
+    // pattern of the last event record type name query, if any
+    std::optional<std::string> _lastErtNamePattern;
 };
 
 } // namespace jacques
