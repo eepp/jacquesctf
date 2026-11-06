@@ -159,16 +159,33 @@ void DtsScreen::_searchAccepted(std::unique_ptr<const SearchQuery> query)
 
 void DtsScreen::_handleKey(const Key key)
 {
+    if (key.ch() == U'+') {
+        _tablesVisible = !_tablesVisible;
+
+        const auto viewRects = this->_viewRects();
+
+        _dtExplorerView->moveAndResize(viewRects.dtExplorer);
+        _dstTableView->isVisible(_tablesVisible);
+        _ertTableView->isVisible(_tablesVisible);
+
+        if (!_tablesVisible) {
+            this->_focus(*_dtExplorerView);
+        }
+
+        return;
+    }
+
+    if (!_tablesVisible) {
+        // only the data type explorer is visible
+        return;
+    }
+
     const auto focusedView = this->_focusedView();
 
     if (const auto specialKey = key.special()) {
         switch (*specialKey) {
         case SpecialKey::ENTER:
         case SpecialKey::TAB:
-            if (!_tablesVisible) {
-                break;
-            }
-
             // change focus: data stream types, event record types, data types
             if (focusedView == _ertTableView.get()) {
                 this->_focus(*_dtExplorerView);
@@ -184,10 +201,6 @@ void DtsScreen::_handleKey(const Key key)
             break;
 
         case SpecialKey::LEFT:
-            if (!_tablesVisible) {
-                break;
-            }
-
             if (_ertTableView->isEmpty()) {
                 this->_focus(*_dstTableView);
             } else {
@@ -198,7 +211,7 @@ void DtsScreen::_handleKey(const Key key)
             break;
 
         case SpecialKey::RIGHT:
-            if (!_tablesVisible || focusedView == _dtExplorerView.get()) {
+            if (focusedView == _dtExplorerView.get()) {
                 break;
             }
 
@@ -213,27 +226,10 @@ void DtsScreen::_handleKey(const Key key)
         const auto ch = *key.ch();
 
         switch (ch) {
-        case '+':
-        {
-            _tablesVisible = !_tablesVisible;
-
-            const auto viewRects = this->_viewRects();
-
-            _dtExplorerView->moveAndResize(viewRects.dtExplorer);
-            _dstTableView->isVisible(_tablesVisible);
-            _ertTableView->isVisible(_tablesVisible);
-
-            if (!_tablesVisible) {
-                this->_focus(*_dtExplorerView);
-            }
-
-            break;
-        }
-
         case '/':
         case 'g':
         {
-            if (!_tablesVisible || focusedView != _ertTableView.get()) {
+            if (focusedView != _ertTableView.get()) {
                 break;
             }
 
@@ -245,7 +241,7 @@ void DtsScreen::_handleKey(const Key key)
         }
 
         case 'n':
-            if (!_tablesVisible || focusedView != _ertTableView.get() || !_lastQuery) {
+            if (focusedView != _ertTableView.get() || !_lastQuery) {
                 break;
             }
 
