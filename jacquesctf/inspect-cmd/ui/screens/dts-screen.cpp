@@ -80,6 +80,7 @@ void DtsScreen::highlightCurDt()
 {
     if (!this->_appState().hasActivePktState()) {
         _dtExplorerView->clearHighlight();
+        return;
     }
 
     auto& activePktState = this->_appState().activePktState();
