@@ -18,10 +18,10 @@ class DsFilesScreen final :
 {
 public:
     explicit DsFilesScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                           InspectCmdState& appState);
+                           InspectCmdState& appState, ScreenHost& host);
 
 private:
-    KeyHandlingReaction _handleKey(Key key) override;
+    void _handleKey(Key key) override;
 
 private:
     std::unique_ptr<DsFileTableView> _view;

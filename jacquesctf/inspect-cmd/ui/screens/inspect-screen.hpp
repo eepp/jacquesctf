@@ -34,12 +34,8 @@ public:
     using Bookmarks = std::unordered_map<Index, DsFileBookmarks>;
 
 public:
-    /*
-     * `renderFrameFunc` renders the whole terminal (see `SearchCtrl`).
-     */
     explicit InspectScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                           InspectCmdState& appState,
-                           SearchCtrl::RenderFrameFunc renderFrameFunc);
+                           InspectCmdState& appState, ScreenHost& host);
     ~InspectScreen();
 
 private:
@@ -74,7 +70,7 @@ private:
 
 private:
     void _resized() override;
-    KeyHandlingReaction _handleKey(Key key) override;
+    void _handleKey(Key key) override;
     void _visibilityChanged() override;
     void _tryShowDecodingError();
     void _snapshotState();
@@ -90,13 +86,19 @@ private:
     void _search(const SearchQuery& query, bool animate = true);
 
     /*
-     * Starts a search with the initial input text `init` and, if the
-     * user accepts it, searches.
+     * Opens the search box with the initial input text `init`; the
+     * search happens when the user accepts the query (see
+     * _searchAccepted()).
      *
      * If `live` is true, then the state follows the search input as
      * the user types it.
      */
     void _startSearch(const std::string& init, bool live);
+
+    /*
+     * Searches with the query `query` which the user accepted, if any.
+     */
+    void _searchAccepted(std::unique_ptr<const SearchQuery> query);
 
 private:
     std::unique_ptr<ErTableView> _ertView;

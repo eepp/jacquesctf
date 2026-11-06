@@ -10,11 +10,12 @@
 namespace jacques {
 
 Screen::Screen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-               InspectCmdState& appState) noexcept :
+               InspectCmdState& appState, ScreenHost& host) noexcept :
     _curRect {rect},
     _curCfg {&cfg},
     _curStylist {&stylist},
-    _curAppState {&appState}
+    _curAppState {&appState},
+    _curHost {&host}
 {
 }
 
@@ -35,14 +36,14 @@ void Screen::isVisible(const bool isVisible)
     this->_visibilityChanged();
 }
 
-KeyHandlingReaction Screen::handleKey(const Key key)
+void Screen::handleKey(const Key key)
 {
     if (_theFocusedView && _theFocusedView->handleKey(key)) {
         this->_focusedViewHandledKey(key);
-        return KeyHandlingReaction::CONTINUE;
+        return;
     }
 
-    return this->_handleKey(key);
+    this->_handleKey(key);
 }
 
 void Screen::_addMainView(View& view)
@@ -93,9 +94,8 @@ bool Screen::_handleDsFileKey(const Key key)
     return true;
 }
 
-KeyHandlingReaction Screen::_handleKey(Key)
+void Screen::_handleKey(Key)
 {
-    return KeyHandlingReaction::CONTINUE;
 }
 
 void Screen::_focusedViewHandledKey(Key)

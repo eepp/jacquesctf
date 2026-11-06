@@ -13,9 +13,9 @@
 namespace jacques {
 
 DtsScreen::DtsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                     InspectCmdState& appState, SearchCtrl::RenderFrameFunc renderFrameFunc) :
-    Screen {rect, cfg, stylist, appState},
-    _searchController {*this, stylist, std::move(renderFrameFunc)}
+                     InspectCmdState& appState, ScreenHost& host) :
+    Screen {rect, cfg, stylist, appState, host},
+    _searchController {*this, stylist, host}
 {
     const auto viewRects = this->_viewRects();
 
@@ -25,7 +25,6 @@ DtsScreen::DtsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& sty
     this->_addView(*_dstTableView);
     this->_addView(*_ertTableView);
     this->_addView(*_dtExplorerView);
-    this->_addView(_searchController.view());
     this->_focus(*_dstTableView);
     this->_updateViews();
 }
@@ -133,7 +132,28 @@ void DtsScreen::_focusedViewHandledKey(Key)
     this->_updateViews();
 }
 
-KeyHandlingReaction DtsScreen::_handleKey(const Key key)
+void DtsScreen::_searchAccepted(std::unique_ptr<const SearchQuery> query)
+{
+    if (!query) {
+        // canceled or invalid
+        return;
+    }
+
+    _lastQuery = nullptr;
+
+    if (const auto sQuery = dynamic_cast<const ErtNameSearchQuery *>(query.get())) {
+        _ertTableView->selectErt(sQuery->pattern());
+        _lastQuery.reset(sQuery);
+        query.release();
+    } else if (const auto sQuery = dynamic_cast<const ErtIdSearchQuery *>(query.get())) {
+        _ertTableView->selectErt(static_cast<yactfr::TypeId>(sQuery->val()));
+    }
+
+    this->_updateViews();
+    _ertTableView->centerSelRow();
+}
+
+void DtsScreen::_handleKey(const Key key)
 {
     const auto focusedView = this->_focusedView();
 
@@ -213,25 +233,10 @@ KeyHandlingReaction DtsScreen::_handleKey(const Key key)
                 break;
             }
 
-            auto query = _searchController.start();
+            _searchController.start([this](std::unique_ptr<const SearchQuery> query) {
+                this->_searchAccepted(std::move(query));
+            });
 
-            if (!query) {
-                // canceled or invalid
-                break;
-            }
-
-            _lastQuery = nullptr;
-
-            if (const auto sQuery = dynamic_cast<const ErtNameSearchQuery *>(query.get())) {
-                _ertTableView->selectErt(sQuery->pattern());
-                _lastQuery.reset(sQuery);
-                query.release();
-            } else if (const auto sQuery = dynamic_cast<const ErtIdSearchQuery *>(query.get())) {
-                _ertTableView->selectErt(static_cast<yactfr::TypeId>(sQuery->val()));
-            }
-
-            this->_updateViews();
-            _ertTableView->centerSelRow();
             break;
         }
 
@@ -249,8 +254,6 @@ KeyHandlingReaction DtsScreen::_handleKey(const Key key)
             break;
         }
     }
-
-    return KeyHandlingReaction::CONTINUE;
 }
 
 } // namespace jacques

@@ -9,8 +9,8 @@
 #include <memory>
 #include <vector>
 
-#include "../inspect-cmd.hpp"
 #include "../key.hpp"
+#include "../screen-host.hpp"
 #include "../rect.hpp"
 #include "cfg.hpp"
 #include "../stylist.hpp"
@@ -36,11 +36,14 @@ namespace jacques {
  * At most one view of a screen has the focus (see _focus()):
  * handleKey() passes the key to this view first (see
  * View::handleKey()), and then to _handleKey() if the view didn't
- * handle it. This is how the navigation keys (Up, Down, Page Up, and
- * so on) reach the focused view.
+ * handle it. This is how the navigation keys (Up, Down, Page Up, and so
+ * on) reach the focused view.
  *
  * A screen which mostly shows a single view adds it with
  * _addMainView(): the default _resized() makes it fill the screen.
+ *
+ * A screen asks its host (the main loop) to switch to another screen or
+ * to open an overlay (see `Overlay`) through _host().
  *
  * As a convenience, the base screen holds the stylist and state, which
  * are almost always needed by derived screens anyway.
@@ -52,9 +55,11 @@ protected:
      * Builds a base screen, initially not visible.
      *
      * `rect` is the rectangle of the screen within the terminal screen.
+     *
+     * `host` must exist as long as this screen exists.
      */
     explicit Screen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                    InspectCmdState& appState) noexcept;
+                    InspectCmdState& appState, ScreenHost& host) noexcept;
 
 public:
     virtual ~Screen() = default;
@@ -105,7 +110,7 @@ public:
      * if it handles it, calls _focusedViewHandledKey(); otherwise,
      * calls _handleKey().
      */
-    KeyHandlingReaction handleKey(Key key);
+    void handleKey(Key key);
 
     const Rect& rect() const noexcept
     {
@@ -173,11 +178,9 @@ protected:
      * handleKey() only calls this if the focused view, if any, didn't
      * handle `key`.
      *
-     * The return value indicates what to do next.
-     *
      * The default implementation doesn't handle any key.
      */
-    virtual KeyHandlingReaction _handleKey(Key key);
+    virtual void _handleKey(Key key);
 
     /*
      * Called when the focused view handled the user key `key` (see
@@ -227,11 +230,17 @@ protected:
         return *_curAppState;
     }
 
+    ScreenHost& _host() const noexcept
+    {
+        return *_curHost;
+    }
+
 private:
     Rect _curRect;
     const InspectCfg *_curCfg;
     const Stylist *_curStylist;
     InspectCmdState *_curAppState;
+    ScreenHost *_curHost;
     bool _isVisible = false;
     std::vector<View *> _views;
     View *_mainView = nullptr;

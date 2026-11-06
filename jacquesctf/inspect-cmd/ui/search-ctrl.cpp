@@ -14,70 +14,83 @@
 
 namespace jacques {
 
-SearchCtrl::SearchCtrl(const Screen& parentScreen, const Stylist& stylist,
-                       RenderFrameFunc renderFrameFunc) :
+SearchCtrl::SearchCtrl(const Screen& parentScreen, const Stylist& stylist, ScreenHost& host) :
     _searchView {std::make_unique<SearchInputView>(SearchCtrl::_viewRect(parentScreen), stylist)},
-    _renderFrameFunc {std::move(renderFrameFunc)}
+    _host {&host}
 {
-    _searchView->isVisible(false);
 }
 
-std::unique_ptr<const SearchQuery> SearchCtrl::startLive(const std::string& init,
-                                                         const LiveUpdateFunc& liveUpdateFunc)
+void SearchCtrl::startLive(std::string init, LiveUpdateFunc liveUpdateFunc, DoneFunc doneFunc)
 {
-    const auto lineLen = _searchView->contentRect().w - 2;
-    std::string buf = init;
-    const auto prevCursorIsVisible = term::cursorIsVisible();
+    assert(!this->isVisible());
+    _buf = std::move(init);
+    _accepted = false;
+    _liveUpdateFunc = std::move(liveUpdateFunc);
+    _doneFunc = std::move(doneFunc);
+    this->_tryLiveUpdate();
+    _host->openOverlay(*this);
+}
 
-    _searchView->isVisible(true);
-    this->_tryLiveUpdate(buf, liveUpdateFunc);
-
-    auto accepted = false;
-
-    while (true) {
-        _renderFrameFunc();
-
-        const auto key = term::readKey();
-
-        if (key.special() == SpecialKey::ENTER) {
-            accepted = true;
-            break;
-        } else if (key.special() == SpecialKey::BACKSPACE) {
-            if (!buf.empty()) {
-                unicode::popBackUtf8(buf);
-                this->_tryLiveUpdate(buf, liveUpdateFunc);
-            }
-        } else if (key.ch() == ctrlCh('W')) {
-            buf.clear();
-            this->_tryLiveUpdate(buf, liveUpdateFunc);
-        } else if (key.ch() == ctrlCh('D')) {
-            break;
-        } else if (const auto ch = key.printableCh()) {
-            auto newBuf = buf;
-
-            unicode::appendUtf8(newBuf, *ch);
-
-            if (term::strWidth(newBuf) > lineLen - 1) {
-                // no space
-                continue;
-            }
-
-            buf = std::move(newBuf);
-            this->_tryLiveUpdate(buf, liveUpdateFunc);
+bool SearchCtrl::_handleKey(const Key key)
+{
+    if (key.special() == SpecialKey::ENTER) {
+        _accepted = true;
+        return false;
+    } else if (key.ch() == ctrlCh('D')) {
+        return false;
+    } else if (key.special() == SpecialKey::BACKSPACE) {
+        if (!_buf.empty()) {
+            unicode::popBackUtf8(_buf);
+            this->_tryLiveUpdate();
         }
+    } else if (key.ch() == ctrlCh('W')) {
+        _buf.clear();
+        this->_tryLiveUpdate();
+    } else if (const auto ch = key.printableCh()) {
+        auto newBuf = _buf;
+
+        unicode::appendUtf8(newBuf, *ch);
+
+        if (term::strWidth(newBuf) > _searchView->contentRect().w - 3) {
+            // no space
+            return true;
+        }
+
+        _buf = std::move(newBuf);
+        this->_tryLiveUpdate();
     }
 
-    _searchView->isVisible(false);
+    return true;
+}
 
-    if (!prevCursorIsVisible) {
+void SearchCtrl::_render()
+{
+    _searchView->render();
+    term::showCursor({
+        _searchView->rect().pos.x + 1 + term::strWidth(_buf),
+        _searchView->rect().pos.y + 1
+    });
+}
+
+void SearchCtrl::_visibilityChanged()
+{
+    if (!this->isVisible()) {
+        // nothing renders the search view anymore
+        _searchView->detach();
         term::hideCursor();
     }
+}
 
-    if (!accepted || buf.empty()) {
-        return nullptr;
-    }
+void SearchCtrl::_closed()
+{
+    auto query = _accepted && !_buf.empty() ? parseSearchQuery(_buf) : nullptr;
 
-    return parseSearchQuery(buf);
+    // `doneFunc()` could start another search
+    const auto doneFunc = std::move(_doneFunc);
+
+    _liveUpdateFunc = nullptr;
+    _doneFunc = nullptr;
+    doneFunc(std::move(query));
 }
 
 std::optional<std::string> SearchCtrl::initFromKey(const Key key)
@@ -121,8 +134,15 @@ void SearchCtrl::parentScreenResized(const Screen& parentScreen)
 
 void SearchCtrl::animateWhile(const AnimatedFunc& func) const
 {
-    _searchView->isVisible(true);
-    _renderFrameFunc();
+    assert(!this->isVisible());
+    _host->renderFrame();
+
+    /*
+     * The search box is closed, therefore the main loop doesn't render
+     * the search view: render it on top of the frame.
+     */
+    _searchView->render();
+    term::update();
 
     /*
      * While `func()` runs, only draw the border animation of the search
@@ -137,24 +157,20 @@ void SearchCtrl::animateWhile(const AnimatedFunc& func) const
         term::update();
     });
 
-    _searchView->isVisible(false);
+    _searchView->detach();
 }
 
-void SearchCtrl::_tryLiveUpdate(const std::string& buf, const LiveUpdateFunc& liveUpdateFunc)
+void SearchCtrl::_tryLiveUpdate()
 {
-    const auto query = parseSearchQuery(buf);
+    const auto query = parseSearchQuery(_buf);
 
     if (query) {
+        // the live update could render something else
         term::hideCursor();
-        liveUpdateFunc(*query);
+        _liveUpdateFunc(*query);
     }
 
-    _searchView->text(buf);
-
-    term::showCursor({
-        _searchView->rect().pos.x + 1 + term::strWidth(buf),
-        _searchView->rect().pos.y + 1
-    });
+    _searchView->text(_buf);
 }
 
 } // namespace jacques

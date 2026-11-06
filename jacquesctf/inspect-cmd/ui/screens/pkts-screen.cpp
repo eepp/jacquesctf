@@ -19,13 +19,12 @@
 namespace jacques {
 
 PktsScreen::PktsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                       InspectCmdState& appState, SearchCtrl::RenderFrameFunc renderFrameFunc) :
-    Screen {rect, cfg, stylist, appState},
+                       InspectCmdState& appState, ScreenHost& host) :
+    Screen {rect, cfg, stylist, appState, host},
     _ptView {std::make_unique<PktTableView>(rect, stylist, appState)},
-    _searchCtrl {*this, stylist, std::move(renderFrameFunc)}
+    _searchCtrl {*this, stylist, host}
 {
     this->_addMainView(*_ptView);
-    this->_addView(_searchCtrl.view());
 }
 
 void PktsScreen::_resized()
@@ -100,21 +99,21 @@ private:
 
 } // namespace
 
-KeyHandlingReaction PktsScreen::_handleKey(const Key key)
+void PktsScreen::_handleKey(const Key key)
 {
     if (this->_handleDsFileKey(key) || this->_handleFmtModeKey(key)) {
-        return KeyHandlingReaction::CONTINUE;
+        return;
     }
 
     if (const auto init = SearchCtrl::initFromKey(key)) {
-        auto query = _searchCtrl.start(*init);
+        _searchCtrl.start(*init, [this](std::unique_ptr<const SearchQuery> query) {
+            if (query) {
+                this->_appState().search(*query);
+                _lastQuery = std::move(query);
+            }
+        });
 
-        if (query) {
-            this->_appState().search(*query);
-            _lastQuery = std::move(query);
-        }
-
-        return KeyHandlingReaction::CONTINUE;
+        return;
     }
 
     if (const auto specialKey = key.special()) {
@@ -125,7 +124,8 @@ KeyHandlingReaction PktsScreen::_handleKey(const Key key)
             }
 
             this->_appState().gotoPkt(_ptView->selPktIndex());
-            return KeyHandlingReaction::RETURN_TO_INSPECT;
+            this->_host().switchToInspectScreen();
+            break;
 
         case SpecialKey::F5:
             this->_appState().gotoPrevPkt();
@@ -163,8 +163,6 @@ KeyHandlingReaction PktsScreen::_handleKey(const Key key)
             break;
         }
     }
-
-    return KeyHandlingReaction::CONTINUE;
 }
 
 } // namespace jacques

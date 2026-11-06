@@ -12,21 +12,36 @@
 #include <string>
 
 #include "key.hpp"
+#include "overlay.hpp"
+#include "screen-host.hpp"
 #include "views/search-input-view.hpp"
 #include "screens/screen.hpp"
 #include "stylist.hpp"
 
 namespace jacques {
 
-class SearchCtrl final
+/*
+ * Search box of a screen.
+ *
+ * start() and startLive() open the search box as an overlay (see
+ * `Overlay`) and return immediately; the main loop then passes the user
+ * keys to it.
+ *
+ * When the user closes the search box, the search controller calls the
+ * done function with the accepted query (if any).
+ */
+class SearchCtrl final :
+    public Overlay
 {
 public:
     using LiveUpdateFunc = std::function<void (const SearchQuery&)>;
 
     /*
-     * Renders all the views of the terminal and updates it.
+     * Function which the search controller calls when the user closes
+     * the search box, with the accepted query, or `nullptr` if the user
+     * canceled the search or if the input text is empty or invalid.
      */
-    using RenderFrameFunc = std::function<void ()>;
+    using DoneFunc = std::function<void (std::unique_ptr<const SearchQuery>)>;
 
     /*
      * Draws the next frame of the border animation of the search view
@@ -41,19 +56,29 @@ public:
 
 public:
     /*
-     * Builds a search controller for the screen `parentScreen`.
-     *
-     * The search controller has its own event loop: it calls
-     * `renderFrameFunc()` to render the terminal.
-     *
-     * `parentScreen` must add view() last (see Screen::_addView()) so
-     * that the search view ends up on top of its other views.
+     * Builds a search controller for the screen `parentScreen` which
+     * `host` hosts.
      */
-    explicit SearchCtrl(const Screen& parentScreen, const Stylist& stylist,
-                        RenderFrameFunc renderFrameFunc);
+    explicit SearchCtrl(const Screen& parentScreen, const Stylist& stylist, ScreenHost& host);
 
-    [[ nodiscard ]] std::unique_ptr<const SearchQuery> startLive(const std::string& init,
-                                                                 const LiveUpdateFunc& liveUpdateFunc);
+    /*
+     * Opens the search box with the initial input text `init`.
+     *
+     * The search controller calls `liveUpdateFunc()` each time the
+     * input text becomes a valid query, and then `doneFunc()` when the
+     * user closes the search box.
+     */
+    void startLive(std::string init, LiveUpdateFunc liveUpdateFunc, DoneFunc doneFunc);
+
+    void start(std::string init, DoneFunc doneFunc)
+    {
+        this->startLive(std::move(init), [](const auto&) {}, std::move(doneFunc));
+    }
+
+    void start(DoneFunc doneFunc)
+    {
+        this->start(std::string {}, std::move(doneFunc));
+    }
 
     void parentScreenResized(const Screen& parentScreen);
 
@@ -85,32 +110,20 @@ public:
     static std::optional<std::string> initFromKey(Key key);
 
     /*
-     * Search view, which the parent screen renders.
-     */
-    View& view() noexcept
-    {
-        return *_searchView;
-    }
-
-    /*
-     * Shows the search view and calls `func()` with a function which
-     * animates its border, which `func()` calls periodically while it
-     * works, then hides the search view.
+     * Renders the whole terminal with the search view on top, and then
+     * calls `func()` with a function which animates the border of the
+     * search view, which `func()` calls periodically while it works.
+     *
+     * The search box must be closed.
      */
     void animateWhile(const AnimatedFunc& func) const;
 
-    [[ nodiscard ]] std::unique_ptr<const SearchQuery> start(const std::string& init)
-    {
-        return this->startLive(init, [](const auto&) {});
-    }
-
-    [[ nodiscard ]] std::unique_ptr<const SearchQuery> start()
-    {
-        return this->start(std::string {});
-    }
-
 private:
-    void _tryLiveUpdate(const std::string& buf, const LiveUpdateFunc& liveUpdateFunc);
+    void _render() override;
+    bool _handleKey(Key key) override;
+    void _visibilityChanged() override;
+    void _closed() override;
+    void _tryLiveUpdate();
 
     static Rect _viewRect(const Screen& parentScreen) noexcept
     {
@@ -121,7 +134,16 @@ private:
 
 private:
     std::unique_ptr<SearchInputView> _searchView;
-    RenderFrameFunc _renderFrameFunc;
+    ScreenHost *_host;
+
+    // current input text
+    std::string _buf;
+
+    // whether or not the user accepted the input text
+    bool _accepted = false;
+
+    LiveUpdateFunc _liveUpdateFunc;
+    DoneFunc _doneFunc;
 };
 
 } // namespace jacques

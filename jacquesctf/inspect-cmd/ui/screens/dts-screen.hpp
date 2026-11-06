@@ -23,21 +23,24 @@ class DtsScreen final :
     public Screen
 {
 public:
-    /*
-     * `renderFrameFunc` renders the whole terminal (see `SearchCtrl`).
-     */
     explicit DtsScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                       InspectCmdState& appState, SearchCtrl::RenderFrameFunc renderFrameFunc);
+                       InspectCmdState& appState, ScreenHost& host);
     void highlightCurDt();
     void clearHighlight();
 
 private:
     void _resized() override;
-    KeyHandlingReaction _handleKey(Key key) override;
+    void _handleKey(Key key) override;
     void _focusedViewHandledKey(Key key) override;
     void _visibilityChanged() override;
     std::tuple<Rect, Rect, Rect> _viewRects() const;
     void _updateViews();
+
+    /*
+     * Selects the event record type which the accepted query `query`,
+     * if any, matches.
+     */
+    void _searchAccepted(std::unique_ptr<const SearchQuery> query);
 
 private:
     std::unique_ptr<ErtTableView> _ertTableView;

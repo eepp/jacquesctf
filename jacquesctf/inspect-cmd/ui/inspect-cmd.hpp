@@ -8,13 +8,6 @@
 
 namespace jacques {
 
-enum class KeyHandlingReaction
-{
-    CONTINUE,
-    RETURN_TO_INSPECT,
-    RETURN_TO_PKTS,
-};
-
 class InspectCfg;
 
 /*

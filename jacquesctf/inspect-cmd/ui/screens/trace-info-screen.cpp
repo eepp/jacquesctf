@@ -12,17 +12,16 @@
 namespace jacques {
 
 TraceInfoScreen::TraceInfoScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                                 InspectCmdState& appState) :
-    Screen {rect, cfg, stylist, appState},
+                                 InspectCmdState& appState, ScreenHost& host) :
+    Screen {rect, cfg, stylist, appState, host},
     _view {std::make_unique<TraceInfoView>(rect, stylist, appState)}
 {
     this->_addMainView(*_view);
 }
 
-KeyHandlingReaction TraceInfoScreen::_handleKey(const Key key)
+void TraceInfoScreen::_handleKey(const Key key)
 {
     this->_handleDsFileKey(key);
-    return KeyHandlingReaction::CONTINUE;
 }
 
 } // namespace jacques

@@ -12,34 +12,32 @@
 namespace jacques {
 
 DsFilesScreen::DsFilesScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                             InspectCmdState& appState) :
-    Screen {rect, cfg, stylist, appState},
+                             InspectCmdState& appState, ScreenHost& host) :
+    Screen {rect, cfg, stylist, appState, host},
     _view {std::make_unique<DsFileTableView>(rect, stylist, appState)}
 {
     _view->selectFirst();
     this->_addMainView(*_view);
 }
 
-KeyHandlingReaction DsFilesScreen::_handleKey(const Key key)
+void DsFilesScreen::_handleKey(const Key key)
 {
     if (this->_handleDsFileKey(key) || this->_handleFmtModeKey(key)) {
-        return KeyHandlingReaction::CONTINUE;
+        return;
     }
 
     if (key.special() != SpecialKey::ENTER) {
-        return KeyHandlingReaction::CONTINUE;
+        return;
     }
 
     this->_appState().gotoDsFile(_view->selDsFileIndex());
 
     const auto pktCount = this->_appState().activeDsFileState().dsFile().pktCount();
 
-    if (pktCount == 0) {
-        return KeyHandlingReaction::CONTINUE;
-    } else if (pktCount == 1) {
-        return KeyHandlingReaction::RETURN_TO_INSPECT;
-    } else {
-        return KeyHandlingReaction::RETURN_TO_PKTS;
+    if (pktCount == 1) {
+        this->_host().switchToInspectScreen();
+    } else if (pktCount > 1) {
+        this->_host().switchToPktsScreen();
     }
 }
 

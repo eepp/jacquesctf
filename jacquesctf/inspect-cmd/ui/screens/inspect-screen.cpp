@@ -22,13 +22,12 @@
 namespace jacques {
 
 InspectScreen::InspectScreen(const Rect& rect, const InspectCfg& cfg, const Stylist& stylist,
-                             InspectCmdState& appState,
-                             SearchCtrl::RenderFrameFunc renderFrameFunc) :
-    Screen {rect, cfg, stylist, appState},
+                             InspectCmdState& appState, ScreenHost& host) :
+    Screen {rect, cfg, stylist, appState, host},
     _decErrorView {
         std::make_unique<PktDecodingErrorDetailsView>(rect, stylist, appState)
     },
-    _searchCtrl {*this, stylist, std::move(renderFrameFunc)},
+    _searchCtrl {*this, stylist, host},
     _curStateSnapshot {_stateSnapshots.end()},
     _ertViewDispModeWheel {
         _ErtViewDispMode::SHORT,
@@ -45,8 +44,7 @@ InspectScreen::InspectScreen(const Rect& rect, const InspectCfg& cfg, const Styl
 
     // in stacking order: overlays last
     for (const auto view : std::initializer_list<View *> {
-        _pdView.get(), _ertView.get(), _priView.get(), _sdteView.get(), _decErrorView.get(),
-        &_searchCtrl.view()
+        _pdView.get(), _ertView.get(), _priView.get(), _sdteView.get(), _decErrorView.get()
     }) {
         this->_addView(*view);
     }
@@ -290,27 +288,35 @@ void InspectScreen::_search(const SearchQuery& query, const bool animate)
 
 void InspectScreen::_startSearch(const std::string& init, const bool live)
 {
-    std::unique_ptr<const SearchQuery> query;
+    if (!live) {
+        _searchCtrl.start(init, [this](std::unique_ptr<const SearchQuery> query) {
+            this->_searchAccepted(std::move(query));
+        });
 
-    if (live) {
-        const auto snapshot = this->_takeStateSnapshot();
-        const auto liveUpdateFunc = [this, snapshot](const auto& query) {
-            // start from initial state
-            this->_restoreStateSnapshot(snapshot);
-
-            if (!dynamic_cast<const ErtNameSearchQuery *>(&query) &&
-                    !dynamic_cast<const ErtIdSearchQuery *>(&query)) {
-                // this makes the appropriate views update and redraw
-                this->_appState().search(query);
-            }
-        };
-
-        query = _searchCtrl.startLive(init, liveUpdateFunc);
-        this->_restoreStateSnapshot(snapshot);
-    } else {
-        query = _searchCtrl.start(init);
+        return;
     }
 
+    const auto snapshot = this->_takeStateSnapshot();
+    const auto liveUpdateFunc = [this, snapshot](const auto& query) {
+        // start from initial state
+        this->_restoreStateSnapshot(snapshot);
+
+        if (!dynamic_cast<const ErtNameSearchQuery *>(&query) &&
+                !dynamic_cast<const ErtIdSearchQuery *>(&query)) {
+            // this makes the appropriate views update and redraw
+            this->_appState().search(query);
+        }
+    };
+
+    _searchCtrl.startLive(init, liveUpdateFunc,
+                          [this, snapshot](std::unique_ptr<const SearchQuery> query) {
+        this->_restoreStateSnapshot(snapshot);
+        this->_searchAccepted(std::move(query));
+    });
+}
+
+void InspectScreen::_searchAccepted(std::unique_ptr<const SearchQuery> query)
+{
     if (!query) {
         // canceled or invalid
         return;
@@ -328,7 +334,7 @@ void InspectScreen::_startSearch(const std::string& init, const bool live)
     this->_tryShowDecodingError();
 }
 
-KeyHandlingReaction InspectScreen::_handleKey(const Key key)
+void InspectScreen::_handleKey(const Key key)
 {
     const auto goingToBookmark = _goingToBookmark;
     const auto decErrorViewWasVisible = _decErrorView->isVisible();
@@ -343,19 +349,19 @@ KeyHandlingReaction InspectScreen::_handleKey(const Key key)
     if (this->_handleDsFileKey(key)) {
         this->_snapshotState();
         this->_tryShowDecodingError();
-        return KeyHandlingReaction::CONTINUE;
+        return;
     }
 
     if (this->_handleFmtModeKey(key)) {
-        return KeyHandlingReaction::CONTINUE;
+        return;
     }
 
     if (key.ch() == U'G') {
         this->_startSearch({}, true);
-        return KeyHandlingReaction::CONTINUE;
+        return;
     } else if (const auto init = SearchCtrl::initFromKey(key)) {
         this->_startSearch(*init, false);
-        return KeyHandlingReaction::CONTINUE;
+        return;
     }
 
     if (const auto specialKey = key.special()) {
@@ -614,8 +620,6 @@ KeyHandlingReaction InspectScreen::_handleKey(const Key key)
             break;
         }
     }
-
-    return KeyHandlingReaction::CONTINUE;
 }
 
 } // namespace jacques
