@@ -208,10 +208,6 @@ void DtsScreen::_handleKey(const Key key)
             break;
 
         case SpecialKey::RIGHT:
-            if (focusedView == _dtExplorerView.get()) {
-                break;
-            }
-
             this->_focus(*_dtExplorerView);
             this->_updateViews();
             break;
