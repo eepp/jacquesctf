@@ -102,24 +102,22 @@ void DtsScreen::highlightCurDt()
     const auto curDst = activePktState.pktIndexEntry().dst();
     const auto curEr = this->_appState().curEr();
 
-    if (curEr && curEr->type()) {
-        assert(curDst);
+    if (curDst) {
+        _dstTableView->selectDst(curDst->id());
+        _ertTableView->dst(*curDst);
 
-        _dstTableView->selectDst(curDst->id());
-        _ertTableView->dst(*curDst);
-        _ertTableView->selectErt(curEr->type()->id());
+        if (curEr && curEr->type()) {
+            _ertTableView->selectErt(curEr->type()->id());
+            _dtExplorerView->ert(*curEr->type());
+            this->_focus(*_ertTableView);
+        } else {
+            _ertTableView->selectFirst();
+            _dtExplorerView->dst(*curDst);
+            this->_focus(*_dstTableView);
+        }
+
         _dstTableView->centerSelRow();
         _ertTableView->centerSelRow();
-        _dtExplorerView->ert(*curEr->type());
-        this->_focus(*_ertTableView);
-    } else if (curDst) {
-        _dstTableView->selectDst(curDst->id());
-        _ertTableView->dst(*curDst);
-        _ertTableView->selectFirst();
-        _dstTableView->centerSelRow();
-        _ertTableView->centerSelRow();
-        _dtExplorerView->dst(*curDst);
-        this->_focus(*_dstTableView);
     }
 
     _dtExplorerView->clearHighlight();
