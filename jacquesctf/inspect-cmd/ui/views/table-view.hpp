@@ -12,7 +12,7 @@
 #include <functional>
 #include <boost/filesystem.hpp>
 
-#include "inspect-common/common-inspect-table-view.hpp"
+#include "inspect-common/table-nav.hpp"
 #include "view.hpp"
 #include "../stylist.hpp"
 #include "../rect.hpp"
@@ -34,7 +34,7 @@ namespace jacques {
  */
 class TableView :
     public View,
-    public CommonInspectTableView
+    public TableNav
 {
 public:
     void centerSelRow();
@@ -151,7 +151,7 @@ protected:
                        const Stylist& stylist, const InspectCmdState& appState);
 
     virtual Size _rowCount() = 0;
-    using CommonInspectTableView::_updateCounts;
+    using TableNav::_updateCounts;
     void _updateCounts();
     void _cols(std::vector<_Col>&& cols);
     void _redrawContent() override;

@@ -403,7 +403,7 @@ void TableView::_selectRow(const Index row)
 
 void TableView::_removeSel()
 {
-    CommonInspectTableView::_removeSel();
+    TableNav::_removeSel();
     this->_invalidate();
 }
 

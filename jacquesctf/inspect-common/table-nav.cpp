@@ -6,11 +6,11 @@
 #include <cassert>
 #include <algorithm>
 
-#include "common-inspect-table-view.hpp"
+#include "table-nav.hpp"
 
 namespace jacques {
 
-void CommonInspectTableView::_updateCounts(const Size rowCount, const Size maxVisibleRowCount)
+void TableNav::_updateCounts(const Size rowCount, const Size maxVisibleRowCount)
 {
     if (rowCount != _theRowCount) {
         _theFirstVisibleRow = 0;
@@ -22,7 +22,7 @@ void CommonInspectTableView::_updateCounts(const Size rowCount, const Size maxVi
     _theFirstVisibleRow = std::min(_theFirstVisibleRow, this->_maxFirstVisibleRow());
 }
 
-bool CommonInspectTableView::_firstVisibleRow(const Index firstVisibleRow)
+bool TableNav::_firstVisibleRow(const Index firstVisibleRow)
 {
     assert(firstVisibleRow <= this->_maxFirstVisibleRow());
 
@@ -34,12 +34,12 @@ bool CommonInspectTableView::_firstVisibleRow(const Index firstVisibleRow)
     return true;
 }
 
-CommonInspectTableView::_Change CommonInspectTableView::_selFirstRow(const bool ensureVisible)
+TableNav::_Change TableNav::_selFirstRow(const bool ensureVisible)
 {
     return this->_selRow(0, ensureVisible);
 }
 
-CommonInspectTableView::_Change CommonInspectTableView::_selLastRow(const bool ensureVisible)
+TableNav::_Change TableNav::_selLastRow(const bool ensureVisible)
 {
     if (_theRowCount == 0) {
         return _Change::NONE;
@@ -48,8 +48,7 @@ CommonInspectTableView::_Change CommonInspectTableView::_selLastRow(const bool e
     return this->_selRow(_theRowCount - 1, ensureVisible);
 }
 
-CommonInspectTableView::_Change CommonInspectTableView::_selNextRow(const Size steps,
-                                                                    const bool ensureVisible)
+TableNav::_Change TableNav::_selNextRow(const Size steps, const bool ensureVisible)
 {
     if (!_theSelRow) {
         return _Change::NONE;
@@ -58,8 +57,7 @@ CommonInspectTableView::_Change CommonInspectTableView::_selNextRow(const Size s
     return this->_selRow(std::min(*_theSelRow + steps, _theRowCount - 1), ensureVisible);
 }
 
-CommonInspectTableView::_Change CommonInspectTableView::_selPrevRow(const Size steps,
-                                                                    const bool ensureVisible)
+TableNav::_Change TableNav::_selPrevRow(const Size steps, const bool ensureVisible)
 {
     if (!_theSelRow) {
         return _Change::NONE;
@@ -68,8 +66,7 @@ CommonInspectTableView::_Change CommonInspectTableView::_selPrevRow(const Size s
     return this->_selRow(*_theSelRow - std::min(steps, *_theSelRow), ensureVisible);
 }
 
-CommonInspectTableView::_Change CommonInspectTableView::_selRow(const Index row,
-                                                                const bool ensureVisible)
+TableNav::_Change TableNav::_selRow(const Index row, const bool ensureVisible)
 {
     if (_theRowCount == 0) {
         return _Change::NONE;
@@ -94,43 +91,43 @@ CommonInspectTableView::_Change CommonInspectTableView::_selRow(const Index row,
     return _Change::SELECTED_ROW;
 }
 
-void CommonInspectTableView::_removeSel()
+void TableNav::_removeSel()
 {
     _theSelRow.reset();
 }
 
-bool CommonInspectTableView::_goUp(const Size steps)
+bool TableNav::_goUp(const Size steps)
 {
     return this->_firstVisibleRow(_theFirstVisibleRow - std::min(steps, _theFirstVisibleRow));
 }
 
-bool CommonInspectTableView::_goDown(const Size steps)
+bool TableNav::_goDown(const Size steps)
 {
     return this->_firstVisibleRow(std::min(_theFirstVisibleRow + steps,
                                            this->_maxFirstVisibleRow()));
 }
 
-bool CommonInspectTableView::_pageUp()
+bool TableNav::_pageUp()
 {
     return this->_goUp(_theMaxVisibleRowCount);
 }
 
-bool CommonInspectTableView::_pageDown()
+bool TableNav::_pageDown()
 {
     return this->_goDown(_theMaxVisibleRowCount);
 }
 
-bool CommonInspectTableView::_showFirstPage()
+bool TableNav::_showFirstPage()
 {
     return this->_firstVisibleRow(0);
 }
 
-bool CommonInspectTableView::_showLastPage()
+bool TableNav::_showLastPage()
 {
     return this->_firstVisibleRow(this->_maxFirstVisibleRow());
 }
 
-bool CommonInspectTableView::_centerOnRow(const Index row)
+bool TableNav::_centerOnRow(const Index row)
 {
     assert(row < _theRowCount);
 
@@ -140,7 +137,7 @@ bool CommonInspectTableView::_centerOnRow(const Index row)
                                            this->_maxFirstVisibleRow()));
 }
 
-bool CommonInspectTableView::_centerOnSelRow()
+bool TableNav::_centerOnSelRow()
 {
     if (!_theSelRow) {
         return false;
@@ -149,41 +146,41 @@ bool CommonInspectTableView::_centerOnSelRow()
     return this->_centerOnRow(*_theSelRow);
 }
 
-Index CommonInspectTableView::_maxFirstVisibleRow() const noexcept
+Index TableNav::_maxFirstVisibleRow() const noexcept
 {
     return this->_isSinglePage() ? 0 : _theRowCount - _theMaxVisibleRowCount;
 }
 
-Size CommonInspectTableView::_visibleRowCount() const noexcept
+Size TableNav::_visibleRowCount() const noexcept
 {
     return std::min(_theRowCount, _theMaxVisibleRowCount);
 }
 
-Index CommonInspectTableView::_lastVisibleRow() const noexcept
+Index TableNav::_lastVisibleRow() const noexcept
 {
     assert(_theRowCount > 0);
     return _theFirstVisibleRow + this->_visibleRowCount() - 1;
 }
 
-bool CommonInspectTableView::_rowIsVisible(const Index row) const noexcept
+bool TableNav::_rowIsVisible(const Index row) const noexcept
 {
     assert(row < _theRowCount);
     return row >= _theFirstVisibleRow && row < _theFirstVisibleRow + this->_visibleRowCount();
 }
 
-Index CommonInspectTableView::_yIndexFromVisibleRow(const Index row) const noexcept
+Index TableNav::_yIndexFromVisibleRow(const Index row) const noexcept
 {
     assert(this->_rowIsVisible(row));
     return row - _theFirstVisibleRow;
 }
 
-Index CommonInspectTableView::_rowFromYIndex(const Index yIndex) const noexcept
+Index TableNav::_rowFromYIndex(const Index yIndex) const noexcept
 {
     assert(_theFirstVisibleRow + yIndex < _theRowCount);
     return _theFirstVisibleRow + yIndex;
 }
 
-bool CommonInspectTableView::_isSinglePage() const noexcept
+bool TableNav::_isSinglePage() const noexcept
 {
     return _theRowCount <= _theMaxVisibleRowCount;
 }

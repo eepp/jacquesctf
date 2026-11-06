@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
-#ifndef _JACQUES_INSPECT_COMMON_COMMON_INSPECT_TABLE_VIEW_HPP
-#define _JACQUES_INSPECT_COMMON_COMMON_INSPECT_TABLE_VIEW_HPP
+#ifndef _JACQUES_INSPECT_COMMON_TABLE_NAV_HPP
+#define _JACQUES_INSPECT_COMMON_TABLE_NAV_HPP
 
 #include <optional>
 
@@ -12,7 +12,7 @@
 
 namespace jacques {
 
-class CommonInspectTableView
+class TableNav
 {
 protected:
     enum class _Change
@@ -23,7 +23,7 @@ protected:
     };
 
 protected:
-    CommonInspectTableView() = default;
+    TableNav() = default;
     void _updateCounts(Size rowCount, Size maxVisibleRowCount);
     bool _firstVisibleRow(Index firstVisibleRow);
     _Change _selFirstRow(bool ensureVisible = false);
@@ -82,4 +82,4 @@ private:
 
 } // namespace jacques
 
-#endif // _JACQUES_INSPECT_COMMON_COMMON_INSPECT_TABLE_VIEW_HPP
+#endif // _JACQUES_INSPECT_COMMON_TABLE_NAV_HPP

@@ -88,10 +88,10 @@ if (JACQUES_HAS_INSPECT_CMD)
     set (
         JACQUES_INSPECT_COMMON_SOURCES
         inspect-common/app-state.cpp
-        inspect-common/common-inspect-table-view.cpp
         inspect-common/ds-file-state.cpp
         inspect-common/pkt-state.cpp
         inspect-common/search-query.cpp
+        inspect-common/table-nav.cpp
     )
 endif ()
 

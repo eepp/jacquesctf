@@ -6,7 +6,7 @@
 #ifndef _JACQUES_INSPECT_CMD_UI_VIEWS_SCROLL_VIEW_HPP
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_SCROLL_VIEW_HPP
 
-#include "inspect-common/common-inspect-table-view.hpp"
+#include "inspect-common/table-nav.hpp"
 #include "view.hpp"
 
 namespace jacques {
@@ -16,11 +16,11 @@ namespace jacques {
  * Down, Page Up, Page Down, Home, and End (see _handleKey()).
  *
  * The scrolling logic is the one of a table view without a selection
- * (see `CommonInspectTableView`).
+ * (see `TableNav`).
  */
 class ScrollView :
     public View,
-    private CommonInspectTableView
+    private TableNav
 {
 protected:
     explicit ScrollView(const Rect& rect, std::string_view title, DecorationStyle decoStyle,
