@@ -77,6 +77,9 @@ protected:
 
             // dimmed (UTC offset of a timestamp, for example)
             DIM,
+
+            // unit (`MiB`, `ns`, `cc`)
+            UNIT,
         };
 
         struct Seg final
@@ -228,6 +231,9 @@ protected:
     _Cell _createDurationCell(const Ts& beginTs, const Ts& endTs) const;
 
 private:
+    // `qty` followed with `unit` (including any leading space) cell
+    static _Cell _createQtyCell(std::string qty, std::string unit);
+
     // "seconds,nanoseconds ns" cell, the nanosecond part being softly accented
     static _Cell _createNsCell(const char *sign, long long ns);
 

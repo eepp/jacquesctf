@@ -63,6 +63,9 @@ public:
          */
         SOFT_ACCENT,
 
+        // unit of a table value (`MiB`, `ns`, `cc`)
+        UNIT,
+
         /*
          * Symbol: key in the help, data type kind, search wildcard,
          * "more text" arrow.

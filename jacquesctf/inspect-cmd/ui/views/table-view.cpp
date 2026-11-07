@@ -249,6 +249,10 @@ void TableView::_applySegStyle(const _Cell::SegRole role, const bool emph)
     case _Cell::SegRole::SOFT_ACCENT:
         this->_style(Stylist::Role::SOFT_ACCENT, emph);
         break;
+
+    case _Cell::SegRole::UNIT:
+        this->_style(Stylist::Role::UNIT, emph);
+        break;
     }
 }
 
@@ -419,15 +423,26 @@ TableView::_Cell TableView::_createDataLenCell(const DataLen& len) const
         const auto& unit = fullFmtLen->unit;
 
         // right-align the unit within four columns
-        return _Cell {
-            withExtraBits(fullFmtLen->qty, fullFmtLen->extraBits) +
-            std::string(unit.size() < 4 ? 4 - unit.size() : 0, ' ') + unit
-        };
+        return this->_createQtyCell(withExtraBits(fullFmtLen->qty, fullFmtLen->extraBits),
+                                    std::string(unit.size() < 4 ? 4 - unit.size() : 0, ' ') + unit);
     } else if (const auto bytesFmtLen = std::get_if<BytesFmtDataLen>(&fmtLen)) {
-        return _Cell {withExtraBits(bytesFmtLen->bytes, bytesFmtLen->extraBits) + " B"};
+        return this->_createQtyCell(withExtraBits(bytesFmtLen->bytes, bytesFmtLen->extraBits),
+                                    " B");
     }
 
-    return _Cell {std::get<BitsFmtDataLen>(fmtLen).bits + " b"};
+    return this->_createQtyCell(std::get<BitsFmtDataLen>(fmtLen).bits, " b");
+}
+
+TableView::_Cell TableView::_createQtyCell(std::string qty, std::string unit)
+{
+    _Cell cell;
+
+    cell.segs = {
+        {std::move(qty), _Cell::SegRole::TEXT},
+        {std::move(unit), _Cell::SegRole::UNIT},
+    };
+
+    return cell;
 }
 
 TableView::_Cell TableView::_createNsCell(const char * const sign, const long long ns)
@@ -438,7 +453,7 @@ TableView::_Cell TableView::_createNsCell(const char * const sign, const long lo
     cell.segs = {
         {sign + sPart + ',', _Cell::SegRole::TEXT},
         {nsPart, _Cell::SegRole::SOFT_ACCENT},
-        {" ns", _Cell::SegRole::TEXT},
+        {" ns", _Cell::SegRole::UNIT},
     };
 
     return cell;
@@ -482,7 +497,7 @@ TableView::_Cell TableView::_createTsCell(const Ts& ts) const
         return this->_createNsCell("", ts.nsFromOrigin());
 
     case TsFmtMode::CYCLES:
-        return _Cell {utils::sepNumber(ts.cycles(), ',') + " cc"};
+        return this->_createQtyCell(utils::sepNumber(ts.cycles(), ','), " cc");
     }
 
     std::abort();
@@ -518,7 +533,7 @@ TableView::_Cell TableView::_createDurationCell(const Ts& beginTs, const Ts& end
         const auto sDiff = static_cast<double>(absDuration.ns()) / 1'000'000'000.;
         const auto cycleDiff = static_cast<long long>(sDiff * beginTs.freq());
 
-        return _Cell {sign + utils::sepNumber(cycleDiff, ',') + " cc"};
+        return this->_createQtyCell(sign + utils::sepNumber(cycleDiff, ','), " cc");
     }
     }
 
