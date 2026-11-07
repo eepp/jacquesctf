@@ -15,21 +15,6 @@
 
 namespace jacques {
 
-PktsScreen::PktsScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
-                       ScreenHost& host) :
-    Screen {rect, stylist, appState, host},
-    _ptView {std::make_unique<PktTableView>(rect, stylist, appState)},
-    _searchCtrl {*this, stylist, host}
-{
-    this->_addMainView(*_ptView);
-}
-
-void PktsScreen::_resized()
-{
-    Screen::_resized();
-    _searchCtrl.parentScreenResized(*this);
-}
-
 namespace {
 
 class AnalyzeAllPktsProgressUpdater final :
@@ -95,6 +80,21 @@ private:
 };
 
 } // namespace
+
+PktsScreen::PktsScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
+                       ScreenHost& host) :
+    Screen {rect, stylist, appState, host},
+    _ptView {std::make_unique<PktTableView>(rect, stylist, appState)},
+    _searchCtrl {*this, stylist, host}
+{
+    this->_addMainView(*_ptView);
+}
+
+void PktsScreen::_resized()
+{
+    Screen::_resized();
+    _searchCtrl.parentScreenResized(*this);
+}
 
 void PktsScreen::_handleKey(const Key key)
 {
