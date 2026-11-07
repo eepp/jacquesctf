@@ -41,7 +41,7 @@ ErTableView::ErTableView(const Rect& rect, const Stylist& stylist, InspectCmdSta
 
             return type ? this->_createUIntCell(type->id()) : this->_createNaCell();
         }},
-        _Col {"Timestamp", this->_tsColWidth(), _COL_TS, [this](const Index row) {
+        _Col {"Timestamp", this->_tsColWidth(), _COL_TS | _COL_DIM_SAME, [this](const Index row) {
             const auto& ts = this->_er(row).ts();
 
             return ts ? this->_createTsCell(*ts) : this->_createNaCell();

@@ -83,6 +83,19 @@ protected:
         {
             std::string text;
             SegRole role;
+
+            /*
+             * Within a `_COL_DIM_SAME` column, dimmed when the segment
+             * at the same index within the cell of the previous visible
+             * row also
+             * has this flag and the same text, and when all the
+             * preceding segments having this flag are also dimmed (for
+             * example, the time of a timestamp isn't dimmed when its
+             * date changes).
+             *
+             * The first visible row never has such dimmed segments.
+             */
+            bool dimIfSameAsPrev = false;
         };
 
         _Cell() = default;
@@ -107,6 +120,14 @@ protected:
      * the same for all the timestamps (see _createTsCell()).
      */
     static constexpr unsigned int _COL_TS = 1U << 4;
+
+    /*
+     * Dims the segments which are the same as the ones of the previous
+     * visible row (see `_Cell::Seg::dimIfSameAsPrev`).
+     *
+     * This only makes sense when the rows are sorted by this column.
+     */
+    static constexpr unsigned int _COL_DIM_SAME = 1U << 5;
 
     class _Col final
     {
@@ -198,6 +219,10 @@ protected:
      *
      * The cell only shows the local UTC offset when it differs from
      * the one which the column title shows.
+     *
+     * Within a `_COL_DIM_SAME` column, the date and time parts are
+     * dimmed when they're the same as the ones of the previous visible
+     * row (see `_Cell::Seg::dimIfSameAsPrev`).
      */
     _Cell _createTsCell(const Ts& ts) const;
     _Cell _createDurationCell(const Ts& beginTs, const Ts& endTs) const;
@@ -216,7 +241,8 @@ private:
     void _fitCols();
     void _drawHeader();
     void _drawRows();
-    void _drawRow(Index row);
+    std::vector<_Cell> _drawRow(Index row, const std::vector<_Cell>& prevCells);
+    static void _dimSameSegs(_Cell& cell, const _Cell& prevCell);
     void _drawCell(const Point& contentPos, Size width, const _Col& col, const _Cell& cell,
                    bool sel);
     void _applySegStyle(_Cell::SegRole role, bool emph);

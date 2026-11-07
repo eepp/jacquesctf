@@ -314,10 +314,32 @@ void TableView::_drawCell(const Point& contentPos, const Size width, const _Col&
     }
 }
 
-void TableView::_drawRow(const Index row)
+void TableView::_dimSameSegs(_Cell& cell, const _Cell& prevCell)
+{
+    for (Index segIndex = 0; segIndex < std::min(cell.segs.size(), prevCell.segs.size());
+            ++segIndex) {
+        auto& seg = cell.segs[segIndex];
+        const auto& prevSeg = prevCell.segs[segIndex];
+
+        if (!seg.dimIfSameAsPrev) {
+            continue;
+        }
+
+        if (!prevSeg.dimIfSameAsPrev || seg.text != prevSeg.text) {
+            // don't dim the following segments either
+            break;
+        }
+
+        seg.role = _Cell::SegRole::DIM;
+    }
+}
+
+std::vector<TableView::_Cell> TableView::_drawRow(const Index row,
+                                                  const std::vector<_Cell>& prevCells)
 {
     const auto sel = this->_rowIsSel(row) && _highlightSel;
     const auto y = this->_contentYFromVisibleRow(row);
+    std::vector<_Cell> cells;
     Index x = 0;
 
     // set style to clear row initially
@@ -329,7 +351,15 @@ void TableView::_drawRow(const Index row)
         const auto& col = _theCols[colIndex];
         const auto width = _colWidths[colIndex];
 
-        this->_drawCell({x, y}, width, col, col.cell(row), sel);
+        cells.push_back(col.cell(row));
+
+        auto& cell = cells.back();
+
+        if (!prevCells.empty() && (col.flags() & _COL_DIM_SAME)) {
+            _dimSameSegs(cell, prevCells[colIndex]);
+        }
+
+        this->_drawCell({x, y}, width, col, cell, sel);
         x += width;
 
         if (colIndex == _colWidths.size() - 1) {
@@ -341,6 +371,8 @@ void TableView::_drawRow(const Index row)
         this->_write({x, y}, glyphs::VLINE);
         x += 1;
     }
+
+    return cells;
 }
 
 TableView::_Cell TableView::_createNaCell()
@@ -408,8 +440,14 @@ TableView::_Cell TableView::_createTsCell(const Ts& ts) const
     switch (ts.effectiveFmtMode(fmtMode)) {
     case TsFmtMode::LONG:
     {
-        const auto fmtTs = std::get<LongFmtTs>(ts.format(fmtMode));
-        _Cell cell {fmtTs.date + ' ' + fmtTs.time + '.' + fmtTs.ns};
+        auto fmtTs = std::get<LongFmtTs>(ts.format(fmtMode));
+        _Cell cell;
+
+        cell.segs = {
+            {std::move(fmtTs.date) + ' ', _Cell::SegRole::TEXT, true},
+            {std::move(fmtTs.time), _Cell::SegRole::TEXT, true},
+            {'.' + fmtTs.ns, _Cell::SegRole::TEXT},
+        };
 
         this->_tryAppendUtcOffsetSeg(cell, fmtTs.utcOffset);
         return cell;
@@ -417,8 +455,13 @@ TableView::_Cell TableView::_createTsCell(const Ts& ts) const
 
     case TsFmtMode::SHORT:
     {
-        const auto fmtTs = std::get<ShortFmtTs>(ts.format(fmtMode));
-        _Cell cell {fmtTs.time + '.' + fmtTs.ns};
+        auto fmtTs = std::get<ShortFmtTs>(ts.format(fmtMode));
+        _Cell cell;
+
+        cell.segs = {
+            {std::move(fmtTs.time), _Cell::SegRole::TEXT, true},
+            {'.' + fmtTs.ns, _Cell::SegRole::TEXT},
+        };
 
         this->_tryAppendUtcOffsetSeg(cell, fmtTs.utcOffset);
         return cell;
@@ -489,9 +532,12 @@ void TableView::_drawRows()
         return;
     }
 
+    // cells of the previous visible row (none for the first one)
+    std::vector<_Cell> prevCells;
+
     for (auto row = this->_firstVisibleRow();
             row < this->_firstVisibleRow() + this->_visibleRowCount(); ++row) {
-        this->_drawRow(row);
+        prevCells = this->_drawRow(row, prevCells);
     }
 
     this->_style(Stylist::Role::FAINT);

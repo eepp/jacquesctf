@@ -28,7 +28,7 @@ PktTableView::PktTableView(const Rect& rect, const Stylist& stylist, InspectCmdS
         this->_createCol("Content length", 16, _COL_REQUIRED, [this](const PktIndexEntry& entry) {
             return this->_createDataLenCell(entry.effectiveContentLen());
         }),
-        this->_createCol("Timestamp: beginning", this->_tsColWidth(), _COL_TS, [this](const PktIndexEntry& entry) {
+        this->_createCol("Timestamp: beginning", this->_tsColWidth(), _COL_TS | _COL_DIM_SAME, [this](const PktIndexEntry& entry) {
             const auto& beginTs = entry.beginTs();
 
             if (!beginTs) {
@@ -45,7 +45,7 @@ PktTableView::PktTableView(const Rect& rect, const Stylist& stylist, InspectCmdS
 
             return cell;
         }),
-        this->_createCol("Timestamp: end", this->_tsColWidth(), _COL_TS, [this](const PktIndexEntry& entry) {
+        this->_createCol("Timestamp: end", this->_tsColWidth(), _COL_TS | _COL_DIM_SAME, [this](const PktIndexEntry& entry) {
             const auto& endTs = entry.endTs();
 
             if (!endTs) {
