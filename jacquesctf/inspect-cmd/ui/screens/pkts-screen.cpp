@@ -35,9 +35,12 @@ public:
 private:
     void _startBuild(const DsFile&, const PktIndexEntry& pktIndexEntry) override
     {
-        ++_pktCount;
+        // besides large packets, show the progress of one packet out of this many
+        static constexpr Index pktUpdateInterval = 49;
 
-        _canUpdate = pktIndexEntry.effectiveTotalLen() >= 2_MiB || _pktCount % 49 == 1;
+        ++_pktCount;
+        _canUpdate = pktIndexEntry.effectiveTotalLen() >= 2_MiB ||
+                     _pktCount % pktUpdateInterval == 1;
 
         if (!_canUpdate) {
             return;
@@ -51,11 +54,14 @@ private:
 
     void _update(const Er& er) override
     {
+        // show the progress of one event record out of this many
+        static constexpr Index erUpdateInterval = 41;
+
         if (!_canUpdate) {
             return;
         }
 
-        if (_erCount++ % 41 != 0) {
+        if (_erCount++ % erUpdateInterval != 0) {
             return;
         }
 
