@@ -5,7 +5,6 @@
 
 #include <utility>
 
-#include "../key.hpp"
 #include "dts-screen.hpp"
 #include "data/content-pkt-region.hpp"
 #include "inspect-common/search-query.hpp"

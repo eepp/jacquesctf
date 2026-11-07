@@ -5,11 +5,8 @@
 
 #include <utility>
 
-#include "../key.hpp"
 #include "../term.hpp"
-#include "../views/pkt-table-view.hpp"
 #include "pkts-screen.hpp"
-#include "../stylist.hpp"
 #include "data/pkt-checkpoints-build-listener.hpp"
 #include "../views/progress-view.hpp"
 

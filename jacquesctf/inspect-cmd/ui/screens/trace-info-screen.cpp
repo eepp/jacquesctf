@@ -3,10 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
-#include "../key.hpp"
 #include "trace-info-screen.hpp"
-#include "../views/trace-info-view.hpp"
-#include "../stylist.hpp"
 
 namespace jacques {
 

@@ -4,8 +4,6 @@
  */
 
 #include "help-screen.hpp"
-#include "../views/help-view.hpp"
-#include "../stylist.hpp"
 
 namespace jacques {
 
