@@ -15,7 +15,7 @@ namespace jacques {
 DtsScreen::DtsScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
                      ScreenHost& host) :
     Screen {rect, stylist, appState, host},
-    _searchController {*this, stylist, host}
+    _searchCtrl {*this, stylist, host}
 {
     const auto viewRects = this->_viewRects();
 
@@ -84,7 +84,7 @@ void DtsScreen::_resized()
     _dstTableView->moveAndResize(viewRects.dstTable);
     _ertTableView->moveAndResize(viewRects.ertTable);
     _dtExplorerView->moveAndResize(viewRects.dtExplorer);
-    _searchController.parentScreenResized(*this);
+    _searchCtrl.parentScreenResized(*this);
 }
 
 void DtsScreen::highlightCurDt()
@@ -235,7 +235,7 @@ void DtsScreen::_handleKey(const Key key)
                 break;
             }
 
-            _searchController.start([this](std::unique_ptr<const SearchQuery> query) {
+            _searchCtrl.start([this](std::unique_ptr<const SearchQuery> query) {
                 this->_searchAccepted(std::move(query));
             });
 

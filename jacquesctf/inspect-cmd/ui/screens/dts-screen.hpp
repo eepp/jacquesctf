@@ -72,7 +72,7 @@ private:
     std::unique_ptr<ErtTableView> _ertTableView;
     std::unique_ptr<DstTableView> _dstTableView;
     std::unique_ptr<DtExplorerView> _dtExplorerView;
-    SearchCtrl _searchController;
+    SearchCtrl _searchCtrl;
     bool _tablesVisible = true;
 
     // pattern of the last event record type name query, if any
