@@ -20,7 +20,7 @@ public:
     explicit PktsScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
                         ScreenHost& host);
 
-protected:
+private:
     void _resized() override;
     void _handleKey(Key key) override;
 
