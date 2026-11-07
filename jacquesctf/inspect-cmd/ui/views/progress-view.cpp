@@ -125,7 +125,7 @@ void setPktIndexBuildProgress(ProgressView& view, const DsFile& dsf,
     }
 
     std::vector<LabelValRow> rows {
-        {"Index:", utils::sepNumber(lastEntry ? lastEntry->indexInDsFile() : 0ULL, ',')},
+        {"Index:", utils::sepNumber(lastEntry ? lastEntry->natIndexInDsFile() : 0ULL, ',')},
         {"Offset:", formatLen(DataLen::fromBytes(offsetBytes))},
         {"Length:", formatLen(dsf.fileLen())},
     };
