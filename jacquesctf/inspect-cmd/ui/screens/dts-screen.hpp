@@ -62,6 +62,12 @@ private:
      */
     void _searchAccepted(std::unique_ptr<const SearchQuery> query);
 
+    /*
+     * Updates the views and centers the selected row of the event
+     * record type table view after a search changed it.
+     */
+    void _selErtChanged();
+
 private:
     std::unique_ptr<ErtTableView> _ertTableView;
     std::unique_ptr<DstTableView> _dstTableView;

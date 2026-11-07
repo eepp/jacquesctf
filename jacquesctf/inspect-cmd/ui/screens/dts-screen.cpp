@@ -161,6 +161,11 @@ void DtsScreen::_searchAccepted(std::unique_ptr<const SearchQuery> query)
         _ertTableView->selectErt(static_cast<yactfr::TypeId>(sQuery->val()));
     }
 
+    this->_selErtChanged();
+}
+
+void DtsScreen::_selErtChanged()
+{
     this->_updateViews();
     _ertTableView->centerSelRow();
 }
@@ -242,8 +247,7 @@ void DtsScreen::_handleKey(const Key key)
             }
 
             _ertTableView->selectErt(*_lastErtNamePattern, true);
-            this->_updateViews();
-            _ertTableView->centerSelRow();
+            this->_selErtChanged();
             break;
 
         default:
