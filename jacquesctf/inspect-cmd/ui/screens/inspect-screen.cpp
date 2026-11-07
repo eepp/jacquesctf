@@ -19,10 +19,11 @@ namespace jacques {
 InspectScreen::InspectScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
                              ScreenHost& host) :
     Screen {rect, stylist, appState, host},
-    _decErrorView {
-        std::make_unique<PktDecodingErrorDetailsView>(this->_decErrorViewRect(), stylist,
-                                                      appState)
-    },
+    _pdView {this->rect(), stylist, appState, _bookmarks},
+    _ertView {this->rect(), stylist, appState},
+    _priView {Rect {{0, 0}, this->rect().w, 1}, stylist, appState},
+    _sdteView {this->rect(), stylist, appState},
+    _decErrorView {this->_decErrorViewRect(), stylist, appState},
     _searchCtrl {*this, stylist, host},
     _curStateSnapshot {_stateSnapshots.end()},
     _ertViewDispModeWheel {
@@ -35,26 +36,16 @@ InspectScreen::InspectScreen(const Rect& rect, const Stylist& stylist, InspectCm
         this->_appStateChanged(msg);
     }}
 {
-    _pdView = std::make_unique<PktDataView>(this->rect(), stylist, appState, _bookmarks);
-    _ertView = std::make_unique<ErTableView>(this->rect(), stylist, appState);
-    _priView = std::make_unique<PktRegionInfoView>(Rect {{0, 0}, this->rect().w, 1}, stylist,
-                                                   appState);
-    _sdteView = std::make_unique<SubDtExplorerView>(this->rect(), stylist, appState);
-
     // in stacking order: overlays last
     for (const auto view : std::initializer_list<View *> {
-        _pdView.get(), _ertView.get(), _priView.get(), _sdteView.get(), _decErrorView.get()
+        &_pdView, &_ertView, &_priView, &_sdteView, &_decErrorView
     }) {
         this->_addView(*view);
     }
 
-    _decErrorView->isVisible(false);
-    this->_focus(*_pdView);
+    _decErrorView.isVisible(false);
+    this->_focus(_pdView);
     this->_updateViews();
-}
-
-InspectScreen::~InspectScreen()
-{
 }
 
 PktDataView::PktBookmarks& InspectScreen::_curPktBookmarks() noexcept
@@ -85,7 +76,7 @@ void InspectScreen::_toggleBookmark(const unsigned int id)
         bookmarkedOffsetInPktBit = this->_appState().curOffsetInPktBits();
     }
 
-    _pdView->bookmarksChanged();
+    _pdView.bookmarksChanged();
 }
 
 void InspectScreen::_gotoBookmark(const unsigned int id)
@@ -106,15 +97,15 @@ void InspectScreen::_updateViews()
     const auto& rect = this->rect();
     const auto dispMode = _ertViewDispModeWheel.curVal();
 
-    _decErrorView->moveAndResize(this->_decErrorViewRect());
+    _decErrorView.moveAndResize(this->_decErrorViewRect());
 
     if (dispMode == _ErtViewDispMode::FULL) {
-        _pdView->isVisible(false);
-        _sdteView->isVisible(false);
-        _priView->isVisible(false);
-        _ertView->isVisible(true);
-        _ertView->moveAndResize(rect);
-        _ertView->centerSelRow();
+        _pdView.isVisible(false);
+        _sdteView.isVisible(false);
+        _priView.isVisible(false);
+        _ertView.isVisible(true);
+        _ertView.moveAndResize(rect);
+        _ertView.centerSelRow();
         return;
     }
 
@@ -134,25 +125,25 @@ void InspectScreen::_updateViews()
     const auto pdViewHeight = rect.h - ertViewHeight - 1;
     const auto pdViewWidth = _sdteViewIsVisible ? rect.w / 2 : rect.w;
 
-    _pdView->isVisible(true);
-    _priView->isVisible(true);
-    _sdteView->isVisible(_sdteViewIsVisible);
-    _ertView->isVisible(dispMode != _ErtViewDispMode::HIDDEN);
-    _pdView->moveAndResize({{0, 0}, pdViewWidth, pdViewHeight});
-    _priView->moveAndResize({{0, pdViewHeight}, rect.w, 1});
+    _pdView.isVisible(true);
+    _priView.isVisible(true);
+    _sdteView.isVisible(_sdteViewIsVisible);
+    _ertView.isVisible(dispMode != _ErtViewDispMode::HIDDEN);
+    _pdView.moveAndResize({{0, 0}, pdViewWidth, pdViewHeight});
+    _priView.moveAndResize({{0, pdViewHeight}, rect.w, 1});
 
     if (dispMode == _ErtViewDispMode::HIDDEN) {
         // keep a valid size while hidden
-        _ertView->moveAndResize({{0, 0}, rect.w, 8});
+        _ertView.moveAndResize({{0, 0}, rect.w, 8});
     } else {
-        _ertView->moveAndResize({{0, pdViewHeight + 1}, rect.w, ertViewHeight});
+        _ertView.moveAndResize({{0, pdViewHeight + 1}, rect.w, ertViewHeight});
     }
 
     if (_sdteViewIsVisible) {
-        _sdteView->moveAndResize({{pdViewWidth, 0}, rect.w - pdViewWidth, pdViewHeight});
+        _sdteView.moveAndResize({{pdViewWidth, 0}, rect.w - pdViewWidth, pdViewHeight});
     }
 
-    _ertView->centerSelRow();
+    _ertView.centerSelRow();
 }
 
 void InspectScreen::_resized()
@@ -177,7 +168,7 @@ void InspectScreen::_visibilityChanged()
 
 void InspectScreen::_tryShowDecodingError()
 {
-    _decErrorView->isVisible(this->_appState().hasActivePktState() &&
+    _decErrorView.isVisible(this->_appState().hasActivePktState() &&
                              this->_appState().activePktState().pkt().error());
 }
 
@@ -281,7 +272,7 @@ void InspectScreen::_restoreStateSnapshot(const _StateSnapshot& snapshot)
 void InspectScreen::_setLastOffsetInRowBits()
 {
     if (!_lastOffsetInRowBits) {
-        _lastOffsetInRowBits = this->_appState().curOffsetInPktBits() % _pdView->rowSize().bits();
+        _lastOffsetInRowBits = this->_appState().curOffsetInPktBits() % _pdView.rowSize().bits();
     }
 }
 
@@ -349,7 +340,7 @@ void InspectScreen::_searchAccepted(std::unique_ptr<const SearchQuery> query)
 void InspectScreen::_handleKey(const Key key)
 {
     const auto goingToBookmark = _goingToBookmark;
-    const auto decErrorViewWasVisible = _decErrorView->isVisible();
+    const auto decErrorViewWasVisible = _decErrorView.isVisible();
 
     /*
      * Any key hides the decoding error box, but _appStateChanged()
@@ -357,7 +348,7 @@ void InspectScreen::_handleKey(const Key key)
      * a decoding error.
      */
     _goingToBookmark = false;
-    _decErrorView->isVisible(false);
+    _decErrorView.isVisible(false);
 
     if (key.special() != SpecialKey::DOWN && key.special() != SpecialKey::UP) {
         _lastOffsetInRowBits = std::nullopt;
@@ -436,11 +427,11 @@ void InspectScreen::_handleKey(const Key key)
 
             Index reqOffsetInPktBits;
 
-            if (this->_appState().curOffsetInPktBits() < _pdView->rowSize()) {
+            if (this->_appState().curOffsetInPktBits() < _pdView.rowSize()) {
                 break;
             } else {
                 const auto curOffsetInPktBits = this->_appState().curOffsetInPktBits();
-                const auto rowSizeBits = _pdView->rowSize().bits();
+                const auto rowSizeBits = _pdView.rowSize().bits();
 
                 this->_setLastOffsetInRowBits();
 
@@ -475,8 +466,8 @@ void InspectScreen::_handleKey(const Key key)
             const auto& curPktRegion = *this->_appState().curPktRegion();
             const auto nextOffsetInPktBits = this->_appState().curOffsetInPktBits() -
                                              (this->_appState().curOffsetInPktBits() %
-                                              _pdView->rowSize().bits()) +
-                                             _pdView->rowSize().bits() + *_lastOffsetInRowBits;
+                                              _pdView.rowSize().bits()) +
+                                             _pdView.rowSize().bits() + *_lastOffsetInRowBits;
             const auto reqOffsetInPktBits = std::max(nextOffsetInPktBits,
                                                      *curPktRegion.segment().endOffsetInPktBits());
 
@@ -493,11 +484,11 @@ void InspectScreen::_handleKey(const Key key)
         }
 
         case SpecialKey::PAGE_UP:
-            _pdView->pageUp();
+            _pdView.pageUp();
             break;
 
         case SpecialKey::PAGE_DOWN:
-            _pdView->pageDown();
+            _pdView.pageDown();
             break;
 
         case SpecialKey::F5:
@@ -544,39 +535,39 @@ void InspectScreen::_handleKey(const Key key)
             break;
 
         case 'E':
-            _pdView->isErFirstPktRegionEmphasized(!_pdView->isErFirstPktRegionEmphasized());
+            _pdView.isErFirstPktRegionEmphasized(!_pdView.isErFirstPktRegionEmphasized());
             break;
 
         case 'a':
-            _pdView->isAsciiVisible(!_pdView->isAsciiVisible());
+            _pdView.isAsciiVisible(!_pdView.isAsciiVisible());
             break;
 
         case 'v':
-            _pdView->isPrevNextVisible(!_pdView->isPrevNextVisible());
+            _pdView.isPrevNextVisible(!_pdView.isPrevNextVisible());
             break;
 
         case 'w':
-            _pdView->isRowSizePowerOfTwo(!_pdView->isRowSizePowerOfTwo());
+            _pdView.isRowSizePowerOfTwo(!_pdView.isRowSizePowerOfTwo());
             break;
 
         case 'x':
-            _pdView->isDataInHex(!_pdView->isDataInHex());
+            _pdView.isDataInHex(!_pdView.isDataInHex());
             break;
 
         case 'D':
-            _pdView->isOffsetInPkt(!_pdView->isOffsetInPkt());
+            _pdView.isOffsetInPkt(!_pdView.isOffsetInPkt());
             break;
 
         case 'o':
-            _pdView->isOffsetInHex(!_pdView->isOffsetInHex());
+            _pdView.isOffsetInHex(!_pdView.isOffsetInHex());
             break;
 
         case 'O':
-            _pdView->isOffsetInBytes(!_pdView->isOffsetInBytes());
+            _pdView.isOffsetInBytes(!_pdView.isOffsetInBytes());
             break;
 
         case 'c':
-            _pdView->centerSel();
+            _pdView.centerSel();
             break;
 
         case 'C':

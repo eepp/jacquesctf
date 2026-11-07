@@ -29,7 +29,6 @@ class InspectScreen final :
 public:
     explicit InspectScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
                            ScreenHost& host);
-    ~InspectScreen();
 
 private:
     struct _StateSnapshot final
@@ -107,11 +106,15 @@ private:
     void _searchAccepted(std::unique_ptr<const SearchQuery> query);
 
 private:
-    std::unique_ptr<ErTableView> _ertView;
-    std::unique_ptr<PktDataView> _pdView;
-    std::unique_ptr<PktRegionInfoView> _priView;
-    std::unique_ptr<SubDtExplorerView> _sdteView;
-    std::unique_ptr<PktDecodingErrorDetailsView> _decErrorView;
+    // before `_pdView` which refers to it
+    PktDataView::Bookmarks _bookmarks;
+
+    PktDataView _pdView;
+    ErTableView _ertView;
+    PktRegionInfoView _priView;
+    SubDtExplorerView _sdteView;
+    PktDecodingErrorDetailsView _decErrorView;
+
     SearchCtrl _searchCtrl;
     std::unique_ptr<const SearchQuery> _lastQuery;
     const Size _maxStateSnapshots = 500;
@@ -119,7 +122,6 @@ private:
     decltype(_stateSnapshots)::iterator _curStateSnapshot;
     CycleWheel<_ErtViewDispMode> _ertViewDispModeWheel;
     bool _sdteViewIsVisible = true;
-    PktDataView::Bookmarks _bookmarks;
     bool _goingToBookmark = false;
     std::optional<Index> _lastOffsetInRowBits;
 
