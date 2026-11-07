@@ -25,11 +25,20 @@ void StatusView::_createEndPositions()
         _EndPositions positions;
         const auto& dsf = dsfState->dsFile();
         const auto pktCountStr = utils::sepNumber(dsf.pktCount());
+        const auto maxSeqNumEntryIt = std::max_element(dsf.pktIndexEntries().begin(),
+                                                       dsf.pktIndexEntries().end(),
+                                                       [](const auto& entryA, const auto& entryB) {
+            return entryA.seqNum() < entryB.seqNum();
+        });
+        const auto maxSeqNumStr = (maxSeqNumEntryIt == dsf.pktIndexEntries().end() ||
+                                   !maxSeqNumEntryIt->seqNum()) ?
+                                  std::string {} :
+                                  utils::sepNumber(*maxSeqNumEntryIt->seqNum());
 
         positions.pktCount = 0;
         positions.pktIndex = positions.pktCount + pktCountStr.size() + 1;
         positions.seqNum = positions.pktIndex + pktCountStr.size() + 5;
-        positions.pktPercent = positions.seqNum + pktCountStr.size() + 6;
+        positions.pktPercent = positions.seqNum + maxSeqNumStr.size() + 6;
         positions.curOffsetInDsFileBits = positions.pktPercent + 9;
         positions.curOffsetInPktBits = positions.curOffsetInDsFileBits + 17;
 
