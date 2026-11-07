@@ -243,6 +243,7 @@ std::optional<long long> parseInt(std::string::const_iterator& begin,
     }
 
     TimestampSearchQuery::Unit unit = TimestampSearchQuery::Unit::NS;
+    auto valMul = mul;
 
     // skip '*'
     ++it;
@@ -254,10 +255,14 @@ std::optional<long long> parseInt(std::string::const_iterator& begin,
     if (*it == '*') {
         unit = TimestampSearchQuery::Unit::CYCLE;
         ++it;
+    } else if (*it == '-' && !isDiff) {
+        // negative nanoseconds from origin
+        valMul = -1LL;
+        ++it;
+    }
 
-        if (it == end) {
-            return nullptr;
-        }
+    if (it == end) {
+        return nullptr;
     }
 
     const auto val = parseInt(it, end);
@@ -266,7 +271,7 @@ std::optional<long long> parseInt(std::string::const_iterator& begin,
         return nullptr;
     }
 
-    return std::make_unique<const TimestampSearchQuery>(isDiff, *val * mul, unit);
+    return std::make_unique<const TimestampSearchQuery>(isDiff, *val * valMul, unit);
 }
 
 [[ nodiscard ]] std::unique_ptr<const SearchQuery> parseErtId(std::string::const_iterator& it,

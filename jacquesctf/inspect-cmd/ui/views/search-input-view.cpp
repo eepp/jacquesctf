@@ -143,7 +143,7 @@ void SearchInputView::_drawFormatText(Point contentPos, const std::string& utf8T
         this->_writeCh(contentPos, *it);
         ++it;
 
-        if (it != text.end() && *it == '*') {
+        if (it != text.end() && (*it == '*' || (*it == '-' && !hasAddSub))) {
             this->_writeCh(contentPos, *it);
             ++it;
         }
