@@ -11,8 +11,6 @@
 #include <boost/operators.hpp>
 #include <fmt/format.h>
 
-#include "aliases.hpp"
-
 namespace jacques {
 
 class Duration final :
@@ -28,30 +26,38 @@ public:
     };
 
 public:
-    explicit Duration() noexcept = default;
-    explicit Duration(unsigned long long ns) noexcept;
-    Duration(const Duration&) noexcept = default;
-    Duration& operator=(const Duration&) noexcept = default;
-    Parts parts() const noexcept;
-    std::string format() const;
+    constexpr explicit Duration(const unsigned long long ns) noexcept :
+        _ns {ns}
+    {
+    }
 
-    unsigned long long ns() const noexcept
+    constexpr unsigned long long ns() const noexcept
     {
         return _ns;
     }
 
-    bool operator==(const Duration& other) const noexcept
+    constexpr Parts parts() const noexcept
+    {
+        const auto secs = _ns / 1'000'000'000;
+        const auto mins = secs / 60;
+
+        return {mins / 60, mins % 60, secs % 60, _ns % 1'000'000'000};
+    }
+
+    std::string format() const;
+
+    constexpr bool operator==(const Duration& other) const noexcept
     {
         return _ns == other._ns;
     }
 
-    bool operator<(const Duration& other) const noexcept
+    constexpr bool operator<(const Duration& other) const noexcept
     {
         return _ns < other._ns;
     }
 
 private:
-    unsigned long long _ns = 0;
+    unsigned long long _ns;
 };
 
 } // namespace jacques

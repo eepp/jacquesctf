@@ -12,8 +12,6 @@
 #include <fmt/format.h>
 #include <yactfr/yactfr.hpp>
 
-#include "aliases.hpp"
-
 namespace jacques {
 
 enum class TsFmtMode
@@ -28,14 +26,10 @@ class Ts final :
     public boost::totally_ordered<Ts>
 {
 public:
-    explicit Ts() noexcept = default;
     explicit Ts(unsigned long long cycles, const yactfr::ClockType& clkType) noexcept;
 
     explicit Ts(unsigned long long cycles, unsigned long long freq, long long offsetSecs,
                 unsigned long long offsetCycles, bool hasUnixEpochOrigin) noexcept;
-
-    Ts(const Ts&) noexcept = default;
-    Ts& operator=(const Ts&) noexcept = default;
 
     unsigned long long cycles() const noexcept
     {

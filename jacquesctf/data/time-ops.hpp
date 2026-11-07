@@ -7,33 +7,19 @@
 #define _JACQUES_DATA_TIME_OPS_HPP
 
 #include <cassert>
-#include <boost/operators.hpp>
 
 #include "ts.hpp"
 #include "duration.hpp"
 
 namespace jacques {
-namespace internal {
 
-static inline unsigned long long diff(const Ts& left, const Ts& right) noexcept
+inline Duration operator-(const Ts& left, const Ts& right) noexcept
 {
     assert(left >= right);
 
-    if (left.nsFromOrigin() >= 0 && right.nsFromOrigin() < 0) {
-        return static_cast<unsigned long long>(left.nsFromOrigin()) +
-               static_cast<unsigned long long>(-right.nsFromOrigin());
-    } else {
-        return static_cast<unsigned long long>(left.nsFromOrigin() - right.nsFromOrigin());
-    }
-}
-
-} // namespace internal
-
-static inline Duration operator-(const Ts& left, const Ts& right)
-{
-    assert(left >= right);
-
-    return Duration {internal::diff(left, right)};
+    // exact since `left >= right`, even if the signed difference overflows
+    return Duration {static_cast<unsigned long long>(left.nsFromOrigin()) -
+                     static_cast<unsigned long long>(right.nsFromOrigin())};
 }
 
 } // namespace jacques
