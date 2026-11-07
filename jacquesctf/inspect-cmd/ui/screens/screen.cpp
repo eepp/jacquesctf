@@ -93,14 +93,6 @@ bool Screen::_handleDsFileKey(const Key key)
     return true;
 }
 
-void Screen::_handleKey(Key)
-{
-}
-
-void Screen::_focusedViewHandledKey(Key)
-{
-}
-
 void Screen::_resized()
 {
     if (_mainView) {
@@ -117,10 +109,6 @@ void Screen::render()
     for (const auto view : _views) {
         view->render();
     }
-}
-
-void Screen::_visibilityChanged()
-{
 }
 
 } // namespace jacques

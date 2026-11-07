@@ -178,7 +178,9 @@ protected:
      *
      * The default implementation doesn't handle any key.
      */
-    virtual void _handleKey(Key key);
+    virtual void _handleKey([[maybe_unused]] const Key key)
+    {
+    }
 
     /*
      * Called when the focused view handled the user key `key` (see
@@ -187,7 +189,9 @@ protected:
      * For example, the selection of the focused view could have
      * changed.
      */
-    virtual void _focusedViewHandledKey(Key key);
+    virtual void _focusedViewHandledKey([[maybe_unused]] const Key key)
+    {
+    }
 
     /*
      * Called when the screen needs to be resized.
@@ -206,7 +210,9 @@ protected:
      * Called when the visibility of the screen changes (new visibility
      * is given by isVisible()).
      */
-    virtual void _visibilityChanged();
+    virtual void _visibilityChanged()
+    {
+    }
 
     const Stylist& _stylist() const noexcept
     {
