@@ -347,13 +347,13 @@ TableView::_Cell TableView::_createDurationCell(const Ts& beginTs, const Ts& end
 
     case TsFmtMode::CYCLES:
     {
-        if (beginTs.frequency() != endTs.frequency()) {
+        if (beginTs.freq() != endTs.freq()) {
             return this->_createNaCell();
         }
 
         // FIXME: this is not accurate enough
         const auto sDiff = static_cast<double>(absDuration.ns()) / 1'000'000'000.;
-        const auto cycleDiff = static_cast<long long>(sDiff * beginTs.frequency());
+        const auto cycleDiff = static_cast<long long>(sDiff * beginTs.freq());
 
         return _Cell {sign + utils::sepNumber(cycleDiff, ',') + " cc"};
     }

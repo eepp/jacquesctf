@@ -42,7 +42,7 @@ public:
         return _cycles;
     }
 
-    unsigned long long frequency() const noexcept
+    unsigned long long freq() const noexcept
     {
         return _freq;
     }
