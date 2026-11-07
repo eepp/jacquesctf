@@ -17,7 +17,6 @@
 #include "../views/sub-dt-explorer-view.hpp"
 #include "../views/pkt-decoding-error-details-view.hpp"
 #include "../views/pkt-data-view.hpp"
-#include "inspect-screen.hpp"
 #include "screen.hpp"
 #include "../cycle-wheel.hpp"
 #include "../search-ctrl.hpp"
