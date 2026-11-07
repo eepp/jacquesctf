@@ -460,8 +460,11 @@ void TraceInfoView::_drawRows()
                 const auto fmtTs = vRow->ts.format();
 
                 if (const auto longFmtTs = std::get_if<LongFmtTs>(&fmtTs)) {
-                    this->_write(valPos, "{} {}.{}", longFmtTs->date, longFmtTs->time,
-                                 longFmtTs->ns);
+                    const auto x = this->_write(valPos, "{} {}.{}", longFmtTs->date,
+                                                longFmtTs->time, longFmtTs->ns);
+
+                    this->_style(Stylist::Role::DIM);
+                    this->_write({x, y}, longFmtTs->utcOffset);
                 } else {
                     // no Unix epoch origin
                     this->_write(valPos, std::get<NsFromOriginFmtTs>(fmtTs).ns);

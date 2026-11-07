@@ -6,6 +6,7 @@
 #ifndef _JACQUES_DATA_TS_HPP
 #define _JACQUES_DATA_TS_HPP
 
+#include <optional>
 #include <string>
 #include <variant>
 #include <boost/operators.hpp>
@@ -112,6 +113,16 @@ private:
     long long _nsFromOrigin;
     bool _hasUnixEpochOrigin;
 };
+
+/*
+ * Returns the local UTC offset, formatted like `LongFmtTs::utcOffset`,
+ * if it's the same for all the times from `first` to `last`, or
+ * `std::nullopt` otherwise.
+ *
+ * Both `first` and `last` must have a Unix epoch origin, and `first`
+ * must not be greater than `last`.
+ */
+std::optional<std::string> constUtcOffset(const Ts& first, const Ts& last);
 
 } // namespace jacques
 

@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include <numeric>
+#include <utility>
 #include <variant>
 #include <fmt/format.h>
 
@@ -18,12 +19,87 @@
 #include "../term.hpp"
 
 namespace jacques {
+namespace {
+
+/*
+ * Widest timestamp cell without a UTC offset, for example
+ * `2024-11-06 08:33:20.010000000` or `-9,223,372,036,854,775,808 ns`.
+ */
+constexpr Size tsWidth = 29;
+
+// widest UTC offset segment of a timestamp cell, for example `-05:00`
+constexpr Size utcOffsetWidth = 6;
+
+// whether or not `appState` has a clock type with a Unix epoch origin
+bool hasUnixEpochClkType(const InspectCmdState& appState)
+{
+    for (auto& dsfState : appState.dsFileStates()) {
+        for (auto& clkType : dsfState->dsFile().metadata().traceType().clockTypes()) {
+            if (clkType->origin() && clkType->origin()->isUnixEpoch()) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/*
+ * Local UTC offset of all the packet timestamps (with a Unix epoch
+ * origin) of `appState`, if it's the same (see constUtcOffset()).
+ */
+std::optional<std::string> constTsUtcOffset(const InspectCmdState& appState)
+{
+    std::optional<Ts> firstTs;
+    std::optional<Ts> lastTs;
+
+    for (auto& dsfState : appState.dsFileStates()) {
+        const auto& dsf = dsfState->dsFile();
+
+        if (dsf.pktCount() == 0) {
+            continue;
+        }
+
+        const auto& beginTs = dsf.pktIndexEntries().front().beginTs();
+        const auto& endTs = dsf.pktIndexEntries().back().endTs();
+
+        if (beginTs && beginTs->hasUnixEpochOrigin() && (!firstTs || *beginTs < *firstTs)) {
+            firstTs = *beginTs;
+        }
+
+        if (endTs && endTs->hasUnixEpochOrigin() && (!lastTs || *endTs > *lastTs)) {
+            lastTs = *endTs;
+        }
+    }
+
+    if (!firstTs && !lastTs) {
+        return std::nullopt;
+    }
+
+    if (!firstTs) {
+        firstTs = lastTs;
+    } else if (!lastTs) {
+        lastTs = firstTs;
+    } else if (*firstTs > *lastTs) {
+        // broken trace
+        std::swap(firstTs, lastTs);
+    }
+
+    return constUtcOffset(*firstTs, *lastTs);
+}
+
+} // namespace
 
 TableView::TableView(const Rect& rect, const std::string_view title,
                      const DecorationStyle decoStyle, const Stylist& stylist,
                      const InspectCmdState& appState) :
     View {rect, title, decoStyle, stylist},
-    _theAppState {&appState}
+    _theAppState {&appState},
+    _tsUtcOffset {constTsUtcOffset(appState)},
+
+    // each timestamp cell may show its own UTC offset
+    _theTsColWidth {tsWidth + (hasUnixEpochClkType(appState) && !_tsUtcOffset ?
+                               utcOffsetWidth : 0)}
 {
     assert(this->contentRect().h >= 2);
 }
@@ -108,8 +184,18 @@ void TableView::_drawHeader()
 
     Index x = 0;
 
+    const auto fmtMode = _theAppState->tsFmtMode();
+    const auto withUtcOffset = _tsUtcOffset &&
+                               (fmtMode == TsFmtMode::LONG || fmtMode == TsFmtMode::SHORT);
+
     for (Index col = 0; col < _colWidths.size(); ++col) {
-        this->_write({x, 0}, term::strFittingPrefix(_theCols[col].title(), _colWidths[col]));
+        auto title = _theCols[col].title();
+
+        if (withUtcOffset && (_theCols[col].flags() & _COL_TS)) {
+            title += fmt::format(" ({})", *_tsUtcOffset);
+        }
+
+        this->_write({x, 0}, term::strFittingPrefix(title, _colWidths[col]));
         x += _colWidths[col];
 
         if (col == _colWidths.size() - 1) {
@@ -154,6 +240,7 @@ void TableView::_applySegStyle(const _Cell::SegRole role, const bool emph)
         break;
 
     case _Cell::SegRole::NA:
+    case _Cell::SegRole::DIM:
         this->_style(Stylist::Role::DIM, emph);
         break;
 
@@ -322,15 +409,19 @@ TableView::_Cell TableView::_createTsCell(const Ts& ts) const
     case TsFmtMode::LONG:
     {
         const auto fmtTs = std::get<LongFmtTs>(ts.format(fmtMode));
+        _Cell cell {fmtTs.date + ' ' + fmtTs.time + '.' + fmtTs.ns};
 
-        return _Cell {fmtTs.date + ' ' + fmtTs.time + '.' + fmtTs.ns};
+        this->_tryAppendUtcOffsetSeg(cell, fmtTs.utcOffset);
+        return cell;
     }
 
     case TsFmtMode::SHORT:
     {
         const auto fmtTs = std::get<ShortFmtTs>(ts.format(fmtMode));
+        _Cell cell {fmtTs.time + '.' + fmtTs.ns};
 
-        return _Cell {fmtTs.time + '.' + fmtTs.ns};
+        this->_tryAppendUtcOffsetSeg(cell, fmtTs.utcOffset);
+        return cell;
     }
 
     case TsFmtMode::NS_FROM_ORIGIN:
@@ -341,6 +432,13 @@ TableView::_Cell TableView::_createTsCell(const Ts& ts) const
     }
 
     std::abort();
+}
+
+void TableView::_tryAppendUtcOffsetSeg(_Cell& cell, const std::string& utcOffset) const
+{
+    if (utcOffset != _tsUtcOffset) {
+        cell.segs.push_back({utcOffset, _Cell::SegRole::DIM});
+    }
 }
 
 TableView::_Cell TableView::_createDurationCell(const Ts& beginTs, const Ts& endTs) const

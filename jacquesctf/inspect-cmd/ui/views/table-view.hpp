@@ -6,6 +6,7 @@
 #ifndef _JACQUES_INSPECT_CMD_UI_VIEWS_TABLE_VIEW_HPP
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_TABLE_VIEW_HPP
 
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -73,6 +74,9 @@ protected:
 
             // accent (nanosecond part of a timestamp, for example)
             ACCENT,
+
+            // dimmed (UTC offset of a timestamp, for example)
+            DIM,
         };
 
         struct Seg final
@@ -97,6 +101,12 @@ protected:
     static constexpr unsigned int _COL_EMPH = 1U << 1;     // emphasized
     static constexpr unsigned int _COL_EXPAND = 1U << 2;   // takes the leftover width
     static constexpr unsigned int _COL_REQUIRED = 1U << 3; // never dropped
+
+    /*
+     * Timestamp column: its title shows the local UTC offset when it's
+     * the same for all the timestamps (see _createTsCell()).
+     */
+    static constexpr unsigned int _COL_TS = 1U << 4;
 
     class _Col final
     {
@@ -171,17 +181,33 @@ protected:
         return _colWidths[col];
     }
 
+    // minimum content width of a timestamp column (see `_COL_TS`)
+    Size _tsColWidth() const noexcept
+    {
+        return _theTsColWidth;
+    }
+
     static _Cell _createNaCell();
     static _Cell _createTextCell(std::string_view text);
     static _Cell _createUIntCell(unsigned long long val, bool sep = false);
     static _Cell _createPathCell(const boost::filesystem::path& path, Size width);
     _Cell _createDataLenCell(const DataLen& len) const;
+
+    /*
+     * Timestamp cell, for a `_COL_TS` column.
+     *
+     * The cell only shows the local UTC offset when it differs from
+     * the one which the column title shows.
+     */
     _Cell _createTsCell(const Ts& ts) const;
     _Cell _createDurationCell(const Ts& beginTs, const Ts& endTs) const;
 
 private:
     // "seconds,nanoseconds ns" cell, the nanosecond part being accented
     static _Cell _createNsCell(const char *sign, long long ns);
+
+    // appends a dimmed `utcOffset` segment to `cell` if needed (see _createTsCell())
+    void _tryAppendUtcOffsetSeg(_Cell& cell, const std::string& utcOffset) const;
 
     void _selNext();
     void _selPrev();
@@ -212,6 +238,12 @@ private:
 
     // for the format modes
     const InspectCmdState *_theAppState;
+
+    // local UTC offset of all the timestamps, if it's the same
+    std::optional<std::string> _tsUtcOffset;
+
+    // minimum content width of a timestamp column
+    Size _theTsColWidth;
 };
 
 } // namespace jacques

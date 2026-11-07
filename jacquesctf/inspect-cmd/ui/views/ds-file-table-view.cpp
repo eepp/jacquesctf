@@ -33,7 +33,7 @@ DsFileTableView::DsFileTableView(const Rect& rect, const Stylist& stylist,
         _Col {"Packets", 12, _COL_REQUIRED, [this](const Index row) {
             return this->_createUIntCell(this->_dsFile(row).pktCount(), true);
         }},
-        _Col {"Timestamp: beginning", 29, _COL_REQUIRED, [this](const Index row) {
+        _Col {"Timestamp: beginning", this->_tsColWidth(), _COL_REQUIRED | _COL_TS, [this](const Index row) {
             const auto firstEntry = this->_firstEntry(row);
 
             if (!firstEntry || !firstEntry->beginTs()) {
@@ -50,7 +50,7 @@ DsFileTableView::DsFileTableView(const Rect& rect, const Stylist& stylist,
 
             return cell;
         }},
-        _Col {"Timestamp: end", 29, 0, [this](const Index row) {
+        _Col {"Timestamp: end", this->_tsColWidth(), _COL_TS, [this](const Index row) {
             const auto lastEntry = this->_lastEntry(row);
 
             if (!lastEntry || !lastEntry->endTs()) {

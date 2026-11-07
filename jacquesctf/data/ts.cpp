@@ -12,6 +12,7 @@
 #include <fmt/format.h>
 
 #include "ts.hpp"
+#include "time-ops.hpp"
 
 namespace jacques {
 namespace {
@@ -43,6 +44,39 @@ unsigned long long cyclesToNs(unsigned long long cycles, const unsigned long lon
     }
 
     return ns;
+}
+
+// local calendar time of `nsFromOrigin` and its nanosecond part
+std::pair<tm, long long> localTime(const long long nsFromOrigin) noexcept
+{
+    // floor division: the nanosecond part is never negative
+    auto secs = nsFromOrigin / nsPerSec;
+    auto ns = nsFromOrigin % nsPerSec;
+
+    if (ns < 0) {
+        ns += nsPerSec;
+        --secs;
+    }
+
+    static_assert(sizeof(time_t) >= 8, "Expecting a 64-bit `time_t`.");
+
+    const auto timeT = static_cast<time_t>(secs);
+    tm tm;
+
+    localtime_r(&timeT, &tm);
+    return {tm, ns};
+}
+
+// formatted UTC offset of `tm` (see `LongFmtTs::utcOffset`)
+std::string fmtUtcOffset(const tm& tm)
+{
+    auto utcOffset = fmt::format("{:%Ez}", tm);
+
+    if (utcOffset == "+00:00" || utcOffset == "-00:00") {
+        return "Z";
+    }
+
+    return utcOffset;
 }
 
 } // namespace
@@ -93,29 +127,10 @@ FmtTs Ts::format(const TsFmtMode fmtMode) const
     case TsFmtMode::LONG:
     case TsFmtMode::SHORT:
     {
-        // floor division: the nanosecond part is never negative
-        auto secs = _nsFromOrigin / nsPerSec;
-        auto ns = _nsFromOrigin % nsPerSec;
-
-        if (ns < 0) {
-            ns += nsPerSec;
-            --secs;
-        }
-
-        static_assert(sizeof(time_t) >= 8, "Expecting a 64-bit `time_t`.");
-
-        const auto timeT = static_cast<time_t>(secs);
-        tm tm;
-
-        localtime_r(&timeT, &tm);
-
+        const auto [tm, ns] = localTime(_nsFromOrigin);
         auto time = fmt::format("{:%T}", tm);
         auto nsStr = fmt::format("{:09}", ns);
-        auto utcOffset = fmt::format("{:%Ez}", tm);
-
-        if (utcOffset == "+00:00" || utcOffset == "-00:00") {
-            utcOffset = "Z";
-        }
+        auto utcOffset = fmtUtcOffset(tm);
 
         if (effFmtMode == TsFmtMode::LONG) {
             return LongFmtTs {
@@ -134,6 +149,34 @@ FmtTs Ts::format(const TsFmtMode fmtMode) const
     }
 
     std::abort();
+}
+
+std::optional<std::string> constUtcOffset(const Ts& first, const Ts& last)
+{
+    assert(first.hasUnixEpochOrigin());
+    assert(last.hasUnixEpochOrigin());
+    assert(first <= last);
+
+    constexpr auto nsPerDay = 86'400 * nsPerSec;
+    const auto days = (last - first).ns() / nsPerDay;
+
+    // don't bother with a longer range: assume the offset changes
+    if (days > 3'660) {
+        return std::nullopt;
+    }
+
+    auto utcOffset = fmtUtcOffset(localTime(last.nsFromOrigin()).first);
+
+    // UTC offset changes are months apart: checking once a day is enough
+    for (unsigned long long day = 0; day <= days; ++day) {
+        const auto ns = first.nsFromOrigin() + static_cast<long long>(day) * nsPerDay;
+
+        if (fmtUtcOffset(localTime(ns).first) != utcOffset) {
+            return std::nullopt;
+        }
+    }
+
+    return utcOffset;
 }
 
 } // namespace jacques
