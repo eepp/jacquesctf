@@ -7,12 +7,12 @@
 #include <boost/filesystem.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <list>
-#include <sstream>
 #include <algorithm>
 #include <iterator>
 #include <cstdlib>
 #include <unordered_set>
 #include <cassert>
+#include <fmt/format.h>
 
 #include "cfg.hpp"
 #include "utils.hpp"
@@ -98,10 +98,7 @@ std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFilePaths,
 
     for (const auto& path : origFilePaths) {
         if (!bfs::exists(path)) {
-            std::ostringstream ss;
-
-            ss << "File or directory `" << path.string() << "` does not exist.";
-            throw CliError {ss.str()};
+            throw CliError {fmt::format("File or directory `{}` does not exist.", path.string())};
         }
 
         if (!bfs::is_directory(path) && path.filename() == "metadata") {
@@ -121,11 +118,9 @@ std::vector<bfs::path> expandPaths(const std::vector<bfs::path>& origFilePaths,
         } else {
             if (const auto metadataPath = path.parent_path() / "metadata";
                     !bfs::exists(metadataPath)) {
-                std::ostringstream ss;
-
-                ss << "File `" << path.string() <<
-                      "` is not part of a CTF trace (missing `metadata` file in its directory).";
-                throw CliError {ss.str()};
+                throw CliError {fmt::format("File `{}` is not part of a CTF trace "
+                                            "(missing `metadata` file in its directory).",
+                                            path.string())};
             }
 
             tmpFilePaths.push_back(path);
@@ -227,17 +222,12 @@ std::vector<bfs::path> getExpandedPaths(const std::vector<std::string>& args)
 void checkLooksLikeDsFile(const bfs::path& path)
 {
     if (!bfs::is_regular_file(path)) {
-        std::ostringstream ss;
-
-        ss << "`" << path.string() << "` is not a regular file.";
-        throw CliError {ss.str()};
+        throw CliError {fmt::format("`{}` is not a regular file.", path.string())};
     }
 
     if (path.filename() == "metadata") {
-        std::ostringstream ss;
-
-        ss << "Cannot list the packets of a metadata file: `" << path.string() << "`.";
-        throw CliError {ss.str()};
+        throw CliError {fmt::format("Cannot list the packets of a metadata file: `{}`.",
+                                    path.string())};
     }
 }
 
@@ -328,11 +318,8 @@ void checkLooksLikeDsFile(const bfs::path& path)
     }
 
     if (srcPath == dstPath) {
-        std::ostringstream ss;
-
-        ss << "Source and destination data stream files are the same: `" <<
-              srcPath.string() << "`.";
-        throw CliError {ss.str()};
+        throw CliError {fmt::format("Source and destination data stream files are the same: `{}`.",
+                                    srcPath.string())};
     }
 
     return std::make_unique<CopyPktsCfg>(std::move(srcPath),

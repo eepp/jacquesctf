@@ -12,6 +12,7 @@
 #include <cassert>
 #include <vector>
 #include <boost/filesystem/path.hpp>
+#include <fmt/format.h>
 
 #include "../key.hpp"
 #include "../rect.hpp"
@@ -326,6 +327,22 @@ protected:
      * just after the last written column.
      */
     Index _write(const Point& contentPos, std::string_view str) const;
+
+    /*
+     * Like _write(const Point&, std::string_view), but writes the
+     * string which fmt::format() returns for `fmtStr`, `arg`,
+     * and `args`.
+     *
+     * This overload requires at least one formatting argument so that
+     * the braces of a plain string remain literal.
+     */
+    template <typename ArgT, typename... ArgTs>
+    Index _write(const Point& contentPos, fmt::format_string<ArgT, ArgTs...> fmtStr, ArgT&& arg,
+                 ArgTs&&... args) const
+    {
+        return this->_write(contentPos, fmt::format(fmtStr, std::forward<ArgT>(arg),
+                                                    std::forward<ArgTs>(args)...));
+    }
 
     /*
      * Fills `contentRect`, a rectangle relative to the top-left

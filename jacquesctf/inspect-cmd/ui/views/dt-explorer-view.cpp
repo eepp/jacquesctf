@@ -6,8 +6,8 @@
 #include <cassert>
 #include <cstdlib>
 #include <functional>
-#include <sstream>
 #include <string>
+#include <fmt/format.h>
 
 #include "abstract-dt-details.hpp"
 #include "dt-explorer-view.hpp"
@@ -71,10 +71,7 @@ void DtExplorerView::dst(const yactfr::DataStreamType& dst, const bool showErts)
     this->_rowCount(_rows.size());
     this->clearHighlight();
 
-    std::ostringstream ss;
-
-    ss << "Data stream type data types: " << "(" << dst.id() << ")";
-    this->_title(ss.str());
+    this->_title(fmt::format("Data stream type data types: ({})", dst.id()));
 }
 
 void DtExplorerView::ert(const yactfr::EventRecordType& ert)
@@ -128,16 +125,12 @@ void DtExplorerView::ert(const yactfr::EventRecordType& ert)
     this->_rowCount(_rows.size());
     this->clearHighlight();
 
-    std::ostringstream ss;
-
-    ss << "Event record type data types: ";
-
     if (ert.name()) {
-        ss << '`' << *ert.name() << "` ";
+        this->_title(fmt::format("Event record type data types: `{}` ({})", *ert.name(),
+                                 ert.id()));
+    } else {
+        this->_title(fmt::format("Event record type data types: ({})", ert.id()));
     }
-
-    ss << "(" << ert.id() << ")";
-    this->_title(ss.str());
 }
 
 void DtExplorerView::singleDt(const yactfr::DataType& dt, const yactfr::Scope scope)
@@ -316,7 +309,7 @@ void DtExplorerView::_drawRows()
             });
 
             this->_style(Stylist::Role::TITLE);
-            this->_write({0, y}, std::string {scopeName} + " type:");
+            this->_write({0, y}, "{} type:", scopeName);
         } else if (const auto detailsRow = std::get_if<const AbstractDtDetails *>(&row)) {
             const auto details = *detailsRow;
             bool highlighted = false;

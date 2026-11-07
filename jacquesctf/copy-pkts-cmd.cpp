@@ -3,14 +3,13 @@
  * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
-#include <iostream>
 #include <cassert>
 #include <regex>
 #include <string>
-#include <sstream>
 #include <fstream>
 #include <algorithm>
 #include <vector>
+#include <fmt/format.h>
 
 #include "cfg.hpp"
 #include "copy-pkts-cmd.hpp"
@@ -41,20 +40,16 @@ Index pktIndexSpecToIndex(const std::string& pktIndexSpec, const Size pktCount)
         const auto pktIndex = pktIndexSpecNumber - 1;
 
         if (pktIndex >= pktCount) {
-            std::ostringstream ss;
-
-            ss << pktIndexSpecNumber << " is out of range (" << pktCount << " packets)";
-            throw CmdError {ss.str()};
+            throw CmdError {fmt::format("{} is out of range ({} packets)", pktIndexSpecNumber,
+                                        pktCount)};
         }
 
         return pktIndex;
     }
 
     if (pktIndexSpecNumber > pktCount) {
-            std::ostringstream ss;
-
-            ss << pktIndexSpecNumber << " is out of range (" << pktCount << " packets)";
-            throw CmdError {ss.str()};
+        throw CmdError {fmt::format("{} is out of range ({} packets)", pktIndexSpecNumber,
+                                    pktCount)};
     }
 
     return pktCount - pktIndexSpecNumber;
@@ -89,10 +84,8 @@ std::vector<Index> parsePktIndexSpecList(const std::string& pktIndexSpecList, co
         } else if (std::regex_search(charIt, endCharIt, matchRes, indexRe)) {
             indexes.push_back(pktIndexSpecToIndex(matchRes[1], pktCount));
         } else {
-            std::ostringstream ss;
-
-            ss << "unknown token found: `" << std::string {charIt, endCharIt} << "`";
-            throw CmdError {ss.str()};
+            throw CmdError {fmt::format("unknown token found: `{}`",
+                                        std::string {charIt, endCharIt})};
         }
 
         charIt += matchRes.length(0);
@@ -129,10 +122,8 @@ std::vector<Index> tryParsePktIndexSpecList(const std::string& pktIndexSpecList,
     try {
         return parsePktIndexSpecList(pktIndexSpecList, pktCount);
     } catch (const CmdError& exc) {
-        std::ostringstream ss;
-
-        ss << "Invalid packet indexes: `" << pktIndexSpecList << "`: " << exc.what() << ".";
-        throw CmdError {ss.str()};
+        throw CmdError {fmt::format("Invalid packet indexes: `{}`: {}.", pktIndexSpecList,
+                                    exc.what())};
     }
 }
 

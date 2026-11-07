@@ -7,10 +7,10 @@
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_DT_DETAILS_HPP
 
 #include <string>
-#include <sstream>
 #include <optional>
 #include <functional>
 #include <notcurses/notcurses.h>
+#include <fmt/format.h>
 
 #include "abstract-dt-details.hpp"
 
@@ -123,19 +123,16 @@ private:
     void _renderVlIntType(const VlIntTypeT& dt, ncplane& plane, Size remWidth,
                           const bool stylize) const
     {
-        std::ostringstream ss;
+        const auto info = std::invoke([&dt] {
+            if (dt.isVariableLengthUnsignedIntegerType()) {
+                return "{~u}";
+            } else {
+                assert(dt.isVariableLengthSignedIntegerType());
+                return "{~i}";
+            }
+        });
 
-        ss << '{';
-
-        if (dt.isVariableLengthUnsignedIntegerType()) {
-            ss << "~u";
-        } else {
-            assert(dt.isVariableLengthSignedIntegerType());
-            ss << "~i";
-        }
-
-        ss << '}';
-        this->_renderDtInfo(plane, remWidth, stylize, ss.str().c_str());
+        this->_renderDtInfo(plane, remWidth, stylize, info);
         this->_renderIntTypeCommon(dt, plane, remWidth, stylize);
     }
 
@@ -227,10 +224,8 @@ private:
     void _renderVarType(const VarTypeT& dt, ncplane& plane, Size remWidth,
                         const bool stylize) const
     {
-        std::ostringstream ss;
-
-        ss << "{var-" << this->_varTypeSelCh(dt) << "-sel}";
-        this->_renderDtInfo(plane, remWidth, stylize, ss.str().c_str());
+        this->_renderDtInfo(plane, remWidth, stylize,
+                            fmt::format("{{var-{}-sel}}", this->_varTypeSelCh(dt)).c_str());
 
         if (remWidth == 0) {
             return;

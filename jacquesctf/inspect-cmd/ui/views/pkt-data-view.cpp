@@ -5,9 +5,9 @@
 
 #include <cassert>
 #include <iterator>
-#include <cstdio>
 #include <algorithm>
 #include <cstdlib>
+#include <fmt/format.h>
 
 #include "../stylist.hpp"
 #include "pkt-data-view.hpp"
@@ -120,7 +120,6 @@ void PktDataView::_setDataXAndRowSize()
         return;
     }
 
-    std::array<char, 32> buf;
     const Size div = _isOffsetInBytes ? 8 : 1;
     auto totalLenBits = this->_appState().activePktState().pktIndexEntry().effectiveTotalLen().bits();
 
@@ -130,13 +129,8 @@ void PktDataView::_setDataXAndRowSize()
 
     const auto maxOffset = static_cast<unsigned long long>(totalLenBits) / div;
 
-    if (_isOffsetInHex) {
-        std::sprintf(buf.data(), "%llx", maxOffset);
-    } else {
-        std::strcpy(buf.data(), utils::sepNumber(maxOffset).c_str());
-    }
-
-    const auto offsetWidth = std::strlen(buf.data());
+    const auto offsetWidth = _isOffsetInHex ? fmt::formatted_size("{:x}", maxOffset) :
+                             utils::sepNumber(maxOffset).size();
 
     Size bytesPerRow = 1;
 
@@ -227,7 +221,7 @@ void PktDataView::_drawOffsets() const
             dispOffsetInPktBits /= div;
 
             const auto offsetStr = _isOffsetInHex ?
-                                   utils::format("%llx", dispOffsetInPktBits) :
+                                   fmt::format("{:x}", dispOffsetInPktBits) :
                                    utils::sepNumber(dispOffsetInPktBits, ',');
 
             const auto curRegionBaseOffsetBits = curRegionSegment.offsetInPktBits() -
@@ -244,7 +238,7 @@ void PktDataView::_drawOffsets() const
                              offsetInPktBits <= curRegionBaseEndOffsetBits;
 
             this->_style(sel ? Stylist::Role::CUR_OFFSET : Stylist::Role::OFFSET);
-            this->_write({0, y}, std::string(maxOffsetWidth - offsetStr.size(), ' ') + offsetStr);
+            this->_write({0, y}, "{:>{}}", offsetStr, maxOffsetWidth);
             offsetInPktBits += _rowSize.bits();
         }
     }

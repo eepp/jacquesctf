@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
-#include <iostream>
 #include <fstream>
 #include <cassert>
 #include <map>

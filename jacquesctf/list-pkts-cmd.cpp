@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
-#include <iostream>
 #include <cassert>
+#include <fmt/format.h>
 
 #include "cfg.hpp"
 #include "list-pkts-cmd.hpp"
@@ -15,46 +15,42 @@
 namespace jacques {
 namespace {
 
-void printHeader([[maybe_unused]] const ListPktsCfg::Fmt fmt, const bool withErCount)
+void printHeader([[maybe_unused]] const ListPktsCfg::Fmt outFmt, const bool withErCount)
 {
-    assert(fmt == ListPktsCfg::Fmt::MACHINE);
+    assert(outFmt == ListPktsCfg::Fmt::MACHINE);
 
-    std::cout << "Index,Offset (bytes),Total length (bytes)," <<
-                 "Content length (bits),Beginning time (cycles)," <<
-                 "Beginning timestamp (ns),End timestamp (cycles),End timestamp (ns)," <<
-                 "Duration (cycles),Duration (ns),Data stream type ID," <<
-                 "Data stream ID,Sequence number," <<
-                 "Discarded event record counter snapshot,";
+    fmt::print("Index,Offset (bytes),Total length (bytes),"
+               "Content length (bits),Beginning time (cycles),"
+               "Beginning timestamp (ns),End timestamp (cycles),End timestamp (ns),"
+               "Duration (cycles),Duration (ns),Data stream type ID,"
+               "Data stream ID,Sequence number,"
+               "Discarded event record counter snapshot,");
 
     if (withErCount) {
-        std::cout << "Event record count,";
+        fmt::print("Event record count,");
     }
 
-    std::cout << "Is valid?" << std::endl;
+    fmt::print("Is valid?\n");
 }
 
-void printRow(const PktIndexEntry& indexEntry, [[maybe_unused]] const ListPktsCfg::Fmt fmt,
+void printRow(const PktIndexEntry& indexEntry, [[maybe_unused]] const ListPktsCfg::Fmt outFmt,
               const bool withErCount)
 {
-    assert(fmt == ListPktsCfg::Fmt::MACHINE);
+    assert(outFmt == ListPktsCfg::Fmt::MACHINE);
 
-    std::cout << indexEntry.natIndexInDsFile() << "," <<
-                 indexEntry.offsetInDsFileBytes() << "," <<
-                 indexEntry.effectiveTotalLen().bytes() << "," <<
-                 indexEntry.effectiveContentLen().bits() << ",";
+    fmt::print("{},{},{},{},", indexEntry.natIndexInDsFile(), indexEntry.offsetInDsFileBytes(),
+               indexEntry.effectiveTotalLen().bytes(), indexEntry.effectiveContentLen().bits());
 
     if (indexEntry.beginTs()) {
-        std::cout << indexEntry.beginTs()->cycles() << "," <<
-                     indexEntry.beginTs()->nsFromOrigin() << ",";
+        fmt::print("{},{},", indexEntry.beginTs()->cycles(), indexEntry.beginTs()->nsFromOrigin());
     } else {
-        std::cout << ",,";
+        fmt::print(",,");
     }
 
     if (indexEntry.endTs()) {
-        std::cout << indexEntry.endTs()->cycles() << "," <<
-                     indexEntry.endTs()->nsFromOrigin() << ",";
+        fmt::print("{},{},", indexEntry.endTs()->cycles(), indexEntry.endTs()->nsFromOrigin());
     } else {
-        std::cout << ",,";
+        fmt::print(",,");
     }
 
     if (indexEntry.beginTs() && indexEntry.endTs() &&
@@ -64,45 +60,45 @@ void printRow(const PktIndexEntry& indexEntry, [[maybe_unused]] const ListPktsCf
         const auto durCycles = indexEntry.endTs()->cycles() -
                                indexEntry.beginTs()->cycles();
 
-        std::cout << durCycles << "," << duration.ns() << ",";
+        fmt::print("{},{},", durCycles, duration.ns());
     } else {
-        std::cout << ",,";
+        fmt::print(",,");
     }
 
     if (indexEntry.dst()) {
-        std::cout << indexEntry.dst()->id() << ",";
+        fmt::print("{},", indexEntry.dst()->id());
     } else {
-        std::cout << ",";
+        fmt::print(",");
     }
 
     if (indexEntry.dsId()) {
-        std::cout << *indexEntry.dsId() << ",";
+        fmt::print("{},", *indexEntry.dsId());
     } else {
-        std::cout << ",";
+        fmt::print(",");
     }
 
     if (indexEntry.seqNum()) {
-        std::cout << *indexEntry.seqNum() << ",";
+        fmt::print("{},", *indexEntry.seqNum());
     } else {
-        std::cout << ",";
+        fmt::print(",");
     }
 
     if (indexEntry.discErCounterSnap()) {
-        std::cout << *indexEntry.discErCounterSnap() << ",";
+        fmt::print("{},", *indexEntry.discErCounterSnap());
     } else {
-        std::cout << ",";
+        fmt::print(",");
     }
 
     if (withErCount) {
         // no event record count for an invalid packet
         if (!indexEntry.isInvalid() && indexEntry.erCount()) {
-            std::cout << *indexEntry.erCount();
+            fmt::print("{}", *indexEntry.erCount());
         }
 
-        std::cout << ",";
+        fmt::print(",");
     }
 
-    std::cout << (indexEntry.isInvalid() ? "no" : "yes") << std::endl;
+    fmt::print("{}\n", indexEntry.isInvalid() ? "no" : "yes");
 }
 
 } // namespace

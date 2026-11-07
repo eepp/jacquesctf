@@ -4,11 +4,10 @@
  */
 
 #include <cassert>
-#include <cstdio>
 #include <cstdlib>
 #include <limits>
-#include <array>
 #include <time.h>
+#include <fmt/format.h>
 
 #include "ts.hpp"
 
@@ -100,34 +99,24 @@ TsFmtMode Ts::effectiveFmtMode(const TsFmtMode fmtMode) const noexcept
     return fmtMode;
 }
 
-void Ts::format(char * const buf, const Size bufSize, const TsFmtMode fmtMode) const
+std::string Ts::format(const TsFmtMode fmtMode) const
 {
     switch (this->effectiveFmtMode(fmtMode)) {
     case TsFmtMode::LONG:
-        std::snprintf(buf, bufSize, "%d-%02u-%02u %02u:%02u:%02u.%09u", _year, _month, _day, _hour,
-                      _min, _sec, _ns);
-        break;
+        return fmt::format("{}-{:02}-{:02} {:02}:{:02}:{:02}.{:09}", _year, _month, _day, _hour,
+                           _min, _sec, _ns);
 
     case TsFmtMode::SHORT:
-        std::snprintf(buf, bufSize, "%02u:%02u:%02u.%09u", _hour, _min, _sec, _ns);
-        break;
+        return fmt::format("{:02}:{:02}:{:02}.{:09}", _hour, _min, _sec, _ns);
 
     case TsFmtMode::NS_FROM_ORIGIN:
-        std::snprintf(buf, bufSize, "%lld", _nsFromOrigin);
-        break;
+        return fmt::to_string(_nsFromOrigin);
 
     case TsFmtMode::CYCLES:
-        std::snprintf(buf, bufSize, "%llu", _cycles);
-        break;
+        return fmt::to_string(_cycles);
     }
-}
 
-std::string Ts::format(const TsFmtMode fmtMode) const
-{
-    std::array<char, 64> buf;
-
-    this->format(buf.data(), buf.size(), fmtMode);
-    return buf.data();
+    std::abort();
 }
 
 } // namespace jacques

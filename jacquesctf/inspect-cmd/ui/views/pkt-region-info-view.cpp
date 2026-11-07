@@ -10,6 +10,7 @@
 #include <cassert>
 #include <variant>
 #include <functional>
+#include <fmt/format.h>
 
 #include "../stylist.hpp"
 #include "../term.hpp"
@@ -92,7 +93,7 @@ private:
             if (item.name) {
                 return std::string {'<'} + utils::escapeStr(*item.name) + '>';
             } else {
-                return std::string {'<'} + std::to_string(item.index) + '>';
+                return fmt::format("<{}>", item.index);
             }
         })};
     }
@@ -107,7 +108,7 @@ private:
          * Reserve five digits each as a trade-off.
          */
         const auto index = _arrayIndexesIt ? **_arrayIndexesIt : 99999;
-        auto str = std::string {'['} + std::to_string(index) + ']';
+        auto str = fmt::format("[{}]", index);
 
         if (_arrayIndexesIt) {
             ++*_arrayIndexesIt;
@@ -193,7 +194,7 @@ void PktRegionInfoView::_redrawContent()
     const auto pathWidth = _maxDtPathSizes[&this->_appState().trace()];
     const auto str = utils::sepNumber(pktRegion->segment().len()->bits(), ',');
 
-    x = this->_write({pathWidth + 4 + this->_curMaxOffsetSize() - 2 - str.size(), 0}, str + " b");
+    x = this->_write({pathWidth + 4 + this->_curMaxOffsetSize() - 2 - str.size(), 0}, "{} b", str);
 
     // byte order
     if (pktRegion->segment().bo()) {
@@ -232,11 +233,11 @@ void PktRegionInfoView::_redrawContent()
 
             switch (prefDispBase) {
             case yactfr::DisplayBase::Octal:
-                x = this->_write({x, 0}, utils::format("0%llo", *val));
+                x = this->_write({x, 0}, "0{:o}", *val);
                 break;
 
             case yactfr::DisplayBase::Hexadecimal:
-                x = this->_write({x, 0}, utils::format("0x%llx", *val));
+                x = this->_write({x, 0}, "0x{:x}", *val);
                 break;
 
             default:
@@ -244,7 +245,7 @@ void PktRegionInfoView::_redrawContent()
                 break;
             }
         } else if (const auto val = std::get_if<double>(&varVal)) {
-            x = this->_write({x, 0}, utils::format("%f", *val));
+            x = this->_write({x, 0}, "{:f}", *val);
         } else if (const auto val = std::get_if<std::string>(&varVal)) {
             x = this->_write({x, 0}, utils::escapeStr(*val));
         }

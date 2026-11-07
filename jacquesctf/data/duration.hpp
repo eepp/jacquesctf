@@ -6,10 +6,10 @@
 #ifndef _JACQUES_DATA_DURATION_HPP
 #define _JACQUES_DATA_DURATION_HPP
 
-#include <ostream>
 #include <string>
-#include <array>
+#include <string_view>
 #include <boost/operators.hpp>
+#include <fmt/format.h>
 
 #include "aliases.hpp"
 
@@ -33,7 +33,6 @@ public:
     Duration(const Duration&) noexcept = default;
     Duration& operator=(const Duration&) noexcept = default;
     Parts parts() const noexcept;
-    void format(char *buf, Size bufSize) const;
     std::string format() const;
 
     unsigned long long ns() const noexcept
@@ -55,15 +54,15 @@ private:
     unsigned long long _ns = 0;
 };
 
-static inline std::ostream& operator<<(std::ostream& stream, const Duration& duration)
-{
-    std::array<char, 64> buf;
-
-    duration.format(buf.data(), buf.size());
-    stream << buf.data();
-    return stream;
-}
-
 } // namespace jacques
+
+template <>
+struct fmt::formatter<jacques::Duration> : fmt::formatter<std::string_view>
+{
+    auto format(const jacques::Duration& duration, fmt::format_context& ctx) const
+    {
+        return fmt::formatter<std::string_view>::format(duration.format(), ctx);
+    }
+};
 
 #endif // _JACQUES_DATA_DURATION_HPP

@@ -8,12 +8,12 @@
 
 #include <string>
 #include <string_view>
-#include <iostream>
+#include <ostream>
 #include <utility>
-#include <sstream>
 #include <iterator>
 #include <optional>
 #include <boost/filesystem.hpp>
+#include <fmt/format.h>
 #include <yactfr/yactfr.hpp>
 
 #include "data/metadata-error.hpp"
@@ -57,11 +57,6 @@ std::vector<std::string> wrapTextLines(const std::string& text, Size lineLen);
 std::string escapeStr(std::string_view str);
 
 /*
- * Formats a string like std::printf() does.
- */
-[[ nodiscard ]] std::string format(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
-
-/*
  * Creates a string which has "thousands separators" from a value,
  * like so:
  *
@@ -89,17 +84,10 @@ bool looksLikeDsFilePath(const boost::filesystem::path& path);
 yactfr::DisplayBase intTypePrefDispBase(const yactfr::DataType& dt) noexcept;
 
 /*
- * Used as such:
- *
- *     error() << "Cannot something something" << std::endl;
- *
- * I hate this. Let's change it some day.
+ * Prints the error message `msg`, prefixed with `ERROR: ` and followed
+ * with a newline, to the standard error.
  */
-static inline std::ostream& error()
-{
-    std::cerr << "ERROR: ";
-    return std::cerr;
-}
+void printError(std::string_view msg);
 
 enum class LenFmtMode
 {
@@ -136,21 +124,21 @@ static inline void maybeAppendPeriod(std::string& str)
 static inline std::string formatTextParseError(const std::string_view path,
                                                const yactfr::TextParseError& error)
 {
-    std::ostringstream ss;
+    std::string str;
 
     for (auto it = error.messages().rbegin(); it != error.messages().rend(); ++it) {
         auto& msg = *it;
 
-        ss << path << ":" << msg.location().naturalLineNumber() <<
-              ":" << msg.location().naturalColumnNumber() << " [" <<
-              msg.location().offset() << "]: " << msg.message();
+        fmt::format_to(std::back_inserter(str), "{}:{}:{} [{}]: {}", path,
+                       msg.location().naturalLineNumber(), msg.location().naturalColumnNumber(),
+                       msg.location().offset(), msg.message());
 
         if (it < error.messages().rend() - 1) {
-            ss << std::endl;
+            str += '\n';
         }
     }
 
-    return ss.str();
+    return str;
 }
 
 } // namespace internal
@@ -158,30 +146,28 @@ static inline std::string formatTextParseError(const std::string_view path,
 template <typename FuncT>
 std::optional<std::string> tryFunc(FuncT&& func)
 {
-    std::ostringstream ss;
+    std::string str;
 
     try {
         func();
     } catch (const MetadataError<yactfr::InvalidMetadataStream>& exc) {
-        ss << "Metadata error: `" << exc.path().string() <<
-              "`: invalid metadata stream: " << exc.what();
+        str = fmt::format("Metadata error: `{}`: invalid metadata stream: {}",
+                          exc.path().string(), exc.what());
     } catch (const MetadataError<yactfr::TextParseError>& exc) {
-        ss << internal::formatTextParseError(exc.path().string(), exc.subError());
+        str = internal::formatTextParseError(exc.path().string(), exc.subError());
     } catch (const CliError& exc) {
-        ss << "Command-line error: " << exc.what();
+        str = fmt::format("Command-line error: {}", exc.what());
     } catch (const boost::filesystem::filesystem_error& exc) {
-        ss << "File system error: " << exc.what();
+        str = fmt::format("File system error: {}", exc.what());
     } catch (const IOError& exc) {
-        ss << "I/O error: " << exc.what();
+        str = fmt::format("I/O error: {}", exc.what());
     } catch (const CmdError& exc) {
-        ss << "Command error: " << exc.what();
+        str = fmt::format("Command error: {}", exc.what());
     } catch (const std::exception& exc) {
-        ss << exc.what();
+        str = exc.what();
     } catch (...) {
-        ss << "Unknown exception";
+        str = "Unknown exception";
     }
-
-    auto str = ss.str();
 
     if (str.empty()) {
         return std::nullopt;
@@ -201,7 +187,7 @@ std::string csvListStr(const ContainerT& container, const bool withBackticks = t
 
     const auto fmtStrFunc = [withBackticks](const auto& str) {
         if (withBackticks) {
-            return std::string {'`'} + str + '`';
+            return fmt::format("`{}`", str);
         }
 
         return str;
@@ -212,30 +198,26 @@ std::string csvListStr(const ContainerT& container, const bool withBackticks = t
     }
 
     if (container.size() == 2 && lastWord) {
-        std::ostringstream ss;
-
-        ss << fmtStrFunc(*container.begin());
-        ss << ' ' << lastWord << ' ';
-        ss << fmtStrFunc(*std::next(container.begin()));
-        return ss.str();
+        return fmt::format("{} {} {}", fmtStrFunc(*container.begin()), lastWord,
+                           fmtStrFunc(*std::next(container.begin())));
     }
 
-    std::ostringstream ss;
+    std::string str;
     const auto penultimateIt = std::prev(container.end());
 
     for (auto it = container.begin(); it < container.end(); ++it) {
         if (it == penultimateIt && lastWord) {
-            ss << lastWord << ' ';
+            fmt::format_to(std::back_inserter(str), "{} ", lastWord);
         }
 
-        ss << fmtStrFunc(*it);
+        str += fmtStrFunc(*it);
 
         if (it != penultimateIt) {
-            ss << ", ";
+            str += ", ";
         }
     }
 
-    return ss.str();
+    return str;
 }
 
 } // namespace jacques::utils

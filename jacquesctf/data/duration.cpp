@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
+#include <iterator>
+#include <fmt/format.h>
+
 #include "duration.hpp"
 
 namespace jacques {
@@ -24,34 +27,26 @@ Duration::Parts Duration::parts() const noexcept
     return {hPart, mPart, sPart, nsPart};
 }
 
-// TODO: use the second parameter
-void Duration::format(char * const buf, const Size) const
+std::string Duration::format() const
 {
-    auto bufAt = buf;
+    std::string str;
+    const auto out = std::back_inserter(str);
     const auto parts = this->parts();
 
     if (parts.hours > 0) {
-        bufAt += std::sprintf(bufAt, "%llu:", parts.hours);
+        fmt::format_to(out, "{}:", parts.hours);
     }
 
     if (parts.mins > 0 || parts.hours > 0) {
-        bufAt += std::sprintf(bufAt, (parts.hours > 0) ? "%02llu:" : "%llu:", parts.mins);
+        fmt::format_to(out, "{:0{}}:", parts.mins, parts.hours > 0 ? 2 : 0);
     }
 
     if (parts.secs > 0 || parts.mins > 0 || parts.hours > 0) {
-        bufAt += std::sprintf(bufAt, (parts.mins > 0 || parts.hours > 0) ? "%02llu" : "%llu",
-                              parts.secs);
+        fmt::format_to(out, "{:0{}}", parts.secs, parts.mins > 0 || parts.hours > 0 ? 2 : 0);
     }
 
-    std::sprintf(bufAt, ".%09llu", parts.ns);
-}
-
-std::string Duration::format() const
-{
-    std::array<char, 64> buf;
-
-    this->format(buf.data(), buf.size());
-    return buf.data();
+    fmt::format_to(out, ".{:09}", parts.ns);
+    return str;
 }
 
 } // namespace jacques

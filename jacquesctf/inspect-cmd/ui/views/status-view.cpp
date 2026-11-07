@@ -82,8 +82,8 @@ void StatusView::_drawOffset(const _EndPositions& endPositions)
     const auto pktLenBits = this->_appState().activePktState().pkt().indexEntry().effectiveTotalLen().bits();
     const auto percent = pktLenBits == 0 ? 0 :
                          this->_appState().activePktState().curOffsetInPktBits() * 100 / pktLenBits;
-    auto x = this->_write({this->contentRect().w - endPositions.pktPercent - 5, 0},
-                          utils::format("%3u", static_cast<unsigned int>(percent)));
+    auto x = this->_write({this->contentRect().w - endPositions.pktPercent - 5, 0}, "{:3}",
+                          percent);
 
     this->_style(Stylist::Role::STATUS);
     this->_write({x, 0}, " %");
@@ -125,7 +125,7 @@ void StatusView::_redrawContent()
         this->_style(Stylist::Role::STATUS, true);
         x = this->_write({x, 0}, indexStr);
         this->_style(Stylist::Role::STATUS);
-        this->_write({x, 0}, "/" + countStr);
+        this->_write({x, 0}, "/{}", countStr);
 
         // packet sequence number
         const auto& seqNum = this->_appState().activePktState().pktIndexEntry().seqNum();
@@ -151,7 +151,7 @@ void StatusView::_redrawContent()
     this->_style(Stylist::Role::STATUS);
 
     if (!dirNameStr.empty()) {
-        x = this->_write({x, 0}, dirNameStr + '/');
+        x = this->_write({x, 0}, "{}/", dirNameStr);
     }
 
     this->_style(Stylist::Role::STATUS, true);

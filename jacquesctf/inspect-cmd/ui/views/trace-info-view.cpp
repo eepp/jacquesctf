@@ -8,6 +8,7 @@
 #include <numeric>
 #include <variant>
 #include <boost/uuid/uuid_io.hpp>
+#include <fmt/format.h>
 
 #include "trace-info-view.hpp"
 #include "data/ts.hpp"
@@ -227,8 +228,8 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
     rows.push_back(std::make_unique<_EmptyRow>());
     rows.push_back(std::make_unique<_SectionRow>("Trace type"));
 
-    const auto version = std::to_string(traceType.majorVersion()) + "." +
-                         std::to_string(traceType.minorVersion());
+    const auto version = fmt::format("{}.{}", traceType.majorVersion(),
+                                     traceType.minorVersion());
 
     rows.push_back(std::make_unique<_StrPropRow>("Version", version));
 
@@ -270,7 +271,7 @@ void TraceInfoView::_buildTraceInfoRows(const Trace& trace)
     for (auto& dst : traceType.dataStreamTypes()) {
         rows.push_back(std::make_unique<_EmptyRow>());
 
-        const auto title = std::string {"Data stream type "} + std::to_string(dst->id());
+        const auto title = fmt::format("Data stream type {}", dst->id());
 
         rows.push_back(std::make_unique<_SectionRow>(title));
         rows.push_back(std::make_unique<_SIntPropRow>("Event record types",
@@ -432,10 +433,10 @@ void TraceInfoView::_drawRows()
 
         if (const auto sRow = dynamic_cast<const _SectionRow *>(row.get())) {
             this->_style(Stylist::Role::TITLE);
-            this->_write({0, y}, sRow->title + ':');
+            this->_write({0, y}, "{}:", sRow->title);
         } else if (const auto sRow = dynamic_cast<const _PropRow *>(row.get())) {
             this->_style(Stylist::Role::PROP_KEY);
-            this->_write({2, y}, sRow->key + ':');
+            this->_write({2, y}, "{}:", sRow->key);
             this->_style(Stylist::Role::PROP_VAL);
 
             const Point valPos {sRow->valOffset + 2, y};
@@ -454,7 +455,7 @@ void TraceInfoView::_drawRows()
             } else if (const auto vRow = dynamic_cast<const _DataLenPropRow *>(row.get())) {
                 const auto [len, unit] = vRow->len.format();
 
-                this->_write(valPos, len + ' ' + unit);
+                this->_write(valPos, "{} {}", len, unit);
             } else if (const auto vRow = dynamic_cast<const _TsPropRow *>(row.get())) {
                 this->_write(valPos, vRow->ts.format());
             } else if (const auto vRow = dynamic_cast<const _DurationPropRow *>(row.get())) {

@@ -11,6 +11,7 @@
 #include <string_view>
 struct ncplane;
 #include <yactfr/metadata/fwd.hpp>
+#include <fmt/format.h>
 
 #include "aliases.hpp"
 #include "utils.hpp"
@@ -72,18 +73,11 @@ std::string intRangeSetStr(const IntRangeSetT& ranges)
 
     std::transform(ranges.begin(), ranges.end(), std::back_inserter(rangeStrs),
                    [](auto& range) {
-        std::ostringstream ss;
-
-        ss << '[';
-
         if (range.lower() == range.upper()) {
-            ss << range.lower();
+            return fmt::format("[{}]", range.lower());
         } else {
-            ss << range.lower() << ", " << range.upper();
+            return fmt::format("[{}, {}]", range.lower(), range.upper());
         }
-
-        ss << ']';
-        return ss.str();
     });
 
     return utils::csvListStr(rangeStrs, false, nullptr);

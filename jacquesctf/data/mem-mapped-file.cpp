@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <fcntl.h>
-#include <sstream>
+#include <fmt/format.h>
 
 #include "mem-mapped-file.hpp"
 #include "io-error.hpp"
@@ -73,14 +73,13 @@ void MemMappedFile::map(const Index offsetBytes, const DataLen& len)
                      static_cast<off_t>(mmapOffsetBytes));
 
     if (_mmapAddr == MAP_FAILED) {
-        std::ostringstream ss;
+        const auto msg = fmt::format("Cannot memory-map region [{}, {}] of file `{}`.",
+                               mmapOffsetBytes, mmapOffsetBytes + _mmapLen.bytes() - 1,
+                               _path.string());
 
-        ss << "Cannot memory-map region [" << mmapOffsetBytes << ", " <<
-              (mmapOffsetBytes + _mmapLen.bytes() - 1) << "] of file `" <<
-              _path.string() << "`.";
         _mmapAddr = nullptr;
         _mmapLen = 0;
-        throw IOError {_path, ss.str()};
+        throw IOError {_path, msg};
     }
 
     _mapAddr = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(_mmapAddr) +

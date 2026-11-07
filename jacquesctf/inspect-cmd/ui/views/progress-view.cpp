@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <utility>
+#include <fmt/format.h>
 
 #include "progress-view.hpp"
 #include "utils.hpp"
@@ -142,7 +143,7 @@ void setPktCheckpointsBuildProgress(ProgressView& view, const PktIndexEntry& pkt
 {
     const auto& contentLen = pktIndexEntry.effectiveContentLen();
 
-    view.subjectText("Packet #" + std::to_string(pktIndexEntry.natIndexInDsFile()));
+    view.subjectText(fmt::format("Packet #{}", pktIndexEntry.natIndexInDsFile()));
 
     if (!lastEr) {
         view.progress(0);
@@ -170,7 +171,7 @@ void setPktCheckpointsBuildProgress(ProgressView& view, const PktIndexEntry& pkt
             rows.push_back({"ERT name:", utils::escapeStr(*ert->name())});
         }
 
-        rows.push_back({"ERT ID:", std::to_string(ert->id())});
+        rows.push_back({"ERT ID:", fmt::to_string(ert->id())});
     }
 
     view.rows(std::move(rows));

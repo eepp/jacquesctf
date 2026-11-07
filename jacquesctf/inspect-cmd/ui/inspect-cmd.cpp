@@ -7,14 +7,15 @@
 #include <array>
 #include <cassert>
 #include <cstdlib>
+#include <cstdio>
 #include <functional>
-#include <iostream>
 #include <optional>
 #include <memory>
 #include <utility>
 #include <vector>
 #include <signal.h>
 #include <notcurses/notcurses.h>
+#include <fmt/format.h>
 
 #include "inspect-cmd.hpp"
 #include "key.hpp"
@@ -48,8 +49,8 @@ void sigHandler(const int signo)
          * When the terminal is initialized, notcurses calls this
          * handler after restoring the terminal.
          */
-        std::cerr << '\n';
-        utils::error() << "Interrupted by user.\n";
+        std::fputc('\n', stderr);
+        utils::printError("Interrupted by user.");
 
         // just exit immediately
         std::exit(0);
@@ -265,10 +266,9 @@ private:
 
         ncplane_erase(&stdPlane);
         _stylist->apply(stdPlane, Stylist::Role::ERROR);
-        ncplane_printf_yx(&stdPlane, 0, 0,
-                          "Terminal size must be at least 80×16 (currently %llu×%llu).",
-                          static_cast<unsigned long long>(termSize.w),
-                          static_cast<unsigned long long>(termSize.h));
+        ncplane_putstr_yx(&stdPlane, 0, 0,
+                          fmt::format("Terminal size must be at least 80×16 (currently {}×{}).",
+                                      termSize.w, termSize.h).c_str());
     }
 
     bool _handleKey(const Key key) override

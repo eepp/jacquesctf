@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include <numeric>
+#include <fmt/format.h>
 
 #include "table-view.hpp"
 #include "utils.hpp"
@@ -266,7 +267,7 @@ TableView::_Cell TableView::_createTextCell(const std::string_view text)
 
 TableView::_Cell TableView::_createUIntCell(const unsigned long long val, const bool sep)
 {
-    return _Cell {sep ? utils::sepNumber(val, ',') : std::to_string(val)};
+    return _Cell {sep ? utils::sepNumber(val, ',') : fmt::to_string(val)};
 }
 
 TableView::_Cell TableView::_createPathCell(const boost::filesystem::path& path, const Size width)

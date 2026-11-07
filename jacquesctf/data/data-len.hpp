@@ -8,9 +8,10 @@
 
 #include <utility>
 #include <string>
-#include <ostream>
+#include <string_view>
 #include <optional>
 #include <boost/operators.hpp>
+#include <fmt/format.h>
 
 #include "aliases.hpp"
 #include "utils.hpp"
@@ -114,14 +115,6 @@ private:
     Size _lenBits = 0;
 };
 
-static inline std::ostream& operator<<(std::ostream& stream, const DataLen& dataLen)
-{
-    const auto [qty, units] = dataLen.format(utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS, ',');
-
-    stream << qty << ' ' << units;
-    return stream;
-}
-
 static inline DataLen operator+(const Size left, const DataLen& right) noexcept
 {
     return left + right.bits();
@@ -178,5 +171,17 @@ static inline DataLen operator""_GiB(const Size gib) noexcept
 }
 
 } // namespace jacques
+
+template <>
+struct fmt::formatter<jacques::DataLen> : fmt::formatter<std::string_view>
+{
+    auto format(const jacques::DataLen& dataLen, fmt::format_context& ctx) const
+    {
+        const auto [qty, units] = dataLen.format(jacques::utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
+                                                 ',');
+
+        return fmt::formatter<std::string_view>::format(fmt::format("{} {}", qty, units), ctx);
+    }
+};
 
 #endif // _JACQUES_DATA_DATA_LEN_HPP

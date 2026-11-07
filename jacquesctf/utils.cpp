@@ -4,16 +4,15 @@
  */
 
 #include <cassert>
-#include <cstring>
 #include <cstdio>
-#include <cstdarg>
 #include <cwctype>
-#include <array>
+#include <iterator>
 #include <string>
 #include <sstream>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <algorithm>
+#include <fmt/format.h>
 
 #include "utils.hpp"
 #include "unicode.hpp"
@@ -34,8 +33,12 @@ inline unsigned long long abs(const unsigned long long val) noexcept
     return val;
 }
 
+/*
+ * Like the public sepNumber() overloads, but zero-pads the absolute
+ * value of `val` to `minDigits` digits first.
+ */
 template <typename ValT>
-std::string sepNumber(const ValT val, const char sep, const char * const fmt)
+std::string sepNumber(const ValT val, const char sep, const unsigned int minDigits)
 {
     /*
      * 1. Convert absolute value to string.
@@ -49,15 +52,14 @@ std::string sepNumber(const ValT val, const char sep, const char * const fmt)
      *
      * 5. Reverse the whole string.
      */
-    std::array<char, 64> buf;
-    const auto count = std::sprintf(buf.data(), fmt, abs(val));
+    const auto digits = fmt::format("{:0{}}", abs(val), minDigits);
     Index i = 0;
     std::string ret;
 
-    ret.reserve(count + count / 3 + 1);
+    ret.reserve(digits.size() + digits.size() / 3 + 1);
 
-    for (auto at = count - 1; at >= 0; --at, ++i) {
-        const auto ch = buf[at];
+    for (auto it = digits.rbegin(); it != digits.rend(); ++it, ++i) {
+        const auto ch = *it;
 
         if (i % 3 == 0 && i != 0) {
             ret += sep;
@@ -80,39 +82,19 @@ std::string sepNumber(const ValT val, const char sep, const char * const fmt)
 
 } // namespace
 
-std::string format(const char * const fmt, ...)
+void printError(const std::string_view msg)
 {
-    va_list args;
-
-    va_start(args, fmt);
-
-    va_list argsCopy;
-
-    va_copy(argsCopy, args);
-
-    const auto len = std::vsnprintf(nullptr, 0, fmt, argsCopy);
-
-    va_end(argsCopy);
-
-    std::string str;
-
-    if (len > 0) {
-        str.resize(static_cast<std::size_t>(len));
-        static_cast<void>(std::vsnprintf(str.data(), str.size() + 1, fmt, args));
-    }
-
-    va_end(args);
-    return str;
+    fmt::print(stderr, "ERROR: {}\n", msg);
 }
 
 std::string sepNumber(const long long val, const char sep)
 {
-    return sepNumber(val, sep, "%lld");
+    return sepNumber(val, sep, 0);
 }
 
 std::string sepNumber(const unsigned long long val, const char sep)
 {
-    return sepNumber(val, sep, "%llu");
+    return sepNumber(val, sep, 0);
 }
 
 std::string wrapText(const std::string& text, const Size lineLen)
@@ -288,7 +270,7 @@ endOfPattern:
 std::pair<std::string, std::string> formatLen(const Size lenBits, const LenFmtMode fmtMode,
                                               const std::optional<char>& sep)
 {
-    std::array<char, 64> buf;
+    std::string qty;
     const char *unit = nullptr;
     const auto sizeBytes = lenBits / 8;
     const auto extraBits = lenBits & 7;
@@ -312,9 +294,9 @@ std::pair<std::string, std::string> formatLen(const Size lenBits, const LenFmtMo
         }
 
         if (fmtMode == LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS && extraBits > 0) {
-            std::sprintf(buf.data(), "%.3f+%llu", val, extraBits);
+            qty = fmt::format("{:.3f}+{}", val, extraBits);
         } else {
-            std::sprintf(buf.data(), "%.3f", val);
+            qty = fmt::format("{:.3f}", val);
         }
 
         break;
@@ -324,22 +306,11 @@ std::pair<std::string, std::string> formatLen(const Size lenBits, const LenFmtMo
     case LenFmtMode::BYTES_FLOOR_WITH_EXTRA_BITS:
         unit = "B";
 
+        qty = sep ? sepNumber(static_cast<long long>(sizeBytes), *sep) :
+              fmt::to_string(sizeBytes);
+
         if (fmtMode == LenFmtMode::BYTES_FLOOR_WITH_EXTRA_BITS && extraBits > 0) {
-            if (sep) {
-                const auto sepNum = sepNumber(static_cast<long long>(sizeBytes), *sep);
-
-                std::sprintf(buf.data(), "%s+%llu", sepNum.c_str(), extraBits);
-            } else {
-                std::sprintf(buf.data(), "%llu+%llu", sizeBytes, extraBits);
-            }
-        } else {
-            if (sep) {
-                const auto sepNum = sepNumber(static_cast<long long>(sizeBytes), *sep);
-
-                std::strcpy(buf.data(), sepNum.c_str());
-            } else {
-                std::sprintf(buf.data(), "%llu", sizeBytes);
-            }
+            fmt::format_to(std::back_inserter(qty), "+{}", extraBits);
         }
 
         break;
@@ -347,19 +318,14 @@ std::pair<std::string, std::string> formatLen(const Size lenBits, const LenFmtMo
     case LenFmtMode::BITS:
         unit = "b";
 
-        if (sep) {
-            const auto sepNum = sepNumber(static_cast<long long>(lenBits), *sep);
-
-            std::strcpy(buf.data(), sepNum.c_str());
-        } else {
-            std::sprintf(buf.data(), "%llu", lenBits);
-        }
+        qty = sep ? sepNumber(static_cast<long long>(lenBits), *sep) :
+              fmt::to_string(lenBits);
 
         break;
     }
 
     assert(unit);
-    return {buf.data(), unit};
+    return {std::move(qty), unit};
 }
 
 std::pair<std::string, std::string> formatNs(long long ns, const std::optional<char>& sep)
@@ -374,10 +340,9 @@ std::pair<std::string, std::string> formatNs(long long ns, const std::optional<c
         sStr = "-";
     }
 
-    sStr += sep ? sepNumber(absSOnly, *sep) : std::to_string(absSOnly);
+    sStr += sep ? sepNumber(absSOnly, *sep) : fmt::to_string(absSOnly);
 
-    const auto nsStr = sep ? sepNumber(nsOnly, *sep, "%09llu") :
-                       std::to_string(nsOnly);
+    const auto nsStr = sep ? sepNumber(nsOnly, *sep, 9) : fmt::to_string(nsOnly);
 
     return {sStr, nsStr};
 }
@@ -427,12 +392,8 @@ std::string escapeStr(const std::string_view str)
                 break;
 
             default:
-            {
-                std::array<char, 8> buf;
-
-                std::sprintf(buf.data(), "\\x%02x", static_cast<unsigned int>(cp));
-                outStr += buf.data();
-            }
+                fmt::format_to(std::back_inserter(outStr), "\\x{:02x}",
+                               static_cast<unsigned int>(cp));
             }
         } else if (cp == U'\\') {
             outStr += "\\\\";

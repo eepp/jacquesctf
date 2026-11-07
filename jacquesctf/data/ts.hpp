@@ -6,9 +6,10 @@
 #ifndef _JACQUES_DATA_TS_HPP
 #define _JACQUES_DATA_TS_HPP
 
-#include <ostream>
 #include <string>
+#include <string_view>
 #include <boost/operators.hpp>
+#include <fmt/format.h>
 #include <yactfr/yactfr.hpp>
 
 #include "aliases.hpp"
@@ -121,7 +122,6 @@ public:
      */
     TsFmtMode effectiveFmtMode(TsFmtMode fmtMode) const noexcept;
 
-    void format(char *buf, Size bufSize, TsFmtMode fmtMode = TsFmtMode::LONG) const;
     std::string format(TsFmtMode fmtMode = TsFmtMode::LONG) const;
 
     bool operator==(const Ts& other) const noexcept
@@ -149,15 +149,15 @@ private:
     Weekday _weekday = Weekday::SUNDAY;
 };
 
-static inline std::ostream& operator<<(std::ostream& stream, const Ts& ts)
-{
-    std::array<char, 64> buf;
-
-    ts.format(buf.data(), buf.size());
-    stream << buf.data();
-    return stream;
-}
-
 } // namespace jacques
+
+template <>
+struct fmt::formatter<jacques::Ts> : fmt::formatter<std::string_view>
+{
+    auto format(const jacques::Ts& ts, fmt::format_context& ctx) const
+    {
+        return fmt::formatter<std::string_view>::format(ts.format(), ctx);
+    }
+};
 
 #endif // _JACQUES_DATA_TS_HPP

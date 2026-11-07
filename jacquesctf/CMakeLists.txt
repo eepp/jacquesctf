@@ -41,6 +41,18 @@ FetchContent_Declare (
 )
 FetchContent_MakeAvailable (yactfr)
 
+# Fetch and build a pinned version of {fmt} (12.2.0, static library,
+# linked into the `jacquesctf` executable).
+#
+# Set `FETCHCONTENT_SOURCE_DIR_FMT` to the path of a local {fmt} source
+# tree to use it instead.
+FetchContent_Declare (
+    fmt
+    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+    GIT_TAG 1be298e1bd68957e4cd352e1f676f00e07dcfb57
+)
+FetchContent_MakeAvailable (fmt)
+
 # Jacques CTF program
 if (JACQUES_HAS_INSPECT_CMD)
     set (
@@ -138,6 +150,7 @@ target_link_libraries (
     Boost::program_options
     Boost::filesystem
     yactfr::yactfr
+    fmt::fmt
 )
 if (JACQUES_HAS_INSPECT_CMD)
     target_link_libraries (jacquesctf PkgConfig::NOTCURSES_CORE)

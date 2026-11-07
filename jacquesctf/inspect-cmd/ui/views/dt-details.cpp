@@ -5,8 +5,9 @@
 
 #include <cassert>
 #include <cstdlib>
-#include <sstream>
 #include <functional>
+#include <iterator>
+#include <fmt/format.h>
 
 #include "dt-details.hpp"
 #include "utils.hpp"
@@ -121,10 +122,7 @@ std::string alignStr(const yactfr::Size align)
     if (align == 1) {
         return "";
     } else {
-        std::ostringstream ss;
-
-        ss << " %" << align;
-        return ss.str();
+        return fmt::format(" %{}", align);
     }
 }
 
@@ -138,34 +136,31 @@ std::string alignStr(const yactfr::DataType& dt)
 void DtDetails::_renderDt(const yactfr::FixedLengthBitArrayType& dt, ncplane& plane,
                           Size remWidth, const bool stylize) const
 {
-    std::ostringstream ss;
+    const auto kind = std::invoke([&dt] {
+        if (dt.isFixedLengthBitMapType()) {
+            return "bm";
+        } else if (dt.isFixedLengthSignedIntegerType()) {
+            return "i";
+        } else if (dt.isFixedLengthUnsignedIntegerType()) {
+            return "u";
+        } else if (dt.isFixedLengthBooleanType()) {
+            return "bool";
+        } else if (dt.isFixedLengthFloatingPointNumberType()) {
+            return "flt";
+        } else {
+            return "ba";
+        }
+    });
 
-    ss << '{';
+    // `^` indicates an unnatural bit order
+    const auto unnaturalBitOrder =
+        (dt.byteOrder() == yactfr::ByteOrder::Big && dt.bitOrder() == yactfr::BitOrder::FirstToLast) ||
+        (dt.byteOrder() == yactfr::ByteOrder::Little && dt.bitOrder() == yactfr::BitOrder::LastToFirst);
 
-    if (dt.isFixedLengthBitMapType()) {
-        ss << "bm";
-    } else if (dt.isFixedLengthSignedIntegerType()) {
-        ss << 'i';
-    } else if (dt.isFixedLengthUnsignedIntegerType()) {
-        ss << 'u';
-    } else if (dt.isFixedLengthBooleanType()) {
-        ss << "bool";
-    } else if (dt.isFixedLengthFloatingPointNumberType()) {
-        ss << "flt";
-    } else {
-        ss << "ba";
-    }
-
-    ss << dt.length() << ' ' << (dt.byteOrder() == yactfr::ByteOrder::Big ? "be" : "le");
-
-    if ((dt.byteOrder() == yactfr::ByteOrder::Big && dt.bitOrder() == yactfr::BitOrder::FirstToLast) ||
-            (dt.byteOrder() == yactfr::ByteOrder::Little && dt.bitOrder() == yactfr::BitOrder::LastToFirst)) {
-        // indicate unnatural bit order
-        ss << '^';
-    }
-
-    ss << alignStr(dt) << '}';
-    this->_renderDtInfo(plane, remWidth, stylize, ss.str().c_str());
+    this->_renderDtInfo(plane, remWidth, stylize,
+                        fmt::format("{{{}{} {}{}{}}}", kind, dt.length(),
+                                    dt.byteOrder() == yactfr::ByteOrder::Big ? "be" : "le",
+                                    unnaturalBitOrder ? "^" : "", alignStr(dt)).c_str());
 
     if (dt.isFixedLengthBitMapType()) {
         const auto count = dt.asFixedLengthBitMapType().flags().size();
@@ -191,10 +186,8 @@ void DtDetails::_renderDt(const yactfr::NullTerminatedStringType& dt, ncplane& p
 void DtDetails::_renderDt(const yactfr::StructureType& dt, ncplane& plane,
                           Size remWidth, const bool stylize) const
 {
-    std::ostringstream ss;
-
-    ss << "{struct" << alignStr(dt) << '}';
-    this->_renderDtInfo(plane, remWidth, stylize, ss.str().c_str());
+    this->_renderDtInfo(plane, remWidth, stylize,
+                        fmt::format("{{struct{}}}", alignStr(dt)).c_str());
 
     if (remWidth == 0) {
         return;
@@ -212,10 +205,8 @@ void DtDetails::_renderDt(const yactfr::StructureType& dt, ncplane& plane,
 void DtDetails::_renderDt(const yactfr::StaticLengthArrayType& dt, ncplane& plane,
                           Size remWidth, const bool stylize) const
 {
-    std::ostringstream ss;
-
-    ss << "{sl-array" << alignStr(dt) << '}';
-    this->_renderDtInfo(plane, remWidth, stylize, ss.str().c_str());
+    this->_renderDtInfo(plane, remWidth, stylize,
+                        fmt::format("{{sl-array{}}}", alignStr(dt)).c_str());
 
     if (remWidth == 0) {
         return;
@@ -280,10 +271,8 @@ void DtDetails::_renderDt(const yactfr::StaticLengthBlobType& dt, ncplane& plane
 void DtDetails::_renderDt(const yactfr::DynamicLengthArrayType& dt, ncplane& plane,
                           Size remWidth, const bool stylize) const
 {
-    std::ostringstream ss;
-
-    ss << "{dl-array" << alignStr(dt) << '}';
-    this->_renderDtInfo(plane, remWidth, stylize, ss.str().c_str());
+    this->_renderDtInfo(plane, remWidth, stylize,
+                        fmt::format("{{dl-array{}}}", alignStr(dt)).c_str());
 
     if (remWidth == 0) {
         return;
@@ -326,9 +315,7 @@ void DtDetails::_renderDt(const yactfr::DynamicLengthBlobType& dt, ncplane& plan
 void DtDetails::_renderDt(const yactfr::OptionalType& dt, ncplane& plane, Size remWidth,
                           const bool stylize) const
 {
-    std::ostringstream ss;
-
-    ss << "{opt-" << std::invoke([&dt] {
+    const auto selCh = std::invoke([&dt] {
         if (dt.isOptionalWithBooleanSelectorType()) {
             return 'b';
         } else if (dt.isOptionalWithUnsignedIntegerSelectorType()) {
@@ -337,8 +324,9 @@ void DtDetails::_renderDt(const yactfr::OptionalType& dt, ncplane& plane, Size r
             assert(dt.isOptionalWithSignedIntegerSelectorType());
             return 'i';
         }
-    }) << "-sel}";
-    this->_renderDtInfo(plane, remWidth, stylize, ss.str().c_str());
+    });
+
+    this->_renderDtInfo(plane, remWidth, stylize, fmt::format("{{opt-{}-sel}}", selCh).c_str());
 
     if (remWidth == 0) {
         return;
@@ -396,10 +384,7 @@ void DtDetails::_renderRoleFlag(ncplane& plane, Size& remWidth, const bool styli
         return;
     }
 
-    std::ostringstream ss;
-
-    ss << '<' << name << '>';
-    this->_renderStr(plane, remWidth, ss.str());
+    this->_renderStr(plane, remWidth, fmt::format("<{}>", name));
 }
 
 void DtDetails::_renderStrEncodingProp(ncplane& plane, Size& remWidth, const bool stylize,
@@ -478,48 +463,45 @@ void DtDetails::_renderProp(ncplane& plane, Size& remWidth, const bool stylize,
 void DtDetails::_renderProp(ncplane& plane, Size& remWidth, const bool stylize,
                             const char * const key, const unsigned long long val) const
 {
-    std::ostringstream ss;
-
-    ss << val;
-    this->_renderProp(plane, remWidth, stylize, key, ss.str().c_str());
+    this->_renderProp(plane, remWidth, stylize, key, fmt::to_string(val).c_str());
 }
 
 void DtDetails::_renderDataLoc(ncplane& plane, Size& remWidth, const bool stylize,
                                const char * const key, const yactfr::DataLocation& loc) const
 {
-    std::ostringstream ss;
+    std::string str;
 
     switch (loc.scope()) {
     case yactfr::Scope::PacketHeader:
-        ss << "PH";
+        str = "PH";
         break;
 
     case yactfr::Scope::PacketContext:
-        ss << "PC";
+        str = "PC";
         break;
 
     case yactfr::Scope::EventRecordHeader:
-        ss << "ERH";
+        str = "ERH";
         break;
 
     case yactfr::Scope::EventRecordCommonContext:
-        ss << "ERCC";
+        str = "ERCC";
         break;
 
     case yactfr::Scope::EventRecordSpecificContext:
-        ss << "ERSC";
+        str = "ERSC";
         break;
 
     case yactfr::Scope::EventRecordPayload:
-        ss << "ERP";
+        str = "ERP";
         break;
     }
 
     for (auto& pathElem : loc.pathElements()) {
-        ss << '/' << pathElem;
+        fmt::format_to(std::back_inserter(str), "/{}", pathElem);
     }
 
-    this->_renderProp(plane, remWidth, stylize, key, ss.str().c_str());
+    this->_renderProp(plane, remWidth, stylize, key, str.c_str());
 }
 
 } // namespace jacques
