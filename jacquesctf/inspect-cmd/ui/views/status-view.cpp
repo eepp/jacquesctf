@@ -34,13 +34,15 @@ void StatusView::_createEndPositions()
                                    !maxSeqNumEntryIt->seqNum()) ?
                                   std::string {} :
                                   utils::sepNumber(*maxSeqNumEntryIt->seqNum());
+        const auto fileLenBitsStr = utils::sepNumber(dsf.fileLen().bits());
 
         positions.pktCount = 0;
         positions.pktIndex = positions.pktCount + pktCountStr.size() + 1;
         positions.seqNum = positions.pktIndex + pktCountStr.size() + 5;
         positions.pktPercent = positions.seqNum + maxSeqNumStr.size() + 6;
         positions.curOffsetInDsFileBits = positions.pktPercent + 9;
-        positions.curOffsetInPktBits = positions.curOffsetInDsFileBits + 17;
+        positions.curOffsetInPktBits = positions.curOffsetInDsFileBits +
+                                       fileLenBitsStr.size() + 7;
 
         const auto maxEntryIt = std::max_element(dsf.pktIndexEntries().begin(),
                                                  dsf.pktIndexEntries().end(),
