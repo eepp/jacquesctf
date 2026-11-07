@@ -98,10 +98,6 @@ enum class LenFmtMode
     BITS,
 };
 
-std::pair<std::string, std::string> formatLen(Size lenBits,
-                                              LenFmtMode fmtMode = LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
-                                              const std::optional<char>& sep = std::nullopt);
-
 std::pair<std::string, std::string> formatNs(long long ns,
                                              const std::optional<char>& sep = std::nullopt);
 

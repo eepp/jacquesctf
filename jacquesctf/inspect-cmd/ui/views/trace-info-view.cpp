@@ -11,6 +11,7 @@
 #include <fmt/format.h>
 
 #include "trace-info-view.hpp"
+#include "data/data-len.hpp"
 #include "data/ts.hpp"
 #include "data/time-ops.hpp"
 #include "../stylist.hpp"
@@ -453,9 +454,13 @@ void TraceInfoView::_drawRows()
             } else if (const auto vRow = dynamic_cast<const _StrPropRow *>(row.get())) {
                 this->_write(valPos, vRow->val);
             } else if (const auto vRow = dynamic_cast<const _DataLenPropRow *>(row.get())) {
-                const auto [len, unit] = vRow->len.format();
+                const auto fmtLen = std::get<FullFmtDataLen>(vRow->len.format());
 
-                this->_write(valPos, "{} {}", len, unit);
+                if (fmtLen.extraBits) {
+                    this->_write(valPos, "{}+{} {}", fmtLen.qty, *fmtLen.extraBits, fmtLen.unit);
+                } else {
+                    this->_write(valPos, "{} {}", fmtLen.qty, fmtLen.unit);
+                }
             } else if (const auto vRow = dynamic_cast<const _TsPropRow *>(row.get())) {
                 const auto fmtTs = vRow->ts.format();
 

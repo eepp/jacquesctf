@@ -6,10 +6,10 @@
 #ifndef _JACQUES_DATA_DATA_LEN_HPP
 #define _JACQUES_DATA_DATA_LEN_HPP
 
-#include <utility>
 #include <string>
 #include <string_view>
 #include <optional>
+#include <variant>
 #include <boost/operators.hpp>
 #include <fmt/format.h>
 
@@ -17,6 +17,48 @@
 #include "utils.hpp"
 
 namespace jacques {
+
+/*
+ * Data length formatted with `utils::LenFmtMode::FULL_FLOOR` or
+ * `utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS`.
+ */
+struct FullFmtDataLen final
+{
+    // quantity of `unit` with three decimal places
+    std::string qty;
+
+    // `B`, `KiB`, `MiB`, or `GiB`
+    std::string unit;
+
+    /*
+     * Extra bits (only with
+     * `utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS`).
+     */
+    std::optional<std::string> extraBits;
+};
+
+/*
+ * Data length formatted with `utils::LenFmtMode::BYTES_FLOOR` or
+ * `utils::LenFmtMode::BYTES_FLOOR_WITH_EXTRA_BITS`.
+ */
+struct BytesFmtDataLen final
+{
+    std::string bytes;
+
+    /*
+     * Extra bits (only
+     * with `utils::LenFmtMode::BYTES_FLOOR_WITH_EXTRA_BITS`).
+     */
+    std::optional<std::string> extraBits;
+};
+
+// data length formatted with `utils::LenFmtMode::BITS`
+struct BitsFmtDataLen final
+{
+    std::string bits;
+};
+
+using FmtDataLen = std::variant<FullFmtDataLen, BytesFmtDataLen, BitsFmtDataLen>;
 
 class DataLen final :
     public boost::totally_ordered<DataLen>
@@ -39,8 +81,14 @@ public:
 
     DataLen& operator=(const DataLen&) noexcept = default;
 
-    std::pair<std::string, std::string> format(utils::LenFmtMode fmtMode = utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
-                                               const std::optional<char>& sep = std::nullopt) const;
+    /*
+     * Formats this data length with the format mode `fmtMode`, using
+     * `sep` as the thousands separator, if set, for the
+     * `utils::LenFmtMode::BYTES_FLOOR*` and
+     * `utils::LenFmtMode::BITS` modes.
+     */
+    FmtDataLen format(utils::LenFmtMode fmtMode = utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
+                      const std::optional<char>& sep = std::nullopt) const;
 
     bool hasExtraBits() const noexcept
     {
@@ -177,10 +225,16 @@ struct fmt::formatter<jacques::DataLen> : fmt::formatter<std::string_view>
 {
     auto format(const jacques::DataLen& dataLen, fmt::format_context& ctx) const
     {
-        const auto [qty, units] = dataLen.format(jacques::utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
-                                                 ',');
+        const auto fmtLen = std::get<jacques::FullFmtDataLen>(
+            dataLen.format(jacques::utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS));
+        auto str = fmtLen.qty;
 
-        return fmt::formatter<std::string_view>::format(fmt::format("{} {}", qty, units), ctx);
+        if (fmtLen.extraBits) {
+            str += '+' + *fmtLen.extraBits;
+        }
+
+        str += ' ' + fmtLen.unit;
+        return fmt::formatter<std::string_view>::format(str, ctx);
     }
 };
 

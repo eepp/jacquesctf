@@ -3,8 +3,11 @@
  * SPDX-License-Identifier: LicenseRef-Coke-Zero-Ware-1.0
  */
 
+#include <variant>
+
 #include "pkt-decoding-error-details-view.hpp"
 #include "utils.hpp"
+#include "data/data-len.hpp"
 #include "../stylist.hpp"
 #include "../../state/msg.hpp"
 
@@ -33,14 +36,18 @@ void PktDecodingErrorDetailsView::_redrawContent()
     this->_write({1, 1}, "PACKET DECODING ERROR");
 
     // packet index and offsets
-    const auto offsetStr = [](const Size offsetBits) {
-        const auto [len, unit] = utils::formatLen(offsetBits,
-                                                  utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS,
-                                                  ',');
-        const auto [lenBits, unitBits] = utils::formatLen(offsetBits, utils::LenFmtMode::BITS,
-                                                          ',');
+    const auto offsetStr = [](const DataLen offset) {
+        const auto fullFmtOffset = std::get<FullFmtDataLen>(
+            offset.format(utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS));
+        const auto bitsFmtOffset = std::get<BitsFmtDataLen>(
+            offset.format(utils::LenFmtMode::BITS, ','));
+        auto str = fullFmtOffset.qty;
 
-        return len + ' ' + unit + " (" + lenBits + ' ' + unitBits + ')';
+        if (fullFmtOffset.extraBits) {
+            str += '+' + *fullFmtOffset.extraBits;
+        }
+
+        return str + ' ' + fullFmtOffset.unit + " (" + bitsFmtOffset.bits + " b)";
     };
 
     this->_writeLabelValRows({1, 3}, {

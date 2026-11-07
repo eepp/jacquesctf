@@ -267,67 +267,6 @@ endOfPattern:
     return p[-1] == '*' && atEndOfPattern(p, pattern);
 }
 
-std::pair<std::string, std::string> formatLen(const Size lenBits, const LenFmtMode fmtMode,
-                                              const std::optional<char>& sep)
-{
-    std::string qty;
-    const char *unit = nullptr;
-    const auto sizeBytes = lenBits / 8;
-    const auto extraBits = lenBits & 7;
-
-    switch (fmtMode) {
-    case LenFmtMode::FULL_FLOOR:
-    case LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS:
-    {
-        unit = "B";
-        double val = static_cast<double>(sizeBytes);
-
-        if (sizeBytes >= 1024 * 1024 * 1024) {
-            val = static_cast<double>(sizeBytes) / (1024. * 1024 * 1024);
-            unit = "GiB";
-        } else if (sizeBytes >= 1024 * 1024) {
-            val = static_cast<double>(sizeBytes) / (1024. * 1024);
-            unit = "MiB";
-        } else if (sizeBytes >= 1024) {
-            val = static_cast<double>(sizeBytes) / 1024.;
-            unit = "KiB";
-        }
-
-        if (fmtMode == LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS && extraBits > 0) {
-            qty = fmt::format("{:.3f}+{}", val, extraBits);
-        } else {
-            qty = fmt::format("{:.3f}", val);
-        }
-
-        break;
-    }
-
-    case LenFmtMode::BYTES_FLOOR:
-    case LenFmtMode::BYTES_FLOOR_WITH_EXTRA_BITS:
-        unit = "B";
-
-        qty = sep ? sepNumber(static_cast<long long>(sizeBytes), *sep) :
-              fmt::to_string(sizeBytes);
-
-        if (fmtMode == LenFmtMode::BYTES_FLOOR_WITH_EXTRA_BITS && extraBits > 0) {
-            fmt::format_to(std::back_inserter(qty), "+{}", extraBits);
-        }
-
-        break;
-
-    case LenFmtMode::BITS:
-        unit = "b";
-
-        qty = sep ? sepNumber(static_cast<long long>(lenBits), *sep) :
-              fmt::to_string(lenBits);
-
-        break;
-    }
-
-    assert(unit);
-    return {std::move(qty), unit};
-}
-
 std::pair<std::string, std::string> formatNs(long long ns, const std::optional<char>& sep)
 {
     constexpr auto nsInS = 1'000'000'000LL;

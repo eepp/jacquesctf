@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include <algorithm>
 #include <numeric>
+#include <optional>
+#include <string>
 #include <utility>
 #include <variant>
 #include <fmt/format.h>
@@ -407,16 +409,25 @@ TableView::_Cell TableView::_createPathCell(const boost::filesystem::path& path,
 
 TableView::_Cell TableView::_createDataLenCell(const DataLen& len) const
 {
-    const auto fmtMode = _theAppState->dataLenFmtMode();
-    const auto [qty, unit] = len.format(fmtMode, ',');
+    const auto fmtLen = len.format(_theAppState->dataLenFmtMode(), ',');
+    const auto withExtraBits = [](const std::string& qty,
+                                  const std::optional<std::string>& extraBits) {
+        return extraBits ? qty + '+' + *extraBits : qty;
+    };
 
-    if (fmtMode == utils::LenFmtMode::FULL_FLOOR ||
-            fmtMode == utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS) {
+    if (const auto fullFmtLen = std::get_if<FullFmtDataLen>(&fmtLen)) {
+        const auto& unit = fullFmtLen->unit;
+
         // right-align the unit within four columns
-        return _Cell {qty + std::string(unit.size() < 4 ? 4 - unit.size() : 0, ' ') + unit};
+        return _Cell {
+            withExtraBits(fullFmtLen->qty, fullFmtLen->extraBits) +
+            std::string(unit.size() < 4 ? 4 - unit.size() : 0, ' ') + unit
+        };
+    } else if (const auto bytesFmtLen = std::get_if<BytesFmtDataLen>(&fmtLen)) {
+        return _Cell {withExtraBits(bytesFmtLen->bytes, bytesFmtLen->extraBits) + " B"};
     }
 
-    return _Cell {qty + ' ' + unit};
+    return _Cell {std::get<BitsFmtDataLen>(fmtLen).bits + " b"};
 }
 
 TableView::_Cell TableView::_createNsCell(const char * const sign, const long long ns)

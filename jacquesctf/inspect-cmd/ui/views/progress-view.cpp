@@ -5,10 +5,12 @@
 
 #include <algorithm>
 #include <utility>
+#include <variant>
 #include <fmt/format.h>
 
 #include "progress-view.hpp"
 #include "utils.hpp"
+#include "data/data-len.hpp"
 #include "../stylist.hpp"
 
 namespace jacques {
@@ -104,9 +106,15 @@ namespace {
 
 std::string formatLen(const DataLen& len)
 {
-    const auto [qty, unit] = len.format(utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS, ',');
+    const auto fmtLen = std::get<FullFmtDataLen>(
+        len.format(utils::LenFmtMode::FULL_FLOOR_WITH_EXTRA_BITS));
+    auto str = fmtLen.qty;
 
-    return qty + ' ' + unit;
+    if (fmtLen.extraBits) {
+        str += '+' + *fmtLen.extraBits;
+    }
+
+    return str + ' ' + fmtLen.unit;
 }
 
 } // namespace
