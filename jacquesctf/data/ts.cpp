@@ -12,8 +12,40 @@
 #include "ts.hpp"
 
 namespace jacques {
+namespace {
 
-Ts::Ts(const unsigned long long cycles, const unsigned long long freq, long long offsetSecs,
+constexpr auto nsPerSec = 1'000'000'000LL;
+
+/*
+ * Returns `cycles` × 10⁹ / `freq` exactly, without overflowing, where
+ * `cycles` is less than `freq`.
+ */
+unsigned long long cyclesToNs(unsigned long long cycles, const unsigned long long freq) noexcept
+{
+    assert(cycles < freq);
+
+    constexpr auto ullNsPerSec = static_cast<unsigned long long>(nsPerSec);
+
+    if (cycles <= std::numeric_limits<unsigned long long>::max() / ullNsPerSec) {
+        // common case: no overflow
+        return cycles * ullNsPerSec / freq;
+    }
+
+    // long division, one decimal digit at a time
+    unsigned long long ns = 0;
+
+    for (auto i = 0; i < 9; ++i) {
+        cycles *= 10;
+        ns = ns * 10 + cycles / freq;
+        cycles %= freq;
+    }
+
+    return ns;
+}
+
+} // namespace
+
+Ts::Ts(const unsigned long long cycles, const unsigned long long freq, const long long offsetSecs,
        const unsigned long long offsetCycles, const bool hasUnixEpochOrigin) noexcept :
     _cycles {cycles},
     _freq {freq},
@@ -21,38 +53,20 @@ Ts::Ts(const unsigned long long cycles, const unsigned long long freq, long long
 {
     assert(offsetCycles < freq);
 
-    const auto secsInCycles = cycles / freq;
-    constexpr auto nsInS = 1'000'000'000ULL;
-    constexpr auto llNsInS = static_cast<long long>(nsInS);
+    // both terms are less than `freq`
+    const auto subSecCycles = offsetCycles + cycles % freq;
 
-    offsetSecs += secsInCycles;
+    const auto secs = offsetSecs + static_cast<long long>(cycles / freq + subSecCycles / freq);
 
-    const auto reducedCycles = cycles - secsInCycles * freq;
-    constexpr auto maxUll = std::numeric_limits<unsigned long long>::max();
-    unsigned long long offsetNsPart;
-
-    if (offsetCycles + reducedCycles <= maxUll / nsInS) {
-        offsetNsPart = (offsetCycles + reducedCycles) * nsInS / freq;
-    } else {
-        /*
-         * FIXME: There could be a 1-ns error here, because we're
-         * converting to nanoseconds two times (offset and value) and
-         * adding those results: if the (real) results were to be 45.6
-         * ns and 12.7 ns, for example, which are in fact 45 and 12
-         * because of the integer divisions, then the result should be
-         * 58 ns, not 57 ns.
-         */
-        offsetNsPart = (offsetCycles * nsInS / freq) + (reducedCycles * nsInS / freq);
-    }
-
-    _nsFromOrigin = offsetSecs * llNsInS + static_cast<long long>(offsetNsPart);
+    _nsFromOrigin = secs * nsPerSec +
+                    static_cast<long long>(cyclesToNs(subSecCycles % freq, freq));
 
     // floor division: the nanosecond part is never negative
-    auto secsFloor = _nsFromOrigin / llNsInS;
-    auto ns = _nsFromOrigin % llNsInS;
+    auto secsFloor = _nsFromOrigin / nsPerSec;
+    auto ns = _nsFromOrigin % nsPerSec;
 
     if (ns < 0) {
-        ns += llNsInS;
+        ns += nsPerSec;
         --secsFloor;
     }
 
