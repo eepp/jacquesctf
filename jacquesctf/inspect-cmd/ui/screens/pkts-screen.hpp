@@ -25,7 +25,7 @@ private:
     void _handleKey(Key key) override;
 
 private:
-    std::unique_ptr<PktTableView> _ptView;
+    PktTableView _ptView;
     SearchCtrl _searchCtrl;
     std::unique_ptr<const SearchQuery> _lastQuery;
 };

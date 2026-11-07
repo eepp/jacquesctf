@@ -69,11 +69,13 @@ private:
     void _selErtChanged();
 
 private:
-    std::unique_ptr<ErtTableView> _ertTableView;
-    std::unique_ptr<DstTableView> _dstTableView;
-    std::unique_ptr<DtExplorerView> _dtExplorerView;
-    SearchCtrl _searchCtrl;
+    // _viewRects() needs this to build the views below
     bool _tablesVisible = true;
+
+    DstTableView _dstTableView;
+    ErtTableView _ertTableView;
+    DtExplorerView _dtExplorerView;
+    SearchCtrl _searchCtrl;
 
     // pattern of the last event record type name query, if any
     std::optional<std::string> _lastErtNamePattern;

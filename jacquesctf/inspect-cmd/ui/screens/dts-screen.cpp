@@ -14,18 +14,16 @@ namespace jacques {
 DtsScreen::DtsScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
                      ScreenHost& host) :
     Screen {rect, stylist, appState, host},
+    _dstTableView {this->_viewRects().dstTable, stylist, appState},
+    _ertTableView {this->_viewRects().ertTable, stylist, appState},
+    _dtExplorerView {this->_viewRects().dtExplorer, stylist},
     _searchCtrl {*this, stylist, host}
 {
-    const auto viewRects = this->_viewRects();
-
-    _dstTableView = std::make_unique<DstTableView>(viewRects.dstTable, stylist, appState);
-    _ertTableView = std::make_unique<ErtTableView>(viewRects.ertTable, stylist, appState);
-    _dtExplorerView = std::make_unique<DtExplorerView>(viewRects.dtExplorer, stylist);
-    this->_addView(*_dstTableView);
-    this->_addView(*_ertTableView);
-    this->_addView(*_dtExplorerView);
+    this->_addView(_dstTableView);
+    this->_addView(_ertTableView);
+    this->_addView(_dtExplorerView);
     this->_updateTraceType();
-    this->_focusAndUpdateViews(*_dstTableView);
+    this->_focusAndUpdateViews(_dstTableView);
 }
 
 void DtsScreen::_visibilityChanged()
@@ -52,21 +50,21 @@ DtsScreen::_ViewRects DtsScreen::_viewRects() const
 
 void DtsScreen::_updateTraceType()
 {
-    _dstTableView->traceType(this->_appState().metadata().traceType());
+    _dstTableView.traceType(this->_appState().metadata().traceType());
 }
 
 void DtsScreen::_updateViews()
 {
-    _ertTableView->dst(*_dstTableView->dst());
-    _dstTableView->highlightSel(false);
-    _ertTableView->highlightSel(false);
+    _ertTableView.dst(*_dstTableView.dst());
+    _dstTableView.highlightSel(false);
+    _ertTableView.highlightSel(false);
 
-    if (this->_focusedView() == _dstTableView.get()) {
-        _dtExplorerView->dst(*_dstTableView->dst());
-        _dstTableView->highlightSel(true);
-    } else if (this->_focusedView() == _ertTableView.get()) {
-        _dtExplorerView->ert(*_ertTableView->ert());
-        _ertTableView->highlightSel(true);
+    if (this->_focusedView() == &_dstTableView) {
+        _dtExplorerView.dst(*_dstTableView.dst());
+        _dstTableView.highlightSel(true);
+    } else if (this->_focusedView() == &_ertTableView) {
+        _dtExplorerView.ert(*_ertTableView.ert());
+        _ertTableView.highlightSel(true);
     }
 }
 
@@ -80,16 +78,16 @@ void DtsScreen::_resized()
 {
     const auto viewRects = this->_viewRects();
 
-    _dstTableView->moveAndResize(viewRects.dstTable);
-    _ertTableView->moveAndResize(viewRects.ertTable);
-    _dtExplorerView->moveAndResize(viewRects.dtExplorer);
+    _dstTableView.moveAndResize(viewRects.dstTable);
+    _ertTableView.moveAndResize(viewRects.ertTable);
+    _dtExplorerView.moveAndResize(viewRects.dtExplorer);
     _searchCtrl.parentScreenResized(*this);
 }
 
 void DtsScreen::highlightCurDt()
 {
     if (!this->_appState().hasActivePktState()) {
-        _dtExplorerView->clearHighlight();
+        _dtExplorerView.clearHighlight();
         return;
     }
 
@@ -102,24 +100,24 @@ void DtsScreen::highlightCurDt()
     const auto curEr = this->_appState().curEr();
 
     if (curDst) {
-        _dstTableView->selectDst(curDst->id());
-        _ertTableView->dst(*curDst);
+        _dstTableView.selectDst(curDst->id());
+        _ertTableView.dst(*curDst);
 
         if (curEr && curEr->type()) {
-            _ertTableView->selectErt(curEr->type()->id());
-            _dtExplorerView->ert(*curEr->type());
-            this->_focus(*_ertTableView);
+            _ertTableView.selectErt(curEr->type()->id());
+            _dtExplorerView.ert(*curEr->type());
+            this->_focus(_ertTableView);
         } else {
-            _ertTableView->selectFirst();
-            _dtExplorerView->dst(*curDst);
-            this->_focus(*_dstTableView);
+            _ertTableView.selectFirst();
+            _dtExplorerView.dst(*curDst);
+            this->_focus(_dstTableView);
         }
 
-        _dstTableView->centerSelRow();
-        _ertTableView->centerSelRow();
+        _dstTableView.centerSelRow();
+        _ertTableView.centerSelRow();
     }
 
-    _dtExplorerView->clearHighlight();
+    _dtExplorerView.clearHighlight();
 
     const auto curPktRegion = this->_appState().curPktRegion();
 
@@ -127,15 +125,15 @@ void DtsScreen::highlightCurDt()
         const auto cPktRegion = dynamic_cast<const ContentPktRegion *>(curPktRegion);
 
         if (cPktRegion) {
-            _dtExplorerView->highlightDt(cPktRegion->dt());
-            this->_focus(*_dtExplorerView);
+            _dtExplorerView.highlightDt(cPktRegion->dt());
+            this->_focus(_dtExplorerView);
         }
     }
 }
 
 void DtsScreen::clearHighlight()
 {
-    _dtExplorerView->clearHighlight();
+    _dtExplorerView.clearHighlight();
 }
 
 void DtsScreen::_focusedViewHandledKey(Key)
@@ -154,10 +152,10 @@ void DtsScreen::_searchAccepted(std::unique_ptr<const SearchQuery> query)
     _lastErtNamePattern.reset();
 
     if (const auto sQuery = dynamic_cast<const ErtNameSearchQuery *>(query.get())) {
-        _ertTableView->selectErt(sQuery->pattern());
+        _ertTableView.selectErt(sQuery->pattern());
         _lastErtNamePattern = sQuery->pattern();
     } else if (const auto sQuery = dynamic_cast<const ErtIdSearchQuery *>(query.get())) {
-        _ertTableView->selectErt(static_cast<yactfr::TypeId>(sQuery->val()));
+        _ertTableView.selectErt(static_cast<yactfr::TypeId>(sQuery->val()));
     }
 
     this->_selErtChanged();
@@ -166,7 +164,7 @@ void DtsScreen::_searchAccepted(std::unique_ptr<const SearchQuery> query)
 void DtsScreen::_selErtChanged()
 {
     this->_updateViews();
-    _ertTableView->centerSelRow();
+    _ertTableView.centerSelRow();
 }
 
 void DtsScreen::_handleKey(const Key key)
@@ -174,11 +172,11 @@ void DtsScreen::_handleKey(const Key key)
     if (key.ch() == U'+') {
         _tablesVisible = !_tablesVisible;
         this->_resized();
-        _dstTableView->isVisible(_tablesVisible);
-        _ertTableView->isVisible(_tablesVisible);
+        _dstTableView.isVisible(_tablesVisible);
+        _ertTableView.isVisible(_tablesVisible);
 
         if (!_tablesVisible) {
-            this->_focus(*_dtExplorerView);
+            this->_focus(_dtExplorerView);
         }
 
         return;
@@ -196,29 +194,29 @@ void DtsScreen::_handleKey(const Key key)
         case SpecialKey::ENTER:
         case SpecialKey::TAB:
             // change focus: data stream types, event record types, data types
-            if (focusedView == _ertTableView.get()) {
-                this->_focusAndUpdateViews(*_dtExplorerView);
-            } else if (focusedView == _dtExplorerView.get()) {
-                this->_focusAndUpdateViews(*_dstTableView);
-            } else if (_ertTableView->isEmpty()) {
-                this->_focusAndUpdateViews(*_dtExplorerView);
+            if (focusedView == &_ertTableView) {
+                this->_focusAndUpdateViews(_dtExplorerView);
+            } else if (focusedView == &_dtExplorerView) {
+                this->_focusAndUpdateViews(_dstTableView);
+            } else if (_ertTableView.isEmpty()) {
+                this->_focusAndUpdateViews(_dtExplorerView);
             } else {
-                this->_focusAndUpdateViews(*_ertTableView);
+                this->_focusAndUpdateViews(_ertTableView);
             }
 
             break;
 
         case SpecialKey::LEFT:
-            if (_ertTableView->isEmpty()) {
-                this->_focusAndUpdateViews(*_dstTableView);
+            if (_ertTableView.isEmpty()) {
+                this->_focusAndUpdateViews(_dstTableView);
             } else {
-                this->_focusAndUpdateViews(*_ertTableView);
+                this->_focusAndUpdateViews(_ertTableView);
             }
 
             break;
 
         case SpecialKey::RIGHT:
-            this->_focusAndUpdateViews(*_dtExplorerView);
+            this->_focusAndUpdateViews(_dtExplorerView);
             break;
 
         default:
@@ -230,7 +228,7 @@ void DtsScreen::_handleKey(const Key key)
         switch (ch) {
         case '/':
         case 'g':
-            if (focusedView != _ertTableView.get()) {
+            if (focusedView != &_ertTableView) {
                 break;
             }
 
@@ -241,11 +239,11 @@ void DtsScreen::_handleKey(const Key key)
             break;
 
         case 'n':
-            if (focusedView != _ertTableView.get() || !_lastErtNamePattern) {
+            if (focusedView != &_ertTableView || !_lastErtNamePattern) {
                 break;
             }
 
-            _ertTableView->selectErt(*_lastErtNamePattern, true);
+            _ertTableView.selectErt(*_lastErtNamePattern, true);
             this->_selErtChanged();
             break;
 

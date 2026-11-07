@@ -19,14 +19,9 @@ class AnalyzeAllPktsProgressUpdater final :
 {
 public:
     explicit AnalyzeAllPktsProgressUpdater(const Stylist& stylist) :
-        _view {
-            std::make_unique<ProgressView>(
-                Rect {{4, 4}, term::size().w - 8, 12},
-                "Creating packet checkpoints…", stylist
-            )
-        }
+        _view {Rect {{4, 4}, term::size().w - 8, 12}, "Creating packet checkpoints…", stylist}
     {
-        _view->focus();
+        _view.focus();
     }
 
 private:
@@ -44,7 +39,7 @@ private:
         }
 
         _pktIndexEntry = &pktIndexEntry;
-        setPktCheckpointsBuildProgress(*_view, pktIndexEntry, nullptr);
+        setPktCheckpointsBuildProgress(_view, pktIndexEntry, nullptr);
         this->_render();
         _erCount = 0;
     }
@@ -62,14 +57,14 @@ private:
             return;
         }
 
-        setPktCheckpointsBuildProgress(*_view, *_pktIndexEntry, &er);
+        setPktCheckpointsBuildProgress(_view, *_pktIndexEntry, &er);
         this->_render();
     }
 
     // renders the progress view on top of the others
     void _render()
     {
-        _view->render();
+        _view.render();
         term::update();
     }
 
@@ -77,7 +72,7 @@ private:
     bool _canUpdate = false;
     Index _pktCount = 0;
     Index _erCount = 0;
-    std::unique_ptr<ProgressView> _view;
+    ProgressView _view;
     const PktIndexEntry *_pktIndexEntry = nullptr;
 };
 
@@ -86,10 +81,10 @@ private:
 PktsScreen::PktsScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
                        ScreenHost& host) :
     Screen {rect, stylist, appState, host},
-    _ptView {std::make_unique<PktTableView>(rect, stylist, appState)},
+    _ptView {rect, stylist, appState},
     _searchCtrl {*this, stylist, host}
 {
-    this->_addMainView(*_ptView);
+    this->_addMainView(_ptView);
 }
 
 void PktsScreen::_resized()
@@ -122,7 +117,7 @@ void PktsScreen::_handleKey(const Key key)
                 break;
             }
 
-            this->_appState().gotoPkt(_ptView->selPktIndex());
+            this->_appState().gotoPkt(_ptView.selPktIndex());
             this->_host().switchToInspectScreen();
             break;
 
@@ -154,7 +149,7 @@ void PktsScreen::_handleKey(const Key key)
             this->_appState().activeDsFileState().analyzeAllPkts(&updater);
 
             // the packet index entries now have more information
-            _ptView->pktIndexEntriesChanged();
+            _ptView.pktIndexEntriesChanged();
             break;
         }
 

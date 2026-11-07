@@ -10,9 +10,9 @@ namespace jacques {
 TraceInfoScreen::TraceInfoScreen(const Rect& rect, const Stylist& stylist,
                                  InspectCmdState& appState, ScreenHost& host) :
     Screen {rect, stylist, appState, host},
-    _view {std::make_unique<TraceInfoView>(rect, stylist, appState)}
+    _view {rect, stylist, appState}
 {
-    this->_addMainView(*_view);
+    this->_addMainView(_view);
 }
 
 void TraceInfoScreen::_handleKey(const Key key)

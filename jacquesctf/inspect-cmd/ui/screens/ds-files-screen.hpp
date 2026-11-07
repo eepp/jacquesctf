@@ -23,7 +23,7 @@ private:
     void _handleKey(Key key) override;
 
 private:
-    std::unique_ptr<DsFileTableView> _view;
+    DsFileTableView _view;
 };
 
 } // namespace jacques

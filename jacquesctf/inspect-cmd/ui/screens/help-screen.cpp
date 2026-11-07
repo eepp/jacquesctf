@@ -10,9 +10,9 @@ namespace jacques {
 HelpScreen::HelpScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
                        ScreenHost& host) :
     Screen {rect, stylist, appState, host},
-    _view {std::make_unique<HelpView>(rect, stylist)}
+    _view {rect, stylist}
 {
-    this->_addMainView(*_view);
+    this->_addMainView(_view);
 }
 
 } // namespace jacques

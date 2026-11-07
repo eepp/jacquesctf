@@ -20,7 +20,7 @@ public:
                         ScreenHost& host);
 
 private:
-    std::unique_ptr<HelpView> _view;
+    HelpView _view;
 };
 
 } // namespace jacques

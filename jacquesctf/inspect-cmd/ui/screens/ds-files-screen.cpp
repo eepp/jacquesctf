@@ -10,10 +10,10 @@ namespace jacques {
 DsFilesScreen::DsFilesScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
                              ScreenHost& host) :
     Screen {rect, stylist, appState, host},
-    _view {std::make_unique<DsFileTableView>(rect, stylist, appState)}
+    _view {rect, stylist, appState}
 {
-    _view->selectFirst();
-    this->_addMainView(*_view);
+    _view.selectFirst();
+    this->_addMainView(_view);
 }
 
 void DsFilesScreen::_handleKey(const Key key)
@@ -26,7 +26,7 @@ void DsFilesScreen::_handleKey(const Key key)
         return;
     }
 
-    this->_appState().gotoDsFile(_view->selDsFileIndex());
+    this->_appState().gotoDsFile(_view.selDsFileIndex());
 
     const auto pktCount = this->_appState().activeDsFileState().dsFile().pktCount();
 

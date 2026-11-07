@@ -23,7 +23,7 @@ private:
     void _handleKey(Key key) override;
 
 private:
-    std::unique_ptr<TraceInfoView> _view;
+    TraceInfoView _view;
 };
 
 } // namespace jacques
