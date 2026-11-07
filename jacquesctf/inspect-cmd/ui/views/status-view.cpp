@@ -79,8 +79,9 @@ void StatusView::_drawOffset(const _EndPositions& endPositions)
     // draw percentage
     this->_style(Stylist::Role::STATUS, true);
 
-    const auto percent = this->_appState().activePktState().curOffsetInPktBits() * 100 /
-                         this->_appState().activePktState().pkt().indexEntry().effectiveTotalLen().bits();
+    const auto pktLenBits = this->_appState().activePktState().pkt().indexEntry().effectiveTotalLen().bits();
+    const auto percent = pktLenBits == 0 ? 0 :
+                         this->_appState().activePktState().curOffsetInPktBits() * 100 / pktLenBits;
     auto x = this->_write({this->contentRect().w - endPositions.pktPercent - 5, 0},
                           utils::format("%3u", static_cast<unsigned int>(percent)));
 
