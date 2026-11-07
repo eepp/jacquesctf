@@ -42,7 +42,7 @@ public:
 
     bool operator==(const Duration& other) const noexcept
     {
-        return _ns - other._ns;
+        return _ns == other._ns;
     }
 
     bool operator<(const Duration& other) const noexcept
