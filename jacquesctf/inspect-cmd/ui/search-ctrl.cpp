@@ -15,7 +15,7 @@
 namespace jacques {
 
 SearchCtrl::SearchCtrl(const Screen& parentScreen, const Stylist& stylist, ScreenHost& host) :
-    _searchView {std::make_unique<SearchInputView>(SearchCtrl::_viewRect(parentScreen), stylist)},
+    _searchView {SearchCtrl::_viewRect(parentScreen), stylist},
     _host {&host}
 {
 }
@@ -51,7 +51,7 @@ bool SearchCtrl::_handleKey(const Key key)
 
         unicode::appendUtf8(newBuf, *ch);
 
-        if (term::strWidth(newBuf) > _searchView->contentRect().w - 3) {
+        if (term::strWidth(newBuf) > _searchView.contentRect().w - 3) {
             // no space
             return true;
         }
@@ -65,10 +65,10 @@ bool SearchCtrl::_handleKey(const Key key)
 
 void SearchCtrl::_render()
 {
-    _searchView->render();
+    _searchView.render();
     term::showCursor({
-        _searchView->rect().pos.x + 1 + term::strWidth(_buf),
-        _searchView->rect().pos.y + 1
+        _searchView.rect().pos.x + 1 + term::strWidth(_buf),
+        _searchView.rect().pos.y + 1
     });
 }
 
@@ -76,7 +76,7 @@ void SearchCtrl::_visibilityChanged()
 {
     if (!this->isVisible()) {
         // nothing renders the search view anymore
-        _searchView->detach();
+        _searchView.detach();
         term::hideCursor();
     }
 }
@@ -129,10 +129,10 @@ std::optional<std::string> SearchCtrl::initFromKey(const Key key)
 
 void SearchCtrl::parentScreenResized(const Screen& parentScreen)
 {
-    _searchView->moveAndResize(SearchCtrl::_viewRect(parentScreen));
+    _searchView.moveAndResize(SearchCtrl::_viewRect(parentScreen));
 }
 
-void SearchCtrl::animateWhile(const AnimatedFunc& func) const
+void SearchCtrl::animateWhile(const AnimatedFunc& func)
 {
     assert(!this->isVisible());
     _host->renderFrame();
@@ -141,7 +141,7 @@ void SearchCtrl::animateWhile(const AnimatedFunc& func) const
      * The search box is closed, therefore the main loop doesn't render
      * the search view: render it on top of the frame.
      */
-    _searchView->render();
+    _searchView.render();
     term::update();
 
     /*
@@ -152,12 +152,12 @@ void SearchCtrl::animateWhile(const AnimatedFunc& func) const
     Index animIndex = 0;
 
     func([this, &animIndex] {
-        _searchView->animateBorder(animIndex);
+        _searchView.animateBorder(animIndex);
         ++animIndex;
         term::update();
     });
 
-    _searchView->detach();
+    _searchView.detach();
 }
 
 void SearchCtrl::_tryLiveUpdate()
@@ -170,7 +170,7 @@ void SearchCtrl::_tryLiveUpdate()
         _liveUpdateFunc(*query);
     }
 
-    _searchView->text(_buf);
+    _searchView.text(_buf);
 }
 
 } // namespace jacques

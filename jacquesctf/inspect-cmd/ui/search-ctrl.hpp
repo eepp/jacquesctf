@@ -116,7 +116,7 @@ public:
      *
      * The search box must be closed.
      */
-    void animateWhile(const AnimatedFunc& func) const;
+    void animateWhile(const AnimatedFunc& func);
 
 private:
     void _render() override;
@@ -133,7 +133,7 @@ private:
     }
 
 private:
-    std::unique_ptr<SearchInputView> _searchView;
+    SearchInputView _searchView;
     ScreenHost *_host;
 
     // current input text
