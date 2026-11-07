@@ -24,17 +24,6 @@ enum class TsFmtMode
     CYCLES,
 };
 
-enum class Weekday
-{
-    SUNDAY,
-    MONDAY,
-    TUESDAY,
-    WEDNESDAY,
-    THURSDAY,
-    FRIDAY,
-    SATURDAY,
-};
-
 class Ts final :
     public boost::totally_ordered<Ts>
 {
@@ -63,55 +52,10 @@ public:
         return _nsFromOrigin;
     }
 
-    unsigned int ns() const noexcept
-    {
-        return _ns;
-    }
-
     // true if the origin of the clock is the Unix epoch
     bool hasUnixEpochOrigin() const noexcept
     {
         return _hasUnixEpochOrigin;
-    }
-
-    /*
-     * The following calendar properties are only meaningful when
-     * hasUnixEpochOrigin() returns true: they're all zero otherwise.
-     */
-
-    unsigned int sec() const noexcept
-    {
-        return _sec;
-    }
-
-    unsigned int min() const noexcept
-    {
-        return _min;
-    }
-
-    unsigned int hour() const noexcept
-    {
-        return _hour;
-    }
-
-    unsigned int day() const noexcept
-    {
-        return _day;
-    }
-
-    unsigned int month() const noexcept
-    {
-        return _month;
-    }
-
-    int year() const noexcept
-    {
-        return _year;
-    }
-
-    Weekday weekday() const noexcept
-    {
-        return _weekday;
     }
 
     /*
@@ -139,14 +83,6 @@ private:
     unsigned long long _freq;
     long long _nsFromOrigin;
     bool _hasUnixEpochOrigin;
-    unsigned int _ns,
-                 _sec = 0,
-                 _min = 0,
-                 _hour = 0,
-                 _day = 0,
-                 _month = 0;
-    int _year = 0;
-    Weekday _weekday = Weekday::SUNDAY;
 };
 
 } // namespace jacques

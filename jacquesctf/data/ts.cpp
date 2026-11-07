@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <limits>
 #include <time.h>
+#include <fmt/chrono.h>
 #include <fmt/format.h>
 
 #include "ts.hpp"
@@ -60,36 +61,6 @@ Ts::Ts(const unsigned long long cycles, const unsigned long long freq, const lon
 
     _nsFromOrigin = secs * nsPerSec +
                     static_cast<long long>(cyclesToNs(subSecCycles % freq, freq));
-
-    // floor division: the nanosecond part is never negative
-    auto secsFloor = _nsFromOrigin / nsPerSec;
-    auto ns = _nsFromOrigin % nsPerSec;
-
-    if (ns < 0) {
-        ns += nsPerSec;
-        --secsFloor;
-    }
-
-    _ns = ns;
-
-    if (!_hasUnixEpochOrigin) {
-        // calendar properties are meaningless without a known origin
-        return;
-    }
-
-    static_assert(sizeof(time_t) >= 8, "Expecting a 64-bit `time_t`.");
-
-    const auto timeT = static_cast<time_t>(secsFloor);
-    tm tm;
-
-    localtime_r(&timeT, &tm);
-    _sec = tm.tm_sec;
-    _min = tm.tm_min;
-    _hour = tm.tm_hour;
-    _day = tm.tm_mday;
-    _month = tm.tm_mon + 1;
-    _year = 1900 + tm.tm_year;
-    _weekday = static_cast<Weekday>(tm.tm_wday);
 }
 
 Ts::Ts(const unsigned long long cycles, const yactfr::ClockType& clkType) noexcept :
@@ -115,13 +86,34 @@ TsFmtMode Ts::effectiveFmtMode(const TsFmtMode fmtMode) const noexcept
 
 std::string Ts::format(const TsFmtMode fmtMode) const
 {
-    switch (this->effectiveFmtMode(fmtMode)) {
-    case TsFmtMode::LONG:
-        return fmt::format("{}-{:02}-{:02} {:02}:{:02}:{:02}.{:09}", _year, _month, _day, _hour,
-                           _min, _sec, _ns);
+    const auto effFmtMode = this->effectiveFmtMode(fmtMode);
 
+    switch (effFmtMode) {
+    case TsFmtMode::LONG:
     case TsFmtMode::SHORT:
-        return fmt::format("{:02}:{:02}:{:02}.{:09}", _hour, _min, _sec, _ns);
+    {
+        // floor division: the nanosecond part is never negative
+        auto secs = _nsFromOrigin / nsPerSec;
+        auto ns = _nsFromOrigin % nsPerSec;
+
+        if (ns < 0) {
+            ns += nsPerSec;
+            --secs;
+        }
+
+        static_assert(sizeof(time_t) >= 8, "Expecting a 64-bit `time_t`.");
+
+        const auto timeT = static_cast<time_t>(secs);
+        tm tm;
+
+        localtime_r(&timeT, &tm);
+
+        if (effFmtMode == TsFmtMode::LONG) {
+            return fmt::format("{:%F %T}.{:09}", tm, ns);
+        }
+
+        return fmt::format("{:%T}.{:09}", tm, ns);
+    }
 
     case TsFmtMode::NS_FROM_ORIGIN:
         return fmt::to_string(_nsFromOrigin);
