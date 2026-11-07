@@ -27,6 +27,7 @@ struct LongFmtTs final
     std::string date;
     std::string time;
     std::string ns;
+    std::string utcOffset;
 };
 
 // timestamp formatted with `TsFmtMode::SHORT`
@@ -34,6 +35,7 @@ struct ShortFmtTs final
 {
     std::string time;
     std::string ns;
+    std::string utcOffset;
 };
 
 // timestamp formatted with `TsFmtMode::NS_FROM_ORIGIN`

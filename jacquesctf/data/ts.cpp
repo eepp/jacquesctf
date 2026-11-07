@@ -111,12 +111,19 @@ FmtTs Ts::format(const TsFmtMode fmtMode) const
 
         auto time = fmt::format("{:%T}", tm);
         auto nsStr = fmt::format("{:09}", ns);
+        auto utcOffset = fmt::format("{:%Ez}", tm);
 
-        if (effFmtMode == TsFmtMode::LONG) {
-            return LongFmtTs {fmt::format("{:%F}", tm), std::move(time), std::move(nsStr)};
+        if (utcOffset == "+00:00" || utcOffset == "-00:00") {
+            utcOffset = "Z";
         }
 
-        return ShortFmtTs {std::move(time), std::move(nsStr)};
+        if (effFmtMode == TsFmtMode::LONG) {
+            return LongFmtTs {
+                fmt::format("{:%F}", tm), std::move(time), std::move(nsStr), std::move(utcOffset)
+            };
+        }
+
+        return ShortFmtTs {std::move(time), std::move(nsStr), std::move(utcOffset)};
     }
 
     case TsFmtMode::NS_FROM_ORIGIN:
