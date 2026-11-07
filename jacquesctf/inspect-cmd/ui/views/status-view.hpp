@@ -35,13 +35,12 @@ private:
 
 private:
     void _createEndPositions();
-    void _drawOffset();
+    void _drawOffset(const _EndPositions& endPositions);
     void _appStateChanged(Message msg) override;
     void _redrawContent() override;
 
 private:
     std::unordered_map<const DsFileState *, _EndPositions> _endPositions;
-    const _EndPositions *_curEndPositions = nullptr;
 };
 
 } // namespace jacques

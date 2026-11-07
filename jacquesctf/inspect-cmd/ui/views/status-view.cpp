@@ -58,26 +58,22 @@ void StatusView::_createEndPositions()
     }
 }
 
-void StatusView::_appStateChanged(const Message msg)
+void StatusView::_appStateChanged(Message)
 {
-    if (msg == Message::ACTIVE_DS_FILE_AND_PKT_CHANGED || msg == Message::ACTIVE_PKT_CHANGED) {
-        _curEndPositions = &_endPositions[&this->_appState().activeDsFileState()];
-    }
-
     this->_invalidate();
 }
 
-void StatusView::_drawOffset()
+void StatusView::_drawOffset(const _EndPositions& endPositions)
 {
-    if (!_curEndPositions || !this->_appState().hasActivePktState()) {
+    if (!this->_appState().hasActivePktState()) {
         return;
     }
 
     // clear previous
     this->_style(Stylist::Role::STATUS);
     this->_fill({
-        {this->contentRect().w - _curEndPositions->dsfPath, 0},
-        _curEndPositions->dsfPath - _curEndPositions->pktPercent, 1
+        {this->contentRect().w - endPositions.dsfPath, 0},
+        endPositions.dsfPath - endPositions.pktPercent, 1
     });
 
     // draw percentage
@@ -85,7 +81,7 @@ void StatusView::_drawOffset()
 
     const auto percent = this->_appState().activePktState().curOffsetInPktBits() * 100 /
                          this->_appState().activePktState().pkt().indexEntry().effectiveTotalLen().bits();
-    auto x = this->_write({this->contentRect().w - _curEndPositions->pktPercent - 5, 0},
+    auto x = this->_write({this->contentRect().w - endPositions.pktPercent - 5, 0},
                           utils::format("%3u", static_cast<unsigned int>(percent)));
 
     this->_style(Stylist::Role::STATUS);
@@ -97,7 +93,7 @@ void StatusView::_drawOffset()
     auto str = utils::sepNumber(this->_appState().activePktState().curOffsetInPktBits(), ',');
 
     x = this->_write({
-        this->contentRect().w - _curEndPositions->curOffsetInPktBits - 2 - str.size(), 0
+        this->contentRect().w - endPositions.curOffsetInPktBits - 2 - str.size(), 0
     }, str);
     this->_style(Stylist::Role::STATUS);
     this->_write({x, 0}, " b");
@@ -105,7 +101,7 @@ void StatusView::_drawOffset()
     // draw new offset in data stream file
     str = utils::sepNumber(this->_appState().activeDsFileState().curOffsetInDsFileBits(), ',');
     this->_write({
-        this->contentRect().w - _curEndPositions->curOffsetInDsFileBits - str.size() - 3, 0
+        this->contentRect().w - endPositions.curOffsetInDsFileBits - str.size() - 3, 0
     }, "(" + str + " b)");
 }
 
@@ -113,9 +109,7 @@ void StatusView::_redrawContent()
 {
     this->_clearContent(Stylist::Role::STATUS);
 
-    if (!_curEndPositions) {
-        return;
-    }
+    const auto& endPositions = _endPositions.at(&this->_appState().activeDsFileState());
 
     if (this->_appState().hasActivePktState()) {
         // packet index and count
@@ -124,7 +118,7 @@ void StatusView::_redrawContent()
         const auto index = this->_appState().activePktState().pktIndexEntry().natIndexInDsFile();
         const auto indexStr = utils::sepNumber(index, ',');
         auto x = this->_write({
-            this->contentRect().w - _curEndPositions->pktIndex - indexStr.size() - 1, 0
+            this->contentRect().w - endPositions.pktIndex - indexStr.size() - 1, 0
         }, "#");
 
         this->_style(Stylist::Role::STATUS, true);
@@ -139,17 +133,17 @@ void StatusView::_redrawContent()
             const auto seqNumStr = utils::sepNumber(*seqNum, ',');
 
             x = this->_write({
-                this->contentRect().w - _curEndPositions->seqNum - seqNumStr.size() - 2, 0
+                this->contentRect().w - endPositions.seqNum - seqNumStr.size() - 2, 0
             }, "##");
             this->_style(Stylist::Role::STATUS, true);
             this->_write({x, 0}, seqNumStr);
         }
     }
 
-    this->_drawOffset();
+    this->_drawOffset(endPositions);
 
     const auto& path = utils::escapeStr(this->_appState().activeDsFileState().dsFile().path().string());
-    const auto pathMaxLen = this->contentRect().w - _curEndPositions->dsfPath;
+    const auto pathMaxLen = this->contentRect().w - endPositions.dsfPath;
     const auto [dirNameStr, filenameStr] = _formatPath(path, pathMaxLen);
     Index x = 0;
 
