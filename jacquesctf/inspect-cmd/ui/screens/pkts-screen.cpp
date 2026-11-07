@@ -37,10 +37,9 @@ private:
     {
         ++_pktCount;
 
-        if (pktIndexEntry.effectiveTotalLen() >= 2_MiB || _pktCount % 49 == 1) {
-            _canUpdate = true;
-        } else {
-            _canUpdate = false;
+        _canUpdate = pktIndexEntry.effectiveTotalLen() >= 2_MiB || _pktCount % 49 == 1;
+
+        if (!_canUpdate) {
             return;
         }
 
