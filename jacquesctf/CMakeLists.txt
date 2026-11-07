@@ -37,7 +37,7 @@ include (FetchContent)
 FetchContent_Declare (
     yactfr
     GIT_REPOSITORY https://github.com/eepp/yactfr.git
-    GIT_TAG 19527dca75852a0942da8364098b734404fb6973
+    GIT_TAG 20b1a3091fd788076b21e6cc0e9d6bb84471ac47
 )
 FetchContent_MakeAvailable (yactfr)
 
