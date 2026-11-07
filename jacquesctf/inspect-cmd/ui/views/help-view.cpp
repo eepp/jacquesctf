@@ -257,7 +257,8 @@ void HelpView::_drawRows()
     this->_style(Stylist::Role::STD);
     this->_clearContent();
 
-    const Index startX = (this->contentRect().w - _longestRowWidth) / 2;
+    const Index startX = this->contentRect().w > _longestRowWidth ?
+                         (this->contentRect().w - _longestRowWidth) / 2 : 0;
 
     for (Index rowNum = 0; rowNum < this->contentRect().h; ++rowNum) {
         const auto y = rowNum;
