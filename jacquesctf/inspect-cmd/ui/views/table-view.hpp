@@ -72,8 +72,8 @@ protected:
             // value not available
             NA,
 
-            // accent (nanosecond part of a timestamp, for example)
-            ACCENT,
+            // subtle accent (nanosecond part of a timestamp, for example)
+            SOFT_ACCENT,
 
             // dimmed (UTC offset of a timestamp, for example)
             DIM,
@@ -228,7 +228,7 @@ protected:
     _Cell _createDurationCell(const Ts& beginTs, const Ts& endTs) const;
 
 private:
-    // "seconds,nanoseconds ns" cell, the nanosecond part being accented
+    // "seconds,nanoseconds ns" cell, the nanosecond part being softly accented
     static _Cell _createNsCell(const char *sign, long long ns);
 
     // appends a dimmed `utcOffset` segment to `cell` if needed (see _createTsCell())

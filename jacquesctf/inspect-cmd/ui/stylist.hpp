@@ -52,10 +52,16 @@ public:
         HIGHLIGHT,
 
         /*
-         * Secondary part of a value or expression: nanosecond part of a
-         * timestamp, mapping or flag range, search prefix.
+         * Secondary part of a value or expression: mapping or flag
+         * range, search prefix.
          */
         ACCENT,
+
+        /*
+         * Subtler `ACCENT` (nanosecond part of a table timestamp
+         * or duration).
+         */
+        SOFT_ACCENT,
 
         /*
          * Symbol: key in the help, data type kind, search wildcard,

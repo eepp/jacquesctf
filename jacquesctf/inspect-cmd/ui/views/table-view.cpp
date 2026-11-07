@@ -246,8 +246,8 @@ void TableView::_applySegStyle(const _Cell::SegRole role, const bool emph)
         this->_style(Stylist::Role::DIM, emph);
         break;
 
-    case _Cell::SegRole::ACCENT:
-        this->_style(Stylist::Role::ACCENT, emph);
+    case _Cell::SegRole::SOFT_ACCENT:
+        this->_style(Stylist::Role::SOFT_ACCENT, emph);
         break;
     }
 }
@@ -437,7 +437,7 @@ TableView::_Cell TableView::_createNsCell(const char * const sign, const long lo
 
     cell.segs = {
         {sign + sPart + ',', _Cell::SegRole::TEXT},
-        {nsPart, _Cell::SegRole::ACCENT},
+        {nsPart, _Cell::SegRole::SOFT_ACCENT},
         {" ns", _Cell::SegRole::TEXT},
     };
 

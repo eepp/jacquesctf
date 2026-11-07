@@ -86,6 +86,7 @@ Stylist::Stylist()
         {Role::SUBTITLE,     green,               bg,                NCSTYLE_UNDERLINE},
         {Role::HIGHLIGHT,    yellow,              bg,                0},
         {Role::ACCENT,       cyan,                bg,                0},
+        {Role::SOFT_ACCENT,  fg.mix(cyan, .5),    bg,                0},
         {Role::SYMBOL,       brightMagenta,       bg,                0},
         {Role::PROP_KEY,     fg,                  bg,                NCSTYLE_BOLD},
         {Role::PROP_VAL,     green,               bg,                0},
