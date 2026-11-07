@@ -47,6 +47,8 @@ private:
     void _appendDetailsRow(const yactfr::DataType& dt, _Details& details);
 
 private:
+    const yactfr::DataStreamType *_dst = nullptr;
+    bool _dstShowErts = false;
     const yactfr::EventRecordType *_ert = nullptr;
     const yactfr::DataType *_singleDt = nullptr;
     const yactfr::DataType *_highlight = nullptr;

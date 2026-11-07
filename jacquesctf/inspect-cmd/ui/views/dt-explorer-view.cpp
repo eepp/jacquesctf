@@ -22,6 +22,10 @@ DtExplorerView::DtExplorerView(const Rect& rect, const Stylist& stylist) :
 
 void DtExplorerView::dst(const yactfr::DataStreamType& dst, const bool showErts)
 {
+    if (&dst == _dst && showErts == _dstShowErts) {
+        return;
+    }
+
     _details.pktHeader.clear();
     _details.pktContext.clear();
     _details.ertHeader.clear();
@@ -29,6 +33,8 @@ void DtExplorerView::dst(const yactfr::DataStreamType& dst, const bool showErts)
     _rows.clear();
     _singleDt = nullptr;
     _ert = nullptr;
+    _dst = &dst;
+    _dstShowErts = showErts;
 
     if (const auto traceType = dst.traceType(); traceType->packetHeaderType()) {
         _rows.push_back(_ScopeSubtitleRow {yactfr::Scope::PacketHeader});
@@ -83,6 +89,7 @@ void DtExplorerView::ert(const yactfr::EventRecordType& ert)
     _details.ertPayload.clear();
     _singleDt = nullptr;
     _ert = &ert;
+    _dst = nullptr;
 
     auto& dst = *ert.dataStreamType();
 
@@ -141,6 +148,7 @@ void DtExplorerView::singleDt(const yactfr::DataType& dt, const yactfr::Scope sc
 
     _singleDt = &dt;
     _ert = nullptr;
+    _dst = nullptr;
     _singleDtDetails.clear();
     _rows.clear();
     _rows.push_back(_ScopeSubtitleRow {scope});
@@ -185,6 +193,7 @@ void DtExplorerView::reset()
     this->_title("Data type");
     _singleDt = nullptr;
     _ert = nullptr;
+    _dst = nullptr;
     _rows.clear();
     this->_rowCount(0);
     this->clearHighlight();
