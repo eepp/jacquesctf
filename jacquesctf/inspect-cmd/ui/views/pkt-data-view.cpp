@@ -16,13 +16,12 @@
 #include "data/content-pkt-region.hpp"
 #include "data/padding-pkt-region.hpp"
 #include "data/error-pkt-region.hpp"
-#include "../screens/inspect-screen.hpp"
 #include "utils.hpp"
 
 namespace jacques {
 
 PktDataView::PktDataView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
-                         const InspectScreen::Bookmarks& bookmarks) :
+                         const Bookmarks& bookmarks) :
     View {rect, "Packet data", DecorationStyle::BORDERS, stylist},
     ViewInspectCmdStateObserver {appState, *this},
     _bookmarks {&bookmarks}
@@ -294,7 +293,7 @@ void PktDataView::_setCustomStyle(const _Char& ch) const
     }
 
     const auto it = _bookmarks->find(this->_appState().activeDsFileStateIndex());
-    const InspectScreen::PktBookmarks *bookmarks = nullptr;
+    const PktBookmarks *bookmarks = nullptr;
 
     if (it != _bookmarks->end()) {
         const auto& dsFileBookmarks = it->second;

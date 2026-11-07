@@ -16,6 +16,7 @@
 #include "../views/er-table-view.hpp"
 #include "../views/sub-dt-explorer-view.hpp"
 #include "../views/pkt-decoding-error-details-view.hpp"
+#include "../views/pkt-data-view.hpp"
 #include "inspect-screen.hpp"
 #include "screen.hpp"
 #include "../cycle-wheel.hpp"
@@ -23,16 +24,9 @@
 
 namespace jacques {
 
-class PktDataView;
-
 class InspectScreen final :
     public Screen
 {
-public:
-    using PktBookmarks = std::array<std::optional<Index>, 4>;
-    using DsFileBookmarks = std::unordered_map<Index, PktBookmarks>;
-    using Bookmarks = std::unordered_map<Index, DsFileBookmarks>;
-
 public:
     explicit InspectScreen(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
                            ScreenHost& host);
@@ -92,7 +86,7 @@ private:
     void _goForward();
     void _restoreStateSnapshot(const _StateSnapshot& snapshot);
     void _updateViews();
-    PktBookmarks& _curPktBookmarks() noexcept;
+    PktDataView::PktBookmarks& _curPktBookmarks() noexcept;
     void _toggleBookmark(unsigned int id);
     void _gotoBookmark(unsigned int id);
     void _setLastOffsetInRowBits();
@@ -126,7 +120,7 @@ private:
     decltype(_stateSnapshots)::iterator _curStateSnapshot;
     CycleWheel<_ErtViewDispMode> _ertViewDispModeWheel;
     bool _sdteViewIsVisible = true;
-    Bookmarks _bookmarks;
+    PktDataView::Bookmarks _bookmarks;
     bool _goingToBookmark = false;
     std::optional<Index> _lastOffsetInRowBits;
 

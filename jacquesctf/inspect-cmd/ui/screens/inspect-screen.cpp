@@ -57,7 +57,7 @@ InspectScreen::~InspectScreen()
 {
 }
 
-InspectScreen::PktBookmarks& InspectScreen::_curPktBookmarks() noexcept
+PktDataView::PktBookmarks& InspectScreen::_curPktBookmarks() noexcept
 {
     const auto dsFileStateIndex = this->_appState().activeDsFileStateIndex();
     const auto pktStateIndex = this->_appState().activeDsFileState().activePktStateIndex();

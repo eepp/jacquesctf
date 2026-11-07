@@ -6,12 +6,15 @@
 #ifndef _JACQUES_INSPECT_CMD_UI_VIEWS_PKT_DATA_VIEW_HPP
 #define _JACQUES_INSPECT_CMD_UI_VIEWS_PKT_DATA_VIEW_HPP
 
-#include <vector>
 #include <algorithm>
+#include <array>
+#include <optional>
+#include <unordered_map>
+#include <vector>
 
+#include "aliases.hpp"
 #include "view.hpp"
 #include "data/pkt-region.hpp"
-#include "../screens/inspect-screen.hpp"
 
 namespace jacques {
 
@@ -45,8 +48,18 @@ class PktDataView final :
     private ViewInspectCmdStateObserver
 {
 public:
+    // bookmarked offsets within a packet (bits)
+    using PktBookmarks = std::array<std::optional<Index>, 4>;
+
+    // packet index within data stream file to packet bookmarks
+    using DsFileBookmarks = std::unordered_map<Index, PktBookmarks>;
+
+    // data stream file index to data stream file bookmarks
+    using Bookmarks = std::unordered_map<Index, DsFileBookmarks>;
+
+public:
     explicit PktDataView(const Rect& rect, const Stylist& stylist, InspectCmdState& appState,
-                         const InspectScreen::Bookmarks& bookmarks);
+                         const Bookmarks& bookmarks);
     void pageDown();
     void pageUp();
     void centerSel();
@@ -191,7 +204,7 @@ private:
     }
 
 private:
-    const InspectScreen::Bookmarks *_bookmarks;
+    const Bookmarks *_bookmarks;
 
     // X position of the first numeric character of a row
     Index _dataX = 0;
