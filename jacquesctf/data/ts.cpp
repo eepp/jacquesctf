@@ -47,12 +47,16 @@ Ts::Ts(const unsigned long long cycles, const unsigned long long freq, long long
 
     _nsFromOrigin = offsetSecs * llNsInS + static_cast<long long>(offsetNsPart);
 
-    // I'm pretty sure there's a way to do this without branching
-    if (_nsFromOrigin < 0) {
-        _ns = std::abs((std::abs(_nsFromOrigin) % llNsInS) - llNsInS);
-    } else {
-        _ns = _nsFromOrigin % llNsInS;
+    // floor division: the nanosecond part is never negative
+    auto secsFloor = _nsFromOrigin / llNsInS;
+    auto ns = _nsFromOrigin % llNsInS;
+
+    if (ns < 0) {
+        ns += llNsInS;
+        --secsFloor;
     }
+
+    _ns = ns;
 
     if (!_hasUnixEpochOrigin) {
         // calendar properties are meaningless without a known origin
@@ -61,14 +65,10 @@ Ts::Ts(const unsigned long long cycles, const unsigned long long freq, long long
 
     static_assert(sizeof(time_t) >= 8, "Expecting a 64-bit `time_t`.");
 
-    // this too...
-    const auto secsFloor = static_cast<time_t>((_nsFromOrigin < 0) ?
-                                               (_nsFromOrigin - llNsInS) / llNsInS :
-                                               _nsFromOrigin / llNsInS);
-
+    const auto timeT = static_cast<time_t>(secsFloor);
     tm tm;
 
-    localtime_r(&secsFloor, &tm);
+    localtime_r(&timeT, &tm);
     _sec = tm.tm_sec;
     _min = tm.tm_min;
     _hour = tm.tm_hour;
