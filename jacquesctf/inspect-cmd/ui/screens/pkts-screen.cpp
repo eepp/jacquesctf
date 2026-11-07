@@ -46,7 +46,7 @@ private:
         _pktIndexEntry = &pktIndexEntry;
         setPktCheckpointsBuildProgress(*_view, pktIndexEntry, nullptr);
         this->_render();
-        _count = 0;
+        _erCount = 0;
     }
 
     void _update(const Er& er) override
@@ -55,7 +55,7 @@ private:
             return;
         }
 
-        if (_count++ % 41 != 0) {
+        if (_erCount++ % 41 != 0) {
             return;
         }
 
@@ -73,7 +73,7 @@ private:
 private:
     bool _canUpdate = false;
     Index _pktCount = 0;
-    Index _count = 0;
+    Index _erCount = 0;
     std::unique_ptr<ProgressView> _view;
     const PktIndexEntry *_pktIndexEntry = nullptr;
 };
