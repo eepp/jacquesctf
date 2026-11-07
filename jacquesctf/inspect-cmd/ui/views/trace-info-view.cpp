@@ -457,7 +457,15 @@ void TraceInfoView::_drawRows()
 
                 this->_write(valPos, "{} {}", len, unit);
             } else if (const auto vRow = dynamic_cast<const _TsPropRow *>(row.get())) {
-                this->_write(valPos, vRow->ts.format());
+                const auto fmtTs = vRow->ts.format();
+
+                if (const auto longFmtTs = std::get_if<LongFmtTs>(&fmtTs)) {
+                    this->_write(valPos, "{} {}.{}", longFmtTs->date, longFmtTs->time,
+                                 longFmtTs->ns);
+                } else {
+                    // no Unix epoch origin
+                    this->_write(valPos, std::get<NsFromOriginFmtTs>(fmtTs).ns);
+                }
             } else if (const auto vRow = dynamic_cast<const _DurationPropRow *>(row.get())) {
                 this->_write(valPos, vRow->duration.format());
             } else if (const auto vRow = dynamic_cast<const _NonePropRow *>(row.get())) {

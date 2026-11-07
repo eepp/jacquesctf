@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include <numeric>
+#include <variant>
 #include <fmt/format.h>
 
 #include "table-view.hpp"
@@ -319,8 +320,18 @@ TableView::_Cell TableView::_createTsCell(const Ts& ts) const
 
     switch (ts.effectiveFmtMode(fmtMode)) {
     case TsFmtMode::LONG:
+    {
+        const auto fmtTs = std::get<LongFmtTs>(ts.format(fmtMode));
+
+        return _Cell {fmtTs.date + ' ' + fmtTs.time + '.' + fmtTs.ns};
+    }
+
     case TsFmtMode::SHORT:
-        return _Cell {ts.format(fmtMode)};
+    {
+        const auto fmtTs = std::get<ShortFmtTs>(ts.format(fmtMode));
+
+        return _Cell {fmtTs.time + '.' + fmtTs.ns};
+    }
 
     case TsFmtMode::NS_FROM_ORIGIN:
         return this->_createNsCell("", ts.nsFromOrigin());

@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <limits>
 #include <time.h>
+#include <utility>
 #include <fmt/chrono.h>
 #include <fmt/format.h>
 
@@ -84,7 +85,7 @@ TsFmtMode Ts::effectiveFmtMode(const TsFmtMode fmtMode) const noexcept
     return fmtMode;
 }
 
-std::string Ts::format(const TsFmtMode fmtMode) const
+FmtTs Ts::format(const TsFmtMode fmtMode) const
 {
     const auto effFmtMode = this->effectiveFmtMode(fmtMode);
 
@@ -108,18 +109,21 @@ std::string Ts::format(const TsFmtMode fmtMode) const
 
         localtime_r(&timeT, &tm);
 
+        auto time = fmt::format("{:%T}", tm);
+        auto nsStr = fmt::format("{:09}", ns);
+
         if (effFmtMode == TsFmtMode::LONG) {
-            return fmt::format("{:%F %T}.{:09}", tm, ns);
+            return LongFmtTs {fmt::format("{:%F}", tm), std::move(time), std::move(nsStr)};
         }
 
-        return fmt::format("{:%T}.{:09}", tm, ns);
+        return ShortFmtTs {std::move(time), std::move(nsStr)};
     }
 
     case TsFmtMode::NS_FROM_ORIGIN:
-        return fmt::to_string(_nsFromOrigin);
+        return NsFromOriginFmtTs {fmt::to_string(_nsFromOrigin)};
 
     case TsFmtMode::CYCLES:
-        return fmt::to_string(_cycles);
+        return CyclesFmtTs {fmt::to_string(_cycles)};
     }
 
     std::abort();

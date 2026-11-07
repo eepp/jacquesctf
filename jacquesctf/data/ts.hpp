@@ -7,9 +7,8 @@
 #define _JACQUES_DATA_TS_HPP
 
 #include <string>
-#include <string_view>
+#include <variant>
 #include <boost/operators.hpp>
-#include <fmt/format.h>
 #include <yactfr/yactfr.hpp>
 
 namespace jacques {
@@ -21,6 +20,35 @@ enum class TsFmtMode
     NS_FROM_ORIGIN,
     CYCLES,
 };
+
+// timestamp formatted with `TsFmtMode::LONG`
+struct LongFmtTs final
+{
+    std::string date;
+    std::string time;
+    std::string ns;
+};
+
+// timestamp formatted with `TsFmtMode::SHORT`
+struct ShortFmtTs final
+{
+    std::string time;
+    std::string ns;
+};
+
+// timestamp formatted with `TsFmtMode::NS_FROM_ORIGIN`
+struct NsFromOriginFmtTs final
+{
+    std::string ns;
+};
+
+// timestamp formatted with `TsFmtMode::CYCLES`
+struct CyclesFmtTs final
+{
+    std::string cycles;
+};
+
+using FmtTs = std::variant<LongFmtTs, ShortFmtTs, NsFromOriginFmtTs, CyclesFmtTs>;
 
 class Ts final :
     public boost::totally_ordered<Ts>
@@ -60,7 +88,11 @@ public:
      */
     TsFmtMode effectiveFmtMode(TsFmtMode fmtMode) const noexcept;
 
-    std::string format(TsFmtMode fmtMode = TsFmtMode::LONG) const;
+    /*
+     * Formats this timestamp with the effective format mode of
+     * `fmtMode` (see effectiveFmtMode()).
+     */
+    FmtTs format(TsFmtMode fmtMode = TsFmtMode::LONG) const;
 
     bool operator==(const Ts& other) const noexcept
     {
@@ -80,14 +112,5 @@ private:
 };
 
 } // namespace jacques
-
-template <>
-struct fmt::formatter<jacques::Ts> : fmt::formatter<std::string_view>
-{
-    auto format(const jacques::Ts& ts, fmt::format_context& ctx) const
-    {
-        return fmt::formatter<std::string_view>::format(ts.format(), ctx);
-    }
-};
 
 #endif // _JACQUES_DATA_TS_HPP
